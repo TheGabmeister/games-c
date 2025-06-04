@@ -1,4 +1,5 @@
 #include <SDL3/SDL.h>
+#include <flecs.h>
 
 bool is_running = true;
 SDL_Window* window;

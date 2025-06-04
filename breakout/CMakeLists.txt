@@ -1,7 +1,7 @@
 ﻿cmake_minimum_required (VERSION 3.21 FATAL_ERROR)
-
 project (breakout)
 
+include(FetchContent)
 set(CMAKE_C_STANDARD 17)
 set(CMAKE_C_STANDARD_REQUIRED ON)
 
@@ -19,6 +19,7 @@ set(CMAKE_LIBRARY_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/$<CONFIGURATION>")
 
 add_subdirectory(thirdparty/SDL) 
 add_subdirectory(thirdparty/glm)
+add_subdirectory(thirdparty/flecs)
 
 ##############################################################################
 
@@ -49,6 +50,7 @@ endif()
 target_link_libraries(${PROJECT_NAME} PRIVATE 
    SDL3::SDL3
    glm::glm-header-only
+   flecs::flecs_static
 )
 
 target_include_directories(${PROJECT_NAME} PRIVATE
