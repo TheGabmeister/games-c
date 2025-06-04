@@ -2,7 +2,8 @@
 
 project (breakout)
 
-set_property(TARGET ${PROJECT_NAME} PROPERTY C_STANDARD 11)
+set(CMAKE_C_STANDARD 11)
+set(CMAKE_C_STANDARD_REQUIRED ON)
 
 #! ! ! ! ! ! !
 #set this to true to ship the game!
