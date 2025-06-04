@@ -1,6 +1,11 @@
 #include <SDL3/SDL.h>
 #include <flecs.h>
 
+typedef struct {
+    double x;
+    double y;
+} Position, Velocity;
+
 bool is_running = true;
 SDL_Window* window;
 SDL_Renderer* renderer; 
@@ -77,8 +82,25 @@ void Render()
 }
 
 void Shutdown()
+
 {
     SDL_DestroyWindow(window);
     SDL_DestroyRenderer(renderer);
     SDL_Quit();
+}
+
+void Move(ecs_iter_t *it) {
+    Position *p = ecs_field(it, Position, 0);
+    Velocity *v = ecs_field(it, Velocity, 1);
+
+    /* Print the set of components for the iterated over entities */
+    char *type_str = ecs_table_str(it->world, it->table);
+    printf("Move entities with [%s]\n", type_str);
+    ecs_os_free(type_str);
+
+    /* Iterate entities for the current table */
+    for (int i = 0; i < it->count; i ++) {
+        p[i].x += v[i].x;
+        p[i].y += v[i].y;
+    }
 }
