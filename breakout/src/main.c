@@ -10,15 +10,22 @@ bool is_running = true;
 SDL_Window* window;
 SDL_Renderer* renderer; 
 
+ecs_world_t *world;
+
 static void InitWindow();
+static void InitGame();
+
 static void HandleInput();
 static void Update();
 static void Render();
 static void Shutdown();
 
+static void Move();
+
 int main(int argc, char* argv[]) 
 {
     InitWindow();
+    InitGame();
 
     while (is_running) 
     {
@@ -41,6 +48,38 @@ void InitWindow()
     }
     window = SDL_CreateWindow("breakout", 1280, 720, SDL_WINDOW_RESIZABLE);
     renderer = SDL_CreateRenderer(window, NULL); // Create renderer
+}
+
+void InitGame()
+{
+    /* Create the world */
+    world = ecs_init();
+
+    /* Register components */
+    ECS_COMPONENT(world, Position);
+    ECS_COMPONENT(world, Velocity);
+
+    /* Register system */
+    ECS_SYSTEM(world, Move, EcsOnUpdate, Position, Velocity);
+
+    /* Register tags (components without a size) */
+    ECS_TAG(world, Eats);
+    ECS_TAG(world, Apples);
+    ECS_TAG(world, Pears);
+
+    /* Create an entity with name Bob, add Position and food preference */
+    ecs_entity_t Bob = ecs_entity(world, { .name = "Bob" });
+    ecs_set(world, Bob, Position, {0, 0});
+    ecs_set(world, Bob, Velocity, {1, 2});
+    ecs_add_pair(world, Bob, Eats, Apples);
+
+    /* Run systems twice. Usually this function is called once per frame */
+    ecs_progress(world, 0);
+    ecs_progress(world, 0);
+
+    /* See if Bob has moved (he has) */
+    const Position *p = ecs_get(world, Bob, Position);
+    printf("Bob's position is {%f, %f}\n", p->x, p->y);
 }
 
 void HandleInput()
@@ -82,8 +121,8 @@ void Render()
 }
 
 void Shutdown()
-
 {
+    ecs_fini(world);
     SDL_DestroyWindow(window);
     SDL_DestroyRenderer(renderer);
     SDL_Quit();
