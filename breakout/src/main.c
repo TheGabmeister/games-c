@@ -9,6 +9,7 @@ typedef struct {
 bool is_running = true;
 SDL_Window* window;
 SDL_Renderer* renderer; 
+int ms_previous_frame = 0;
 
 ecs_world_t *world;
 
@@ -104,7 +105,11 @@ void HandleInput()
 
 void Update()
 {
+    // delta time, the difference in ticks since the last frame, converted to seconds 
+    double dt = (SDL_GetTicks() - ms_previous_frame) / 1000.0;
 
+    // Store the "previous" frame time
+    ms_previous_frame = SDL_GetTicks();
 }
 
 void Render()
