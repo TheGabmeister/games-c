@@ -22,6 +22,8 @@ ECS_COMPONENT_DECLARE(Velocity);
 ECS_COMPONENT_DECLARE(BoxCollider);
 ECS_TAG_DECLARE(Projectile);
 ECS_TAG_DECLARE(Enemy);
+ECS_TAG_DECLARE(EnemyProjectile);
+ECS_TAG_DECLARE(Player);
 
 #define RESOURCES       "resources/"
 #define PLAYER_SPEED    300.0f
@@ -29,6 +31,7 @@ ECS_TAG_DECLARE(Enemy);
 #define BULLET_SIZE     10.0f
 #define WINDOW_W        600
 #define WINDOW_H        800
+#define ENEMY_SHOOT_INTERVAL 5.0f
 
 static bool initialize(SDL_Window **window, SDL_Renderer **renderer) {
     if (!SDL_Init(SDL_INIT_VIDEO)) {
@@ -81,12 +84,16 @@ int main(void) {
     ECS_COMPONENT_DEFINE(world, BoxCollider);
     ECS_TAG_DEFINE(world, Projectile);
     ECS_TAG_DEFINE(world, Enemy);
+    ECS_TAG_DEFINE(world, EnemyProjectile);
+    ECS_TAG_DEFINE(world, Player);
 
-    ecs_entity_t square = ecs_new(world);
-    ecs_set_name(world, square, "Player");
-    ecs_set(world, square, Position, {.x = 350, .y = 650});
-    ecs_set(world, square, Size, {.w = 100, .h = 100});
-    ecs_set(world, square, Velocity, {.x = 0, .y = 0});
+    ecs_entity_t player = ecs_new(world);
+    ecs_set_name(world, player, "PlayerShip");
+    ecs_add(world, player, Player);
+    ecs_set(world, player, Position,    {.x = 350, .y = 650});
+    ecs_set(world, player, Size,        {.w = 100, .h = 100});
+    ecs_set(world, player, Velocity,    {.x = 0, .y = 0});
+    ecs_set(world, player, BoxCollider, {.w = 100, .h = 100});
 
     ecs_entity_t enemy = ecs_new(world);
     ecs_set_name(world, enemy, "EnemyShip");
@@ -110,6 +117,20 @@ int main(void) {
             { ecs_id(Enemy) }
         }
     });
+    ecs_query_t *enemy_proj_coll_q = ecs_query(world, {
+        .terms = {
+            { ecs_id(Position) },
+            { ecs_id(BoxCollider) },
+            { ecs_id(EnemyProjectile) }
+        }
+    });
+    ecs_query_t *player_coll_q = ecs_query(world, {
+        .terms = {
+            { ecs_id(Position) },
+            { ecs_id(BoxCollider) },
+            { ecs_id(Player) }
+        }
+    });
 
     // Query for all renderable/moveable entities (player + projectiles)
     ecs_query_t *q = ecs_query(world, {
@@ -127,7 +148,10 @@ int main(void) {
         }
     });
 
-    ecs_entity_t bullet = 0; // 0 means no bullet in flight
+    ecs_entity_t bullet = 0;       // 0 means no player bullet in flight
+    ecs_entity_t enemy_bullet = 0; // 0 means no enemy bullet in flight
+    float enemy_shoot_timer = ENEMY_SHOOT_INTERVAL;
+    float respawn_timer = 0.0f;
 
     bool running = true;
     SDL_Event event;
@@ -147,9 +171,9 @@ int main(void) {
                 running = false;
             }
             if (event.type == SDL_EVENT_KEY_DOWN && event.key.scancode == SDL_SCANCODE_SPACE) {
-                if (bullet == 0) {
-                    const Position *pp = ecs_get(world, square, Position);
-                    const Size     *ps = ecs_get(world, square, Size);
+                if (bullet == 0 && player != 0) {
+                    const Position *pp = ecs_get(world, player, Position);
+                    const Size     *ps = ecs_get(world, player, Size);
                     float bx = pp->x + ps->w / 2.0f - BULLET_SIZE / 2.0f;
                     float by = pp->y - BULLET_SIZE;
                     bullet = ecs_new(world);
@@ -165,19 +189,65 @@ int main(void) {
         nk_input_end(ctx);
 
         // Player movement
-        const bool *keys = SDL_GetKeyboardState(NULL);
-        float vx = 0, vy = 0;
-        if (keys[SDL_SCANCODE_A] || keys[SDL_SCANCODE_LEFT])  vx -= PLAYER_SPEED;
-        if (keys[SDL_SCANCODE_D] || keys[SDL_SCANCODE_RIGHT]) vx += PLAYER_SPEED;
-        ecs_set(world, square, Velocity, {.x = vx, .y = vy});
+        if (player != 0) {
+            const bool *keys = SDL_GetKeyboardState(NULL);
+            float vx = 0, vy = 0;
+            if (keys[SDL_SCANCODE_A] || keys[SDL_SCANCODE_LEFT])  vx -= PLAYER_SPEED;
+            if (keys[SDL_SCANCODE_D] || keys[SDL_SCANCODE_RIGHT]) vx += PLAYER_SPEED;
+            ecs_set(world, player, Velocity, {.x = vx, .y = vy});
+        }
 
-        // Destroy bullet if it has left the top of the window
+        // Player respawn after 3 seconds
+        if (player == 0) {
+            respawn_timer -= dt;
+            if (respawn_timer <= 0.0f) {
+                player = ecs_new(world);
+                ecs_set_name(world, player, "PlayerShip");
+                ecs_add(world, player, Player);
+                ecs_set(world, player, Position,    {.x = 350, .y = 650});
+                ecs_set(world, player, Size,        {.w = 100, .h = 100});
+                ecs_set(world, player, Velocity,    {.x = 0, .y = 0});
+                ecs_set(world, player, BoxCollider, {.w = 100, .h = 100});
+            }
+        }
+
+        // Enemy shoots downward every 5 seconds
+        if (enemy != 0) {
+            enemy_shoot_timer -= dt;
+            if (enemy_shoot_timer <= 0.0f) {
+                enemy_shoot_timer = ENEMY_SHOOT_INTERVAL;
+                if (enemy_bullet == 0) {
+                    const Position *ep = ecs_get(world, enemy, Position);
+                    const Size     *es = ecs_get(world, enemy, Size);
+                    float bx = ep->x + es->w / 2.0f - BULLET_SIZE / 2.0f;
+                    float by = ep->y + es->h;
+                    enemy_bullet = ecs_new(world);
+                    ecs_set_name(world, enemy_bullet, "EnemyBullet");
+                    ecs_add(world, enemy_bullet, EnemyProjectile);
+                    ecs_set(world, enemy_bullet, Position,    {.x = bx, .y = by});
+                    ecs_set(world, enemy_bullet, Size,        {.w = BULLET_SIZE, .h = BULLET_SIZE});
+                    ecs_set(world, enemy_bullet, Velocity,    {.x = 0, .y = BULLET_SPEED});
+                    ecs_set(world, enemy_bullet, BoxCollider, {.w = BULLET_SIZE, .h = BULLET_SIZE});
+                }
+            }
+        }
+
+        // Destroy player bullet if it has left the top of the window
         if (bullet != 0) {
             const Position *bp = ecs_get(world, bullet, Position);
             const Size     *bs = ecs_get(world, bullet, Size);
             if (bp->y + bs->h < 0) {
                 ecs_delete(world, bullet);
                 bullet = 0;
+            }
+        }
+
+        // Destroy enemy bullet if it has left the bottom of the window
+        if (enemy_bullet != 0) {
+            const Position *bp = ecs_get(world, enemy_bullet, Position);
+            if (bp->y > WINDOW_H) {
+                ecs_delete(world, enemy_bullet);
+                enemy_bullet = 0;
             }
         }
 
@@ -195,7 +265,7 @@ int main(void) {
                 p[i].x += v[i].x * dt;
                 p[i].y += v[i].y * dt;
                 SDL_FRect rect = { p[i].x, p[i].y, s[i].w, s[i].h };
-                if (it.entities[i] == square) {
+                if (it.entities[i] == player) {
                     SDL_RenderTexture(renderer, player_tex, NULL, &rect);
                 } else if (it.entities[i] == enemy) {
                     SDL_RenderTexture(renderer, enemy_tex, NULL, &rect);
@@ -244,11 +314,50 @@ int main(void) {
             }
         }
 
+        // Collect enemy projectile bounds
+        struct { ecs_entity_t e; float x, y, w, h; } eprojs[64];
+        int neprojs = 0;
+        {
+            ecs_iter_t it = ecs_query_iter(world, enemy_proj_coll_q);
+            while (ecs_query_next(&it)) {
+                Position    *p = ecs_field(&it, Position, 0);
+                BoxCollider *c = ecs_field(&it, BoxCollider, 1);
+                for (int i = 0; i < it.count && neprojs < 64; i++) {
+                    eprojs[neprojs].e = it.entities[i];
+                    eprojs[neprojs].x = p[i].x; eprojs[neprojs].y = p[i].y;
+                    eprojs[neprojs].w = c[i].w; eprojs[neprojs].h = c[i].h;
+                    neprojs++;
+                }
+            }
+        }
+
+        // Test player against enemy projectiles; collect hits for deferred deletion
+        {
+            ecs_iter_t it = ecs_query_iter(world, player_coll_q);
+            while (ecs_query_next(&it)) {
+                Position    *pp = ecs_field(&it, Position, 0);
+                BoxCollider *pc = ecs_field(&it, BoxCollider, 1);
+                for (int i = 0; i < it.count; i++) {
+                    for (int j = 0; j < neprojs; j++) {
+                        bool hit = eprojs[j].x < pp[i].x + pc[i].w && eprojs[j].x + eprojs[j].w > pp[i].x &&
+                                   eprojs[j].y < pp[i].y + pc[i].h && eprojs[j].y + eprojs[j].h > pp[i].y;
+                        if (hit) {
+                            to_delete[ndel++] = it.entities[i];
+                            to_delete[ndel++] = eprojs[j].e;
+                            break;
+                        }
+                    }
+                }
+            }
+        }
+
         // Deferred deletion — guard with ecs_is_alive to handle duplicates
         for (int i = 0; i < ndel; i++) {
             if (!ecs_is_alive(world, to_delete[i])) continue;
-            if (to_delete[i] == bullet) bullet = 0;
-            if (to_delete[i] == enemy)  enemy  = 0;
+            if (to_delete[i] == bullet)       bullet = 0;
+            if (to_delete[i] == enemy)        enemy  = 0;
+            if (to_delete[i] == enemy_bullet) enemy_bullet = 0;
+            if (to_delete[i] == player) { player = 0; respawn_timer = 3.0f; }
             ecs_delete(world, to_delete[i]);
         }
 
@@ -266,6 +375,8 @@ int main(void) {
     ecs_query_fini(q);
     ecs_query_fini(proj_coll_q);
     ecs_query_fini(enemy_coll_q);
+    ecs_query_fini(enemy_proj_coll_q);
+    ecs_query_fini(player_coll_q);
     ecs_fini(world);
     SDL_DestroyTexture(player_tex);
     SDL_DestroyTexture(enemy_tex);
