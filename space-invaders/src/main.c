@@ -15,55 +15,52 @@ ECS_COMPONENT_DECLARE(Velocity);
 ECS_TAG_DECLARE(Projectile);
 ECS_TAG_DECLARE(Enemy);
 
-
+#define RESOURCES       "resources/"
 #define PLAYER_SPEED    300.0f
 #define BULLET_SPEED    600.0f
 #define BULLET_SIZE     10.0f
 #define WINDOW_W        600
 #define WINDOW_H        800
 
-int main(void) {
+static bool initialize(SDL_Window **window, SDL_Renderer **renderer) {
     if (!SDL_Init(SDL_INIT_VIDEO)) {
         fprintf(stderr, "SDL_Init failed: %s\n", SDL_GetError());
-        return 1;
+        return false;
     }
 
-    SDL_Window *window = SDL_CreateWindow("Space Invaders", WINDOW_W, WINDOW_H, 0);
-    if (!window) {
+    *window = SDL_CreateWindow("Space Invaders", WINDOW_W, WINDOW_H, 0);
+    if (!*window) {
         fprintf(stderr, "SDL_CreateWindow failed: %s\n", SDL_GetError());
         SDL_Quit();
-        return 1;
+        return false;
     }
 
-    SDL_Renderer *renderer = SDL_CreateRenderer(window, NULL);
-    if (!renderer) {
+    *renderer = SDL_CreateRenderer(*window, NULL);
+    if (!*renderer) {
         fprintf(stderr, "SDL_CreateRenderer failed: %s\n", SDL_GetError());
-        SDL_DestroyWindow(window);
+        SDL_DestroyWindow(*window);
         SDL_Quit();
+        return false;
+    }
+
+    return true;
+}
+
+int main(void) {
+    SDL_Window *window;
+    SDL_Renderer *renderer;
+    if (!initialize(&window, &renderer)) {
         return 1;
     }
 
     const char *base = SDL_GetBasePath();
     char tex_path[512];
 
-    snprintf(tex_path, sizeof(tex_path), "%sresources/player-ship.png", base);
+    snprintf(tex_path, sizeof(tex_path), "%s" RESOURCES "player-ship.png", base);
     SDL_Texture *player_tex = load_texture(renderer, tex_path);
-    if (!player_tex) {
-        SDL_DestroyRenderer(renderer);
-        SDL_DestroyWindow(window);
-        SDL_Quit();
-        return 1;
-    }
 
-    snprintf(tex_path, sizeof(tex_path), "%sresources/enemy-ufo.png", base);
+    snprintf(tex_path, sizeof(tex_path), "%s" RESOURCES "enemy-ufo.png", base);
     SDL_Texture *enemy_tex = load_texture(renderer, tex_path);
-    if (!enemy_tex) {
-        SDL_DestroyTexture(player_tex);
-        SDL_DestroyRenderer(renderer);
-        SDL_DestroyWindow(window);
-        SDL_Quit();
-        return 1;
-    }
 
     ecs_world_t *world = ecs_init();
 
