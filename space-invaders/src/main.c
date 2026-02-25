@@ -14,6 +14,7 @@ ECS_COMPONENT_DECLARE(Position);
 ECS_COMPONENT_DECLARE(Size);
 ECS_COMPONENT_DECLARE(Velocity);
 ECS_TAG_DECLARE(Projectile);
+ECS_TAG_DECLARE(Enemy);
 
 #define PLAYER_SPEED    300.0f
 #define BULLET_SPEED    600.0f
@@ -59,17 +60,40 @@ int main(void) {
     SDL_SetTextureBlendMode(player_tex, SDL_BLENDMODE_BLEND);
     stbi_image_free(pixels);
 
+    snprintf(tex_path, sizeof(tex_path), "%sresources/enemy-ufo.png", SDL_GetBasePath());
+    pixels = stbi_load(tex_path, &img_w, &img_h, NULL, 4);
+    if (!pixels) {
+        fprintf(stderr, "Failed to load enemy-ufo.png: %s\n", stbi_failure_reason());
+        SDL_DestroyTexture(player_tex);
+        SDL_DestroyRenderer(renderer);
+        SDL_DestroyWindow(window);
+        SDL_Quit();
+        return 1;
+    }
+    SDL_Texture *enemy_tex = SDL_CreateTexture(renderer, SDL_PIXELFORMAT_RGBA32,
+                                               SDL_TEXTUREACCESS_STATIC, img_w, img_h);
+    SDL_UpdateTexture(enemy_tex, NULL, pixels, img_w * 4);
+    SDL_SetTextureBlendMode(enemy_tex, SDL_BLENDMODE_BLEND);
+    stbi_image_free(pixels);
+
     ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT_DEFINE(world, Position);
     ECS_COMPONENT_DEFINE(world, Size);
     ECS_COMPONENT_DEFINE(world, Velocity);
     ECS_TAG_DEFINE(world, Projectile);
+    ECS_TAG_DEFINE(world, Enemy);
 
     ecs_entity_t square = ecs_new(world);
     ecs_set(world, square, Position, {.x = 350, .y = 650});
     ecs_set(world, square, Size, {.w = 100, .h = 100});
     ecs_set(world, square, Velocity, {.x = 0, .y = 0});
+
+    ecs_entity_t enemy = ecs_new(world);
+    ecs_add(world, enemy, Enemy);
+    ecs_set(world, enemy, Position, {.x = 250, .y = 100});
+    ecs_set(world, enemy, Size,     {.w = 100, .h = 100});
+    ecs_set(world, enemy, Velocity, {.x = 0, .y = 0});
 
     // Query for all renderable/moveable entities (player + projectiles)
     ecs_query_t *q = ecs_query(world, {
@@ -143,6 +167,8 @@ int main(void) {
                 SDL_FRect rect = { p[i].x, p[i].y, s[i].w, s[i].h };
                 if (it.entities[i] == square) {
                     SDL_RenderTexture(renderer, player_tex, NULL, &rect);
+                } else if (it.entities[i] == enemy) {
+                    SDL_RenderTexture(renderer, enemy_tex, NULL, &rect);
                 } else {
                     SDL_RenderFillRect(renderer, &rect);
                 }
@@ -155,6 +181,7 @@ int main(void) {
     ecs_query_fini(q);
     ecs_fini(world);
     SDL_DestroyTexture(player_tex);
+    SDL_DestroyTexture(enemy_tex);
     SDL_DestroyRenderer(renderer);
     SDL_DestroyWindow(window);
     SDL_Quit();
