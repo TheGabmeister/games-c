@@ -3,8 +3,11 @@ project(space-invaders)
 
 set(CMAKE_C_STANDARD 11)
 
+add_subdirectory(thirdparty/sdl)
+add_subdirectory(thirdparty/flecs)
+
 add_executable(${PROJECT_NAME} src/main.c src/texture.c)
-target_include_directories(${PROJECT_NAME} PRIVATE thirdparty)
+target_include_directories(${PROJECT_NAME} PRIVATE thirdparty/stb)
 target_link_libraries(${PROJECT_NAME} PRIVATE SDL3::SDL3 flecs::flecs_static)
 
 # Copy SDL3 shared library next to the executable on Windows
