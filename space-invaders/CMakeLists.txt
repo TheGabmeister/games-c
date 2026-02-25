@@ -17,7 +17,7 @@ FetchContent_Declare(
 
 FetchContent_MakeAvailable(SDL3 flecs)
 
-add_executable(${PROJECT_NAME} src/main.c)
+add_executable(${PROJECT_NAME} src/main.c src/texture.c)
 target_include_directories(${PROJECT_NAME} PRIVATE thirdparty)
 target_link_libraries(${PROJECT_NAME} PRIVATE SDL3::SDL3 flecs::flecs_static)
 
