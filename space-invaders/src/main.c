@@ -3,6 +3,9 @@
 #include <SDL3/SDL.h>
 #include <flecs.h>
 
+#define STB_IMAGE_IMPLEMENTATION
+#include "stb_image.h"
+
 typedef struct { float x, y; } Position;
 typedef struct { float w, h; } Size;
 typedef struct { float x, y; } Velocity;
@@ -47,7 +50,7 @@ int main(void) {
     ECS_TAG_DEFINE(world, Projectile);
 
     ecs_entity_t square = ecs_new(world);
-    ecs_set(world, square, Position, {.x = 350, .y = 250});
+    ecs_set(world, square, Position, {.x = 350, .y = 650});
     ecs_set(world, square, Size, {.w = 100, .h = 100});
     ecs_set(world, square, Velocity, {.x = 0, .y = 0});
 
@@ -95,8 +98,6 @@ int main(void) {
         float vx = 0, vy = 0;
         if (keys[SDL_SCANCODE_A] || keys[SDL_SCANCODE_LEFT])  vx -= PLAYER_SPEED;
         if (keys[SDL_SCANCODE_D] || keys[SDL_SCANCODE_RIGHT]) vx += PLAYER_SPEED;
-        if (keys[SDL_SCANCODE_W] || keys[SDL_SCANCODE_UP])    vy -= PLAYER_SPEED;
-        if (keys[SDL_SCANCODE_S] || keys[SDL_SCANCODE_DOWN])  vy += PLAYER_SPEED;
         ecs_set(world, square, Velocity, {.x = vx, .y = vy});
 
         // Destroy bullet if it has left the top of the window

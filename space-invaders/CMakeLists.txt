@@ -14,16 +14,18 @@ FetchContent_Declare(
     GIT_REPOSITORY https://github.com/SanderMertens/flecs.git
     GIT_TAG v4.1.4
 )
+
 FetchContent_MakeAvailable(SDL3 flecs)
 
-add_executable(hello main.c)
-target_link_libraries(hello PRIVATE SDL3::SDL3 flecs::flecs_static)
+add_executable(${PROJECT_NAME} src/main.c)
+target_include_directories(${PROJECT_NAME} PRIVATE thirdparty)
+target_link_libraries(${PROJECT_NAME} PRIVATE SDL3::SDL3 flecs::flecs_static)
 
 # Copy SDL3 shared library next to the executable on Windows
 if(WIN32)
-    add_custom_command(TARGET hello POST_BUILD
+    add_custom_command(TARGET ${PROJECT_NAME} POST_BUILD
         COMMAND ${CMAKE_COMMAND} -E copy_if_different
             $<TARGET_FILE:SDL3::SDL3>
-            $<TARGET_FILE_DIR:hello>
+            $<TARGET_FILE_DIR:${PROJECT_NAME}>
     )
 endif()
