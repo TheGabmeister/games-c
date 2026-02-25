@@ -3,20 +3,6 @@ project(space-invaders)
 
 set(CMAKE_C_STANDARD 11)
 
-include(FetchContent)
-FetchContent_Declare(
-    SDL3
-    GIT_REPOSITORY https://github.com/libsdl-org/SDL.git
-    GIT_TAG release-3.4.2
-)
-FetchContent_Declare(
-    flecs
-    GIT_REPOSITORY https://github.com/SanderMertens/flecs.git
-    GIT_TAG v4.1.4
-)
-
-FetchContent_MakeAvailable(SDL3 flecs)
-
 add_executable(${PROJECT_NAME} src/main.c src/texture.c)
 target_include_directories(${PROJECT_NAME} PRIVATE thirdparty)
 target_link_libraries(${PROJECT_NAME} PRIVATE SDL3::SDL3 flecs::flecs_static)
