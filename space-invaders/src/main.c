@@ -42,6 +42,23 @@ int main(void) {
         return 1;
     }
 
+    char tex_path[512];
+    snprintf(tex_path, sizeof(tex_path), "%sresources/player-ship.png", SDL_GetBasePath());
+    int img_w, img_h;
+    unsigned char *pixels = stbi_load(tex_path, &img_w, &img_h, NULL, 4);
+    if (!pixels) {
+        fprintf(stderr, "Failed to load player-ship.png: %s\n", stbi_failure_reason());
+        SDL_DestroyRenderer(renderer);
+        SDL_DestroyWindow(window);
+        SDL_Quit();
+        return 1;
+    }
+    SDL_Texture *player_tex = SDL_CreateTexture(renderer, SDL_PIXELFORMAT_RGBA32,
+                                                SDL_TEXTUREACCESS_STATIC, img_w, img_h);
+    SDL_UpdateTexture(player_tex, NULL, pixels, img_w * 4);
+    SDL_SetTextureBlendMode(player_tex, SDL_BLENDMODE_BLEND);
+    stbi_image_free(pixels);
+
     ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT_DEFINE(world, Position);
@@ -124,7 +141,11 @@ int main(void) {
                 p[i].x += v[i].x * dt;
                 p[i].y += v[i].y * dt;
                 SDL_FRect rect = { p[i].x, p[i].y, s[i].w, s[i].h };
-                SDL_RenderFillRect(renderer, &rect);
+                if (it.entities[i] == square) {
+                    SDL_RenderTexture(renderer, player_tex, NULL, &rect);
+                } else {
+                    SDL_RenderFillRect(renderer, &rect);
+                }
             }
         }
 
@@ -133,6 +154,7 @@ int main(void) {
 
     ecs_query_fini(q);
     ecs_fini(world);
+    SDL_DestroyTexture(player_tex);
     SDL_DestroyRenderer(renderer);
     SDL_DestroyWindow(window);
     SDL_Quit();
