@@ -12,8 +12,6 @@
 #define NK_SDL3_RENDERER_IMPLEMENTATION
 #include "nuklear_sdl3_renderer.h"
 
-
-
 #include "texture.h"
 
 typedef struct { float x, y; } Position;
@@ -66,6 +64,9 @@ int main(void) {
         return 1;
     }
 
+    struct nk_context *ctx = nk_sdl_init(window, renderer, nk_sdl_allocator());
+    nk_sdl_style_set_debug_font(ctx);
+
     const char *base = SDL_GetBasePath();
     char tex_path[512];
 
@@ -85,11 +86,13 @@ int main(void) {
     ECS_TAG_DEFINE(world, Enemy);
 
     ecs_entity_t square = ecs_new(world);
+    ecs_set_name(world, square, "Player");
     ecs_set(world, square, Position, {.x = 350, .y = 650});
     ecs_set(world, square, Size, {.w = 100, .h = 100});
     ecs_set(world, square, Velocity, {.x = 0, .y = 0});
 
     ecs_entity_t enemy = ecs_new(world);
+    ecs_set_name(world, enemy, "EnemyShip");
     ecs_add(world, enemy, Enemy);
     ecs_set(world, enemy, Position,    {.x = 250, .y = 100});
     ecs_set(world, enemy, Size,        {.w = 100, .h = 100});
@@ -120,11 +123,20 @@ int main(void) {
         }
     });
 
+    // Query for the entity inspector: all entities with a Position
+    ecs_query_t *debug_q = ecs_query(world, {
+        .terms = {
+            { ecs_id(Position) }
+        }
+    });
+
     ecs_entity_t bullet = 0; // 0 means no bullet in flight
 
     bool running = true;
     SDL_Event event;
     Uint64 last_ticks = SDL_GetTicks();
+
+    nk_input_begin(ctx);
 
     while (running) {
         Uint64 now = SDL_GetTicks();
@@ -132,6 +144,8 @@ int main(void) {
         last_ticks = now;
 
         while (SDL_PollEvent(&event)) {
+            SDL_ConvertEventToRenderCoordinates(renderer, &event);
+            nk_sdl_handle_event(ctx, &event);
             if (event.type == SDL_EVENT_QUIT) {
                 running = false;
             }
@@ -142,6 +156,7 @@ int main(void) {
                     float bx = pp->x + ps->w / 2.0f - BULLET_SIZE / 2.0f;
                     float by = pp->y - BULLET_SIZE;
                     bullet = ecs_new(world);
+                    ecs_set_name(world, bullet, "Bullet");
                     ecs_add(world, bullet, Projectile);
                     ecs_set(world, bullet, Position,    {.x = bx, .y = by});
                     ecs_set(world, bullet, Size,        {.w = BULLET_SIZE, .h = BULLET_SIZE});
@@ -150,6 +165,7 @@ int main(void) {
                 }
             }
         }
+        nk_input_end(ctx);
 
         // Player movement
         const bool *keys = SDL_GetKeyboardState(NULL);
@@ -239,15 +255,65 @@ int main(void) {
             ecs_delete(world, to_delete[i]);
         }
 
+        // Entity inspector window
+        {
+            int entity_count = 0;
+            ecs_iter_t dit = ecs_query_iter(world, debug_q);
+            while (ecs_query_next(&dit)) entity_count += dit.count;
+
+            if (nk_begin(ctx, "Entity Inspector",
+                         nk_rect(10, 10, 220, 200),
+                         NK_WINDOW_BORDER | NK_WINDOW_MOVABLE | NK_WINDOW_SCALABLE |
+                         NK_WINDOW_MINIMIZABLE | NK_WINDOW_TITLE))
+            {
+                char count_buf[32];
+                snprintf(count_buf, sizeof(count_buf), "Entities: %d", entity_count);
+                nk_layout_row_dynamic(ctx, 18, 1);
+                nk_label(ctx, count_buf, NK_TEXT_LEFT);
+
+                nk_layout_row_template_begin(ctx, 18);
+                nk_layout_row_template_push_static(ctx, 70);
+                nk_layout_row_template_push_static(ctx, 65);
+                nk_layout_row_template_push_static(ctx, 65);
+                nk_layout_row_template_end(ctx);
+
+                nk_label(ctx, "Name", NK_TEXT_LEFT);
+                nk_label(ctx, "X",    NK_TEXT_LEFT);
+                nk_label(ctx, "Y",    NK_TEXT_LEFT);
+
+                dit = ecs_query_iter(world, debug_q);
+                while (ecs_query_next(&dit)) {
+                    Position *p = ecs_field(&dit, Position, 0);
+                    for (int i = 0; i < dit.count; i++) {
+                        const char *name = ecs_get_name(world, dit.entities[i]);
+                        char xbuf[24], ybuf[24];
+                        snprintf(xbuf, sizeof(xbuf), "%.1f", p[i].x);
+                        snprintf(ybuf, sizeof(ybuf), "%.1f", p[i].y);
+                        nk_label(ctx, name ? name : "unnamed", NK_TEXT_LEFT);
+                        nk_label(ctx, xbuf, NK_TEXT_LEFT);
+                        nk_label(ctx, ybuf, NK_TEXT_LEFT);
+                    }
+                }
+            }
+            nk_end(ctx);
+        }
+
+        nk_sdl_render(ctx, NK_ANTI_ALIASING_ON);
+        nk_sdl_update_TextInput(ctx);
+
         SDL_RenderPresent(renderer);
+
+        nk_input_begin(ctx);
     }
 
+    ecs_query_fini(debug_q);
     ecs_query_fini(q);
     ecs_query_fini(proj_coll_q);
     ecs_query_fini(enemy_coll_q);
     ecs_fini(world);
     SDL_DestroyTexture(player_tex);
     SDL_DestroyTexture(enemy_tex);
+    nk_sdl_shutdown(ctx);
     SDL_DestroyRenderer(renderer);
     SDL_DestroyWindow(window);
     SDL_Quit();
