@@ -8,10 +8,12 @@
 typedef struct { float x, y; } Position;
 typedef struct { float w, h; } Size;
 typedef struct { float x, y; } Velocity;
+typedef struct { float w, h; } BoxCollider;
 
 ECS_COMPONENT_DECLARE(Position);
 ECS_COMPONENT_DECLARE(Size);
 ECS_COMPONENT_DECLARE(Velocity);
+ECS_COMPONENT_DECLARE(BoxCollider);
 ECS_TAG_DECLARE(Projectile);
 ECS_TAG_DECLARE(Enemy);
 
@@ -67,6 +69,7 @@ int main(void) {
     ECS_COMPONENT_DEFINE(world, Position);
     ECS_COMPONENT_DEFINE(world, Size);
     ECS_COMPONENT_DEFINE(world, Velocity);
+    ECS_COMPONENT_DEFINE(world, BoxCollider);
     ECS_TAG_DEFINE(world, Projectile);
     ECS_TAG_DEFINE(world, Enemy);
 
@@ -77,9 +80,25 @@ int main(void) {
 
     ecs_entity_t enemy = ecs_new(world);
     ecs_add(world, enemy, Enemy);
-    ecs_set(world, enemy, Position, {.x = 250, .y = 100});
-    ecs_set(world, enemy, Size,     {.w = 100, .h = 100});
-    ecs_set(world, enemy, Velocity, {.x = 0, .y = 0});
+    ecs_set(world, enemy, Position,    {.x = 250, .y = 100});
+    ecs_set(world, enemy, Size,        {.w = 100, .h = 100});
+    ecs_set(world, enemy, Velocity,    {.x = 0, .y = 0});
+    ecs_set(world, enemy, BoxCollider, {.w = 100, .h = 100});
+
+    ecs_query_t *proj_coll_q = ecs_query(world, {
+        .terms = {
+            { ecs_id(Position) },
+            { ecs_id(BoxCollider) },
+            { ecs_id(Projectile) }
+        }
+    });
+    ecs_query_t *enemy_coll_q = ecs_query(world, {
+        .terms = {
+            { ecs_id(Position) },
+            { ecs_id(BoxCollider) },
+            { ecs_id(Enemy) }
+        }
+    });
 
     // Query for all renderable/moveable entities (player + projectiles)
     ecs_query_t *q = ecs_query(world, {
@@ -113,9 +132,10 @@ int main(void) {
                     float by = pp->y - BULLET_SIZE;
                     bullet = ecs_new(world);
                     ecs_add(world, bullet, Projectile);
-                    ecs_set(world, bullet, Position, {.x = bx, .y = by});
-                    ecs_set(world, bullet, Size,     {.w = BULLET_SIZE, .h = BULLET_SIZE});
-                    ecs_set(world, bullet, Velocity, {.x = 0, .y = -BULLET_SPEED});
+                    ecs_set(world, bullet, Position,    {.x = bx, .y = by});
+                    ecs_set(world, bullet, Size,        {.w = BULLET_SIZE, .h = BULLET_SIZE});
+                    ecs_set(world, bullet, Velocity,    {.x = 0, .y = -BULLET_SPEED});
+                    ecs_set(world, bullet, BoxCollider, {.w = BULLET_SIZE, .h = BULLET_SIZE});
                 }
             }
         }
@@ -161,10 +181,59 @@ int main(void) {
             }
         }
 
+        // Collision detection: collect live projectile bounds
+        struct { ecs_entity_t e; float x, y, w, h; } projs[64];
+        int nprojs = 0;
+        {
+            ecs_iter_t it = ecs_query_iter(world, proj_coll_q);
+            while (ecs_query_next(&it)) {
+                Position    *p = ecs_field(&it, Position, 0);
+                BoxCollider *c = ecs_field(&it, BoxCollider, 1);
+                for (int i = 0; i < it.count && nprojs < 64; i++) {
+                    projs[nprojs].e = it.entities[i];
+                    projs[nprojs].x = p[i].x; projs[nprojs].y = p[i].y;
+                    projs[nprojs].w = c[i].w; projs[nprojs].h = c[i].h;
+                    nprojs++;
+                }
+            }
+        }
+
+        // Test each enemy against every projectile; collect hits for deferred deletion
+        ecs_entity_t to_delete[128];
+        int ndel = 0;
+        {
+            ecs_iter_t it = ecs_query_iter(world, enemy_coll_q);
+            while (ecs_query_next(&it)) {
+                Position    *ep = ecs_field(&it, Position, 0);
+                BoxCollider *ec = ecs_field(&it, BoxCollider, 1);
+                for (int i = 0; i < it.count; i++) {
+                    for (int j = 0; j < nprojs; j++) {
+                        bool hit = projs[j].x < ep[i].x + ec[i].w && projs[j].x + projs[j].w > ep[i].x &&
+                                   projs[j].y < ep[i].y + ec[i].h && projs[j].y + projs[j].h > ep[i].y;
+                        if (hit) {
+                            to_delete[ndel++] = it.entities[i];
+                            to_delete[ndel++] = projs[j].e;
+                            break;
+                        }
+                    }
+                }
+            }
+        }
+
+        // Deferred deletion — guard with ecs_is_alive to handle duplicates
+        for (int i = 0; i < ndel; i++) {
+            if (!ecs_is_alive(world, to_delete[i])) continue;
+            if (to_delete[i] == bullet) bullet = 0;
+            if (to_delete[i] == enemy)  enemy  = 0;
+            ecs_delete(world, to_delete[i]);
+        }
+
         SDL_RenderPresent(renderer);
     }
 
     ecs_query_fini(q);
+    ecs_query_fini(proj_coll_q);
+    ecs_query_fini(enemy_coll_q);
     ecs_fini(world);
     SDL_DestroyTexture(player_tex);
     SDL_DestroyTexture(enemy_tex);
