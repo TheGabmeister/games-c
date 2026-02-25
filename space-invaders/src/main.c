@@ -33,6 +33,52 @@ ECS_TAG_DECLARE(Player);
 #define WINDOW_H        800
 #define ENEMY_SHOOT_INTERVAL 5.0f
 
+typedef struct {
+    ecs_entity_t e;
+    float x, y, w, h;
+} ColliderBounds;
+
+static ecs_entity_t spawn_ship(ecs_world_t *world, const char *name, ecs_entity_t tag, float x, float y) {
+    ecs_entity_t e = ecs_new(world);
+    ecs_set_name(world, e, name);
+    ecs_add_id(world, e, tag);
+    ecs_set(world, e, Position,    {.x = x, .y = y});
+    ecs_set(world, e, Size,        {.w = 100, .h = 100});
+    ecs_set(world, e, Velocity,    {.x = 0, .y = 0});
+    ecs_set(world, e, BoxCollider, {.w = 100, .h = 100});
+    return e;
+}
+
+static ecs_entity_t spawn_bullet(ecs_world_t *world, const char *name, ecs_entity_t tag, float x, float y, float vy) {
+    ecs_entity_t b = ecs_new(world);
+    ecs_set_name(world, b, name);
+    ecs_add_id(world, b, tag);
+    ecs_set(world, b, Position,    {.x = x, .y = y});
+    ecs_set(world, b, Size,        {.w = BULLET_SIZE, .h = BULLET_SIZE});
+    ecs_set(world, b, Velocity,    {.x = 0, .y = vy});
+    ecs_set(world, b, BoxCollider, {.w = BULLET_SIZE, .h = BULLET_SIZE});
+    return b;
+}
+
+static int collect_collider_bounds(ecs_world_t *world, ecs_query_t *q, ColliderBounds *out, int max) {
+    int n = 0;
+    ecs_iter_t it = ecs_query_iter(world, q);
+    while (ecs_query_next(&it)) {
+        Position    *p = ecs_field(&it, Position, 0);
+        BoxCollider *c = ecs_field(&it, BoxCollider, 1);
+        for (int i = 0; i < it.count && n < max; i++) {
+            out[n] = (ColliderBounds){ it.entities[i], p[i].x, p[i].y, c[i].w, c[i].h };
+            n++;
+        }
+    }
+    return n;
+}
+
+static bool aabb_overlap(const ColliderBounds *a, float bx, float by, float bw, float bh) {
+    return a->x < bx + bw && a->x + a->w > bx &&
+           a->y < by + bh && a->y + a->h > by;
+}
+
 static bool initialize(SDL_Window **window, SDL_Renderer **renderer) {
     if (!SDL_Init(SDL_INIT_VIDEO)) {
         fprintf(stderr, "SDL_Init failed: %s\n", SDL_GetError());
@@ -87,21 +133,8 @@ int main(void) {
     ECS_TAG_DEFINE(world, EnemyProjectile);
     ECS_TAG_DEFINE(world, Player);
 
-    ecs_entity_t player = ecs_new(world);
-    ecs_set_name(world, player, "PlayerShip");
-    ecs_add(world, player, Player);
-    ecs_set(world, player, Position,    {.x = 350, .y = 650});
-    ecs_set(world, player, Size,        {.w = 100, .h = 100});
-    ecs_set(world, player, Velocity,    {.x = 0, .y = 0});
-    ecs_set(world, player, BoxCollider, {.w = 100, .h = 100});
-
-    ecs_entity_t enemy = ecs_new(world);
-    ecs_set_name(world, enemy, "EnemyShip");
-    ecs_add(world, enemy, Enemy);
-    ecs_set(world, enemy, Position,    {.x = 250, .y = 100});
-    ecs_set(world, enemy, Size,        {.w = 100, .h = 100});
-    ecs_set(world, enemy, Velocity,    {.x = 0, .y = 0});
-    ecs_set(world, enemy, BoxCollider, {.w = 100, .h = 100});
+    ecs_entity_t player = spawn_ship(world, "PlayerShip", Player, 350, 650);
+    ecs_entity_t enemy  = spawn_ship(world, "EnemyShip",  Enemy,  250, 100);
 
     ecs_query_t *proj_coll_q = ecs_query(world, {
         .terms = {
@@ -176,13 +209,7 @@ int main(void) {
                     const Size     *ps = ecs_get(world, player, Size);
                     float bx = pp->x + ps->w / 2.0f - BULLET_SIZE / 2.0f;
                     float by = pp->y - BULLET_SIZE;
-                    bullet = ecs_new(world);
-                    ecs_set_name(world, bullet, "Bullet");
-                    ecs_add(world, bullet, Projectile);
-                    ecs_set(world, bullet, Position,    {.x = bx, .y = by});
-                    ecs_set(world, bullet, Size,        {.w = BULLET_SIZE, .h = BULLET_SIZE});
-                    ecs_set(world, bullet, Velocity,    {.x = 0, .y = -BULLET_SPEED});
-                    ecs_set(world, bullet, BoxCollider, {.w = BULLET_SIZE, .h = BULLET_SIZE});
+                    bullet = spawn_bullet(world, "Bullet", Projectile, bx, by, -BULLET_SPEED);
                 }
             }
         }
@@ -201,13 +228,7 @@ int main(void) {
         if (player == 0) {
             respawn_timer -= dt;
             if (respawn_timer <= 0.0f) {
-                player = ecs_new(world);
-                ecs_set_name(world, player, "PlayerShip");
-                ecs_add(world, player, Player);
-                ecs_set(world, player, Position,    {.x = 350, .y = 650});
-                ecs_set(world, player, Size,        {.w = 100, .h = 100});
-                ecs_set(world, player, Velocity,    {.x = 0, .y = 0});
-                ecs_set(world, player, BoxCollider, {.w = 100, .h = 100});
+                player = spawn_ship(world, "PlayerShip", Player, 350, 650);
             }
         }
 
@@ -221,13 +242,7 @@ int main(void) {
                     const Size     *es = ecs_get(world, enemy, Size);
                     float bx = ep->x + es->w / 2.0f - BULLET_SIZE / 2.0f;
                     float by = ep->y + es->h;
-                    enemy_bullet = ecs_new(world);
-                    ecs_set_name(world, enemy_bullet, "EnemyBullet");
-                    ecs_add(world, enemy_bullet, EnemyProjectile);
-                    ecs_set(world, enemy_bullet, Position,    {.x = bx, .y = by});
-                    ecs_set(world, enemy_bullet, Size,        {.w = BULLET_SIZE, .h = BULLET_SIZE});
-                    ecs_set(world, enemy_bullet, Velocity,    {.x = 0, .y = BULLET_SPEED});
-                    ecs_set(world, enemy_bullet, BoxCollider, {.w = BULLET_SIZE, .h = BULLET_SIZE});
+                    enemy_bullet = spawn_bullet(world, "EnemyBullet", EnemyProjectile, bx, by, BULLET_SPEED);
                 }
             }
         }
@@ -276,21 +291,8 @@ int main(void) {
         }
 
         // Collision detection: collect live projectile bounds
-        struct { ecs_entity_t e; float x, y, w, h; } projs[64];
-        int nprojs = 0;
-        {
-            ecs_iter_t it = ecs_query_iter(world, proj_coll_q);
-            while (ecs_query_next(&it)) {
-                Position    *p = ecs_field(&it, Position, 0);
-                BoxCollider *c = ecs_field(&it, BoxCollider, 1);
-                for (int i = 0; i < it.count && nprojs < 64; i++) {
-                    projs[nprojs].e = it.entities[i];
-                    projs[nprojs].x = p[i].x; projs[nprojs].y = p[i].y;
-                    projs[nprojs].w = c[i].w; projs[nprojs].h = c[i].h;
-                    nprojs++;
-                }
-            }
-        }
+        ColliderBounds projs[64];
+        int nprojs = collect_collider_bounds(world, proj_coll_q, projs, 64);
 
         // Test each enemy against every projectile; collect hits for deferred deletion
         ecs_entity_t to_delete[128];
@@ -302,9 +304,7 @@ int main(void) {
                 BoxCollider *ec = ecs_field(&it, BoxCollider, 1);
                 for (int i = 0; i < it.count; i++) {
                     for (int j = 0; j < nprojs; j++) {
-                        bool hit = projs[j].x < ep[i].x + ec[i].w && projs[j].x + projs[j].w > ep[i].x &&
-                                   projs[j].y < ep[i].y + ec[i].h && projs[j].y + projs[j].h > ep[i].y;
-                        if (hit) {
+                        if (aabb_overlap(&projs[j], ep[i].x, ep[i].y, ec[i].w, ec[i].h)) {
                             to_delete[ndel++] = it.entities[i];
                             to_delete[ndel++] = projs[j].e;
                             break;
@@ -315,21 +315,8 @@ int main(void) {
         }
 
         // Collect enemy projectile bounds
-        struct { ecs_entity_t e; float x, y, w, h; } eprojs[64];
-        int neprojs = 0;
-        {
-            ecs_iter_t it = ecs_query_iter(world, enemy_proj_coll_q);
-            while (ecs_query_next(&it)) {
-                Position    *p = ecs_field(&it, Position, 0);
-                BoxCollider *c = ecs_field(&it, BoxCollider, 1);
-                for (int i = 0; i < it.count && neprojs < 64; i++) {
-                    eprojs[neprojs].e = it.entities[i];
-                    eprojs[neprojs].x = p[i].x; eprojs[neprojs].y = p[i].y;
-                    eprojs[neprojs].w = c[i].w; eprojs[neprojs].h = c[i].h;
-                    neprojs++;
-                }
-            }
-        }
+        ColliderBounds eprojs[64];
+        int neprojs = collect_collider_bounds(world, enemy_proj_coll_q, eprojs, 64);
 
         // Test player against enemy projectiles; collect hits for deferred deletion
         {
@@ -339,9 +326,7 @@ int main(void) {
                 BoxCollider *pc = ecs_field(&it, BoxCollider, 1);
                 for (int i = 0; i < it.count; i++) {
                     for (int j = 0; j < neprojs; j++) {
-                        bool hit = eprojs[j].x < pp[i].x + pc[i].w && eprojs[j].x + eprojs[j].w > pp[i].x &&
-                                   eprojs[j].y < pp[i].y + pc[i].h && eprojs[j].y + eprojs[j].h > pp[i].y;
-                        if (hit) {
+                        if (aabb_overlap(&eprojs[j], pp[i].x, pp[i].y, pc[i].w, pc[i].h)) {
                             to_delete[ndel++] = it.entities[i];
                             to_delete[ndel++] = eprojs[j].e;
                             break;
