@@ -16,6 +16,21 @@ ECS_COMPONENT_DECLARE(Velocity);
 ECS_TAG_DECLARE(Projectile);
 ECS_TAG_DECLARE(Enemy);
 
+static SDL_Texture *load_texture(SDL_Renderer *renderer, const char *path) {
+    int w, h;
+    unsigned char *pixels = stbi_load(path, &w, &h, NULL, 4);
+    if (!pixels) {
+        fprintf(stderr, "Failed to load texture '%s': %s\n", path, stbi_failure_reason());
+        return NULL;
+    }
+    SDL_Texture *tex = SDL_CreateTexture(renderer, SDL_PIXELFORMAT_RGBA32,
+                                         SDL_TEXTUREACCESS_STATIC, w, h);
+    SDL_UpdateTexture(tex, NULL, pixels, w * 4);
+    SDL_SetTextureBlendMode(tex, SDL_BLENDMODE_BLEND);
+    stbi_image_free(pixels);
+    return tex;
+}
+
 #define PLAYER_SPEED    300.0f
 #define BULLET_SPEED    600.0f
 #define BULLET_SIZE     10.0f
@@ -43,38 +58,27 @@ int main(void) {
         return 1;
     }
 
+    const char *base = SDL_GetBasePath();
     char tex_path[512];
-    snprintf(tex_path, sizeof(tex_path), "%sresources/player-ship.png", SDL_GetBasePath());
-    int img_w, img_h;
-    unsigned char *pixels = stbi_load(tex_path, &img_w, &img_h, NULL, 4);
-    if (!pixels) {
-        fprintf(stderr, "Failed to load player-ship.png: %s\n", stbi_failure_reason());
+
+    snprintf(tex_path, sizeof(tex_path), "%sresources/player-ship.png", base);
+    SDL_Texture *player_tex = load_texture(renderer, tex_path);
+    if (!player_tex) {
         SDL_DestroyRenderer(renderer);
         SDL_DestroyWindow(window);
         SDL_Quit();
         return 1;
     }
-    SDL_Texture *player_tex = SDL_CreateTexture(renderer, SDL_PIXELFORMAT_RGBA32,
-                                                SDL_TEXTUREACCESS_STATIC, img_w, img_h);
-    SDL_UpdateTexture(player_tex, NULL, pixels, img_w * 4);
-    SDL_SetTextureBlendMode(player_tex, SDL_BLENDMODE_BLEND);
-    stbi_image_free(pixels);
 
-    snprintf(tex_path, sizeof(tex_path), "%sresources/enemy-ufo.png", SDL_GetBasePath());
-    pixels = stbi_load(tex_path, &img_w, &img_h, NULL, 4);
-    if (!pixels) {
-        fprintf(stderr, "Failed to load enemy-ufo.png: %s\n", stbi_failure_reason());
+    snprintf(tex_path, sizeof(tex_path), "%sresources/enemy-ufo.png", base);
+    SDL_Texture *enemy_tex = load_texture(renderer, tex_path);
+    if (!enemy_tex) {
         SDL_DestroyTexture(player_tex);
         SDL_DestroyRenderer(renderer);
         SDL_DestroyWindow(window);
         SDL_Quit();
         return 1;
     }
-    SDL_Texture *enemy_tex = SDL_CreateTexture(renderer, SDL_PIXELFORMAT_RGBA32,
-                                               SDL_TEXTUREACCESS_STATIC, img_w, img_h);
-    SDL_UpdateTexture(enemy_tex, NULL, pixels, img_w * 4);
-    SDL_SetTextureBlendMode(enemy_tex, SDL_BLENDMODE_BLEND);
-    stbi_image_free(pixels);
 
     ecs_world_t *world = ecs_init();
 
