@@ -1,0 +1,16 @@
+{
+  "level": {
+    "name": "Level 1",
+    "entities": [
+      {
+        "id": "invader_01",
+        "components": {
+          "transform": { "x": 100, "y": 50 },
+          "sprite": { "url": "assets/invader_a.png" },
+          "health": { "hp": 1 },
+          "movement": { "speed": 2, "pattern": "zigzag" }
+        }
+      }
+    ]
+  }
+}
