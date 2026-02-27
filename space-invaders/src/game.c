@@ -5,62 +5,14 @@
 ecs_entity_t Player;
 ecs_entity_t Enemy;
 
-static cJSON *level_json = NULL;
-
 void game_init()
 {
     setup_window();
-    load_level();               /* Phase 1: textures into asset_manager; retains JSON */
-    spawn_entities();           /* Registers components + tags + prefabs               */
-    spawn_entities_from_level(); /* Phase 2: instantiates entities from JSON           */
+    load_level();
 
     renderer_system_init(world);
     input_system_init(world);
     movement_system_init(world);
-}
-
-void spawn_entities()
-{
-    world = ecs_init();
-
-    component_manager_init(world);
-
-    /* 2. Create tags — must exist before prefab_manager_init() */
-    Player = ecs_new(world);
-    Enemy  = ecs_new(world);
-
-    /* 3. Init prefabs — reads asset_manager, so load_level() must run first */
-    prefab_manager_init(world);
-}
-
-void spawn_entities_from_level()
-{
-    if (!level_json) {
-        SDL_Log("spawn_entities_from_level: no level loaded");
-        return;
-    }
-
-    cJSON *entities = cJSON_GetObjectItemCaseSensitive(level_json, "entities");
-    cJSON *entry;
-    cJSON_ArrayForEach(entry, entities) {
-        cJSON *prefab_name = cJSON_GetObjectItemCaseSensitive(entry, "prefab");
-        if (!cJSON_IsString(prefab_name)) {
-            SDL_Log("spawn_entities_from_level: entry missing 'prefab' key, skipping");
-            continue;
-        }
-
-        cJSON *overrides = cJSON_GetObjectItemCaseSensitive(entry, "overrides");
-        if (overrides) {
-            prefab_instantiate(world, prefab_name->valuestring, overrides);
-        } else {
-            cJSON *empty = cJSON_CreateObject();
-            prefab_instantiate(world, prefab_name->valuestring, empty);
-            cJSON_Delete(empty);
-        }
-    }
-
-    cJSON_Delete(level_json);
-    level_json = NULL;
 }
 
 void game_run()
@@ -145,7 +97,7 @@ void load_level()
     fclose(f);
     buf[len] = '\0';
 
-    level_json = cJSON_Parse(buf);
+    cJSON *level_json = cJSON_Parse(buf);
     free(buf);
 
     if (!level_json) {
@@ -153,6 +105,7 @@ void load_level()
         return;
     }
 
+    /* Phase 1: load textures into asset_manager */
     cJSON *assets = cJSON_GetObjectItemCaseSensitive(level_json, "assets");
     cJSON *asset;
     cJSON_ArrayForEach(asset, assets) {
@@ -173,5 +126,32 @@ void load_level()
             asset_manager_add(id->valuestring, tex);
     }
 
-    /* Do NOT cJSON_Delete here — level_json is retained for spawn_entities_from_level() */
+    /* Phase 2: init ECS world, components, tags, and prefabs */
+    world = ecs_init();
+    component_manager_init(world);
+    Player = ecs_new(world);
+    Enemy  = ecs_new(world);
+    prefab_manager_init(world);
+
+    /* Phase 3: instantiate entities from JSON */
+    cJSON *entities = cJSON_GetObjectItemCaseSensitive(level_json, "entities");
+    cJSON *entry;
+    cJSON_ArrayForEach(entry, entities) {
+        cJSON *prefab_name = cJSON_GetObjectItemCaseSensitive(entry, "prefab");
+        if (!cJSON_IsString(prefab_name)) {
+            SDL_Log("load_level: entry missing 'prefab' key, skipping");
+            continue;
+        }
+
+        cJSON *overrides = cJSON_GetObjectItemCaseSensitive(entry, "overrides");
+        if (overrides) {
+            prefab_instantiate(world, prefab_name->valuestring, overrides);
+        } else {
+            cJSON *empty = cJSON_CreateObject();
+            prefab_instantiate(world, prefab_name->valuestring, empty);
+            cJSON_Delete(empty);
+        }
+    }
+
+    cJSON_Delete(level_json);
 }
