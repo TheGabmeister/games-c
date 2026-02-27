@@ -10,9 +10,11 @@
 #include "components/velocity.h"
 #include "settings.h"
 
-static SDL_Window   *window;
-static SDL_Renderer *renderer;
-static ecs_world_t  *world;
+SDL_Window   *window;
+SDL_Renderer *renderer;
+ecs_world_t  *world;
+ecs_entity_t Player;
+ecs_entity_t Enemy;
 
 bool isRunning;
 

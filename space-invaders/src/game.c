@@ -2,9 +2,6 @@
 #include "components/health.h"
 #include "components/box_collider.h"
 
-ecs_entity_t Player;
-ecs_entity_t Enemy;
-
 void game_init()
 {
     setup_window();
@@ -128,9 +125,9 @@ void load_level()
 
     /* Phase 2: init ECS world, components, tags, and prefabs */
     world = ecs_init();
-    component_manager_init(world);
     Player = ecs_new(world);
     Enemy  = ecs_new(world);
+    component_manager_init(world);
     prefab_manager_init(world);
 
     /* Phase 3: instantiate entities from JSON */
