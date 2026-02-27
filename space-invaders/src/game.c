@@ -144,18 +144,6 @@ int game_run(void) {
                 player = player_spawn(world, 350.0f, 650.0f, player_tex);
         }
 
-        /* Enemy AI */
-        if (enemy != 0) {
-            ecs_entity_t nb = enemy_update(world, enemy, dt,
-                                           &enemy_shoot_timer, enemy_bullet == 0);
-            if (nb) enemy_bullet = nb;
-        }
-
-        /* Off-screen bullet cleanup */
-        if (bullet != 0 && !bullet_update(world, bullet, WINDOW_H))
-            bullet = 0;
-        if (enemy_bullet != 0 && !bullet_update(world, enemy_bullet, WINDOW_H))
-            enemy_bullet = 0;
 
         /* --- Phase 3: Systems --- */
         physics_system_update(world, dt);

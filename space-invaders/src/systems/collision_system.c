@@ -2,6 +2,7 @@
 #include "components/box_collider_comp.h"
 #include "components/transform_comp.h"
 #include <flecs.h>
+#include "collision_system.h"
 
 typedef struct {
     ecs_entity_t e;
@@ -12,6 +13,8 @@ static ecs_query_t *s_proj_q;
 static ecs_query_t *s_enemy_q;
 static ecs_query_t *s_enemy_proj_q;
 static ecs_query_t *s_player_q;
+
+
 
 static int collect_bounds(ecs_world_t *world, ecs_query_t *q,
                            ColliderBounds *out, int max) {
@@ -32,20 +35,9 @@ static bool aabb_overlap(const ColliderBounds *a, float bx, float by, float bw, 
            a->y < by + bh && a->y + a->h > by;
 }
 
-void collision_system_init(ecs_world_t *world) {
-    s_proj_q = ecs_query(world, {
-        .terms = { { ecs_id(Position) }, { ecs_id(BoxCollider) }, { ecs_id(Projectile) } }
-    });
-    s_enemy_q = ecs_query(world, {
-        .terms = { { ecs_id(Position) }, { ecs_id(BoxCollider) }, { ecs_id(Enemy) } }
-    });
-    s_enemy_proj_q = ecs_query(world, {
-        .terms = { { ecs_id(Position) }, { ecs_id(BoxCollider) }, { ecs_id(EnemyProjectile) } }
-    });
-    s_player_q = ecs_query(world, {
-        .terms = { { ecs_id(Position) }, { ecs_id(BoxCollider) }, { ecs_id(Player) } }
-    });
-}
+    void collision_system_init(ecs_world_t * world)
+    {
+    }
 
 int collision_system_update(ecs_world_t *world, ecs_entity_t *killed_out, int max_killed) {
     ColliderBounds projs[64],  eprojs[64];
