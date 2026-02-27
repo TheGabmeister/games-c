@@ -9,7 +9,7 @@ void game_init()
 
 }
 
-void spawn_entites()
+void spawn_entities()
 {
     world = ecs_init();
     ECS_COMPONENT_DEFINE(world, Transform);
@@ -26,9 +26,7 @@ void spawn_entites()
         .color   = {255, 255, 255, 255}
     });
 
-    render_query = ecs_query(world, {
-        .terms = {{ ecs_id(Transform) }, { ecs_id(Sprite) }}
-    });
+    renderer_system_init(world);
 }
 
 void game_run()
@@ -45,25 +43,7 @@ void game_run()
         SDL_SetRenderDrawColor(renderer, 0, 0, 0, 255);
         SDL_RenderClear(renderer);
 
-        ecs_iter_t it = ecs_query_iter(world, render_query);
-        while (ecs_query_next(&it))
-        {
-            Transform *transforms = ecs_field(&it, Transform, 0);
-            Sprite    *sprites    = ecs_field(&it, Sprite,    1);
-            for (int i = 0; i < it.count; i++)
-            {
-                if (!sprites[i].texture) continue;
-                float tw, th;
-                SDL_GetTextureSize(sprites[i].texture, &tw, &th);
-                SDL_FRect dst = {
-                    transforms[i].position[0] - tw * transforms[i].scale[0] * 0.5f,
-                    transforms[i].position[1] - th * transforms[i].scale[1] * 0.5f,
-                    tw * transforms[i].scale[0],
-                    th * transforms[i].scale[1]
-                };
-                SDL_RenderTexture(renderer, sprites[i].texture, NULL, &dst);
-            }
-        }
+        renderer_system_run(world, renderer);
 
         SDL_RenderPresent(renderer);
     }
@@ -71,7 +51,7 @@ void game_run()
 
 void game_destroy()
 {
-    ecs_query_fini(render_query);
+    renderer_system_destroy();
     ecs_fini(world);
     asset_registry_destroy();
     SDL_DestroyRenderer(renderer);
