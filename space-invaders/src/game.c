@@ -45,5 +45,31 @@ void setup_window()
 
 void load_level()
 {
-    
+    FILE *f = fopen(ASSETS "level_01.json", "rb");
+    if (!f) {
+        SDL_Log("load_level: failed to open level_01.json");
+        return;
+    }
+
+    fseek(f, 0, SEEK_END);
+    long len = ftell(f);
+    rewind(f);
+
+    char *buf = malloc(len + 1);
+    fread(buf, 1, len, f);
+    fclose(f);
+    buf[len] = '\0';
+
+    cJSON *json = cJSON_Parse(buf);
+    free(buf);
+
+    if (!json) {
+        SDL_Log("load_level: cJSON_Parse failed: %s", cJSON_GetErrorPtr());
+        return;
+    }
+
+    char *printed = cJSON_Print(json);
+    SDL_Log("level_01.json:\n%s", printed);
+    free(printed);
+    cJSON_Delete(json);
 }
