@@ -1,4 +1,5 @@
-#pragma once
+#ifndef SPRITE_COMPONENT_H
+#define SPRITE_COMPONENT_H
 
 #include <SDL3/SDL.h>
 #include <flecs.h>
@@ -8,4 +9,6 @@ typedef struct {
     SDL_Color    color;
 } Sprite;
 
-extern ECS_COMPONENT_DECLARE(Sprite);
+ECS_COMPONENT_DECLARE(Sprite);
+
+#endif

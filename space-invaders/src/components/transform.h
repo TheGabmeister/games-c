@@ -1,9 +1,14 @@
-#pragma once
+#ifndef TRANSFORM_COMPONENT_H
+#define TRANSFORM_COMPONENT_H
 
 #include <flecs.h>
 
 typedef struct { float x, y; } Position;
-typedef struct { float w, h; } Size;
+typedef struct { float r; } Rotation;
+typedef struct { float w, h; } Scale;
 
-extern ECS_COMPONENT_DECLARE(Position);
-extern ECS_COMPONENT_DECLARE(Size);
+ECS_COMPONENT_DECLARE(Position);
+ECS_COMPONENT_DECLARE(Rotation);
+ECS_COMPONENT_DECLARE(Scale);
+
+#endif
