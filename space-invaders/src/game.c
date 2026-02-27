@@ -1,13 +1,18 @@
 #include "game.h"
+#include "components/health.h"
+#include "components/box_collider.h"
 
 ecs_entity_t Player;
+ecs_entity_t Enemy;
 
+static cJSON *level_json = NULL;
 
 void game_init()
 {
     setup_window();
-    load_level();
-    spawn_entities();
+    load_level();               /* Phase 1: textures into asset_manager; retains JSON */
+    spawn_entities();           /* Registers components + tags + prefabs               */
+    spawn_entities_from_level(); /* Phase 2: instantiates entities from JSON           */
 
     renderer_system_init(world);
     input_system_init(world);
@@ -17,25 +22,45 @@ void game_init()
 void spawn_entities()
 {
     world = ecs_init();
-    ECS_COMPONENT_DEFINE(world, Transform);
-    ECS_COMPONENT_DEFINE(world, Sprite);
-    ECS_COMPONENT_DEFINE(world, Velocity);
+
+    component_manager_init(world);
+
+    /* 2. Create tags — must exist before prefab_manager_init() */
     Player = ecs_new(world);
+    Enemy  = ecs_new(world);
 
-    ecs_entity_t player = ecs_new(world);
-    ecs_add_id(world, player, Player);
-    ecs_set(world, player, Transform, {
-        .position = {WINDOW_WIDTH / 2.0f, WINDOW_HEIGHT - 80.0f},
-        .rotation = 0.0f,
-        .scale    = {1.0f, 1.0f}
-    });
-    ecs_set(world, player, Velocity, { .x = 0.0f, .y = 0.0f });
-    ecs_set(world, player, Sprite, {
-        .texture = asset_manager_get("player-ship"),
-        .color   = {255, 255, 255, 255}
-    });
+    /* 3. Init prefabs — reads asset_manager, so load_level() must run first */
+    prefab_manager_init(world);
+}
 
-    
+void spawn_entities_from_level()
+{
+    if (!level_json) {
+        SDL_Log("spawn_entities_from_level: no level loaded");
+        return;
+    }
+
+    cJSON *entities = cJSON_GetObjectItemCaseSensitive(level_json, "entities");
+    cJSON *entry;
+    cJSON_ArrayForEach(entry, entities) {
+        cJSON *prefab_name = cJSON_GetObjectItemCaseSensitive(entry, "prefab");
+        if (!cJSON_IsString(prefab_name)) {
+            SDL_Log("spawn_entities_from_level: entry missing 'prefab' key, skipping");
+            continue;
+        }
+
+        cJSON *overrides = cJSON_GetObjectItemCaseSensitive(entry, "overrides");
+        if (overrides) {
+            prefab_instantiate(world, prefab_name->valuestring, overrides);
+        } else {
+            cJSON *empty = cJSON_CreateObject();
+            prefab_instantiate(world, prefab_name->valuestring, empty);
+            cJSON_Delete(empty);
+        }
+    }
+
+    cJSON_Delete(level_json);
+    level_json = NULL;
 }
 
 void game_run()
@@ -120,15 +145,15 @@ void load_level()
     fclose(f);
     buf[len] = '\0';
 
-    cJSON *json = cJSON_Parse(buf);
+    level_json = cJSON_Parse(buf);
     free(buf);
 
-    if (!json) {
+    if (!level_json) {
         SDL_Log("load_level: cJSON_Parse failed: %s", cJSON_GetErrorPtr());
         return;
     }
 
-    cJSON *assets = cJSON_GetObjectItemCaseSensitive(json, "assets");
+    cJSON *assets = cJSON_GetObjectItemCaseSensitive(level_json, "assets");
     cJSON *asset;
     cJSON_ArrayForEach(asset, assets) {
         cJSON *type = cJSON_GetObjectItemCaseSensitive(asset, "type");
@@ -148,7 +173,5 @@ void load_level()
             asset_manager_add(id->valuestring, tex);
     }
 
-    cJSON_Delete(json);
+    /* Do NOT cJSON_Delete here — level_json is retained for spawn_entities_from_level() */
 }
-
-

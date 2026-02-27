@@ -4,5 +4,6 @@
 #include <flecs.h>
 
 extern ecs_entity_t Player;
+extern ecs_entity_t Enemy;
 
 #endif

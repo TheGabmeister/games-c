@@ -2,6 +2,7 @@
 #define GAME_H
 
 #include "managers/asset.h"
+#include "managers/prefab.h"
 #include "systems/renderer.h"
 #include "systems/input.h"
 #include "systems/movement.h"
@@ -21,5 +22,6 @@ void game_destroy();
 void setup_window();
 void load_level();
 void spawn_entities();
+void spawn_entities_from_level();
 
 #endif

@@ -1,44 +1,38 @@
 {
     "assets": [
         { "type": "texture", "id": "player-ship", "file": "./assets/player-ship.png" },
-        { "type": "texture", "id": "enemy-ufo", "file": "./assets/enemy-ufo.png" }
+        { "type": "texture", "id": "enemy-ufo",   "file": "./assets/enemy-ufo.png"   }
     ],
     "entities": [
         {
-            "name": "Player",
-            "components": [
-                {
-                    "transform": {
-                        "position": [80, 80],
-                        "rotation": 0,
-                        "scale": [1, 1]
-                    },
-                    "sprite": {
-                        "id": "player-ship",
-                        "width": 32,
-                        "height": 32,
-                        "z_index": 4
-                    }
-                }
-            ]
+            "prefab": "Player",
+            "overrides": {
+                "transform": { "position": [400, 520], "rotation": 0, "scale": [1, 1] }
+            }
         },
         {
-            "name": "Enemy",
-            "components": [
-                {
-                    "transform": {
-                        "position": [0, 0],
-                        "rotation": 0,
-                        "scale": [1, 1]
-                    },
-                    "sprite": {
-                        "id": "enemy-ufo",
-                        "width": 32,
-                        "height": 32,
-                        "z_index": 4
-                    }
-                }
-            ]
+            "prefab": "Enemy",
+            "overrides": {
+                "transform": { "position": [100, 80], "rotation": 0, "scale": [1, 1] },
+                "velocity":  { "x": 30, "y": 0 },
+                "health":    { "current": 1, "max": 1 }
+            }
+        },
+        {
+            "prefab": "Enemy",
+            "overrides": {
+                "transform": { "position": [200, 80], "rotation": 0, "scale": [1, 1] },
+                "velocity":  { "x": 30, "y": 0 },
+                "health":    { "current": 1, "max": 1 }
+            }
+        },
+        {
+            "prefab": "Enemy",
+            "overrides": {
+                "transform": { "position": [300, 80], "rotation": 0, "scale": [1, 1] },
+                "velocity":  { "x": 30, "y": 0 },
+                "health":    { "current": 1, "max": 1 }
+            }
         }
     ]
 }
