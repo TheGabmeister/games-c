@@ -1,8 +1,10 @@
 #include "systems/collision_system.h"
 #include "components/box_collider_comp.h"
 #include "components/transform_comp.h"
+#include "entities/bullet.h"
+#include "entities/enemy.h"
+#include "entities/player.h"
 #include <flecs.h>
-#include "collision_system.h"
 
 typedef struct {
     ecs_entity_t e;
@@ -35,9 +37,36 @@ static bool aabb_overlap(const ColliderBounds *a, float bx, float by, float bw, 
            a->y < by + bh && a->y + a->h > by;
 }
 
-    void collision_system_init(ecs_world_t * world)
-    {
-    }
+void collision_system_init(ecs_world_t *world) {
+    s_proj_q = ecs_query(world, {
+        .terms = {
+            { ecs_id(Position) },
+            { ecs_id(BoxCollider) },
+            { Projectile }
+        }
+    });
+    s_enemy_q = ecs_query(world, {
+        .terms = {
+            { ecs_id(Position) },
+            { ecs_id(BoxCollider) },
+            { Enemy }
+        }
+    });
+    s_enemy_proj_q = ecs_query(world, {
+        .terms = {
+            { ecs_id(Position) },
+            { ecs_id(BoxCollider) },
+            { EnemyProjectile }
+        }
+    });
+    s_player_q = ecs_query(world, {
+        .terms = {
+            { ecs_id(Position) },
+            { ecs_id(BoxCollider) },
+            { Player }
+        }
+    });
+}
 
 int collision_system_update(ecs_world_t *world, ecs_entity_t *killed_out, int max_killed) {
     ColliderBounds projs[64],  eprojs[64];
