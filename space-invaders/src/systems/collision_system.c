@@ -1,5 +1,7 @@
 #include "systems/collision_system.h"
-#include "components.h"
+#include "components/box_collider_comp.h"
+#include "components/transform_comp.h"
+#include <flecs.h>
 
 typedef struct {
     ecs_entity_t e;

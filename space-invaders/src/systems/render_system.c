@@ -1,4 +1,5 @@
 #include <SDL3/SDL.h>
+#include <flecs.h>
 
 /* mandatory: sdl3_renderer depends on those defines */
 #define NK_INCLUDE_COMMAND_USERDATA
@@ -10,7 +11,6 @@
 #include "nuklear_sdl3_renderer.h"
 
 #include "systems/render_system.h"
-#include "components.h"
 
 static SDL_Renderer      *s_renderer;
 static struct nk_context *s_ctx;

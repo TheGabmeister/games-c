@@ -4,7 +4,6 @@
 #include <flecs.h>
 
 #include "game.h"
-#include "components.h"
 #include "texture.h"
 #include "entity_inspector.h"
 #include "entities/player.h"
@@ -14,6 +13,11 @@
 #include "systems/render_system.h"
 #include "systems/collision_system.h"
 #include "systems/input_system.h"
+#include "components/box_collider_comp.h"
+#include "components/sprite_comp.h"
+#include "components/transform_comp.h"
+#include "components/velocity_comp.h"
+#include "components/health_comp.h"
 
 /* ---- ECS component/tag definitions (one translation unit only) ---- */
 

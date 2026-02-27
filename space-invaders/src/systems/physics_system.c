@@ -1,5 +1,6 @@
 #include "systems/physics_system.h"
-#include "components.h"
+#include "components/transform_comp.h"
+#include "components/velocity_comp.h"
 
 static ecs_query_t *s_query;
 

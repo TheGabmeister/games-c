@@ -1,5 +1,5 @@
 #include "systems/input_system.h"
-#include "components.h"
+#include "components/velocity_comp.h"
 
 void input_system_init(void) { /* nothing to initialise */ }
 
