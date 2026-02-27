@@ -9,7 +9,15 @@ void game_init()
 
 void game_run()
 {
-
+    SDL_Event event;
+    while (true)
+    {
+        while (SDL_PollEvent(&event))
+        {
+            if (event.type == SDL_EVENT_QUIT || event.type == SDL_EVENT_KEY_DOWN)
+                return;
+        }
+    }
 
 }
 
