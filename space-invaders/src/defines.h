@@ -19,7 +19,5 @@
 #define MIN(a, b) ((a) < (b) ? (a) : (b))
 #endif
 
-#define ASSETS      "assets/"
-
 
 #endif // SARSA_H

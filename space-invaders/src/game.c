@@ -77,7 +77,9 @@ void setup_window()
 
 void load_level()
 {
-    FILE *f = fopen(ASSETS "level_01.json", "rb");
+    char path[512];
+    snprintf(path, sizeof(path), "%s%s", ASSETS_DIR, "level_01.json");
+    FILE *f = fopen(path, "rb");
     if (!f) {
         SDL_Log("load_level: failed to open level_01.json");
         return;

@@ -1,15 +1,10 @@
-#ifndef WINDOW_TITLE
-#define WINDOW_TITLE    "Space Invaders"
-#endif
+#ifndef SETTINGS_H
+#define SETTINGS_H
 
-#ifndef WINDOW_WIDTH
-#define WINDOW_WIDTH    800
-#endif
+extern const char* WINDOW_TITLE;
+extern int WINDOW_WIDTH;
+extern int WINDOW_HEIGHT;
+extern float PLAYER_SPEED;
+extern const char* ASSETS_DIR;
 
-#ifndef WINDOW_HEIGHT
-#define WINDOW_HEIGHT   600
-#endif
-
-#ifndef PLAYER_SPEED
-#define PLAYER_SPEED    200.0f
 #endif
