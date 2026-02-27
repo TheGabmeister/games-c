@@ -3,12 +3,10 @@
 
 #include <flecs.h>
 
-typedef struct { float x, y; } Position;
-typedef struct { float r; } Rotation;
-typedef struct { float w, h; } Scale;
+//typedef struct { float x, y, r, w, h; } Position;
 
-ECS_COMPONENT_DECLARE(Position);
-ECS_COMPONENT_DECLARE(Rotation);
-ECS_COMPONENT_DECLARE(Scale);
+//ECS_COMPONENT_DECLARE(Position);
+//ECS_COMPONENT_DECLARE(Rotation);
+//ECS_COMPONENT_DECLARE(Scale);
 
 #endif
