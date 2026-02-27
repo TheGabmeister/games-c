@@ -1,3 +1,4 @@
+#define STB_IMAGE_IMPLEMENTATION
 #include "sarsa.h"
 
 SDL_Texture *load_texture(SDL_Renderer *renderer, const char *path) 
