@@ -15,6 +15,7 @@ void game_run()
 
 void game_destroy()
 {
+    asset_registry_destroy();
     SDL_DestroyRenderer(renderer);
     SDL_DestroyWindow(window);
     SDL_Quit();
@@ -68,8 +69,25 @@ void load_level()
         return;
     }
 
-    char *printed = cJSON_Print(json);
-    SDL_Log("level_01.json:\n%s", printed);
-    free(printed);
+    cJSON *assets = cJSON_GetObjectItemCaseSensitive(json, "assets");
+    cJSON *asset;
+    cJSON_ArrayForEach(asset, assets) {
+        cJSON *type = cJSON_GetObjectItemCaseSensitive(asset, "type");
+        if (!cJSON_IsString(type) || strcmp(type->valuestring, "texture") != 0)
+            continue;
+
+        cJSON *file = cJSON_GetObjectItemCaseSensitive(asset, "file");
+        if (!cJSON_IsString(file))
+            continue;
+
+        cJSON *id = cJSON_GetObjectItemCaseSensitive(asset, "id");
+        if (!cJSON_IsString(id))
+            continue;
+
+        SDL_Texture *tex = load_texture(renderer, file->valuestring);
+        if (tex)
+            asset_registry_add(id->valuestring, tex);
+    }
+
     cJSON_Delete(json);
 }

@@ -2,6 +2,7 @@
 #define GAME_H
 
 #include "sarsa.h"
+#include "asset_registry.h"
 
 #define WINDOW_TITLE    "Space Invaders"
 #define WINDOW_WIDTH    800
