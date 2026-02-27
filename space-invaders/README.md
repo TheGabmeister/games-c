@@ -3,3 +3,4 @@ Dependencies:
 - Flecs v4.1.4 https://github.com/SanderMertens/flecs/releases/tag/v4.1.4
 - stb_image https://github.com/nothings/stb/blob/master/stb_image.h
 - cJSON https://github.com/DaveGamble/cJSON/releases/tag/v1.7.19
+- cglm https://github.com/recp/cglm/releases/tag/v0.9.6
