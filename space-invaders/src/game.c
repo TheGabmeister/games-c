@@ -1,6 +1,4 @@
 #include "game.h"
-#include "components/health.h"
-#include "components/box_collider.h"
 
 void game_init()
 {

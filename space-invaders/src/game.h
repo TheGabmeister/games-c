@@ -1,6 +1,7 @@
 #ifndef GAME_H
 #define GAME_H
 
+#include "defines.h"
 #include "texture.h"
 #include "managers/asset.h"
 #include "managers/prefab.h"
@@ -8,6 +9,8 @@
 #include "systems/renderer.h"
 #include "systems/input.h"
 #include "systems/movement.h"
+#include "components/health.h"
+#include "components/box_collider.h"
 #include "components/velocity.h"
 #include "settings.h"
 

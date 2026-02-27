@@ -1,9 +1,5 @@
-#define STB_IMAGE_IMPLEMENTATION
+#include "defines.h"
 #include "stb_image.h"
-
-#include <stdio.h>
-#include <SDL3/SDL.h>
-
 #include "texture.h"
 
 SDL_Texture *load_texture(SDL_Renderer *renderer, const char *path)

@@ -1,7 +1,6 @@
 #ifndef RENDERER_SYSTEM_H
 #define RENDERER_SYSTEM_H
 
-#include "../sarsa.h"
 #include "../components/transform.h"
 #include "../components/sprite.h"
 

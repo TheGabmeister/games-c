@@ -9,6 +9,8 @@
 //#define NK_SDL3_RENDERER_IMPLEMENTATION
 //#include "nuklear_sdl3_renderer.h"
 
+#define STB_IMAGE_IMPLEMENTATION
+
 #ifndef MAX
 #define MAX(a, b) ((a) > (b) ? (a) : (b))
 #endif
@@ -18,15 +20,6 @@
 #endif
 
 #define ASSETS      "assets/"
-
-#include <stdbool.h>
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
-
-#include <SDL3/SDL.h>
-#include <flecs.h>
-#include <cJSON.h>
 
 
 #endif // SARSA_H
