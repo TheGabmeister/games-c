@@ -6,10 +6,7 @@
 #include "systems/renderer.h"
 #include "systems/input.h"
 #include "systems/movement.h"
-
-#define WINDOW_TITLE    "Space Invaders"
-#define WINDOW_WIDTH    800
-#define WINDOW_HEIGHT   600
+#include "settings.h"
 
 static SDL_Window   *window;
 static SDL_Renderer *renderer;

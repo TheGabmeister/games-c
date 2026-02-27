@@ -1,4 +1,8 @@
 #include "input.h"
+#include <SDL3/SDL.h>
+#include "tags.h"
+#include "../components/velocity.h"
+#include "settings.h"
 
 static ecs_query_t *input_query;
 
