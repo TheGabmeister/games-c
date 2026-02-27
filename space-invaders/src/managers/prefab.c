@@ -23,10 +23,6 @@ void prefab_manager_init(ecs_world_t *world)
 
     ecs_add_id(world, PlayerPrefab, Player);
 
-    ecs_set(world, PlayerPrefab, Sprite, {
-        .texture = asset_manager_get("player-ship"),
-        .color   = {255, 255, 255, 255}
-    });
     ecs_set(world, PlayerPrefab, BoxCollider, { .w = 32.0f, .h = 32.0f });
 
     /* Establish component slots; values are always overridden per-instance */
@@ -44,10 +40,6 @@ void prefab_manager_init(ecs_world_t *world)
 
     ecs_add_id(world, EnemyPrefab, Enemy);
 
-    ecs_set(world, EnemyPrefab, Sprite, {
-        .texture = asset_manager_get("enemy-ufo"),
-        .color   = {255, 255, 255, 255}
-    });
     ecs_set(world, EnemyPrefab, BoxCollider, { .w = 32.0f, .h = 32.0f });
 
     ecs_set(world, EnemyPrefab, Transform, {
@@ -73,6 +65,19 @@ ecs_entity_t prefab_instantiate(ecs_world_t *world,
     }
 
     ecs_entity_t e = ecs_new_w_pair(world, EcsIsA, prefab);
+
+    /* Override: Sprite */
+    cJSON *s = cJSON_GetObjectItemCaseSensitive(overrides, "sprite");
+    if (s) {
+        cJSON *tid = cJSON_GetObjectItemCaseSensitive(s, "texture_id");
+        if (cJSON_IsString(tid)) {
+            Sprite sp = {
+                .texture = asset_manager_get(tid->valuestring),
+                .color   = {255, 255, 255, 255}
+            };
+            ecs_set_id(world, e, ecs_id(Sprite), sizeof(Sprite), &sp);
+        }
+    }
 
     /* Override: Transform */
     cJSON *t = cJSON_GetObjectItemCaseSensitive(overrides, "transform");
