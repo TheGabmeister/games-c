@@ -1,10 +1,7 @@
-#include "texture.h"
-#include <stdio.h>
+#include "sarsa.h"
 
-#define STB_IMAGE_IMPLEMENTATION
-#include "stb_image.h"
-
-SDL_Texture *load_texture(SDL_Renderer *renderer, const char *path) {
+SDL_Texture *load_texture(SDL_Renderer *renderer, const char *path) 
+{
     int w, h;
     unsigned char *pixels = stbi_load(path, &w, &h, NULL, 4);
     if (!pixels) {
