@@ -1,6 +1,7 @@
 #ifndef GAME_H
 #define GAME_H
 
+#include "texture.h"
 #include "managers/asset.h"
 #include "managers/prefab.h"
 #include "managers/component.h"
