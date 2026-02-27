@@ -9,9 +9,9 @@
             "components": [
                 {
                     "transform": {
-                        "position": [0, 0, 0],
-                        "rotation": [0, 0, 0],
-                        "scale": [1, 1, 1]
+                        "position": [0, 0],
+                        "rotation": 0,
+                        "scale": [1, 1]
                     },
                     "sprite": {
                         "id": "player-ship",
@@ -27,12 +27,12 @@
             "components": [
                 {
                     "transform": {
-                        "position": [0, 0, 0],
-                        "rotation": [0, 0, 0],
-                        "scale": [1, 1, 1]
+                        "position": [0, 0],
+                        "rotation": 0,
+                        "scale": [1, 1]
                     },
                     "sprite": {
-                        "texture_asset_id": "enemy-ufo",
+                        "id": "enemy-ufo",
                         "width": 32,
                         "height": 32,
                         "z_index": 4
