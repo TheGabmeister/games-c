@@ -31,7 +31,7 @@ void spawn_entities()
     });
     ecs_set(world, player, Velocity, { .x = 0.0f, .y = 0.0f });
     ecs_set(world, player, Sprite, {
-        .texture = asset_registry_get("player-ship"),
+        .texture = asset_manager_get("player-ship"),
         .color   = {255, 255, 255, 255}
     });
 
@@ -74,7 +74,7 @@ void game_destroy()
     movement_system_destroy();
     renderer_system_destroy();
     ecs_fini(world);
-    asset_registry_destroy();
+    asset_manager_destroy();
     SDL_DestroyRenderer(renderer);
     SDL_DestroyWindow(window);
     SDL_Quit();
@@ -145,7 +145,7 @@ void load_level()
 
         SDL_Texture *tex = load_texture(renderer, file->valuestring);
         if (tex)
-            asset_registry_add(id->valuestring, tex);
+            asset_manager_add(id->valuestring, tex);
     }
 
     cJSON_Delete(json);

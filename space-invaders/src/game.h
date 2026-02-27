@@ -1,11 +1,11 @@
 #ifndef GAME_H
 #define GAME_H
 
-#include "sarsa.h"
-#include "asset_registry.h"
+#include "managers/asset.h"
 #include "systems/renderer.h"
 #include "systems/input.h"
 #include "systems/movement.h"
+#include "components/velocity.h"
 #include "settings.h"
 
 static SDL_Window   *window;

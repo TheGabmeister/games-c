@@ -1,4 +1,7 @@
+#include <flecs.h>
 #include "movement.h"
+#include "../components/transform.h"
+#include "../components/velocity.h"
 
 static ecs_query_t *movement_query;
 
