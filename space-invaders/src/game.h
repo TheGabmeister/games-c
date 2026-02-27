@@ -21,5 +21,6 @@ void game_destroy();
 
 void setup_window();
 void load_level();
+void spawn_entites();
 
 #endif

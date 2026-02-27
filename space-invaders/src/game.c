@@ -4,12 +4,16 @@
 void game_init()
 {
     setup_window();
+    load_level();
+    spawn_entities();
 
+}
+
+void spawn_entites()
+{
     world = ecs_init();
     ECS_COMPONENT_DEFINE(world, Transform);
     ECS_COMPONENT_DEFINE(world, Sprite);
-
-    load_level();
 
     ecs_entity_t player = ecs_new(world);
     ecs_set(world, player, Transform, {
@@ -145,3 +149,5 @@ void load_level()
 
     cJSON_Delete(json);
 }
+
+
