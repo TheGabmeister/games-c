@@ -1,5 +1,7 @@
 #include "game.h"
 
+ecs_entity_t Player;
+
 
 void game_init()
 {
@@ -7,6 +9,9 @@ void game_init()
     load_level();
     spawn_entities();
 
+    renderer_system_init(world);
+    input_system_init(world);
+    movement_system_init(world);
 }
 
 void spawn_entities()
@@ -14,31 +19,45 @@ void spawn_entities()
     world = ecs_init();
     ECS_COMPONENT_DEFINE(world, Transform);
     ECS_COMPONENT_DEFINE(world, Sprite);
+    ECS_COMPONENT_DEFINE(world, Velocity);
+    Player = ecs_new(world);
 
     ecs_entity_t player = ecs_new(world);
+    ecs_add_id(world, player, Player);
     ecs_set(world, player, Transform, {
         .position = {WINDOW_WIDTH / 2.0f, WINDOW_HEIGHT - 80.0f},
         .rotation = 0.0f,
         .scale    = {1.0f, 1.0f}
     });
+    ecs_set(world, player, Velocity, { .x = 0.0f, .y = 0.0f });
     ecs_set(world, player, Sprite, {
         .texture = asset_registry_get("player-ship"),
         .color   = {255, 255, 255, 255}
     });
 
-    renderer_system_init(world);
+    
 }
 
 void game_run()
 {
     SDL_Event event;
-    while (true)
+    Uint64 last_ticks = SDL_GetTicks();
+    isRunning = true;
+    while (isRunning)
     {
+        Uint64 now = SDL_GetTicks();
+        float dt = (now - last_ticks) / 1000.0f;
+        if (dt > 0.05f) dt = 0.05f;
+        last_ticks = now;
+
         while (SDL_PollEvent(&event))
         {
-            if (event.type == SDL_EVENT_QUIT || event.type == SDL_EVENT_KEY_DOWN)
-                return;
+            if (event.type == SDL_EVENT_QUIT || event.key.scancode == SDL_SCANCODE_ESCAPE)
+                isRunning = false;
         }
+
+        input_system_run(world);
+        movement_system_run(world, dt);
 
         SDL_SetRenderDrawColor(renderer, 0, 0, 0, 255);
         SDL_RenderClear(renderer);
@@ -51,6 +70,8 @@ void game_run()
 
 void game_destroy()
 {
+    input_system_destroy();
+    movement_system_destroy();
     renderer_system_destroy();
     ecs_fini(world);
     asset_registry_destroy();
