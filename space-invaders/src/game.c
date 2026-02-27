@@ -59,8 +59,9 @@ static bool sdl_init(SDL_Window **window, SDL_Renderer **renderer) {
 }
 
 int game_run(void) {
+
     SDL_Window   *window;
-    SDL_Renderer *renderer;
+SDL_Renderer *renderer;
     if (!sdl_init(&window, &renderer)) return 1;
 
     /* Load textures */
