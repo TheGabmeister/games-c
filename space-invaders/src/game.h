@@ -1,6 +1,8 @@
-#pragma once
+#ifndef GAME_MANAGER_H
+#define GAME_MANAGER_H
 
-#define WINDOW_W 600
-#define WINDOW_H 800
+void game_init(void);
+void game_run(void);
+void game_destroy(void);
 
-int game_run(void);
+#endif

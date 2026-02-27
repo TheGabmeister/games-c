@@ -1,16 +1,44 @@
 {
-  "level": {
-    "name": "Level 1",
+    "assets": [
+        { "type": "texture", "id": "player-ship", "file": "./assets/player-ship.png" },
+        { "type": "texture", "id": "enemy-ufo", "file": "./assets/enemy-ufo.png" }
+    ],
     "entities": [
-      {
-        "id": "invader_01",
-        "components": {
-          "transform": { "x": 100, "y": 50 },
-          "sprite": { "url": "assets/invader_a.png" },
-          "health": { "hp": 1 },
-          "movement": { "speed": 2, "pattern": "zigzag" }
+        {
+            "name": "Player",
+            "components": [
+                {
+                    "transform": {
+                        "position": [0, 0, 0],
+                        "rotation": [0, 0, 0],
+                        "scale": [1, 1, 1]
+                    },
+                    "sprite": {
+                        "texture_asset_id": "player-ship",
+                        "width": 32,
+                        "height": 32,
+                        "z_index": 4
+                    }
+                }
+            ]
+        },
+                {
+            "name": "Enemy",
+            "components": [
+                {
+                    "transform": {
+                        "position": [0, 0, 0],
+                        "rotation": [0, 0, 0],
+                        "scale": [1, 1, 1]
+                    },
+                    "sprite": {
+                        "texture_asset_id": "enemy-ufo",
+                        "width": 32,
+                        "height": 32,
+                        "z_index": 4
+                    }
+                }
+            ]
         }
-      }
     ]
-  }
 }
