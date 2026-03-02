@@ -1,4 +1,5 @@
-#include "managers/asset.h"
+#include "asset.h"
+#include <SDL3/SDL.h>
 #include <string.h>
 
 AssetManager asset_manager = {0};

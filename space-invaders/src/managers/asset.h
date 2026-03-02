@@ -1,9 +1,9 @@
 #ifndef ASSET_MANAGER_H
 #define ASSET_MANAGER_H
 
-#include <SDL3/SDL.h>
-
 #define ASSET_MANAGER_MAX 64
+typedef struct SDL_Texture SDL_Texture;
+
 
 typedef struct {
     char         id[64];

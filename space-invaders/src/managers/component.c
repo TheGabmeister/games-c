@@ -1,3 +1,4 @@
+#include <flecs.h>
 #include "../components/transform.h"
 #include "../components/sprite.h"
 #include "../components/velocity.h"
