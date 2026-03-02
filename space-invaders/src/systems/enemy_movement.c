@@ -10,6 +10,7 @@
 /* Terms: [Enemy(tag), Transform, Velocity, BoxCollider]
  * indices:     0           1         2          3       */
 static ecs_query_t *enemy_move_query;
+static bool s_reached_bottom = false;
 
 void enemy_movement_system_init(ecs_world_t *world)
 {
@@ -25,7 +26,10 @@ void enemy_movement_system_init(ecs_world_t *world)
 
 void enemy_movement_system_run(ecs_world_t *world)
 {
-    /* Pass 1: check if any enemy has crossed a horizontal boundary. */
+    s_reached_bottom = false;
+
+    /* Pass 1: check if any enemy has crossed a horizontal boundary.
+     * Also detect if any enemy has reached the bottom of the screen. */
     bool hit_edge = false;
     {
         ecs_iter_t it = ecs_query_iter(world, enemy_move_query);
@@ -44,6 +48,8 @@ void enemy_movement_system_run(ecs_world_t *world)
                 if ((vx > 0.0f && x + hw >= (float)WINDOW_WIDTH) ||
                     (vx < 0.0f && x - hw <= 0.0f))
                     hit_edge = true;
+                if (tr[i].position[1] + bc[i].h * 0.5f >= (float)WINDOW_HEIGHT - 40.0f)
+                    s_reached_bottom = true;
             }
         }
         if (hit_edge) ecs_iter_fini(&it);
@@ -70,4 +76,9 @@ void enemy_movement_system_run(ecs_world_t *world)
 void enemy_movement_system_destroy(void)
 {
     ecs_query_fini(enemy_move_query);
+}
+
+bool enemy_movement_system_reached_bottom(void)
+{
+    return s_reached_bottom;
 }

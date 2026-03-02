@@ -1,5 +1,6 @@
 #include "game.h"
 #include "systems/enemy_movement.h"
+#include <string.h>
 
 SDL_Window   *window     = NULL;
 SDL_Renderer *renderer   = NULL;
@@ -9,14 +10,64 @@ ecs_entity_t  Enemy      = 0;
 ecs_entity_t  Projectile = 0;
 ecs_entity_t  Shooting   = 0;
 
-bool isRunning = false;
+bool      isRunning  = false;
+GameState game_state = GAME_STATE_MENU;
 
-void game_init()
+/* ------------------------------------------------------------------ */
+/* Text rendering helpers                                               */
+/* ------------------------------------------------------------------ */
+
+/* Render text centered horizontally at the given screen-space y.
+ * SDL_RenderDebugText uses an 8x8 pixel font; scale multiplies that. */
+static void render_text_centered(float scale, float screen_y, const char *text)
 {
-    setup_window();
-    audio_manager_init();
-    load_level();
+    float text_w_screen = (float)strlen(text) * 8.0f * scale;
+    float screen_x = ((float)WINDOW_WIDTH - text_w_screen) * 0.5f;
+    SDL_SetRenderScale(renderer, scale, scale);
+    SDL_RenderDebugText(renderer, screen_x / scale, screen_y / scale, text);
+    SDL_SetRenderScale(renderer, 1.0f, 1.0f);
+}
 
+/* ------------------------------------------------------------------ */
+/* Per-state render functions                                           */
+/* ------------------------------------------------------------------ */
+
+static void render_menu(void)
+{
+    SDL_SetRenderDrawColor(renderer, 255, 255, 255, 255);
+    render_text_centered(4.0f, 160.0f, "SPACE INVADERS");
+
+    SDL_SetRenderDrawColor(renderer, 180, 180, 180, 255);
+    render_text_centered(2.0f, 290.0f, "PRESS ENTER TO PLAY");
+    render_text_centered(2.0f, 325.0f, "ESC TO QUIT");
+}
+
+static void render_game_over(void)
+{
+    /* Frozen world is already drawn — overlay the result text. */
+    SDL_SetRenderDrawColor(renderer, 220, 50, 50, 255);
+    render_text_centered(4.0f, 180.0f, "GAME OVER");
+
+    SDL_SetRenderDrawColor(renderer, 180, 180, 180, 255);
+    render_text_centered(2.0f, 310.0f, "ENTER: RESTART   ESC: QUIT");
+}
+
+static void render_win(void)
+{
+    SDL_SetRenderDrawColor(renderer, 50, 220, 50, 255);
+    render_text_centered(4.0f, 180.0f, "YOU WIN!");
+
+    SDL_SetRenderDrawColor(renderer, 180, 180, 180, 255);
+    render_text_centered(2.0f, 310.0f, "ENTER: PLAY AGAIN   ESC: QUIT");
+}
+
+/* ------------------------------------------------------------------ */
+/* World lifecycle (safe to call multiple times for restart)           */
+/* ------------------------------------------------------------------ */
+
+static void world_init(void)
+{
+    load_level();
     renderer_system_init(world);
     input_system_init(world);
     movement_system_init(world);
@@ -24,7 +75,56 @@ void game_init()
     enemy_movement_system_init(world);
     boundary_system_init(world);
     collision_system_init(world);
+}
+
+static void world_fini(void)
+{
+    input_system_destroy();
+    combat_system_destroy();
+    movement_system_destroy();
+    enemy_movement_system_destroy();
+    boundary_system_destroy();
+    collision_system_destroy();
+    renderer_system_destroy();
+    ecs_fini(world);
+    world = NULL;
+    /* Free textures after the world (and all Sprite components) are gone. */
+    asset_manager_destroy();
+}
+
+/* ------------------------------------------------------------------ */
+/* State transitions                                                    */
+/* ------------------------------------------------------------------ */
+
+static void start_game(void)
+{
+    if (world) world_fini();
+    world_init();
+    game_state = GAME_STATE_PLAYING;
+}
+
+/* Check win/lose conditions; only call during GAME_STATE_PLAYING. */
+static void check_game_conditions(void)
+{
+    if (ecs_count_id(world, Enemy) == 0) {
+        game_state = GAME_STATE_WIN;
+        return;
+    }
+    if (enemy_movement_system_reached_bottom()) {
+        game_state = GAME_STATE_GAME_OVER;
+    }
+}
+
+/* ------------------------------------------------------------------ */
+/* Public API                                                           */
+/* ------------------------------------------------------------------ */
+
+void game_init()
+{
+    setup_window();
+    audio_manager_init();
     gui_system_init(window, renderer);
+    /* Level loads when the player presses ENTER from the menu. */
 }
 
 void game_run()
@@ -32,6 +132,7 @@ void game_run()
     SDL_Event event;
     Uint64 last_ticks = SDL_GetTicks();
     isRunning = true;
+
     while (isRunning)
     {
         Uint64 now = SDL_GetTicks();
@@ -41,23 +142,69 @@ void game_run()
 
         while (SDL_PollEvent(&event))
         {
-            if (event.type == SDL_EVENT_QUIT || event.key.scancode == SDL_SCANCODE_ESCAPE)
+            if (event.type == SDL_EVENT_QUIT) {
                 isRunning = false;
-            gui_system_handle_event(&event);
-        }
+                break;
+            }
 
-        input_system_run(world);
-        combat_system_run(world);
-        movement_system_run(world, dt);
-        enemy_movement_system_run(world);
-        boundary_system_run(world);
-        collision_system_run(world);
+            if (event.type == SDL_EVENT_KEY_DOWN) {
+                SDL_Scancode sc = event.key.scancode;
+                switch (game_state) {
+                    case GAME_STATE_MENU:
+                        if (sc == SDL_SCANCODE_RETURN || sc == SDL_SCANCODE_KP_ENTER)
+                            start_game();
+                        else if (sc == SDL_SCANCODE_ESCAPE)
+                            isRunning = false;
+                        break;
+                    case GAME_STATE_PLAYING:
+                        if (sc == SDL_SCANCODE_ESCAPE)
+                            isRunning = false;
+                        break;
+                    case GAME_STATE_GAME_OVER:
+                    case GAME_STATE_WIN:
+                        if (sc == SDL_SCANCODE_RETURN || sc == SDL_SCANCODE_KP_ENTER)
+                            start_game();
+                        else if (sc == SDL_SCANCODE_ESCAPE)
+                            isRunning = false;
+                        break;
+                }
+            }
+
+            if (game_state == GAME_STATE_PLAYING)
+                gui_system_handle_event(&event);
+        }
 
         SDL_SetRenderDrawColor(renderer, 0, 0, 0, 255);
         SDL_RenderClear(renderer);
 
-        renderer_system_run(world, renderer);
-        gui_system_run(world);
+        switch (game_state) {
+            case GAME_STATE_MENU:
+                render_menu();
+                break;
+
+            case GAME_STATE_PLAYING:
+                input_system_run(world);
+                combat_system_run(world);
+                movement_system_run(world, dt);
+                enemy_movement_system_run(world);
+                boundary_system_run(world);
+                collision_system_run(world);
+                check_game_conditions();
+
+                renderer_system_run(world, renderer);
+                gui_system_run(world);
+                break;
+
+            case GAME_STATE_GAME_OVER:
+                renderer_system_run(world, renderer);
+                render_game_over();
+                break;
+
+            case GAME_STATE_WIN:
+                renderer_system_run(world, renderer);
+                render_win();
+                break;
+        }
 
         SDL_RenderPresent(renderer);
     }
@@ -65,17 +212,9 @@ void game_run()
 
 void game_destroy()
 {
-    input_system_destroy();
-    combat_system_destroy();
-    movement_system_destroy();
-    enemy_movement_system_destroy();
-    boundary_system_destroy();
-    collision_system_destroy();
-    renderer_system_destroy();
+    if (world) world_fini();
     gui_system_destroy();
-    ecs_fini(world);
     audio_manager_destroy();
-    asset_manager_destroy();
     SDL_DestroyRenderer(renderer);
     SDL_DestroyWindow(window);
     SDL_Quit();

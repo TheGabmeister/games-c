@@ -2,6 +2,7 @@
 #define GAME_H
 
 #include "defines.h"
+#include "game_state.h"
 #include "texture.h"
 #include "managers/asset.h"
 #include "managers/audio.h"
@@ -27,7 +28,8 @@ extern ecs_entity_t  Enemy;
 extern ecs_entity_t  Projectile;
 extern ecs_entity_t  Shooting;
 
-extern bool isRunning;
+extern bool      isRunning;
+extern GameState game_state;
 
 void game_init();
 void game_run();
