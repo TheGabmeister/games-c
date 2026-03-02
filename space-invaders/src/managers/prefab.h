@@ -23,6 +23,7 @@ void prefab_manager_init(ecs_world_t *world);
  * Expected override keys (all optional):
  *   "transform": { "position": [x, y], "rotation": r, "scale": [sx, sy] }
  *   "velocity":  { "x": vx, "y": vy }
+ *   "box_collider": { "w": width, "h": height }
  *   "health":    { "current": c, "max": m }
  *
  * Returns the new entity id, or 0 on failure.

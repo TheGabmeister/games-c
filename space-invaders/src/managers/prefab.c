@@ -146,6 +146,22 @@ ecs_entity_t prefab_instantiate(ecs_world_t *world,
         ecs_set_id(world, e, ecs_id(Velocity), sizeof(Velocity), &vel);
     }
 
+    /* Override: BoxCollider */
+    cJSON *bc = cJSON_GetObjectItemCaseSensitive(overrides, "box_collider");
+    if (bc) {
+        BoxCollider box = { .w = 0.0f, .h = 0.0f };
+        const BoxCollider *inherited = ecs_get(world, e, BoxCollider);
+        if (inherited) box = *inherited;
+
+        cJSON *w = cJSON_GetObjectItemCaseSensitive(bc, "w");
+        if (cJSON_IsNumber(w)) box.w = (float)w->valuedouble;
+
+        cJSON *h = cJSON_GetObjectItemCaseSensitive(bc, "h");
+        if (cJSON_IsNumber(h)) box.h = (float)h->valuedouble;
+
+        ecs_set_id(world, e, ecs_id(BoxCollider), sizeof(BoxCollider), &box);
+    }
+
     /* Override: Health */
     cJSON *h = cJSON_GetObjectItemCaseSensitive(overrides, "health");
     if (h) {
