@@ -10,8 +10,6 @@ ecs_entity_t  Shooting   = 0;
 
 bool isRunning = false;
 
-static ecs_query_t *boundary_query = NULL;
-
 void game_init()
 {
     setup_window();
@@ -21,13 +19,7 @@ void game_init()
     input_system_init(world);
     movement_system_init(world);
     combat_system_init(world);
-
-    boundary_query = ecs_query(world, {
-        .terms = {
-            { .id = Projectile },
-            { .id = ecs_id(Transform) }
-        }
-    });
+    boundary_system_init(world);
 }
 
 void game_run()
@@ -51,23 +43,7 @@ void game_run()
         input_system_run(world);
         combat_system_run(world);
         movement_system_run(world, dt);
-
-        /* Destroy projectiles that have moved above the top of the screen */
-        ecs_entity_t to_delete[64];
-        int del_count = 0;
-        ecs_iter_t bit = ecs_query_iter(world, boundary_query);
-        while (ecs_query_next(&bit))
-        {
-            Transform *transforms = ecs_field(&bit, Transform, 1);
-            for (int i = 0; i < bit.count; i++)
-            {
-                if ((transforms[i].position[1] < 0.0f ||
-                     transforms[i].position[1] > (float)WINDOW_HEIGHT) && del_count < 64)
-                    to_delete[del_count++] = bit.entities[i];
-            }
-        }
-        for (int i = 0; i < del_count; i++)
-            ecs_delete(world, to_delete[i]);
+        boundary_system_run(world);
 
         SDL_SetRenderDrawColor(renderer, 0, 0, 0, 255);
         SDL_RenderClear(renderer);
@@ -80,10 +56,10 @@ void game_run()
 
 void game_destroy()
 {
-    ecs_query_fini(boundary_query);
     input_system_destroy();
     combat_system_destroy();
     movement_system_destroy();
+    boundary_system_destroy();
     renderer_system_destroy();
     ecs_fini(world);
     asset_manager_destroy();

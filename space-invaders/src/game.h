@@ -10,6 +10,7 @@
 #include "systems/input.h"
 #include "systems/movement.h"
 #include "systems/combat.h"
+#include "systems/boundary.h"
 #include "components/health.h"
 #include "components/box_collider.h"
 #include "components/velocity.h"
