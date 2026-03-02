@@ -1,93 +1,93 @@
 {
   "assets": [
-    { "type": "texture", "id": "player-ship", "file": "./assets/player-ship.png" },
-    { "type": "texture", "id": "enemy-ufo",   "file": "./assets/enemy-ufo.png"   },
-    { "type": "audio", "id": "sfx-laser1",   "file": "./assets/sfx-laser1.ogg"   },
-    { "type": "audio", "id": "sfx-laser2",   "file": "./assets/sfx-laser2.ogg"   },
-    { "type": "audio", "id": "sfx-lose",   "file": "./assets/sfx-lose.ogg"   },
-    { "type": "audio", "id": "music-spaceshooter",   "file": "./assets/music-spaceshooter.ogg"   }
+    { "type": "texture", "id": "player_ship", "file": "./assets/player_ship.png" },
+    { "type": "texture", "id": "enemy_ufo",   "file": "./assets/enemy_ufo.png"   },
+    { "type": "audio", "id": "sfx_laser1",   "file": "./assets/sfx_laser1.ogg"   },
+    { "type": "audio", "id": "sfx_laser2",   "file": "./assets/sfx_laser2.ogg"   },
+    { "type": "audio", "id": "sfx_lose",     "file": "./assets/sfx_lose.ogg"     },
+    { "type": "audio", "id": "music_spaceshooter",   "file": "./assets/music_spaceshooter.ogg"   }
   ],
   "entities": [
     { "prefab": "Player", "overrides": {
-        "sprite":       { "texture_id": "player-ship" },
+        "sprite":       { "texture_id": "player_ship" },
         "transform":    { "position": [400, 520], "rotation": 0, "scale": [1, 1] },
         "box_collider": { "w": 32, "h": 32 }
     } },
 
     { "prefab": "Enemy", "overrides": {
-        "sprite": { "texture_id": "enemy-ufo" },
+        "sprite": { "texture_id": "enemy_ufo" },
         "transform": { "position": [100, 80], "rotation": 0, "scale": [1, 1] },
         "velocity": { "x": 30, "y": 0 }, "health": { "current": 1, "max": 1 }, "box_collider": { "w": 32, "h": 32 }
     } },
     { "prefab": "Enemy", "overrides": {
-        "sprite": { "texture_id": "enemy-ufo" },
+        "sprite": { "texture_id": "enemy_ufo" },
         "transform": { "position": [200, 80], "rotation": 0, "scale": [1, 1] },
         "velocity": { "x": 30, "y": 0 }, "health": { "current": 1, "max": 1 }, "box_collider": { "w": 32, "h": 32 }
     } },
     { "prefab": "Enemy", "overrides": {
-        "sprite": { "texture_id": "enemy-ufo" },
+        "sprite": { "texture_id": "enemy_ufo" },
         "transform": { "position": [300, 80], "rotation": 0, "scale": [1, 1] },
         "velocity": { "x": 30, "y": 0 }, "health": { "current": 1, "max": 1 }, "box_collider": { "w": 32, "h": 32 }
     } },
     { "prefab": "Enemy", "overrides": {
-        "sprite": { "texture_id": "enemy-ufo" },
+        "sprite": { "texture_id": "enemy_ufo" },
         "transform": { "position": [400, 80], "rotation": 0, "scale": [1, 1] },
         "velocity": { "x": 30, "y": 0 }, "health": { "current": 1, "max": 1 }, "box_collider": { "w": 32, "h": 32 }
     } },
     { "prefab": "Enemy", "overrides": {
-        "sprite": { "texture_id": "enemy-ufo" },
+        "sprite": { "texture_id": "enemy_ufo" },
         "transform": { "position": [500, 80], "rotation": 0, "scale": [1, 1] },
         "velocity": { "x": 30, "y": 0 }, "health": { "current": 1, "max": 1 }, "box_collider": { "w": 32, "h": 32 }
     } },
 
     { "prefab": "Enemy", "overrides": {
-        "sprite": { "texture_id": "enemy-ufo" },
+        "sprite": { "texture_id": "enemy_ufo" },
         "transform": { "position": [100, 140], "rotation": 0, "scale": [1, 1] },
         "velocity": { "x": 30, "y": 0 }, "health": { "current": 1, "max": 1 }, "box_collider": { "w": 32, "h": 32 }
     } },
     { "prefab": "Enemy", "overrides": {
-        "sprite": { "texture_id": "enemy-ufo" },
+        "sprite": { "texture_id": "enemy_ufo" },
         "transform": { "position": [200, 140], "rotation": 0, "scale": [1, 1] },
         "velocity": { "x": 30, "y": 0 }, "health": { "current": 1, "max": 1 }, "box_collider": { "w": 32, "h": 32 }
     } },
     { "prefab": "Enemy", "overrides": {
-        "sprite": { "texture_id": "enemy-ufo" },
+        "sprite": { "texture_id": "enemy_ufo" },
         "transform": { "position": [300, 140], "rotation": 0, "scale": [1, 1] },
         "velocity": { "x": 30, "y": 0 }, "health": { "current": 1, "max": 1 }, "box_collider": { "w": 32, "h": 32 }
     } },
     { "prefab": "Enemy", "overrides": {
-        "sprite": { "texture_id": "enemy-ufo" },
+        "sprite": { "texture_id": "enemy_ufo" },
         "transform": { "position": [400, 140], "rotation": 0, "scale": [1, 1] },
         "velocity": { "x": 30, "y": 0 }, "health": { "current": 1, "max": 1 }, "box_collider": { "w": 32, "h": 32 }
     } },
     { "prefab": "Enemy", "overrides": {
-        "sprite": { "texture_id": "enemy-ufo" },
+        "sprite": { "texture_id": "enemy_ufo" },
         "transform": { "position": [500, 140], "rotation": 0, "scale": [1, 1] },
         "velocity": { "x": 30, "y": 0 }, "health": { "current": 1, "max": 1 }, "box_collider": { "w": 32, "h": 32 }
     } },
 
     { "prefab": "Enemy", "overrides": {
-        "sprite": { "texture_id": "enemy-ufo" },
+        "sprite": { "texture_id": "enemy_ufo" },
         "transform": { "position": [100, 200], "rotation": 0, "scale": [1, 1] },
         "velocity": { "x": 30, "y": 0 }, "health": { "current": 1, "max": 1 }, "box_collider": { "w": 32, "h": 32 }
     } },
     { "prefab": "Enemy", "overrides": {
-        "sprite": { "texture_id": "enemy-ufo" },
+        "sprite": { "texture_id": "enemy_ufo" },
         "transform": { "position": [200, 200], "rotation": 0, "scale": [1, 1] },
         "velocity": { "x": 30, "y": 0 }, "health": { "current": 1, "max": 1 }, "box_collider": { "w": 32, "h": 32 }
     } },
     { "prefab": "Enemy", "overrides": {
-        "sprite": { "texture_id": "enemy-ufo" },
+        "sprite": { "texture_id": "enemy_ufo" },
         "transform": { "position": [300, 200], "rotation": 0, "scale": [1, 1] },
         "velocity": { "x": 30, "y": 0 }, "health": { "current": 1, "max": 1 }, "box_collider": { "w": 32, "h": 32 }
     } },
     { "prefab": "Enemy", "overrides": {
-        "sprite": { "texture_id": "enemy-ufo" },
+        "sprite": { "texture_id": "enemy_ufo" },
         "transform": { "position": [400, 200], "rotation": 0, "scale": [1, 1] },
         "velocity": { "x": 30, "y": 0 }, "health": { "current": 1, "max": 1 }, "box_collider": { "w": 32, "h": 32 }
     } },
     { "prefab": "Enemy", "overrides": {
-        "sprite": { "texture_id": "enemy-ufo" },
+        "sprite": { "texture_id": "enemy_ufo" },
         "transform": { "position": [500, 200], "rotation": 0, "scale": [1, 1] },
         "velocity": { "x": 30, "y": 0 }, "health": { "current": 1, "max": 1 }, "box_collider": { "w": 32, "h": 32 }
     } }
