@@ -19,6 +19,7 @@ SDL_Renderer *renderer;
 ecs_world_t  *world;
 ecs_entity_t Player;
 ecs_entity_t Enemy;
+ecs_entity_t Projectile;
 
 bool isRunning;
 

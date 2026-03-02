@@ -5,5 +5,6 @@
 
 extern ecs_entity_t Player;
 extern ecs_entity_t Enemy;
+extern ecs_entity_t Projectile;
 
 #endif

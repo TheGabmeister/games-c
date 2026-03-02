@@ -6,12 +6,14 @@
 #include "../components/sprite.h"
 #include "../components/box_collider.h"
 #include "../components/health.h"
+#include "../settings.h"
 
 #include <SDL3/SDL.h>
 #include <string.h>
 
-static ecs_entity_t PlayerPrefab = 0;
-static ecs_entity_t EnemyPrefab  = 0;
+static ecs_entity_t PlayerPrefab     = 0;
+static ecs_entity_t EnemyPrefab      = 0;
+static ecs_entity_t ProjectilePrefab = 0;
 
 void prefab_manager_init(ecs_world_t *world)
 {
@@ -47,6 +49,24 @@ void prefab_manager_init(ecs_world_t *world)
     });
     ecs_set(world, EnemyPrefab, Velocity, { .x = 0.0f, .y = 0.0f });
     ecs_set(world, EnemyPrefab, Health,   { .current = 1, .max = 1 });
+
+    /* --- ProjectilePrefab --- */
+    ProjectilePrefab = ecs_entity(world, {
+        .name = "ProjectilePrefab",
+        .add  = ecs_ids(EcsPrefab)
+    });
+
+    ecs_add_id(world, ProjectilePrefab, Projectile);
+
+    ecs_set(world, ProjectilePrefab, BoxCollider, { .w = 4.0f, .h = 16.0f });
+    ecs_set(world, ProjectilePrefab, Sprite, {
+        .texture = NULL,
+        .color   = {255, 255, 255, 255}
+    });
+    ecs_set(world, ProjectilePrefab, Transform, {
+        .position = {0.0f, 0.0f}, .rotation = 0.0f, .scale = {1.0f, 1.0f}
+    });
+    ecs_set(world, ProjectilePrefab, Velocity, { .x = 0.0f, .y = -PROJECTILE_SPEED });
 }
 
 ecs_entity_t prefab_instantiate(ecs_world_t *world,
@@ -58,6 +78,8 @@ ecs_entity_t prefab_instantiate(ecs_world_t *world,
         prefab = PlayerPrefab;
     else if (strcmp(prefab_name, "Enemy") == 0)
         prefab = EnemyPrefab;
+    else if (strcmp(prefab_name, "Projectile") == 0)
+        prefab = ProjectilePrefab;
 
     if (!prefab) {
         SDL_Log("prefab_instantiate: unknown prefab '%s'", prefab_name);
@@ -132,6 +154,18 @@ ecs_entity_t prefab_instantiate(ecs_world_t *world,
 
         ecs_set_id(world, e, ecs_id(Health), sizeof(Health), &hp);
     }
+
+    return e;
+}
+
+ecs_entity_t prefab_spawn_projectile(ecs_world_t *world, float x, float y)
+{
+    ecs_entity_t e = ecs_new_w_pair(world, EcsIsA, ProjectilePrefab);
+
+    ecs_set(world, e, Transform, {
+        .position = {x, y}, .rotation = 0.0f, .scale = {1.0f, 1.0f}
+    });
+    ecs_set(world, e, Velocity, { .x = 0.0f, .y = -PROJECTILE_SPEED });
 
     return e;
 }

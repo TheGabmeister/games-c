@@ -1,5 +1,7 @@
 #include "game.h"
 
+static ecs_query_t *boundary_query = NULL;
+
 void game_init()
 {
     setup_window();
@@ -8,6 +10,13 @@ void game_init()
     renderer_system_init(world);
     input_system_init(world);
     movement_system_init(world);
+
+    boundary_query = ecs_query(world, {
+        .terms = {
+            { .id = Projectile },
+            { .id = ecs_id(Transform) }
+        }
+    });
 }
 
 void game_run()
@@ -31,6 +40,22 @@ void game_run()
         input_system_run(world);
         movement_system_run(world, dt);
 
+        /* Destroy projectiles that have moved above the top of the screen */
+        ecs_entity_t to_delete[64];
+        int del_count = 0;
+        ecs_iter_t bit = ecs_query_iter(world, boundary_query);
+        while (ecs_query_next(&bit))
+        {
+            Transform *transforms = ecs_field(&bit, Transform, 1);
+            for (int i = 0; i < bit.count; i++)
+            {
+                if (transforms[i].position[1] < 0.0f && del_count < 64)
+                    to_delete[del_count++] = bit.entities[i];
+            }
+        }
+        for (int i = 0; i < del_count; i++)
+            ecs_delete(world, to_delete[i]);
+
         SDL_SetRenderDrawColor(renderer, 0, 0, 0, 255);
         SDL_RenderClear(renderer);
 
@@ -42,6 +67,7 @@ void game_run()
 
 void game_destroy()
 {
+    ecs_query_fini(boundary_query);
     input_system_destroy();
     movement_system_destroy();
     renderer_system_destroy();
@@ -124,9 +150,10 @@ void load_level()
     }
 
     /* Phase 2: init ECS world, components, tags, and prefabs */
-    world = ecs_init();
-    Player = ecs_new(world);
-    Enemy  = ecs_new(world);
+    world      = ecs_init();
+    Player     = ecs_new(world);
+    Enemy      = ecs_new(world);
+    Projectile = ecs_new(world);
     component_manager_init(world);
     prefab_manager_init(world);
 

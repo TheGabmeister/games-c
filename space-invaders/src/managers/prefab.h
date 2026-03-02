@@ -31,4 +31,12 @@ ecs_entity_t prefab_instantiate(ecs_world_t *world,
                                 const char  *prefab_name,
                                 cJSON       *overrides);
 
+/*
+ * prefab_spawn_projectile
+ *
+ * Spawns a Projectile entity at position (x, y) with upward velocity.
+ * The projectile has a Sprite (white rect), BoxCollider, Transform, and Velocity.
+ */
+ecs_entity_t prefab_spawn_projectile(ecs_world_t *world, float x, float y);
+
 #endif /* PREFAB_MANAGER_H */
