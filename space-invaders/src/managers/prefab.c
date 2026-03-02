@@ -15,6 +15,14 @@ static ecs_entity_t PlayerPrefab     = 0;
 static ecs_entity_t EnemyPrefab      = 0;
 static ecs_entity_t ProjectilePrefab = 0;
 
+static void set_default_physics(ecs_world_t *world, ecs_entity_t e)
+{
+    ecs_set(world, e, Transform, {
+        .position = {0.0f, 0.0f}, .rotation = 0.0f, .scale = {1.0f, 1.0f}
+    });
+    ecs_set(world, e, Velocity, { .x = 0.0f, .y = 0.0f });
+}
+
 void prefab_manager_init(ecs_world_t *world)
 {
     /* --- PlayerPrefab --- */
@@ -28,10 +36,7 @@ void prefab_manager_init(ecs_world_t *world)
     ecs_set(world, PlayerPrefab, BoxCollider, { .w = 32.0f, .h = 32.0f });
 
     /* Establish component slots; values are always overridden per-instance */
-    ecs_set(world, PlayerPrefab, Transform, {
-        .position = {0.0f, 0.0f}, .rotation = 0.0f, .scale = {1.0f, 1.0f}
-    });
-    ecs_set(world, PlayerPrefab, Velocity, { .x = 0.0f, .y = 0.0f });
+    set_default_physics(world, PlayerPrefab);
     ecs_set(world, PlayerPrefab, Health,   { .current = 3, .max = 3 });
 
     /* --- EnemyPrefab --- */
@@ -44,10 +49,7 @@ void prefab_manager_init(ecs_world_t *world)
 
     ecs_set(world, EnemyPrefab, BoxCollider, { .w = 32.0f, .h = 32.0f });
 
-    ecs_set(world, EnemyPrefab, Transform, {
-        .position = {0.0f, 0.0f}, .rotation = 0.0f, .scale = {1.0f, 1.0f}
-    });
-    ecs_set(world, EnemyPrefab, Velocity, { .x = 0.0f, .y = 0.0f });
+    set_default_physics(world, EnemyPrefab);
     ecs_set(world, EnemyPrefab, Health,   { .current = 1, .max = 1 });
 
     /* --- ProjectilePrefab --- */
@@ -63,9 +65,7 @@ void prefab_manager_init(ecs_world_t *world)
         .texture = NULL,
         .color   = {255, 255, 255, 255}
     });
-    ecs_set(world, ProjectilePrefab, Transform, {
-        .position = {0.0f, 0.0f}, .rotation = 0.0f, .scale = {1.0f, 1.0f}
-    });
+    set_default_physics(world, ProjectilePrefab);
     ecs_set(world, ProjectilePrefab, Velocity, { .x = 0.0f, .y = -PROJECTILE_SPEED });
 }
 
