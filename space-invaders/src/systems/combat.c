@@ -2,6 +2,7 @@
 #include "tags.h"
 #include "../components/transform.h"
 #include "../managers/prefab.h"
+#include "../managers/audio.h"
 #include "../settings.h"
 
 static ecs_query_t *player_shoot_query;
@@ -26,7 +27,7 @@ void combat_system_init(ecs_world_t *world)
     });
 }
 
-static void process_shooters(ecs_world_t *world, ecs_query_t *query, float vy)
+static void process_shooters(ecs_world_t *world, ecs_query_t *query, float vy, SfxId sfx)
 {
     ecs_entity_t to_clear[64];
     int          count = 0;
@@ -47,14 +48,17 @@ static void process_shooters(ecs_world_t *world, ecs_query_t *query, float vy)
         }
     }
 
+    if (count > 0)
+        audio_play_sfx(sfx);
+
     for (int i = 0; i < count; i++)
         ecs_remove_id(world, to_clear[i], Shooting);
 }
 
 void combat_system_run(ecs_world_t *world)
 {
-    process_shooters(world, player_shoot_query, -PROJECTILE_SPEED);
-    process_shooters(world, enemy_shoot_query,  +PROJECTILE_SPEED);
+    process_shooters(world, player_shoot_query, -PROJECTILE_SPEED, SFX_LASER);
+    process_shooters(world, enemy_shoot_query,  +PROJECTILE_SPEED, SFX_COUNT);
 }
 
 void combat_system_destroy(void)

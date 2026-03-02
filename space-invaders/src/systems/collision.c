@@ -2,6 +2,7 @@
 #include "tags.h"
 #include "../components/transform.h"
 #include "../components/box_collider.h"
+#include "../managers/audio.h"
 
 #define MAX_PROJECTILES 256
 #define MAX_HITS        256
@@ -110,6 +111,7 @@ void collision_system_run(ecs_world_t *world)
     {
         ecs_delete(world, del_proj[i]);
         ecs_delete(world, del_enemy[i]);
+        audio_play_sfx(SFX_BUMP);
     }
 }
 

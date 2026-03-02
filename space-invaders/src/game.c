@@ -14,6 +14,7 @@ bool isRunning = false;
 void game_init()
 {
     setup_window();
+    audio_manager_init();
     load_level();
 
     renderer_system_init(world);
@@ -73,6 +74,7 @@ void game_destroy()
     renderer_system_destroy();
     gui_system_destroy();
     ecs_fini(world);
+    audio_manager_destroy();
     asset_manager_destroy();
     SDL_DestroyRenderer(renderer);
     SDL_DestroyWindow(window);

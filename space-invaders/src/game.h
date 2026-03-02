@@ -4,6 +4,7 @@
 #include "defines.h"
 #include "texture.h"
 #include "managers/asset.h"
+#include "managers/audio.h"
 #include "managers/prefab.h"
 #include "managers/component.h"
 #include "systems/renderer.h"
