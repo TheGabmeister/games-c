@@ -1,5 +1,5 @@
-#ifndef SARSA_H
-#define SARSA_H
+#ifndef DEFINES_H
+#define DEFINES_H
 
 /* mandatory: sdl3_renderer depends on those defines */
 //#define NK_INCLUDE_COMMAND_USERDATA
@@ -20,4 +20,4 @@
 #endif
 
 
-#endif // SARSA_H
+#endif // DEFINES_H
