@@ -1,4 +1,5 @@
 #include "game.h"
+#include "systems/enemy_movement.h"
 
 SDL_Window   *window     = NULL;
 SDL_Renderer *renderer   = NULL;
@@ -19,6 +20,7 @@ void game_init()
     input_system_init(world);
     movement_system_init(world);
     combat_system_init(world);
+    enemy_movement_system_init(world);
     boundary_system_init(world);
     collision_system_init(world);
     gui_system_init(window, renderer);
@@ -46,6 +48,7 @@ void game_run()
         input_system_run(world);
         combat_system_run(world);
         movement_system_run(world, dt);
+        enemy_movement_system_run(world);
         boundary_system_run(world);
         collision_system_run(world);
 
@@ -64,6 +67,7 @@ void game_destroy()
     input_system_destroy();
     combat_system_destroy();
     movement_system_destroy();
+    enemy_movement_system_destroy();
     boundary_system_destroy();
     collision_system_destroy();
     renderer_system_destroy();
