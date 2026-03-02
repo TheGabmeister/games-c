@@ -11,6 +11,7 @@
 #include "systems/movement.h"
 #include "systems/combat.h"
 #include "systems/boundary.h"
+#include "systems/collision.h"
 #include "systems/gui.h"
 #include "components/health.h"
 #include "components/box_collider.h"

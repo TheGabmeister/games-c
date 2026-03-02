@@ -20,6 +20,7 @@ void game_init()
     movement_system_init(world);
     combat_system_init(world);
     boundary_system_init(world);
+    collision_system_init(world);
     gui_system_init(window, renderer);
 }
 
@@ -46,6 +47,7 @@ void game_run()
         combat_system_run(world);
         movement_system_run(world, dt);
         boundary_system_run(world);
+        collision_system_run(world);
 
         SDL_SetRenderDrawColor(renderer, 0, 0, 0, 255);
         SDL_RenderClear(renderer);
@@ -63,6 +65,7 @@ void game_destroy()
     combat_system_destroy();
     movement_system_destroy();
     boundary_system_destroy();
+    collision_system_destroy();
     renderer_system_destroy();
     gui_system_destroy();
     ecs_fini(world);
