@@ -1,17 +1,36 @@
 #include "game.h"
+#include "game_state.h"
+#include "tags.h"
+#include "defines.h"
+#include "texture.h"
+#include "settings.h"
+#include "managers/asset.h"
+#include "managers/audio.h"
+#include "managers/prefab.h"
+#include "managers/component.h"
+#include "systems/renderer.h"
+#include "systems/input.h"
+#include "systems/movement.h"
+#include "systems/combat.h"
 #include "systems/enemy_movement.h"
+#include "systems/boundary.h"
+#include "systems/collision.h"
+#include "systems/gui.h"
 #include <string.h>
 
-SDL_Window   *window     = NULL;
-SDL_Renderer *renderer   = NULL;
-ecs_world_t  *world      = NULL;
-ecs_entity_t  Player     = 0;
-ecs_entity_t  Enemy      = 0;
-ecs_entity_t  Projectile = 0;
-ecs_entity_t  Shooting   = 0;
+/* SDL and ECS handles — private to game.c */
+static SDL_Window   *window   = NULL;
+static SDL_Renderer *renderer = NULL;
+static ecs_world_t  *world    = NULL;
 
-bool      isRunning  = false;
-GameState game_state = GAME_STATE_MENU;
+/* Tags — non-static: systems access them via tags.h externs */
+ecs_entity_t Player     = 0;
+ecs_entity_t Enemy      = 0;
+ecs_entity_t Projectile = 0;
+ecs_entity_t Shooting   = 0;
+
+static bool      isRunning  = false;
+static GameState game_state = GAME_STATE_MENU;
 
 /* Query used only for win-condition counting; excludes prefabs automatically. */
 static ecs_query_t *enemy_count_query = NULL;
@@ -35,7 +54,7 @@ static void render_text_centered(float scale, float screen_y, const char *text)
 /* Per-state render functions                                           */
 /* ------------------------------------------------------------------ */
 
-static void render_menu(void)
+static void render_menu()
 {
     SDL_SetRenderDrawColor(renderer, 255, 255, 255, 255);
     render_text_centered(4.0f, 160.0f, "SPACE INVADERS");
@@ -45,7 +64,7 @@ static void render_menu(void)
     render_text_centered(2.0f, 325.0f, "ESC TO QUIT");
 }
 
-static void render_game_over(void)
+static void render_game_over()
 {
     /* Frozen world is already drawn — overlay the result text. */
     SDL_SetRenderDrawColor(renderer, 220, 50, 50, 255);
@@ -55,7 +74,7 @@ static void render_game_over(void)
     render_text_centered(2.0f, 310.0f, "ENTER: RESTART   ESC: QUIT");
 }
 
-static void render_win(void)
+static void render_win()
 {
     SDL_SetRenderDrawColor(renderer, 50, 220, 50, 255);
     render_text_centered(4.0f, 180.0f, "YOU WIN!");
@@ -65,10 +84,17 @@ static void render_win(void)
 }
 
 /* ------------------------------------------------------------------ */
+/* Forward declarations                                                 */
+/* ------------------------------------------------------------------ */
+
+static void setup_window();
+static void load_level();
+
+/* ------------------------------------------------------------------ */
 /* World lifecycle (safe to call multiple times for restart)           */
 /* ------------------------------------------------------------------ */
 
-static void world_init(void)
+static void world_init()
 {
     load_level();
     enemy_count_query = ecs_query(world, { .terms = { { .id = Enemy } } });
@@ -81,7 +107,7 @@ static void world_init(void)
     collision_system_init(world);
 }
 
-static void world_fini(void)
+static void world_fini()
 {
     input_system_destroy();
     combat_system_destroy();
@@ -102,7 +128,7 @@ static void world_fini(void)
 /* State transitions                                                    */
 /* ------------------------------------------------------------------ */
 
-static void start_game(void)
+static void start_game()
 {
     if (world) world_fini();
     world_init();
@@ -110,7 +136,7 @@ static void start_game(void)
 }
 
 /* Check win/lose conditions; only call during GAME_STATE_PLAYING. */
-static void check_game_conditions(void)
+static void check_game_conditions()
 {
     /* Count live enemy instances via a query — ecs_count_id is not used here
      * because it includes the EnemyPrefab entity itself, which also carries
@@ -233,7 +259,7 @@ void game_destroy()
     SDL_Quit();
 }
 
-void setup_window()
+static void setup_window()
 {
     if (!SDL_Init(SDL_INIT_VIDEO)) {
         SDL_Log("SDL_Init failed: %s", SDL_GetError());
@@ -256,7 +282,7 @@ void setup_window()
     }
 }
 
-void load_level()
+static void load_level()
 {
     char path[512];
     snprintf(path, sizeof(path), "%s%s", ASSETS_DIR, "level_01.json");
