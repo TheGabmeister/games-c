@@ -6,6 +6,7 @@ set(CMAKE_C_STANDARD 11)
 add_subdirectory(thirdparty/sdl)
 add_subdirectory(thirdparty/flecs)
 add_subdirectory(thirdparty/cglm)
+add_subdirectory(thirdparty/raudio)
 
 file(GLOB_RECURSE MY_SOURCES CONFIGURE_DEPENDS "${CMAKE_CURRENT_SOURCE_DIR}/src/*.c")
 add_executable(${PROJECT_NAME} 
@@ -18,10 +19,11 @@ target_include_directories(${PROJECT_NAME} PRIVATE
     thirdparty/nuklear
     thirdparty/cjson
 )
-target_link_libraries(${PROJECT_NAME} PRIVATE 
-    SDL3::SDL3 
+target_link_libraries(${PROJECT_NAME} PRIVATE
+    SDL3::SDL3
     flecs::flecs_static
     cglm
+    raudio
 )
 
 # Copy SDL3 shared library next to the executable on Windows
