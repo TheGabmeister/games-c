@@ -42,15 +42,22 @@ static ecs_query_t *enemy_count_query = NULL;
 /* Text rendering helpers                                               */
 /* ------------------------------------------------------------------ */
 
-/* Render text centered horizontally at the given screen-space y.
- * SDL_RenderDebugText uses an 8x8 pixel font; scale multiplies that. */
-static void render_text_centered(float scale, float screen_y, const char *text)
+/* SDL_RenderDebugText uses an 8x8 pixel font; scale multiplies that. */
+static void render_text(SDL_Renderer *r, SDL_Color color, float scale,
+                        float x, float y, const char *text)
 {
-    float text_w_screen = (float)strlen(text) * 8.0f * scale;
-    float screen_x = ((float)WINDOW_WIDTH - text_w_screen) * 0.5f;
-    SDL_SetRenderScale(renderer, scale, scale);
-    SDL_RenderDebugText(renderer, screen_x / scale, screen_y / scale, text);
-    SDL_SetRenderScale(renderer, 1.0f, 1.0f);
+    SDL_SetRenderDrawColor(r, color.r, color.g, color.b, color.a);
+    SDL_SetRenderScale(r, scale, scale);
+    SDL_RenderDebugText(r, x / scale, y / scale, text);
+    SDL_SetRenderScale(r, 1.0f, 1.0f);
+}
+
+static void render_text_centered(SDL_Color color, float scale,
+                                 float screen_y, const char *text)
+{
+    float text_w = (float)strlen(text) * 8.0f * scale;
+    float screen_x = ((float)WINDOW_WIDTH - text_w) * 0.5f;
+    render_text(renderer, color, scale, screen_x, screen_y, text);
 }
 
 /* ------------------------------------------------------------------ */
@@ -59,31 +66,22 @@ static void render_text_centered(float scale, float screen_y, const char *text)
 
 static void render_menu()
 {
-    SDL_SetRenderDrawColor(renderer, 255, 255, 255, 255);
-    render_text_centered(4.0f, 160.0f, "SPACE INVADERS");
-
-    SDL_SetRenderDrawColor(renderer, 180, 180, 180, 255);
-    render_text_centered(2.0f, 290.0f, "PRESS ENTER TO PLAY");
-    render_text_centered(2.0f, 325.0f, "ESC TO QUIT");
+    render_text_centered((SDL_Color){255, 255, 255, 255}, 4.0f, 160.0f, "SPACE INVADERS");
+    render_text_centered((SDL_Color){180, 180, 180, 255}, 2.0f, 290.0f, "PRESS ENTER TO PLAY");
+    render_text_centered((SDL_Color){180, 180, 180, 255}, 2.0f, 325.0f, "ESC TO QUIT");
 }
 
 static void render_game_over()
 {
     /* Frozen world is already drawn — overlay the result text. */
-    SDL_SetRenderDrawColor(renderer, 220, 50, 50, 255);
-    render_text_centered(4.0f, 180.0f, "GAME OVER");
-
-    SDL_SetRenderDrawColor(renderer, 180, 180, 180, 255);
-    render_text_centered(2.0f, 310.0f, "ENTER: RESTART   ESC: QUIT");
+    render_text_centered((SDL_Color){220,  50,  50, 255}, 4.0f, 180.0f, "GAME OVER");
+    render_text_centered((SDL_Color){180, 180, 180, 255}, 2.0f, 310.0f, "ENTER: RESTART   ESC: QUIT");
 }
 
 static void render_win()
 {
-    SDL_SetRenderDrawColor(renderer, 50, 220, 50, 255);
-    render_text_centered(4.0f, 180.0f, "YOU WIN!");
-
-    SDL_SetRenderDrawColor(renderer, 180, 180, 180, 255);
-    render_text_centered(2.0f, 310.0f, "ENTER: PLAY AGAIN   ESC: QUIT");
+    render_text_centered((SDL_Color){ 50, 220,  50, 255}, 4.0f, 180.0f, "YOU WIN!");
+    render_text_centered((SDL_Color){180, 180, 180, 255}, 2.0f, 310.0f, "ENTER: PLAY AGAIN   ESC: QUIT");
 }
 
 /* ------------------------------------------------------------------ */
