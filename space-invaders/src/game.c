@@ -20,6 +20,7 @@ void game_init()
     movement_system_init(world);
     combat_system_init(world);
     boundary_system_init(world);
+    gui_system_init(window, renderer);
 }
 
 void game_run()
@@ -38,6 +39,7 @@ void game_run()
         {
             if (event.type == SDL_EVENT_QUIT || event.key.scancode == SDL_SCANCODE_ESCAPE)
                 isRunning = false;
+            gui_system_handle_event(&event);
         }
 
         input_system_run(world);
@@ -49,6 +51,7 @@ void game_run()
         SDL_RenderClear(renderer);
 
         renderer_system_run(world, renderer);
+        gui_system_run(world);
 
         SDL_RenderPresent(renderer);
     }
@@ -61,6 +64,7 @@ void game_destroy()
     movement_system_destroy();
     boundary_system_destroy();
     renderer_system_destroy();
+    gui_system_destroy();
     ecs_fini(world);
     asset_manager_destroy();
     SDL_DestroyRenderer(renderer);
