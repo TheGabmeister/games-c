@@ -13,6 +13,9 @@ ecs_entity_t  Shooting   = 0;
 bool      isRunning  = false;
 GameState game_state = GAME_STATE_MENU;
 
+/* Query used only for win-condition counting; excludes prefabs automatically. */
+static ecs_query_t *enemy_count_query = NULL;
+
 /* ------------------------------------------------------------------ */
 /* Text rendering helpers                                               */
 /* ------------------------------------------------------------------ */
@@ -68,6 +71,7 @@ static void render_win(void)
 static void world_init(void)
 {
     load_level();
+    enemy_count_query = ecs_query(world, { .terms = { { .id = Enemy } } });
     renderer_system_init(world);
     input_system_init(world);
     movement_system_init(world);
@@ -86,6 +90,8 @@ static void world_fini(void)
     boundary_system_destroy();
     collision_system_destroy();
     renderer_system_destroy();
+    ecs_query_fini(enemy_count_query);
+    enemy_count_query = NULL;
     ecs_fini(world);
     world = NULL;
     /* Free textures after the world (and all Sprite components) are gone. */
@@ -106,7 +112,14 @@ static void start_game(void)
 /* Check win/lose conditions; only call during GAME_STATE_PLAYING. */
 static void check_game_conditions(void)
 {
-    if (ecs_count_id(world, Enemy) == 0) {
+    /* Count live enemy instances via a query — ecs_count_id is not used here
+     * because it includes the EnemyPrefab entity itself, which also carries
+     * the Enemy tag, so it would never reach zero. Queries exclude prefabs. */
+    int enemy_count = 0;
+    ecs_iter_t it = ecs_query_iter(world, enemy_count_query);
+    while (ecs_query_next(&it)) enemy_count += it.count;
+
+    if (enemy_count == 0) {
         game_state = GAME_STATE_WIN;
         return;
     }
