@@ -10,6 +10,7 @@ void game_init()
     renderer_system_init(world);
     input_system_init(world);
     movement_system_init(world);
+    combat_system_init(world);
 
     boundary_query = ecs_query(world, {
         .terms = {
@@ -38,6 +39,7 @@ void game_run()
         }
 
         input_system_run(world);
+        combat_system_run(world);
         movement_system_run(world, dt);
 
         /* Destroy projectiles that have moved above the top of the screen */
@@ -49,7 +51,8 @@ void game_run()
             Transform *transforms = ecs_field(&bit, Transform, 1);
             for (int i = 0; i < bit.count; i++)
             {
-                if (transforms[i].position[1] < 0.0f && del_count < 64)
+                if ((transforms[i].position[1] < 0.0f ||
+                     transforms[i].position[1] > (float)WINDOW_HEIGHT) && del_count < 64)
                     to_delete[del_count++] = bit.entities[i];
             }
         }
@@ -69,6 +72,7 @@ void game_destroy()
 {
     ecs_query_fini(boundary_query);
     input_system_destroy();
+    combat_system_destroy();
     movement_system_destroy();
     renderer_system_destroy();
     ecs_fini(world);
@@ -154,6 +158,7 @@ void load_level()
     Player     = ecs_new(world);
     Enemy      = ecs_new(world);
     Projectile = ecs_new(world);
+    Shooting   = ecs_new(world);
     component_manager_init(world);
     prefab_manager_init(world);
 

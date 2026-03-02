@@ -158,14 +158,14 @@ ecs_entity_t prefab_instantiate(ecs_world_t *world,
     return e;
 }
 
-ecs_entity_t prefab_spawn_projectile(ecs_world_t *world, float x, float y)
+ecs_entity_t prefab_spawn_projectile(ecs_world_t *world, float x, float y, float vy)
 {
     ecs_entity_t e = ecs_new_w_pair(world, EcsIsA, ProjectilePrefab);
 
     ecs_set(world, e, Transform, {
         .position = {x, y}, .rotation = 0.0f, .scale = {1.0f, 1.0f}
     });
-    ecs_set(world, e, Velocity, { .x = 0.0f, .y = -PROJECTILE_SPEED });
+    ecs_set(world, e, Velocity, { .x = 0.0f, .y = vy });
 
     return e;
 }

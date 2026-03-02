@@ -9,6 +9,7 @@
 #include "systems/renderer.h"
 #include "systems/input.h"
 #include "systems/movement.h"
+#include "systems/combat.h"
 #include "components/health.h"
 #include "components/box_collider.h"
 #include "components/velocity.h"
@@ -20,6 +21,7 @@ ecs_world_t  *world;
 ecs_entity_t Player;
 ecs_entity_t Enemy;
 ecs_entity_t Projectile;
+ecs_entity_t Shooting;
 
 bool isRunning;
 

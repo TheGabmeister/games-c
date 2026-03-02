@@ -2,8 +2,6 @@
 #include <SDL3/SDL.h>
 #include "tags.h"
 #include "../components/velocity.h"
-#include "../components/transform.h"
-#include "../managers/prefab.h"
 #include "settings.h"
 
 static ecs_query_t *input_query;
@@ -21,8 +19,7 @@ void input_system_init(ecs_world_t *world)
 
     shoot_query = ecs_query(world, {
         .terms = {
-            { .id = Player },
-            { .id = ecs_id(Transform) }
+            { .id = Player }
         }
     });
 }
@@ -54,13 +51,8 @@ void input_system_run(ecs_world_t *world)
         ecs_iter_t sit = ecs_query_iter(world, shoot_query);
         while (ecs_query_next(&sit))
         {
-            Transform *transforms = ecs_field(&sit, Transform, 1);
             for (int i = 0; i < sit.count; i++)
-            {
-                prefab_spawn_projectile(world,
-                    transforms[i].position[0],
-                    transforms[i].position[1]);
-            }
+                ecs_add_id(world, sit.entities[i], Shooting);
         }
     }
     prev_space = cur_space;

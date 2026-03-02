@@ -34,9 +34,9 @@ ecs_entity_t prefab_instantiate(ecs_world_t *world,
 /*
  * prefab_spawn_projectile
  *
- * Spawns a Projectile entity at position (x, y) with upward velocity.
- * The projectile has a Sprite (white rect), BoxCollider, Transform, and Velocity.
+ * Spawns a Projectile entity at position (x, y) with the given y-velocity.
+ * Pass a negative vy for upward (player) projectiles, positive for downward (enemy).
  */
-ecs_entity_t prefab_spawn_projectile(ecs_world_t *world, float x, float y);
+ecs_entity_t prefab_spawn_projectile(ecs_world_t *world, float x, float y, float vy);
 
 #endif /* PREFAB_MANAGER_H */
