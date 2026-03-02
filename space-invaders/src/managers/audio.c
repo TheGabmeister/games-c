@@ -32,13 +32,13 @@ void audio_manager_destroy(void)
     CloseAudioDevice();
 }
 
-/* IDs prefixed with "music-" are loaded as streamed Music; all others as Sound. */
+/* IDs prefixed with "music_" are loaded as streamed Music; all others as Sound. */
 void audio_manager_add(const char *id, const char *file)
 {
-    if (strncmp(id, "music-", 6) == 0)
+    if (strncmp(id, "music_", 6) == 0)
     {
         if (music_count >= AUDIO_MUSIC_MAX) {
-            SDL_Log("audio_manager_add: music cache full, cannot add '%s'", id);
+            SDL_LogError("audio_manager_add: music cache full, cannot add '%s'", id);
             return;
         }
         MusicEntry *e = &music_entries[music_count++];
@@ -49,7 +49,7 @@ void audio_manager_add(const char *id, const char *file)
     else
     {
         if (sfx_count >= AUDIO_SFX_MAX) {
-            SDL_Log("audio_manager_add: sfx cache full, cannot add '%s'", id);
+            SDL_LogError("audio_manager_add: sfx cache full, cannot add '%s'", id);
             return;
         }
         SfxEntry *e = &sfx_entries[sfx_count++];
@@ -67,7 +67,7 @@ void audio_play_sfx(const char *id)
             return;
         }
     }
-    SDL_Log("audio_play_sfx: unknown id '%s'", id);
+    SDL_LogError("audio_play_sfx: unknown id '%s'", id);
 }
 
 void audio_play_music(const char *id)
@@ -79,7 +79,7 @@ void audio_play_music(const char *id)
             return;
         }
     }
-    SDL_Log("audio_play_music: unknown id '%s'", id);
+    SDL_LogError("audio_play_music: unknown id '%s'", id);
 }
 
 void audio_stop_music(void)

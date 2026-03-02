@@ -139,7 +139,7 @@ static void start_game()
     score_reset();
     if (world) world_fini();
     world_init();
-    audio_play_music("music-spaceshooter");
+    audio_play_music("music_spaceshooter");
     game_state = GAME_STATE_PLAYING;
 }
 

@@ -57,8 +57,8 @@ static void process_shooters(ecs_world_t *world, ecs_query_t *query, float vy, c
 
 void combat_system_run(ecs_world_t *world)
 {
-    process_shooters(world, player_shoot_query, -PROJECTILE_SPEED, "sfx-laser1");
-    process_shooters(world, enemy_shoot_query,  +PROJECTILE_SPEED, "sfx-laser2");
+    process_shooters(world, player_shoot_query, -PROJECTILE_SPEED, "sfx_laser1");
+    process_shooters(world, enemy_shoot_query,  +PROJECTILE_SPEED, "sfx_laser2");
 }
 
 void combat_system_destroy(void)
