@@ -50,6 +50,7 @@ void prefab_manager_init(ecs_world_t *world)
     ecs_set(world, EnemyPrefab, BoxCollider, { .w = 32.0f, .h = 32.0f });
 
     set_default_physics(world, EnemyPrefab);
+    ecs_set(world, EnemyPrefab, Velocity, { .x = ENEMY_SPEED, .y = 0.0f });
     ecs_set(world, EnemyPrefab, Health,   { .current = 1, .max = 1 });
 
     /* --- ProjectilePrefab --- */
