@@ -113,6 +113,7 @@ static void world_init()
 
 static void world_fini()
 {
+    audio_stop_music();
     input_system_destroy();
     combat_system_destroy();
     movement_system_destroy();
@@ -138,6 +139,7 @@ static void start_game()
     score_reset();
     if (world) world_fini();
     world_init();
+    audio_play_music("music-spaceshooter");
     game_state = GAME_STATE_PLAYING;
 }
 
@@ -194,6 +196,8 @@ void game_run()
         float dt = (now - last_ticks) / 1000.0f;
         if (dt > 0.05f) dt = 0.05f;
         last_ticks = now;
+
+        audio_update();
 
         while (SDL_PollEvent(&event))
         {
@@ -329,25 +333,22 @@ static void load_level()
         return;
     }
 
-    /* Phase 1: load textures into asset_manager */
+    /* Phase 1: load assets (textures + audio) */
     cJSON *assets = cJSON_GetObjectItemCaseSensitive(level_json, "assets");
     cJSON *asset;
     cJSON_ArrayForEach(asset, assets) {
         cJSON *type = cJSON_GetObjectItemCaseSensitive(asset, "type");
-        if (!cJSON_IsString(type) || strcmp(type->valuestring, "texture") != 0)
-            continue;
-
+        cJSON *id   = cJSON_GetObjectItemCaseSensitive(asset, "id");
         cJSON *file = cJSON_GetObjectItemCaseSensitive(asset, "file");
-        if (!cJSON_IsString(file))
+        if (!cJSON_IsString(type) || !cJSON_IsString(id) || !cJSON_IsString(file))
             continue;
 
-        cJSON *id = cJSON_GetObjectItemCaseSensitive(asset, "id");
-        if (!cJSON_IsString(id))
-            continue;
-
-        SDL_Texture *tex = load_texture(renderer, file->valuestring);
-        if (tex)
-            asset_manager_add(id->valuestring, tex);
+        if (strcmp(type->valuestring, "texture") == 0) {
+            SDL_Texture *tex = load_texture(renderer, file->valuestring);
+            if (tex) asset_manager_add(id->valuestring, tex);
+        } else if (strcmp(type->valuestring, "audio") == 0) {
+            audio_manager_add(id->valuestring, file->valuestring);
+        }
     }
 
     /* Phase 2: init ECS world, components, tags, and prefabs */

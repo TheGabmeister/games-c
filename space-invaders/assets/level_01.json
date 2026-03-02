@@ -1,7 +1,11 @@
 {
   "assets": [
     { "type": "texture", "id": "player-ship", "file": "./assets/player-ship.png" },
-    { "type": "texture", "id": "enemy-ufo",   "file": "./assets/enemy-ufo.png"   }
+    { "type": "texture", "id": "enemy-ufo",   "file": "./assets/enemy-ufo.png"   },
+    { "type": "audio", "id": "sfx-laser1",   "file": "./assets/sfx-laser1.ogg"   },
+    { "type": "audio", "id": "sfx-laser2",   "file": "./assets/sfx-laser2.ogg"   },
+    { "type": "audio", "id": "sfx-lose",   "file": "./assets/sfx-lose.ogg"   },
+    { "type": "audio", "id": "music-spaceshooter",   "file": "./assets/music-spaceshooter.ogg"   }
   ],
   "entities": [
     { "prefab": "Player", "overrides": {

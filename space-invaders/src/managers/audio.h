@@ -1,14 +1,23 @@
-#ifndef AUDIO_H
-#define AUDIO_H
+#ifndef AUDIO_MANAGER_H
+#define AUDIO_MANAGER_H
 
-typedef enum {
-    SFX_LASER,
-    SFX_BUMP,
-    SFX_COUNT   /* sentinel — also means "no sound" */
-} SfxId;
-
+/* Initialise/teardown the audio device. */
 void audio_manager_init(void);
 void audio_manager_destroy(void);
-void audio_play_sfx(SfxId id);
 
-#endif /* AUDIO_H */
+/* Load an audio asset by string ID.
+ * IDs prefixed with "music-" are loaded as streamed Music tracks;
+ * all others are loaded as in-memory Sound effects. */
+void audio_manager_add(const char *id, const char *file);
+
+/* Play a previously loaded sound effect by ID. */
+void audio_play_sfx(const char *id);
+
+/* Start/stop the active music track. */
+void audio_play_music(const char *id);
+void audio_stop_music(void);
+
+/* Must be called once per frame while music is playing. */
+void audio_update(void);
+
+#endif /* AUDIO_MANAGER_H */

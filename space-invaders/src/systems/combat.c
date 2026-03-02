@@ -27,7 +27,7 @@ void combat_system_init(ecs_world_t *world)
     });
 }
 
-static void process_shooters(ecs_world_t *world, ecs_query_t *query, float vy, SfxId sfx)
+static void process_shooters(ecs_world_t *world, ecs_query_t *query, float vy, const char *sfx_id)
 {
     ecs_entity_t to_clear[64];
     int          count = 0;
@@ -48,8 +48,8 @@ static void process_shooters(ecs_world_t *world, ecs_query_t *query, float vy, S
         }
     }
 
-    if (count > 0)
-        audio_play_sfx(sfx);
+    if (count > 0 && sfx_id)
+        audio_play_sfx(sfx_id);
 
     for (int i = 0; i < count; i++)
         ecs_remove_id(world, to_clear[i], Shooting);
@@ -57,8 +57,8 @@ static void process_shooters(ecs_world_t *world, ecs_query_t *query, float vy, S
 
 void combat_system_run(ecs_world_t *world)
 {
-    process_shooters(world, player_shoot_query, -PROJECTILE_SPEED, SFX_LASER);
-    process_shooters(world, enemy_shoot_query,  +PROJECTILE_SPEED, SFX_COUNT);
+    process_shooters(world, player_shoot_query, -PROJECTILE_SPEED, "sfx-laser1");
+    process_shooters(world, enemy_shoot_query,  +PROJECTILE_SPEED, "sfx-laser2");
 }
 
 void combat_system_destroy(void)

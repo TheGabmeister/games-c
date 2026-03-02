@@ -172,7 +172,7 @@ void collision_system_run(ecs_world_t *world)
         ecs_delete(world, del_proj[i]);
         ecs_delete(world, del_enemy[i]);
         score_add(10);
-        audio_play_sfx(SFX_BUMP);
+        audio_play_sfx("sfx-lose");
     }
 
     /* Step 3b: delete enemy projectiles and damage player */
@@ -181,7 +181,7 @@ void collision_system_run(ecs_world_t *world)
         ecs_delete(world, del_enemy_proj[i]);
         Health *h = ecs_get_mut(world, hit_player[i], Health);
         if (h) h->current--;
-        audio_play_sfx(SFX_BUMP);
+        audio_play_sfx("sfx-lose");
     }
 }
 
