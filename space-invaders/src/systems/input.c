@@ -2,12 +2,10 @@
 #include <SDL3/SDL.h>
 #include "tags.h"
 #include "../components/velocity.h"
-#include "../components/transform.h"
-#include "../components/box_collider.h"
 #include "settings.h"
 
-/* Terms: [Player(tag), Velocity, Transform, BoxCollider]
- * indices:     0           1         2           3       */
+/* Terms: [Player(tag), Velocity]
+ * indices:     0           1    */
 static ecs_query_t *input_query;
 static ecs_query_t *shoot_query;
 static bool         prev_space = false;
@@ -17,9 +15,7 @@ void input_system_init(ecs_world_t *world)
     input_query = ecs_query(world, {
         .terms = {
             { .id = Player },
-            { .id = ecs_id(Velocity) },
-            { .id = ecs_id(Transform) },
-            { .id = ecs_id(BoxCollider) }
+            { .id = ecs_id(Velocity) }
         }
     });
 
@@ -41,24 +37,10 @@ void input_system_run(ecs_world_t *world)
     ecs_iter_t it = ecs_query_iter(world, input_query);
     while (ecs_query_next(&it))
     {
-        Velocity    *velocities = ecs_field(&it, Velocity,    1);
-        Transform   *transforms = ecs_field(&it, Transform,   2);
-        BoxCollider *colliders  = ecs_field(&it, BoxCollider, 3);
+        Velocity *velocities = ecs_field(&it, Velocity, 1);
         for (int i = 0; i < it.count; i++)
         {
-            float hw = colliders[i].w * 0.5f;
-            float x  = transforms[i].position[0];
-
-            /* Hard-clamp position to fix any prior-frame overshoot */
-            if (x - hw < 0.0f)                    transforms[i].position[0] = hw;
-            if (x + hw > (float)WINDOW_WIDTH)      transforms[i].position[0] = (float)WINDOW_WIDTH - hw;
-
-            /* Suppress velocity that would push the player further out-of-bounds */
-            float vx = dx;
-            if (x - hw <= 0.0f && vx < 0.0f)                vx = 0.0f;
-            if (x + hw >= (float)WINDOW_WIDTH && vx > 0.0f) vx = 0.0f;
-
-            velocities[i].x = vx;
+            velocities[i].x = dx;
             velocities[i].y = 0.0f;
         }
     }
