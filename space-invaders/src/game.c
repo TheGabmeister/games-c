@@ -9,7 +9,7 @@
 #include "managers/audio.h"
 #include "managers/prefab.h"
 #include "managers/component.h"
-#include "components/health.h"
+#include "systems/hud.h"
 #include "systems/renderer.h"
 #include "systems/input.h"
 #include "systems/movement.h"
@@ -35,9 +35,7 @@ static bool      isRunning  = false;
 static GameState game_state = GAME_STATE_MENU;
 
 /* Query used only for win-condition counting; excludes prefabs automatically. */
-static ecs_query_t *enemy_count_query  = NULL;
-/* Query to read player lives (Health component). */
-static ecs_query_t *player_health_query = NULL;
+static ecs_query_t *enemy_count_query = NULL;
 
 /* ------------------------------------------------------------------ */
 /* Text rendering helpers                                               */
@@ -87,52 +85,12 @@ static void render_win()
     render_text_centered(2.0f, 310.0f, "ENTER: PLAY AGAIN   ESC: QUIT");
 }
 
-static void render_hud()
-{
-    /* Read player lives from the ECS. */
-    int lives = 0;
-    ecs_iter_t it = ecs_query_iter(world, player_health_query);
-    while (ecs_query_next(&it)) {
-        Health *h = ecs_field(&it, Health, 1);
-        if (it.count > 0) lives = h[0].current;
-    }
-
-    char buf[32];
-    const float scale = 1.5f;
-    const float char_w = 8.0f * scale;
-    const float y_screen = 8.0f;
-
-    SDL_SetRenderScale(renderer, scale, scale);
-    SDL_SetRenderDrawColor(renderer, 255, 255, 255, 255);
-
-    /* Left: score */
-    SDL_snprintf(buf, sizeof(buf), "SCORE: %05d", score_get());
-    SDL_RenderDebugText(renderer, 8.0f / scale, y_screen / scale, buf);
-
-    /* Center: hi-score */
-    SDL_snprintf(buf, sizeof(buf), "HI: %05d", score_get_high());
-    float hi_w = (float)strlen(buf) * char_w;
-    SDL_RenderDebugText(renderer,
-        ((float)WINDOW_WIDTH - hi_w) * 0.5f / scale,
-        y_screen / scale, buf);
-
-    /* Right: lives */
-    SDL_snprintf(buf, sizeof(buf), "LIVES: %d", lives);
-    float lives_w = (float)strlen(buf) * char_w;
-    SDL_RenderDebugText(renderer,
-        ((float)WINDOW_WIDTH - lives_w - 8.0f) / scale,
-        y_screen / scale, buf);
-
-    SDL_SetRenderScale(renderer, 1.0f, 1.0f);
-}
-
 /* ------------------------------------------------------------------ */
 /* Forward declarations                                                 */
 /* ------------------------------------------------------------------ */
 
 static void setup_window();
 static void load_level();
-static void render_hud();
 
 /* ------------------------------------------------------------------ */
 /* World lifecycle (safe to call multiple times for restart)           */
@@ -141,12 +99,9 @@ static void render_hud();
 static void world_init()
 {
     load_level();
-    enemy_count_query   = ecs_query(world, { .terms = { { .id = Enemy } } });
-    /* Terms: [Player(tag), Health] — indices 0 (tag), 1 */
-    player_health_query = ecs_query(world, {
-        .terms = { { .id = Player }, { .id = ecs_id(Health) } }
-    });
+    enemy_count_query = ecs_query(world, { .terms = { { .id = Enemy } } });
     renderer_system_init(world);
+    hud_system_init(world, renderer);
     input_system_init(world);
     movement_system_init(world);
     combat_system_init(world);
@@ -164,10 +119,9 @@ static void world_fini()
     boundary_system_destroy();
     collision_system_destroy();
     renderer_system_destroy();
+    hud_system_destroy();
     ecs_query_fini(enemy_count_query);
     enemy_count_query = NULL;
-    ecs_query_fini(player_health_query);
-    player_health_query = NULL;
     ecs_fini(world);
     world = NULL;
     /* Free textures after the world (and all Sprite components) are gone. */
@@ -207,17 +161,9 @@ static void check_game_conditions()
         return;
     }
     /* Player out of lives */
-    ecs_iter_t pit = ecs_query_iter(world, player_health_query);
-    while (ecs_query_next(&pit)) {
-        Health *h = ecs_field(&pit, Health, 1);
-        for (int i = 0; i < pit.count; i++) {
-            if (h[i].current <= 0) {
-                score_update_high();
-                game_state = GAME_STATE_GAME_OVER;
-                ecs_iter_fini(&pit);
-                return;
-            }
-        }
+    if (hud_system_get_player_lives() <= 0) {
+        score_update_high();
+        game_state = GAME_STATE_GAME_OVER;
     }
 }
 
@@ -300,19 +246,19 @@ void game_run()
 
                 renderer_system_run(world, renderer);
                 gui_system_run(world);
-                render_hud();
+                hud_system_run();
                 break;
 
             case GAME_STATE_GAME_OVER:
                 renderer_system_run(world, renderer);
                 render_game_over();
-                render_hud();
+                hud_system_run();
                 break;
 
             case GAME_STATE_WIN:
                 renderer_system_run(world, renderer);
                 render_win();
-                render_hud();
+                hud_system_run();
                 break;
         }
 
