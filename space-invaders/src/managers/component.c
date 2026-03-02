@@ -4,6 +4,7 @@
 #include "../components/velocity.h"
 #include "../components/box_collider.h"
 #include "../components/health.h"
+#include "../components/shoot_timer.h"
 
 void component_manager_init(ecs_world_t *world)
 {
@@ -12,4 +13,5 @@ void component_manager_init(ecs_world_t *world)
     ECS_COMPONENT_DEFINE(world, Velocity);
     ECS_COMPONENT_DEFINE(world, BoxCollider);
     ECS_COMPONENT_DEFINE(world, Health);
+    ECS_COMPONENT_DEFINE(world, ShootTimer);
 }

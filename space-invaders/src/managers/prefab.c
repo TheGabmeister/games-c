@@ -6,6 +6,7 @@
 #include "../components/sprite.h"
 #include "../components/box_collider.h"
 #include "../components/health.h"
+#include "../components/shoot_timer.h"
 #include "../settings.h"
 
 #include <SDL3/SDL.h>
@@ -51,7 +52,8 @@ void prefab_manager_init(ecs_world_t *world)
 
     set_default_physics(world, EnemyPrefab);
     ecs_set(world, EnemyPrefab, Velocity, { .x = ENEMY_SPEED, .y = 0.0f });
-    ecs_set(world, EnemyPrefab, Health,   { .current = 1, .max = 1 });
+    ecs_set(world, EnemyPrefab, Health,     { .current = 1, .max = 1 });
+    ecs_set(world, EnemyPrefab, ShootTimer, { .time_remaining = -1.0f });
 
     /* --- ProjectilePrefab --- */
     ProjectilePrefab = ecs_entity(world, {

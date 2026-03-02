@@ -19,6 +19,7 @@
 #include "systems/collision.h"
 #include "systems/gui.h"
 #include <string.h>
+#include <stdlib.h>
 
 /* SDL and ECS handles — private to game.c */
 static SDL_Window   *window   = NULL;
@@ -174,6 +175,7 @@ static void check_game_conditions()
 void game_init()
 {
     setup_window();
+    srand((unsigned int)SDL_GetTicks());
     score_load_high();
     audio_manager_init();
     gui_system_init(window, renderer);
@@ -239,7 +241,7 @@ void game_run()
                 input_system_run(world);
                 combat_system_run(world);
                 movement_system_run(world, dt);
-                enemy_movement_system_run(world);
+                enemy_movement_system_run(world, dt);
                 boundary_system_run(world);
                 collision_system_run(world);
                 check_game_conditions();

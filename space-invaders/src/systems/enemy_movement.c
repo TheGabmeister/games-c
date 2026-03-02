@@ -3,12 +3,15 @@
 #include "../components/transform.h"
 #include "../components/velocity.h"
 #include "../components/box_collider.h"
+#include "../components/shoot_timer.h"
 #include "../settings.h"
+#include <stdlib.h>
 
-#define ENEMY_DROP 24.0f
+#define ENEMY_DROP            24.0f
+#define ENEMY_SHOOT_INTERVAL  20.0f
 
-/* Terms: [Enemy(tag), Transform, Velocity, BoxCollider]
- * indices:     0           1         2          3       */
+/* Terms: [Enemy(tag), Transform, Velocity, BoxCollider, ShootTimer]
+ * indices:     0           1         2          3            4      */
 static ecs_query_t *enemy_move_query;
 static bool s_reached_bottom = false;
 
@@ -19,12 +22,13 @@ void enemy_movement_system_init(ecs_world_t *world)
             { .id = Enemy },
             { .id = ecs_id(Transform) },
             { .id = ecs_id(Velocity) },
-            { .id = ecs_id(BoxCollider) }
+            { .id = ecs_id(BoxCollider) },
+            { .id = ecs_id(ShootTimer) }
         }
     });
 }
 
-void enemy_movement_system_run(ecs_world_t *world)
+void enemy_movement_system_run(ecs_world_t *world, float dt)
 {
     s_reached_bottom = false;
 
@@ -55,10 +59,9 @@ void enemy_movement_system_run(ecs_world_t *world)
         if (hit_edge) ecs_iter_fini(&it);
     }
 
-    if (!hit_edge) return;
-
-    /* Pass 2: reverse all enemy x-velocities and step everyone down. */
+    if (hit_edge)
     {
+        /* Pass 2: reverse all enemy x-velocities and step everyone down. */
         ecs_iter_t it = ecs_query_iter(world, enemy_move_query);
         while (ecs_query_next(&it))
         {
@@ -68,6 +71,34 @@ void enemy_movement_system_run(ecs_world_t *world)
             {
                 vl[i].x               = (vl[i].x > 0.0f) ? -ENEMY_SPEED : ENEMY_SPEED;
                 tr[i].position[1]    += ENEMY_DROP;
+            }
+        }
+    }
+
+    /* Pass 3: per-enemy shoot timers.
+     * Each enemy fires once at a random point within ENEMY_SHOOT_INTERVAL seconds,
+     * then picks a new random interval and repeats. */
+    {
+        ecs_iter_t it = ecs_query_iter(world, enemy_move_query);
+        while (ecs_query_next(&it))
+        {
+            ShootTimer *st = ecs_field(&it, ShootTimer, 4);
+            for (int i = 0; i < it.count; i++)
+            {
+                if (st[i].time_remaining < 0.0f)
+                {
+                    /* First frame: spread out initial fire times across the interval */
+                    st[i].time_remaining = (float)rand() / (float)RAND_MAX * ENEMY_SHOOT_INTERVAL;
+                }
+                else
+                {
+                    st[i].time_remaining -= dt;
+                    if (st[i].time_remaining <= 0.0f)
+                    {
+                        ecs_add_id(world, it.entities[i], Shooting);
+                        st[i].time_remaining = (float)rand() / (float)RAND_MAX * ENEMY_SHOOT_INTERVAL;
+                    }
+                }
             }
         }
     }
