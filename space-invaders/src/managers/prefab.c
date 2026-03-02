@@ -73,13 +73,17 @@ ecs_entity_t prefab_instantiate(ecs_world_t *world,
                                 const char  *prefab_name,
                                 cJSON       *overrides)
 {
-    ecs_entity_t prefab = 0;
-    if (strcmp(prefab_name, "Player") == 0)
-        prefab = PlayerPrefab;
-    else if (strcmp(prefab_name, "Enemy") == 0)
-        prefab = EnemyPrefab;
-    else if (strcmp(prefab_name, "Projectile") == 0)
-        prefab = ProjectilePrefab;
+    if (!prefab_name) {
+        SDL_Log("prefab_instantiate: prefab_name is NULL");
+        return 0;
+    }
+
+    ecs_entity_t prefab = ecs_lookup(world, prefab_name);
+    if (!prefab) {
+        char prefab_entity_name[128];
+        SDL_snprintf(prefab_entity_name, sizeof(prefab_entity_name), "%sPrefab", prefab_name);
+        prefab = ecs_lookup(world, prefab_entity_name);
+    }
 
     if (!prefab) {
         SDL_Log("prefab_instantiate: unknown prefab '%s'", prefab_name);
