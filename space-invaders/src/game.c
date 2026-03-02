@@ -1,5 +1,15 @@
 #include "game.h"
 
+SDL_Window   *window     = NULL;
+SDL_Renderer *renderer   = NULL;
+ecs_world_t  *world      = NULL;
+ecs_entity_t  Player     = 0;
+ecs_entity_t  Enemy      = 0;
+ecs_entity_t  Projectile = 0;
+ecs_entity_t  Shooting   = 0;
+
+bool isRunning = false;
+
 static ecs_query_t *boundary_query = NULL;
 
 void game_init()

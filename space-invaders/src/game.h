@@ -15,15 +15,15 @@
 #include "components/velocity.h"
 #include "settings.h"
 
-SDL_Window   *window;
-SDL_Renderer *renderer;
-ecs_world_t  *world;
-ecs_entity_t Player;
-ecs_entity_t Enemy;
-ecs_entity_t Projectile;
-ecs_entity_t Shooting;
+extern SDL_Window   *window;
+extern SDL_Renderer *renderer;
+extern ecs_world_t  *world;
+extern ecs_entity_t  Player;
+extern ecs_entity_t  Enemy;
+extern ecs_entity_t  Projectile;
+extern ecs_entity_t  Shooting;
 
-bool isRunning;
+extern bool isRunning;
 
 void game_init();
 void game_run();
