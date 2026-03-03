@@ -528,12 +528,11 @@ static void MixFloat32Audio(float *dst, const float *src, const int buffer_size,
 // SDL calls this function from the audio device thread as more data is needed the mixer.
 static void SDLCALL MixerCallback(void *userdata, SDL_AudioStream *stream, int additional_amount, int total_amount)
 {
-    MIX_Mixer *mixer = (MIX_Mixer *) userdata;
-    mixer->actual_mixed_bytes = 0;
-
     if (additional_amount == 0) {
         return;  // nothing to actually do yet. This was a courtesy call; the stream still has enough buffered.
     }
+
+    MIX_Mixer *mixer = (MIX_Mixer *) userdata;
 
     // it should be asking for float data...
     SDL_assert((additional_amount % sizeof (float)) == 0);
@@ -604,10 +603,6 @@ static void SDLCALL MixerCallback(void *userdata, SDL_AudioStream *stream, int a
             }
         }
 
-        if (group_bytes > mixer->actual_mixed_bytes) {
-            mixer->actual_mixed_bytes = group_bytes;
-        }
-
         if (group->postmix_callback) {
             group->postmix_callback(group->postmix_callback_userdata, group, &mixer->spec, group_mixbuf, additional_amount / sizeof (float));
         }
@@ -624,21 +619,14 @@ static void SDLCALL MixerCallback(void *userdata, SDL_AudioStream *stream, int a
     SDL_PutAudioStreamData(stream, final_mixbuf, additional_amount);
 }
 
-int MIX_Generate(MIX_Mixer *mixer, void *buffer, int buflen)
+bool MIX_Generate(MIX_Mixer *mixer, void *buffer, int buflen)
 {
-    SDL_AudioSpec output_spec;
     if (!CheckMixerParam(mixer)) {
-        return -1;
+        return false;
     } else if (mixer->device_id) {
-        SDL_SetError("Can't use MIX_Generate with a MIX_Mixer from MIX_CreateMixerDevice");
-        return -1;
-    } else if (!SDL_GetAudioStreamFormat(mixer->output_stream, NULL, &output_spec)) {
-        return -1;
-    } else if (!SDL_GetAudioStreamData(mixer->output_stream, buffer, buflen)) {  // will fire MixerCallback() to generate audio.
-        return -1;
+        return SDL_SetError("Can't use MIX_Generate with a MIX_Mixer from MIX_CreateMixerDevice");
     }
-
-    return (mixer->actual_mixed_bytes / sizeof (float)) * SDL_AUDIO_BYTESIZE(output_spec.format);
+    return SDL_GetAudioStreamData(mixer->output_stream, buffer, buflen);  // will fire MixerCallback() to generate audio.
 }
 
 static void InitDecoders(void)
@@ -935,7 +923,7 @@ static const MIX_Decoder *PrepareDecoder(SDL_IOStream *io, MIX_Audio *audio)
             if (decoder->init_audio(io, &audio->spec, audio->props, &audio->duration_frames, &audio->decoder_userdata)) {
                 audio->decoder = decoder;
                 return decoder;
-            } else if (SDL_SeekIO(io, 0, SDL_IO_SEEK_SET) < 0) {   // note this seeks to offset 0, because we're using an IoClamp.
+            } else if (SDL_SeekIO(io, 0, SDL_IO_SEEK_SET) == -1) {   // note this seeks to offset 0, because we're using an IoClamp.
                 SDL_SetError("Can't seek in stream to find proper decoder");
                 return NULL;
             }
@@ -1060,7 +1048,7 @@ MIX_Audio *MIX_LoadAudioWithProperties(SDL_PropertiesID props)  // lets you spec
     audio_userdata = audio->decoder_userdata;  // less wordy access to this pointer.  :)
 
     // Go back to start of the SDL_IOStream, since we're either precaching, predecoding, or maybe just getting ready to actually play the thing.
-    if (io && (SDL_SeekIO(io, 0, SDL_IO_SEEK_SET) < 0)) {   // note this seeks to offset 0, because we're using an IoClamp.
+    if (io && (SDL_SeekIO(io, 0, SDL_IO_SEEK_SET) == -1)) {   // note this seeks to offset 0, because we're using an IoClamp.
         goto failed;
     }
 
@@ -2170,7 +2158,7 @@ static Sint64 GetTrackOptionFramesOrTicks(MIX_Track *track, SDL_PropertiesID opt
     } else if (SDL_HasProperty(options, msprop)) {
         const Sint64 val = SDL_GetNumberProperty(options, msprop, defval);
         Sint64 val_frames = MIX_TrackMSToFrames(track, val);
-        if (val_frames < 0) {
+        if (val_frames == -1) {
             val_frames = 0;
         }
         return (val < 0) ? val : val_frames;
@@ -2349,7 +2337,7 @@ bool MIX_StopAllTracks(MIX_Mixer *mixer, Sint64 fade_out_ms)
 
     for (MIX_Track *track = mixer->all_tracks; track != NULL; track = track->next) {
         Sint64 fade_out_frames = MIX_TrackMSToFrames(track, fade_out_ms);
-        if (fade_out_frames < 0) {
+        if (fade_out_frames == -1) {
             fade_out_frames = 0;
         }
         StopTrack(track, (fade_out_ms > 0) ? fade_out_frames : -1);
@@ -2376,7 +2364,7 @@ bool MIX_StopTag(MIX_Mixer *mixer, const char *tag, Sint64 fade_out_ms)
     const size_t total = list->num_tracks;
     for (size_t i = 0; i < total; i++) {
         Sint64 fade_out_frames = MIX_TrackMSToFrames(list->tracks[i], fade_out_ms);
-        if (fade_out_frames < 0) {
+        if (fade_out_frames == -1) {
             fade_out_frames = 0;
         }
         StopTrack(list->tracks[i], (fade_out_ms > 0) ? fade_out_frames : -1);

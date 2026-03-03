@@ -7,6 +7,7 @@ add_subdirectory(thirdparty/sdl)
 add_subdirectory(thirdparty/flecs)
 add_subdirectory(thirdparty/cglm)
 add_subdirectory(thirdparty/raudio)
+add_subdirectory(thirdparty/sdl_mixer)
 
 file(GLOB_RECURSE MY_SOURCES CONFIGURE_DEPENDS "${CMAKE_CURRENT_SOURCE_DIR}/src/*.c")
 add_executable(${PROJECT_NAME} 
