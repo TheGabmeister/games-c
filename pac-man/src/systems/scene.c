@@ -126,12 +126,12 @@ static inline void _process_input(ecs_world_t *world, Input *input, Time *time, 
 
 void update_scene(ecs_iter_t *it)
 {
-  Scene *scene = ecs_term(it, Scene, 1);
-  Stateful *stateful = ecs_term(it, Stateful, 2);
-  Transition *transition = ecs_term(it, Transition, 3);
-  Time *time = ecs_term(it, Time, 4);
-  Input *input = ecs_term(it, Input, 5);
-  Settings *settings = ecs_term(it, Settings, 6);
+  Scene *scene = ecs_field(it, Scene, 0);
+  Stateful *stateful = ecs_field(it, Stateful, 1);
+  Transition *transition = ecs_field(it, Transition, 2);
+  Time *time = ecs_field(it, Time, 3);
+  Input *input = ecs_field(it, Input, 4);
+  Settings *settings = ecs_field(it, Settings, 5);
   bool allow_paused = true;
   for (int i = 0; i < it->count; ++i)
   {

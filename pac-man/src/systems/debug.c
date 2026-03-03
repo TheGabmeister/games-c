@@ -54,8 +54,8 @@ void _debug_text(ecs_world_t *world, const char *format, ...)
 
 void debug_input(ecs_iter_t *it)
 {
-  Input *input = ecs_term(it, Input, 1);
-  Debug *debug = ecs_term(it, Debug, 2);
+  Input *input = ecs_field(it, Input, 0);
+  Debug *debug = ecs_field(it, Debug, 1);
   if (input->toggle_debug)
     debug->enabled = !debug->enabled;
   if (!debug->enabled)
@@ -74,9 +74,9 @@ void debug_input(ecs_iter_t *it)
 
 void debug_scene(ecs_iter_t *it)
 {
-  Scene *scene = ecs_term(it, Scene, 1);
-  Stateful *stateful = ecs_term(it, Stateful, 2);
-  Debug *debug = ecs_term(it, Debug, 3);
+  Scene *scene = ecs_field(it, Scene, 0);
+  Stateful *stateful = ecs_field(it, Stateful, 1);
+  Debug *debug = ecs_field(it, Debug, 2);
   if (!debug->enabled)
     return;
   for (int i = 0; i < it->count; ++i)
@@ -93,8 +93,8 @@ void debug_scene(ecs_iter_t *it)
 
 void debug_render(ecs_iter_t *it)
 {
-  Label *label = ecs_term(it, Label, 1);
-  Debug *debug = ecs_term(it, Debug, 2);
+  Label *label = ecs_field(it, Label, 0);
+  Debug *debug = ecs_field(it, Debug, 1);
   _pointer = _buffer;
   if (!debug->enabled)
     return;
@@ -127,9 +127,9 @@ void debug_render(ecs_iter_t *it)
 
 void debug_physics(ecs_iter_t *it)
 {
-  Physics *physics = ecs_term(it, Physics, 1);
-  Debug *debug = ecs_term(it, Debug, 2);
-  Viewport *viewport = ecs_term(it, Viewport, 3);
+  Physics *physics = ecs_field(it, Physics, 0);
+  Debug *debug = ecs_field(it, Debug, 1);
+  Viewport *viewport = ecs_field(it, Viewport, 2);
   if (!debug->enabled)
     return;
   for (int i = 0; i < it->count; ++i)
@@ -148,8 +148,8 @@ void debug_physics(ecs_iter_t *it)
 
 void debug_display(ecs_iter_t *it)
 {
-  Display *display = ecs_term(it, Display, 1);
-  Debug *debug = ecs_term(it, Debug, 2);
+  Display *display = ecs_field(it, Display, 0);
+  Debug *debug = ecs_field(it, Debug, 1);
   if (!debug->enabled)
     return;
   _debug_text(it->world, "Display: %3.2f, %3.2f; Scale: %1.3f", display->window.width, display->window.height, display->scale);

@@ -123,7 +123,13 @@ static inline void _init_game(void)
 {
   if (IsWindowReady())
   {
-    SetWindowIcon(GetTextureData(*texture_manager_get(TEXTURE_SHIP)));
+    Texture *icon_texture = texture_manager_get(TEXTURE_SHIP);
+    if (icon_texture != NULL && IsTextureValid(*icon_texture))
+    {
+      Image icon = LoadImageFromTexture(*icon_texture);
+      SetWindowIcon(icon);
+      UnloadImage(icon);
+    }
   }
   ecs_singleton_set(_world, Display, {.border = BLACK, .background = WHITE, .raster = {0, 0, RASTER_WIDTH, RASTER_HEIGHT}});
   ecs_singleton_set(_world, Time, {.scale = 1});

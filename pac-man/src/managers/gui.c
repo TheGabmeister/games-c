@@ -52,7 +52,7 @@ static void _nuklear_clipboard_paste(nk_handle user, struct nk_text_edit *edit)
 
 static void _remove_window(ecs_iter_t *it)
 {
-  Window *window = ecs_term(it, Window, 1);
+  Window *window = ecs_field(it, Window, 0);
   Interface *interface = ecs_singleton_get_mut(it->world, Interface);
   for (int i = 0; i < it->count; ++i)
   {
@@ -71,7 +71,7 @@ void gui_manager_init(ecs_world_t *world)
   Interface *interface = ecs_singleton_get_mut(world, Interface);
   nk_init_default(interface, &_font);
   ecs_singleton_modified(world, Interface);
-  ECS_TRIGGER(world, _remove_window, EcsOnRemove, Window);
+  ECS_OBSERVER(world, _remove_window, EcsOnRemove, Window);
 }
 
 //------------------------------------------------------------------------------

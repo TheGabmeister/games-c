@@ -15,7 +15,7 @@
 
 void progress_time(ecs_iter_t *it)
 {
-  Time *time = ecs_term(it, Time, 1);
+  Time *time = ecs_field(it, Time, 0);
   time->scale = time->paused ? 0 : 1;
   time->delta = it->delta_time * time->scale;
 }
@@ -24,8 +24,8 @@ void progress_time(ecs_iter_t *it)
 
 void transition(ecs_iter_t *it)
 {
-  Time *time = ecs_term(it, Time, 1);
-  Transition *transition = ecs_term(it, Transition, 2);
+  Time *time = ecs_field(it, Time, 0);
+  Transition *transition = ecs_field(it, Transition, 1);
   for (int i = 0; i < it->count; ++i)
   {
     if (transition[i].complete)
@@ -89,8 +89,8 @@ void transition(ecs_iter_t *it)
 
 void state_machine(ecs_iter_t *it)
 {
-  Time *time = ecs_term(it, Time, 1);
-  Stateful *stateful = ecs_term(it, Stateful, 2);
+  Time *time = ecs_field(it, Time, 0);
+  Stateful *stateful = ecs_field(it, Stateful, 1);
   for (int i = 0; i < it->count; ++i)
   {
     stateful[i].transitioned = (stateful[i].timer <= 0);

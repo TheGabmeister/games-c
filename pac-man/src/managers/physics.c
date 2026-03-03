@@ -58,7 +58,7 @@ static inline void _delete_entity(void *pointer)
 
 void _destroy_physical(ecs_iter_t *it)
 {
-  Physical *physical = ecs_term(it, Physical, 1);
+  Physical *physical = ecs_field(it, Physical, 0);
   const Physics *physics = ecs_singleton_get(it->world, Physics);
   for (int i = 0; i < it->count; ++i)
   {
@@ -107,7 +107,7 @@ static void _handle_collision(cpArbiter *arb, cpSpace *space, void *data)
   cpShape *shape[2];
   cpArbiterGetShapes(arb, &shape[0], &shape[1]);
   ecs_world_t *world = space->userData;
-  ecs_entity_t entity = ecs_new(world, 0);
+  ecs_entity_t entity = ecs_new(world);
   float energy = cpArbiterTotalKE(arb);
   ecs_set(world, entity, Collision, {.energy = energy, .entities = {_get_entity(shape[0]->userData), _get_entity(shape[1]->userData)}, .normal = _to_vector(cpArbiterGetNormal(arb)), .contacts = {_to_vector(cpArbiterGetPointA(arb, 0)), _to_vector(cpArbiterGetPointB(arb, 0))}});
 }
@@ -123,7 +123,7 @@ void physics_manager_init(ecs_world_t *world)
 
   cpSpaceSetCollisionSlop(space, 0.02);
 
-  ECS_TRIGGER(world, _destroy_physical, EcsOnRemove, Physical);
+  ECS_OBSERVER(world, _destroy_physical, EcsOnRemove, Physical);
 
   cpCollisionHandler *handler = NULL;
   handler = cpSpaceAddCollisionHandler(space, BODY_TYPE_BALL, BODY_TYPE_WALL);
@@ -146,7 +146,7 @@ void physics_ball(ecs_world_t *world, ecs_entity_t parent, float mass, float rad
   float scale = 0.25;
   position = Vector2Scale(position, scale);
   const Physics *physics = ecs_singleton_get(world, Physics);
-  ecs_entity_t entity = ecs_new(world, 0);
+  ecs_entity_t entity = ecs_new(world);
   cpBody *body = cpBodyNew(mass, cpMomentForCircle(mass, 0, radius * 0.9, cpvzero));
   cpBodySetPosition(body, _from_vector(position));
   cpSpaceAddBody(physics->space, body);
@@ -168,7 +168,7 @@ void physics_ball(ecs_world_t *world, ecs_entity_t parent, float mass, float rad
 void physics_line(ecs_world_t *world, ecs_entity_t parent, Vector2 from, Vector2 to, float radius)
 {
   const Physics *physics = ecs_singleton_get(world, Physics);
-  ecs_entity_t entity = ecs_new(world, 0);
+  ecs_entity_t entity = ecs_new(world);
   cpBody *body = cpSpaceGetStaticBody(physics->space);
   cpShape *shape = cpSegmentShapeNew(body, _from_vector(from), _from_vector(to), radius);
   cpShapeSetUserData(shape, _store_entity(entity));
@@ -185,7 +185,7 @@ void physics_line(ecs_world_t *world, ecs_entity_t parent, Vector2 from, Vector2
 void physics_box(ecs_world_t *world, ecs_entity_t parent, Vector2 position)
 {
   const Physics *physics = ecs_singleton_get(world, Physics);
-  ecs_entity_t entity = ecs_new(world, 0);
+  ecs_entity_t entity = ecs_new(world);
   cpBody *body = cpSpaceGetStaticBody(physics->space);
   float size = 2.0;
   cpVect vertices[] = {{position.x - size, position.y - size}, {position.x + size, position.y - size}, {position.x + size, position.y + size}, {position.x - size, position.y + size}};
@@ -204,7 +204,7 @@ void physics_box(ecs_world_t *world, ecs_entity_t parent, Vector2 position)
 void physics_wedge(ecs_world_t *world, ecs_entity_t parent, Vector2 position, int corner)
 {
   const Physics *physics = ecs_singleton_get(world, Physics);
-  ecs_entity_t entity = ecs_new(world, 0);
+  ecs_entity_t entity = ecs_new(world);
   cpBody *body = cpSpaceGetStaticBody(physics->space);
   float size = 2.0;
   cpVect vertices[] = {{position.x - size, position.y - size}, {position.x + size, position.y - size}, {position.x + size, position.y + size}, {position.x - size, position.y + size}};

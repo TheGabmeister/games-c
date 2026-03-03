@@ -29,9 +29,9 @@ static float _timer = 0;
 
 void gui_input(ecs_iter_t *it)
 {
-  Interface *interface = ecs_term(it, Interface, 1);
-  Input *input = ecs_term(it, Input, 2);
-  Window *window = ecs_term(it, Window, 4);
+  Interface *interface = ecs_field(it, Interface, 0);
+  Input *input = ecs_field(it, Input, 1);
+  Window *window = ecs_field(it, Window, 3);
   _pointer.x = 0.5 * RASTER_WIDTH;
   unsigned int max = 0;
   for (int i = 0; i < it->count; ++i)
@@ -94,9 +94,9 @@ static inline Color _from_color(struct nk_color color)
 
 void gui_update(ecs_iter_t *it)
 {
-  Interface *interface = ecs_term(it, Interface, 1);
-  Window *window = ecs_term(it, Window, 2);
-  Widget *widget = ecs_term(it, Widget, 3);
+  Interface *interface = ecs_field(it, Interface, 0);
+  Window *window = ecs_field(it, Window, 1);
+  Widget *widget = ecs_field(it, Widget, 2);
   bool hover = false;
   if (nk_begin(interface, window->name, _to_rect(window->bounds), window->flags))
   {
@@ -172,7 +172,7 @@ static inline void _rect(const struct nk_command_rect *command)
   Color color = _from_color(command->color);
   Rectangle rect = (Rectangle){command->x, command->y, command->w, command->h};
   if (command->rounding > 0)
-    DrawRectangleRoundedLines(rect, command->rounding * 0.05, 1, command->line_thickness, color);
+    DrawRectangleRoundedLinesEx(rect, command->rounding * 0.05, 1, command->line_thickness, color);
   else
     DrawRectangleLinesEx(rect, command->line_thickness, color);
 }
@@ -292,7 +292,7 @@ static inline void _custom(const struct nk_command *command)
 
 void gui_render(ecs_iter_t *it)
 {
-  Interface *interface = ecs_term(it, Interface, 1);
+  Interface *interface = ecs_field(it, Interface, 0);
   const struct nk_command *command;
   _scissoring = false;
   BeginTextureMode(*texture_manager_playfield());
@@ -377,7 +377,7 @@ void gui_reset(int row)
 
 void update_console(ecs_iter_t *it)
 {
-  Spatial *spatial = ecs_term(it, Spatial, 1);
+  Spatial *spatial = ecs_field(it, Spatial, 0);
   for (int i = 0; i < it->count; ++i)
   {
     spatial[i].position.y = RASTER_HEIGHT * 0.75 - (it->count - i - 1) * 90;

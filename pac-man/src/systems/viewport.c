@@ -14,8 +14,8 @@
 
 void update_viewport(ecs_iter_t *it)
 {
-  Input *input = ecs_term(it, Input, 1);
-  Viewport *viewport = ecs_term(it, Viewport, 2);
+  Input *input = ecs_field(it, Input, 0);
+  Viewport *viewport = ecs_field(it, Viewport, 1);
   for (int i = it->count - 1; i >= 0; --i)
   {
     viewport[i].active = false;

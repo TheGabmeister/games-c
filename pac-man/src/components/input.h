@@ -1,6 +1,7 @@
 #ifndef INPUT_COMPONENT_H
 #define INPUT_COMPONENT_H
 
+#include <raylib.h>
 #include <raymath.h>
 #include <flecs.h>
 

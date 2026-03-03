@@ -13,9 +13,9 @@
 
 void process_input(ecs_iter_t *it)
 {
-  Input *input = ecs_term(it, Input, 1);
-  Settings *settings = ecs_term(it, Settings, 2);
-  Display *display = ecs_term(it, Display, 3);
+  Input *input = ecs_field(it, Input, 0);
+  Settings *settings = ecs_field(it, Settings, 1);
+  Display *display = ecs_field(it, Display, 2);
   *input = (Input){0};
 
   input->quit |= WindowShouldClose();

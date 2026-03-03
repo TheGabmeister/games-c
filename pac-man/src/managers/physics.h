@@ -2,6 +2,7 @@
 #define PHYSICS_MANAGER_H
 
 #include <flecs.h>
+#include <raylib.h>
 #include <raymath.h>
 
 #include "../components/physics.h"

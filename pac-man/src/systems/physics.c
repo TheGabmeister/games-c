@@ -15,8 +15,8 @@
 
 void physics_update(ecs_iter_t *it)
 {
-  Time *time = ecs_term(it, Time, 1);
-  Physics *physics = ecs_term(it, Physics, 2);
+  Time *time = ecs_field(it, Time, 0);
+  Physics *physics = ecs_field(it, Physics, 1);
   cpSpaceSetUserData(physics->space, it->world);
   cpSpaceStep(physics->space, time->delta);
 }

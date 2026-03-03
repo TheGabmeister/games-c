@@ -25,7 +25,7 @@
 
 void refresh_display(ecs_iter_t *it)
 {
-  Display *display = ecs_term(it, Display, 1);
+  Display *display = ecs_field(it, Display, 0);
 
   display->window.width = GetScreenWidth();
   display->window.height = GetScreenHeight();
@@ -47,11 +47,11 @@ void refresh_display(ecs_iter_t *it)
 
 void render_scene(ecs_iter_t *it)
 {
-  Scene *scene = ecs_term(it, Scene, 1);
-  Stateful *stateful = ecs_term(it, Stateful, 2);
-  Transition *transition = ecs_term(it, Transition, 3);
-  Display *display = ecs_term(it, Display, 4);
-  Time *time = ecs_term(it, Time, 5);
+  Scene *scene = ecs_field(it, Scene, 0);
+  Stateful *stateful = ecs_field(it, Stateful, 1);
+  Transition *transition = ecs_field(it, Transition, 2);
+  Display *display = ecs_field(it, Display, 3);
+  Time *time = ecs_field(it, Time, 4);
   RenderTexture2D *playfield = texture_manager_playfield();
   BeginTextureMode(*playfield);
   for (int i = 0; i < it->count; ++i)
@@ -132,11 +132,11 @@ static inline Vector2 _align(Vector2 position, Vector2 size, Aligned aligned)
 
 void render_labels(ecs_iter_t *it)
 {
-  Time *time = ecs_term(it, Time, 1);
-  Label *label = ecs_term(it, Label, 2);
-  Aligned *aligned = ecs_term(it, Aligned, 3);
-  Spatial *spatial = ecs_term(it, Spatial, 4);
-  Tinted *tinted = ecs_term(it, Tinted, 5);
+  Time *time = ecs_field(it, Time, 0);
+  Label *label = ecs_field(it, Label, 1);
+  Aligned *aligned = ecs_field(it, Aligned, 2);
+  Spatial *spatial = ecs_field(it, Spatial, 3);
+  Tinted *tinted = ecs_field(it, Tinted, 4);
   RenderTexture2D *playfield = texture_manager_playfield();
   BeginTextureMode(*playfield);
   if (time->paused)
@@ -162,9 +162,9 @@ void render_labels(ecs_iter_t *it)
 
 void render_images(ecs_iter_t *it)
 {
-  Renderable *renderable = ecs_term(it, Renderable, 1);
-  Spatial *spatial = ecs_term(it, Spatial, 2);
-  Tinted *tinted = ecs_term(it, Tinted, 3);
+  Renderable *renderable = ecs_field(it, Renderable, 0);
+  Spatial *spatial = ecs_field(it, Spatial, 1);
+  Tinted *tinted = ecs_field(it, Tinted, 2);
   RenderTexture2D *playfield = texture_manager_playfield();
   BeginTextureMode(*playfield);
   for (int i = 0; i < it->count; ++i)
@@ -180,10 +180,10 @@ void render_images(ecs_iter_t *it)
 
 static inline void _render_physical(ecs_iter_t *it)
 {
-  Renderable *renderable = ecs_term(it, Renderable, 1);
-  Physical *physical = ecs_term(it, Physical, 2);
-  Tinted *tinted = ecs_term(it, Tinted, 3);
-  Transition *transition = ecs_term(it, Transition, 4);
+  Renderable *renderable = ecs_field(it, Renderable, 0);
+  Physical *physical = ecs_field(it, Physical, 1);
+  Tinted *tinted = ecs_field(it, Tinted, 2);
+  Transition *transition = ecs_field(it, Transition, 3);
   for (int i = 0; i < it->count; ++i)
   {
     if (physical[i].body->space == NULL)
@@ -225,7 +225,7 @@ void render_physical(ecs_iter_t *it)
   ecs_iter_t vit = ecs_query_iter(system_manager_viewport_query());
   while (ecs_query_next(&vit))
   {
-    Viewport *viewport = ecs_term(&vit, Viewport, 1);
+    Viewport *viewport = ecs_field(&vit, Viewport, 0);
     for (int i = 0; i < vit.count; ++i)
     {
       if (!viewport[i].active)
@@ -243,7 +243,7 @@ void render_physical(ecs_iter_t *it)
 
 void render_viewports(ecs_iter_t *it)
 {
-  Viewport *viewport = ecs_term(it, Viewport, 1);
+  Viewport *viewport = ecs_field(it, Viewport, 0);
   RenderTexture2D *playfield = texture_manager_playfield();
   Font *font = font_manager_get(FONT_CLOVER);
   Vector2 size = MeasureTextEx(*font, "Connect Controller", 48, 0);
@@ -268,7 +268,7 @@ void render_viewports(ecs_iter_t *it)
 
 void composite_display(ecs_iter_t *it)
 {
-  Display *display = ecs_term(it, Display, 1);
+  Display *display = ecs_field(it, Display, 0);
   RenderTexture2D *playfield = texture_manager_playfield();
   BeginDrawing();
   ClearBackground(display->border);

@@ -2,6 +2,7 @@
 #define COLLISION_COMPONENT_H
 
 #include <flecs.h>
+#include <raylib.h>
 #include <raymath.h>
 
 #include "physical.h"
