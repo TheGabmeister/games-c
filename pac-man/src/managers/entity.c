@@ -27,10 +27,6 @@ void entity_manager_init(ecs_world_t *world)
 {
   ecs_atfini(world, _fini, NULL);
 
-  ECS_TYPE_DEFINE(world, SceneType, Scene, Stateful, Transition);
-  ECS_TYPE_DEFINE(world, LabelType, Label, Spatial, Tinted);
-  ECS_TYPE_DEFINE(world, ImageType, Renderable, Spatial, Tinted);
-
   ECS_TAG_DEFINE(world, DebugTag);
 }
 
@@ -38,7 +34,7 @@ void entity_manager_init(ecs_world_t *world)
 
 ecs_entity_t entity_manager_spawn_scene(ecs_world_t *world, SceneName id, Color color, ShaderName shader_id, TextureName texture_id)
 {
-  ecs_entity_t entity = ecs_new(world, SceneType);
+  ecs_entity_t entity = ecs_new(world);
   Shader *shader = shader_manager_get(shader_id);
   Texture *texture = texture_manager_get(texture_id);
   ecs_set(world, entity, Scene, {.id = id, .color = color, .shader = shader, .texture = texture});
@@ -51,7 +47,7 @@ ecs_entity_t entity_manager_spawn_scene(ecs_world_t *world, SceneName id, Color 
 
 ecs_entity_t entity_manager_spawn_label(ecs_world_t *world, ecs_entity_t parent, FontName id, const char *text, HorizontalAlignment align, VerticalAlignment valign, float size, Vector2 position, Color tint)
 {
-  ecs_entity_t entity = ecs_new(world, LabelType);
+  ecs_entity_t entity = ecs_new(world);
   Font *font = font_manager_get(id);
   ecs_set(world, entity, Label, {.font = font, .text = text, .size = size});
   ecs_set(world, entity, Spatial, {.position = position});
@@ -66,7 +62,7 @@ ecs_entity_t entity_manager_spawn_label(ecs_world_t *world, ecs_entity_t parent,
 
 ecs_entity_t entity_manager_spawn_debug(ecs_world_t *world, const char *text)
 {
-  ecs_entity_t entity = ecs_new(world, 0);
+  ecs_entity_t entity = ecs_new(world);
   ecs_set(world, entity, Label, {.text = text});
   ecs_add(world, entity, DebugTag);
   return entity;
@@ -76,7 +72,7 @@ ecs_entity_t entity_manager_spawn_debug(ecs_world_t *world, const char *text)
 
 ecs_entity_t entity_manager_spawn_image(ecs_world_t *world, ecs_entity_t parent, TextureName id, float scale, Vector2 position, Color tint)
 {
-  ecs_entity_t entity = ecs_new(world, ImageType);
+  ecs_entity_t entity = ecs_new(world);
   Texture *texture = texture_manager_get(id);
   ecs_set(world, entity, Renderable, {.texture = texture, .scale = scale, .src = (Rectangle){0, 0, texture->width, texture->height}});
   ecs_set(world, entity, Spatial, {.position = position});
@@ -89,7 +85,7 @@ ecs_entity_t entity_manager_spawn_image(ecs_world_t *world, ecs_entity_t parent,
 
 ecs_entity_t entity_manager_spawn_sound(ecs_world_t *world, ecs_entity_t parent, SoundName id, float volume)
 {
-  ecs_entity_t entity = ecs_new(world, 0);
+  ecs_entity_t entity = ecs_new(world);
   Sound *sound = sound_manager_get(id);
   ecs_set(world, entity, Audible, {.sound = sound, .volume = volume});
   if (parent != 0)
@@ -101,7 +97,7 @@ ecs_entity_t entity_manager_spawn_sound(ecs_world_t *world, ecs_entity_t parent,
 
 ecs_entity_t entity_manager_spawn_music(ecs_world_t *world, MusicName id, float volume)
 {
-  ecs_entity_t entity = ecs_new(world, 0);
+  ecs_entity_t entity = ecs_new(world);
   Music *music = music_manager_get(id);
   ecs_set(world, entity, Track, {.music = music, .volume = volume});
   return entity;
@@ -111,7 +107,7 @@ ecs_entity_t entity_manager_spawn_music(ecs_world_t *world, MusicName id, float 
 
 ecs_entity_t _spawn_viewport(ecs_world_t *world, ecs_entity_t parent, Vector2 size, Rectangle dst, Color background)
 {
-  ecs_entity_t entity = ecs_new(world, 0);
+  ecs_entity_t entity = ecs_new(world);
   RenderTexture2D raster = LoadRenderTexture(size.x, size.y);
   Camera2D camera = {.target = Vector2Zero(), .offset = Vector2Scale(size, 0.5), .rotation = 0, .zoom = 10};
   Rectangle src = {0, 0, size.x, size.y};

@@ -8,6 +8,11 @@ add_subdirectory(vendor/flecs)
 set(BUILD_SHARED_LIBS OFF CACHE BOOL "" FORCE)
 add_subdirectory(vendor/raylib)
 
+set(BUILD_DEMOS OFF CACHE BOOL "" FORCE)
+set(BUILD_SHARED OFF CACHE BOOL "" FORCE)
+set(BUILD_STATIC ON CACHE BOOL "" FORCE)
+add_subdirectory(vendor/Chipmunk2D)
+
 
 file(GLOB_RECURSE MY_SOURCES CONFIGURE_DEPENDS "${CMAKE_CURRENT_SOURCE_DIR}/src/*.c")
 add_executable(${PROJECT_NAME} 
@@ -16,13 +21,15 @@ add_executable(${PROJECT_NAME}
     vendor/tinyfiledialogs/tinyfiledialogs.c
     )
 
-target_include_directories(${PROJECT_NAME} PRIVATE 
-    src/ 
+target_include_directories(${PROJECT_NAME} PRIVATE
+    src/
     vendor/nuklear
     vendor/cjson
     vendor/tinyfiledialogs
+    vendor/Chipmunk2D/include
 )
 target_link_libraries(${PROJECT_NAME} PRIVATE
     flecs::flecs_static
     raylib
+    chipmunk_static
 )
