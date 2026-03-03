@@ -27,8 +27,8 @@ set(SDLMIXER_AU                OFF)
 add_subdirectory(thirdparty/sdl_mixer)
 
 file(GLOB_RECURSE MY_SOURCES CONFIGURE_DEPENDS "${CMAKE_CURRENT_SOURCE_DIR}/src/*.c")
-add_executable(${PROJECT_NAME} 
-    ${MY_SOURCES} 
+add_executable(${PROJECT_NAME} WIN32
+    ${MY_SOURCES}
     thirdparty/cjson/cJSON.c)
 
 target_include_directories(${PROJECT_NAME} PRIVATE 
@@ -49,6 +49,7 @@ if(WIN32)
     add_custom_command(TARGET ${PROJECT_NAME} POST_BUILD
         COMMAND ${CMAKE_COMMAND} -E copy_if_different
             $<TARGET_FILE:SDL3::SDL3>
+            $<TARGET_FILE:SDL3_mixer::SDL3_mixer>
             $<TARGET_FILE_DIR:${PROJECT_NAME}>
     )
 endif()
