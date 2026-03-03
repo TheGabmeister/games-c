@@ -222,7 +222,7 @@ static inline void _render_physical(ecs_iter_t *it)
 
 void render_physical(ecs_iter_t *it)
 {
-  ecs_iter_t vit = ecs_query_iter(system_manager_viewport_query());
+  ecs_iter_t vit = ecs_query_iter(it->world, system_manager_viewport_query());
   while (ecs_query_next(&vit))
   {
     Viewport *viewport = ecs_field(&vit, Viewport, 0);
@@ -282,8 +282,8 @@ void composite_display(ecs_iter_t *it)
 
 void animate(ecs_iter_t *it)
 {
-  Animated *animated = ecs_column(it, Animated, 1);
-  Renderable *renderable = ecs_column(it, Renderable, 2);
+  Animated *animated = ecs_field(it, Animated, 0);
+  Renderable *renderable = ecs_field(it, Renderable, 1);
 
   for (int i = 0; i < it->count; ++i)
   {
