@@ -292,7 +292,7 @@ static inline void _custom(const struct nk_command *command)
 
 void gui_render(ecs_iter_t *it)
 {
-  Interface *interface = ecs_field(it, Interface, 0);
+  Interface *interface = ecs_singleton_get_mut(it->world, Interface);
   const struct nk_command *command;
   _scissoring = false;
   BeginTextureMode(*texture_manager_playfield());

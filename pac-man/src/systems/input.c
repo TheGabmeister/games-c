@@ -13,9 +13,9 @@
 
 void process_input(ecs_iter_t *it)
 {
-  Input *input = ecs_field(it, Input, 0);
-  Settings *settings = ecs_field(it, Settings, 1);
-  Display *display = ecs_field(it, Display, 2);
+  Input *input = ecs_singleton_get_mut(it->world, Input);
+  Settings *settings = ecs_singleton_get_mut(it->world, Settings);
+  Display *display = ecs_singleton_get_mut(it->world, Display);
   *input = (Input){0};
 
   input->quit |= WindowShouldClose();

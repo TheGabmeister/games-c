@@ -54,8 +54,8 @@ void _debug_text(ecs_world_t *world, const char *format, ...)
 
 void debug_input(ecs_iter_t *it)
 {
-  Input *input = ecs_field(it, Input, 0);
-  Debug *debug = ecs_field(it, Debug, 1);
+  Input *input = ecs_singleton_get_mut(it->world, Input);
+  Debug *debug = ecs_singleton_get_mut(it->world, Debug);
   if (input->toggle_debug)
     debug->enabled = !debug->enabled;
   if (!debug->enabled)
@@ -148,8 +148,8 @@ void debug_physics(ecs_iter_t *it)
 
 void debug_display(ecs_iter_t *it)
 {
-  Display *display = ecs_field(it, Display, 0);
-  Debug *debug = ecs_field(it, Debug, 1);
+  Display *display = ecs_singleton_get_mut(it->world, Display);
+  Debug *debug = ecs_singleton_get_mut(it->world, Debug);
   if (!debug->enabled)
     return;
   _debug_text(it->world, "Display: %3.2f, %3.2f; Scale: %1.3f", display->window.width, display->window.height, display->scale);

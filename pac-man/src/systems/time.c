@@ -15,7 +15,7 @@
 
 void progress_time(ecs_iter_t *it)
 {
-  Time *time = ecs_field(it, Time, 0);
+  Time *time = ecs_singleton_get_mut(it->world, Time);
   time->scale = time->paused ? 0 : 1;
   time->delta = it->delta_time * time->scale;
 }

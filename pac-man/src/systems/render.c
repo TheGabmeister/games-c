@@ -25,7 +25,7 @@
 
 void refresh_display(ecs_iter_t *it)
 {
-  Display *display = ecs_field(it, Display, 0);
+  Display *display = ecs_singleton_get_mut(it->world, Display);
 
   display->window.width = GetScreenWidth();
   display->window.height = GetScreenHeight();
@@ -268,7 +268,7 @@ void render_viewports(ecs_iter_t *it)
 
 void composite_display(ecs_iter_t *it)
 {
-  Display *display = ecs_field(it, Display, 0);
+  Display *display = ecs_singleton_get_mut(it->world, Display);
   RenderTexture2D *playfield = texture_manager_playfield();
   BeginDrawing();
   ClearBackground(display->border);
