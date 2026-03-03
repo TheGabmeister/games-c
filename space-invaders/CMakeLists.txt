@@ -27,7 +27,7 @@ set(SDLMIXER_AU                OFF)
 add_subdirectory(thirdparty/sdl_mixer)
 
 file(GLOB_RECURSE MY_SOURCES CONFIGURE_DEPENDS "${CMAKE_CURRENT_SOURCE_DIR}/src/*.c")
-add_executable(${PROJECT_NAME} WIN32
+add_executable(${PROJECT_NAME} 
     ${MY_SOURCES}
     thirdparty/cjson/cJSON.c)
 
