@@ -78,7 +78,7 @@ void gui_manager_init(ecs_world_t *world)
 
 ecs_entity_t gui_window(ecs_world_t *world, ecs_entity_t parent, const char *name, int x, int y, int width, int height, int row, int max)
 {
-  ecs_entity_t entity = ecs_new(world, 0);
+  ecs_entity_t entity = ecs_new(world);
   unsigned int button_height = (height - (max + 1) * 4) / max;
   ecs_set(world, entity, Window, {.name = name, .bounds = (Rectangle){x, y, width, height}, .flags = NK_WINDOW_NO_SCROLLBAR, .max = max, .button_height = button_height});
   ecs_add_pair(world, entity, EcsChildOf, parent);
@@ -90,7 +90,7 @@ ecs_entity_t gui_window(ecs_world_t *world, ecs_entity_t parent, const char *nam
 
 ecs_entity_t gui_label(ecs_world_t *world, ecs_entity_t window, const char *name)
 {
-  ecs_entity_t entity = ecs_new(world, 0);
+  ecs_entity_t entity = ecs_new(world);
   ecs_set(world, entity, Widget, {.type = WIDGET_LABEL, .name = name});
   ecs_add_pair(world, entity, EcsChildOf, window);
   return entity;
@@ -100,7 +100,7 @@ ecs_entity_t gui_label(ecs_world_t *world, ecs_entity_t window, const char *name
 
 ecs_entity_t gui_button(ecs_world_t *world, ecs_entity_t window, const char *name, int value, widgetCallback callback)
 {
-  ecs_entity_t entity = ecs_new(world, 0);
+  ecs_entity_t entity = ecs_new(world);
   ecs_set(world, entity, Widget, {.type = WIDGET_BUTTON, .name = name, .value = value, .callback = callback});
   ecs_add_pair(world, entity, EcsChildOf, window);
   return entity;
@@ -110,7 +110,7 @@ ecs_entity_t gui_button(ecs_world_t *world, ecs_entity_t window, const char *nam
 
 ecs_entity_t gui_slider(ecs_world_t *world, ecs_entity_t window, float value, widgetCallback callback)
 {
-  ecs_entity_t entity = ecs_new(world, 0);
+  ecs_entity_t entity = ecs_new(world);
   ecs_set(world, entity, Widget, {.type = WIDGET_SLIDER, .value = value, .callback = callback});
   ecs_add_pair(world, entity, EcsChildOf, window);
   return entity;
@@ -120,7 +120,7 @@ ecs_entity_t gui_slider(ecs_world_t *world, ecs_entity_t window, float value, wi
 
 ecs_entity_t gui_separator(ecs_world_t *world, ecs_entity_t window)
 {
-  ecs_entity_t entity = ecs_new(world, 0);
+  ecs_entity_t entity = ecs_new(world);
   ecs_set(world, entity, Widget, {.type = WIDGET_SEPARATOR});
   ecs_add_pair(world, entity, EcsChildOf, window);
   return entity;

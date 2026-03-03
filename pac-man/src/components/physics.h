@@ -2,10 +2,7 @@
 #define PHYSICS_COMPONENT_H
 
 #include <flecs.h>
-#include <chipmunk_structs.h>
-
-#include <flecs.h>
-#include <chipmunk_structs.h>
+#include <chipmunk/chipmunk_structs.h>
 
 typedef struct Physics
 {

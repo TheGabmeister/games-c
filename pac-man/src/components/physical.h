@@ -2,7 +2,7 @@
 #define PHYSICAL_COMPONENT_H
 
 #include <flecs.h>
-#include <chipmunk_structs.h>
+#include <chipmunk/chipmunk_structs.h>
 
 typedef enum BodyType
 {
