@@ -6,29 +6,36 @@
 #define AUDIO_SFX_MAX   16
 #define AUDIO_MUSIC_MAX  4
 
-typedef struct { char id[64]; Mix_Chunk *chunk; } SfxEntry;
-typedef struct { char id[64]; Mix_Music *music; } MusicEntry;
+typedef struct { char id[64]; MIX_Audio *audio; } SfxEntry;
+typedef struct { char id[64]; MIX_Audio *audio; } MusicEntry;
 
-static SfxEntry   sfx_entries[AUDIO_SFX_MAX];
-static int        sfx_count   = 0;
-static MusicEntry music_entries[AUDIO_MUSIC_MAX];
-static int        music_count  = 0;
+static MIX_Mixer  *mixer        = NULL;
+static MIX_Track  *music_track  = NULL;
+static SfxEntry    sfx_entries[AUDIO_SFX_MAX];
+static int         sfx_count    = 0;
+static MusicEntry  music_entries[AUDIO_MUSIC_MAX];
+static int         music_count  = 0;
 
 void audio_manager_init(void)
 {
-    Mix_OpenAudio(0, NULL);
+    MIX_Init();
+    mixer       = MIX_CreateMixerDevice(SDL_AUDIO_DEVICE_DEFAULT_PLAYBACK, NULL);
+    music_track = MIX_CreateTrack(mixer);
 }
 
 void audio_manager_destroy(void)
 {
     audio_stop_music();
     for (int i = 0; i < sfx_count; i++)
-        Mix_FreeChunk(sfx_entries[i].chunk);
+        MIX_DestroyAudio(sfx_entries[i].audio);
     sfx_count = 0;
     for (int i = 0; i < music_count; i++)
-        Mix_FreeMusic(music_entries[i].music);
+        MIX_DestroyAudio(music_entries[i].audio);
     music_count = 0;
-    Mix_CloseAudio();
+    MIX_DestroyMixer(mixer); /* also destroys music_track */
+    mixer       = NULL;
+    music_track = NULL;
+    MIX_Quit();
 }
 
 /* IDs prefixed with "music_" are loaded as streamed Music; all others as Sound. */
@@ -43,7 +50,7 @@ void audio_manager_add(const char *id, const char *file)
         MusicEntry *e = &music_entries[music_count++];
         strncpy(e->id, id, sizeof(e->id) - 1);
         e->id[sizeof(e->id) - 1] = '\0';
-        e->music = Mix_LoadMUS(file);
+        e->audio = MIX_LoadAudio(mixer, file, false); /* stream from disk */
     }
     else
     {
@@ -54,7 +61,7 @@ void audio_manager_add(const char *id, const char *file)
         SfxEntry *e = &sfx_entries[sfx_count++];
         strncpy(e->id, id, sizeof(e->id) - 1);
         e->id[sizeof(e->id) - 1] = '\0';
-        e->chunk = Mix_LoadWAV(file);
+        e->audio = MIX_LoadAudio(mixer, file, true); /* fully pre-decode into memory */
     }
 }
 
@@ -62,7 +69,7 @@ void audio_play_sfx(const char *id)
 {
     for (int i = 0; i < sfx_count; i++) {
         if (strcmp(sfx_entries[i].id, id) == 0) {
-            Mix_PlayChannel(-1, sfx_entries[i].chunk, 0);
+            MIX_PlayAudio(mixer, sfx_entries[i].audio); /* fire-and-forget */
             return;
         }
     }
@@ -73,7 +80,12 @@ void audio_play_music(const char *id)
 {
     for (int i = 0; i < music_count; i++) {
         if (strcmp(music_entries[i].id, id) == 0) {
-            Mix_PlayMusic(music_entries[i].music, -1);
+            MIX_StopTrack(music_track, 0);
+            MIX_SetTrackAudio(music_track, music_entries[i].audio);
+            SDL_PropertiesID props = SDL_CreateProperties();
+            SDL_SetNumberProperty(props, MIX_PROP_PLAY_LOOPS_NUMBER, -1);
+            MIX_PlayTrack(music_track, props);
+            SDL_DestroyProperties(props);
             return;
         }
     }
@@ -82,10 +94,11 @@ void audio_play_music(const char *id)
 
 void audio_stop_music(void)
 {
-    Mix_HaltMusic();
+    if (music_track)
+        MIX_StopTrack(music_track, 0);
 }
 
 void audio_update(void)
 {
-    /* SDL_mixer streams music on a background thread; nothing to do here. */
+    /* MIX_Mixer runs on a background thread; nothing to do here. */
 }
