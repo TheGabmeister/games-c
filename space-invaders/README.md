@@ -4,4 +4,4 @@ Dependencies:
 - stb_image https://github.com/nothings/stb/blob/master/stb_image.h
 - cJSON https://github.com/DaveGamble/cJSON/releases/tag/v1.7.19
 - cglm https://github.com/recp/cglm/releases/tag/v0.9.6
-- raudio https://github.com/raysan5/raudio
+- SDL_mixer https://github.com/libsdl-org/SDL_mixer/releases/tag/prerelease-3.1.2

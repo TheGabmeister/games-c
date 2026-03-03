@@ -6,7 +6,6 @@ set(CMAKE_C_STANDARD 11)
 add_subdirectory(thirdparty/sdl)
 add_subdirectory(thirdparty/flecs)
 add_subdirectory(thirdparty/cglm)
-add_subdirectory(thirdparty/raudio)
 
 # SDL_mixer: WAV, MP3 (dr_mp3), OGG Vorbis (stb_vorbis) — all header-only, no external deps
 set(SDLMIXER_WAVE              ON)
@@ -43,7 +42,6 @@ target_link_libraries(${PROJECT_NAME} PRIVATE
     SDL3_mixer::SDL3_mixer
     flecs::flecs_static
     cglm
-    raudio
 )
 
 # Copy SDL3 shared library next to the executable on Windows
