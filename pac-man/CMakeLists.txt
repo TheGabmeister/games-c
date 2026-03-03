@@ -33,3 +33,12 @@ target_link_libraries(${PROJECT_NAME} PRIVATE
     raylib
     chipmunk_static
 )
+
+set(RES_SOURCE_DIR "${CMAKE_CURRENT_SOURCE_DIR}/res")
+add_custom_target(copy_resources ALL
+    COMMAND ${CMAKE_COMMAND} -E copy_directory
+            "${RES_SOURCE_DIR}"
+            "$<TARGET_FILE_DIR:${PROJECT_NAME}>/res"
+    COMMENT "Copying res folder next to executable"
+)
+add_dependencies(${PROJECT_NAME} copy_resources) # Force copy even when only building executable

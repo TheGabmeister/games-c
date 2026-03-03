@@ -38,7 +38,7 @@ void system_manager_init(ecs_world_t *world)
   ECS_SYSTEM(world, progress_time, EcsOnLoad, [inout] $Time);
   ECS_SYSTEM(world, process_input, EcsOnLoad, [out] $Input, [inout] $Settings, [in] $Display);
   ECS_SYSTEM(world, gui_input, EcsPostLoad, [inout] $Interface, [in] $Input, [in] $Settings, [in] Window);
-  ECS_SYSTEM(world, gui_update, EcsPreUpdate, [inout] $Interface, [in] PARENT:Window, [inout] ?Widget);
+  ECS_SYSTEM(world, gui_update, EcsPreUpdate, [inout] $Interface, [in] Window(up), [inout] ?Widget);
   ECS_SYSTEM(world, transition, EcsPreUpdate, [in] $Time, [inout] Transition, [out] :*);
   ECS_SYSTEM(world, state_machine, EcsPreUpdate, [in] $Time, [inout] Stateful, [out] :*);
   ECS_SYSTEM(world, update_viewport, EcsOnUpdate, [in] $Input, [inout] Viewport);
