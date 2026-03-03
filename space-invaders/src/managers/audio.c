@@ -48,8 +48,7 @@ void audio_manager_add(const char *id, const char *file)
             return;
         }
         MusicEntry *e = &music_entries[music_count++];
-        strncpy(e->id, id, sizeof(e->id) - 1);
-        e->id[sizeof(e->id) - 1] = '\0';
+        strncpy_s(e->id, sizeof(e->id), id, _TRUNCATE);
         e->audio = MIX_LoadAudio(mixer, file, false); /* stream from disk */
     }
     else
@@ -59,8 +58,7 @@ void audio_manager_add(const char *id, const char *file)
             return;
         }
         SfxEntry *e = &sfx_entries[sfx_count++];
-        strncpy(e->id, id, sizeof(e->id) - 1);
-        e->id[sizeof(e->id) - 1] = '\0';
+        strncpy_s(e->id, sizeof(e->id), id, _TRUNCATE);
         e->audio = MIX_LoadAudio(mixer, file, true); /* fully pre-decode into memory */
     }
 }

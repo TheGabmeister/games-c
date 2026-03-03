@@ -11,8 +11,7 @@ void asset_manager_add(const char *id, SDL_Texture *texture)
         return;
     }
     TextureEntry *e = &asset_manager.entries[asset_manager.count++];
-    strncpy(e->id, id, sizeof(e->id) - 1);
-    e->id[sizeof(e->id) - 1] = '\0';
+    strncpy_s(e->id, sizeof(e->id), id, _TRUNCATE);
     e->texture = texture;
 }
 
