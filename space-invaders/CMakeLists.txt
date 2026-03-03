@@ -7,6 +7,24 @@ add_subdirectory(thirdparty/sdl)
 add_subdirectory(thirdparty/flecs)
 add_subdirectory(thirdparty/cglm)
 add_subdirectory(thirdparty/raudio)
+
+# SDL_mixer: WAV, MP3 (dr_mp3), OGG Vorbis (stb_vorbis) — all header-only, no external deps
+set(SDLMIXER_WAVE              ON)
+set(SDLMIXER_MP3               ON)
+set(SDLMIXER_MP3_DRMP3         ON)
+set(SDLMIXER_MP3_MPG123        OFF)
+set(SDLMIXER_VORBIS_STB        ON)
+set(SDLMIXER_VORBIS_VORBISFILE OFF)
+set(SDLMIXER_VORBIS_TREMOR     OFF)
+set(SDLMIXER_FLAC              OFF)
+set(SDLMIXER_GME               OFF)
+set(SDLMIXER_MOD               OFF)
+set(SDLMIXER_MIDI              OFF)
+set(SDLMIXER_OPUS              OFF)
+set(SDLMIXER_WAVPACK           OFF)
+set(SDLMIXER_AIFF              OFF)
+set(SDLMIXER_VOC               OFF)
+set(SDLMIXER_AU                OFF)
 add_subdirectory(thirdparty/sdl_mixer)
 
 file(GLOB_RECURSE MY_SOURCES CONFIGURE_DEPENDS "${CMAKE_CURRENT_SOURCE_DIR}/src/*.c")
@@ -22,6 +40,7 @@ target_include_directories(${PROJECT_NAME} PRIVATE
 )
 target_link_libraries(${PROJECT_NAME} PRIVATE
     SDL3::SDL3
+    SDL3_mixer::SDL3_mixer
     flecs::flecs_static
     cglm
     raudio
