@@ -1,5 +1,6 @@
 #include "game.h"
 #include "game_state.h"
+#include "event.h"
 #include "tags.h"
 #include "defines.h"
 #include "texture.h"
@@ -169,6 +170,22 @@ static void check_game_conditions()
 }
 
 /* ------------------------------------------------------------------ */
+/* Event handling                                                       */
+/* ------------------------------------------------------------------ */
+
+static void game_event_handler(const GameEvent *event, void *ctx)
+{
+    (void)ctx;
+    switch (event->type) {
+        case GAME_EVENT_PLAY_SOUND:
+            audio_play_sfx(event->data.play_sound.sound_id);
+            break;
+        default:
+            break;
+    }
+}
+
+/* ------------------------------------------------------------------ */
 /* Public API                                                           */
 /* ------------------------------------------------------------------ */
 
@@ -177,6 +194,7 @@ void game_init()
     setup_window();
     srand((unsigned int)SDL_GetTicks());
     score_load_high();
+    event_queue_init(&g_events);
     audio_manager_init();
     gui_system_init(window, renderer);
     /* Level loads when the player presses ENTER from the menu. */
@@ -247,6 +265,7 @@ void game_run()
                 boundary_system_run(world);
                 collision_system_run(world);
                 check_game_conditions();
+                event_queue_dispatch(&g_events, game_event_handler, NULL);
 
                 renderer_system_run(world, renderer);
                 gui_system_run(world);

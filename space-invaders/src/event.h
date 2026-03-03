@@ -67,4 +67,7 @@ void event_queue_dispatch(EventQueue *queue, event_handler_fn handler, void *ctx
 size_t event_queue_count(const EventQueue *queue);
 uint32_t event_queue_dropped(const EventQueue *queue);
 
+/* Global event queue — push from any system, dispatched once per frame in game.c. */
+extern EventQueue g_events;
+
 #endif /* EVENT_H */

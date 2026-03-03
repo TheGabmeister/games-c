@@ -2,7 +2,7 @@
 #include "tags.h"
 #include "../components/transform.h"
 #include "../managers/prefab.h"
-#include "../managers/audio.h"
+#include "../event.h"
 #include "../settings.h"
 
 static ecs_query_t *player_shoot_query;
@@ -49,7 +49,10 @@ static void process_shooters(ecs_world_t *world, ecs_query_t *query, float vy, c
     }
 
     if (count > 0 && sfx_id)
-        audio_play_sfx(sfx_id);
+        event_queue_push(&g_events, &(GameEvent){
+            .type = GAME_EVENT_PLAY_SOUND,
+            .data.play_sound = { .sound_id = sfx_id }
+        });
 
     for (int i = 0; i < count; i++)
         ecs_remove_id(world, to_clear[i], Shooting);

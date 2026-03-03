@@ -1,5 +1,7 @@
 #include "event.h"
 
+EventQueue g_events;
+
 void event_queue_init(EventQueue *queue)
 {
     if (!queue) return;

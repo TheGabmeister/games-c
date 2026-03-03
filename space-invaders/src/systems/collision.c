@@ -4,7 +4,7 @@
 #include "../components/box_collider.h"
 #include "../components/velocity.h"
 #include "../components/health.h"
-#include "../managers/audio.h"
+#include "../event.h"
 #include "../score.h"
 
 #define MAX_PROJECTILES 256
@@ -172,7 +172,10 @@ void collision_system_run(ecs_world_t *world)
         ecs_delete(world, del_proj[i]);
         ecs_delete(world, del_enemy[i]);
         score_add(10);
-        audio_play_sfx("sfx_lose");
+        event_queue_push(&g_events, &(GameEvent){
+            .type = GAME_EVENT_PLAY_SOUND,
+            .data.play_sound = { .sound_id = "sfx_lose" }
+        });
     }
 
     /* Step 3b: delete enemy projectiles and damage player */
@@ -181,7 +184,10 @@ void collision_system_run(ecs_world_t *world)
         ecs_delete(world, del_enemy_proj[i]);
         Health *h = ecs_get_mut(world, hit_player[i], Health);
         if (h) h->current--;
-        audio_play_sfx("sfx_lose");
+        event_queue_push(&g_events, &(GameEvent){
+            .type = GAME_EVENT_PLAY_SOUND,
+            .data.play_sound = { .sound_id = "sfx_lose" }
+        });
     }
 }
 
