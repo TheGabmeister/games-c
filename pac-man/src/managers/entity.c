@@ -1,5 +1,5 @@
-#include <raymath.h>
 #include <raylib.h>
+#include <raymath.h>
 
 #include "../components/spatial.h"
 #include "../components/tinted.h"
@@ -109,7 +109,11 @@ ecs_entity_t _spawn_viewport(ecs_world_t *world, ecs_entity_t parent, Vector2 si
 {
   ecs_entity_t entity = ecs_new(world);
   RenderTexture2D raster = LoadRenderTexture(size.x, size.y);
-  Camera2D camera = {.target = Vector2Zero(), .offset = Vector2Scale(size, 0.5), .rotation = 0, .zoom = 10};
+  Camera2D camera = {0};
+  camera.target = Vector2Zero();
+  camera.offset = Vector2Scale(size, 0.5f);
+  camera.rotation = 0.0f;
+  camera.zoom = 10.0f;
   Rectangle src = {0, 0, size.x, size.y};
   Vector2 origin = {dst.width * 0.5, dst.height * 0.5};
   ecs_set(world, entity, Viewport, {.raster = raster, .size = size, .background = background, .camera = camera, .src = src, .dst = dst, .origin = origin, .rotation = 0, .color = WHITE});
