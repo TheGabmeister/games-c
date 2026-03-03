@@ -19,7 +19,7 @@ static void _load(int id, const char *name)
   char filename[256];
   sprintf(filename, "./res/fonts/%s.ttf", name);
   _font[id] = LoadFont(filename);
-  SetTextureFilter(_font[id].texture, FILTER_POINT);
+  SetTextureFilter(_font[id].texture, TEXTURE_FILTER_POINT);
 }
 
 //------------------------------------------------------------------------------

@@ -7,7 +7,7 @@
 
 void play_sounds(ecs_iter_t *it)
 {
-  Audible *audible = ecs_term(it, Audible, 1);
+  Audible *audible = ecs_field(it, Audible, 0);
   for (int i = 0; i < it->count; ++i)
   {
     if (IsAudioDeviceReady())
@@ -42,7 +42,7 @@ static inline void _update_track(Track *track, float volume, float delta)
 
 void play_music(ecs_iter_t *it)
 {
-  Track *track = ecs_term(it, Track, 1);
+  Track *track = ecs_field(it, Track, 0);
   for (int i = 0; i < it->count; ++i)
   {
     TrackState new_state = MAX_TRACKS;

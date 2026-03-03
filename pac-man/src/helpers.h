@@ -1,5 +1,5 @@
 #include <raymath.h>
-#include <chipmunk.h>
+#include <chipmunk/chipmunk.h>
 
 //==============================================================================
 
