@@ -8,38 +8,93 @@
 
 #define STORAGE_DATA_FILE "storage.data"
 
-static unsigned int _load_storage_value(unsigned int position)
+int _load_storage_value(unsigned int position)
 {
-  int size = 0;
-  unsigned char *data = LoadFileData(STORAGE_DATA_FILE, &size);
-  unsigned int value = 0;
-  if (data)
-  {
-    if (size >= (int)((position + 1) * sizeof(unsigned int)))
-      value = ((unsigned int *)data)[position];
-    MemFree(data);
-  }
-  return value;
+    int value = 0;
+    int dataSize = 0;
+    unsigned char *fileData = LoadFileData(STORAGE_DATA_FILE, &dataSize);
+
+    if (fileData != NULL)
+    {
+        if (dataSize < ((int)(position*4))) TraceLog(LOG_WARNING, "FILEIO: [%s] Failed to find storage position: %i", STORAGE_DATA_FILE, position);
+        else
+        {
+            int *dataPtr = (int *)fileData;
+            value = dataPtr[position];
+        }
+
+        UnloadFileData(fileData);
+
+        TraceLog(LOG_INFO, "FILEIO: [%s] Loaded storage value: %i", STORAGE_DATA_FILE, value);
+    }
+
+    return value;
 }
 
-static void _save_storage_value(unsigned int position, unsigned int value)
+bool _save_storage_value(unsigned int position, int value)
 {
-  int size = 0;
-  unsigned char *data = LoadFileData(STORAGE_DATA_FILE, &size);
-  int needed = (int)((position + 1) * sizeof(unsigned int));
-  if (size < needed)
-  {
-    unsigned char *buf = MemAlloc(needed);
-    if (!buf) { MemFree(data); return; }
-    if (data) for (int i = 0; i < size; i++) buf[i] = data[i];
-    for (int i = size; i < needed; i++) buf[i] = 0;
-    MemFree(data);
-    data = buf;
-    size = needed;
-  }
-  ((unsigned int *)data)[position] = value;
-  SaveFileData(STORAGE_DATA_FILE, data, size);
-  MemFree(data);
+    bool success = false;
+    int dataSize = 0;
+    unsigned int newDataSize = 0;
+    unsigned char *fileData = LoadFileData(STORAGE_DATA_FILE, &dataSize);
+    unsigned char *newFileData = NULL;
+
+    if (fileData != NULL)
+    {
+        if (dataSize <= (position*sizeof(int)))
+        {
+            // Increase data size up to position and store value
+            newDataSize = (position + 1)*sizeof(int);
+            newFileData = (unsigned char *)RL_REALLOC(fileData, newDataSize);
+
+            if (newFileData != NULL)
+            {
+                // RL_REALLOC succeded
+                int *dataPtr = (int *)newFileData;
+                dataPtr[position] = value;
+            }
+            else
+            {
+                // RL_REALLOC failed
+                TraceLog(LOG_WARNING, "FILEIO: [%s] Failed to realloc data (%u), position in bytes (%u) bigger than actual file size", STORAGE_DATA_FILE, dataSize, position*sizeof(int));
+
+                // We store the old size of the file
+                newFileData = fileData;
+                newDataSize = dataSize;
+            }
+        }
+        else
+        {
+            // Store the old size of the file
+            newFileData = fileData;
+            newDataSize = dataSize;
+
+            // Replace value on selected position
+            int *dataPtr = (int *)newFileData;
+            dataPtr[position] = value;
+        }
+
+        success = SaveFileData(STORAGE_DATA_FILE, newFileData, newDataSize);
+        RL_FREE(newFileData);
+
+        TraceLog(LOG_INFO, "FILEIO: [%s] Saved storage value: %i", STORAGE_DATA_FILE, value);
+    }
+    else
+    {
+        TraceLog(LOG_INFO, "FILEIO: [%s] File created successfully", STORAGE_DATA_FILE);
+
+        dataSize = (position + 1)*sizeof(int);
+        fileData = (unsigned char *)RL_MALLOC(dataSize);
+        int *dataPtr = (int *)fileData;
+        dataPtr[position] = value;
+
+        success = SaveFileData(STORAGE_DATA_FILE, fileData, dataSize);
+        UnloadFileData(fileData);
+
+        TraceLog(LOG_INFO, "FILEIO: [%s] Saved storage value: %i", STORAGE_DATA_FILE, value);
+    }
+
+    return success;
 }
 
 //------------------------------------------------------------------------------
