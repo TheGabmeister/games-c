@@ -56,3 +56,8 @@ dkms.conf
 
 # Cmake
 build
+
+# IDEs
+out
+.vs
+.vscode
