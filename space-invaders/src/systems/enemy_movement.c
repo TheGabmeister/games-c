@@ -44,11 +44,10 @@ void enemy_movement_system_run(ecs_world_t *world, float dt)
             BoxCollider *bc = ecs_field(&it, BoxCollider, 3);
             for (int i = 0; i < it.count && !hit_edge; i++)
             {
-                float sign = (vl[i].x < 0.0f) ? -1.0f : 1.0f;
-                vl[i].x = sign * ENEMY_SPEED;
+                vl[i].speed = ENEMY_SPEED;
                 float x  = tr[i].position[0];
                 float hw = bc[i].w * 0.5f;
-                float vx = vl[i].x;
+                float vx = vl[i].speed * vl[i].direction[0];
                 if ((vx > 0.0f && x + hw >= (float)WINDOW_WIDTH) ||
                     (vx < 0.0f && x - hw <= 0.0f))
                     hit_edge = true;
@@ -69,7 +68,7 @@ void enemy_movement_system_run(ecs_world_t *world, float dt)
             Velocity  *vl = ecs_field(&it, Velocity,  2);
             for (int i = 0; i < it.count; i++)
             {
-                vl[i].x               = (vl[i].x > 0.0f) ? -ENEMY_SPEED : ENEMY_SPEED;
+                vl[i].direction[0] = (vl[i].direction[0] > 0.0f) ? -1.0f : 1.0f;
                 tr[i].position[1]    += ENEMY_DROP;
             }
         }

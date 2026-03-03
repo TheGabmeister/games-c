@@ -79,7 +79,7 @@ void collision_system_run(ecs_world_t *world)
                 .cy = tr[i].position[1],
                 .hw = bc[i].w * 0.5f,
                 .hh = bc[i].h * 0.5f,
-                .vy = vel[i].y
+                .vy = vel[i].speed * vel[i].direction[1]
             };
         }
     }

@@ -21,8 +21,8 @@ void movement_system_run(ecs_world_t *world, float dt)
         Velocity  *velocities = ecs_field(&it, Velocity,  1);
         for (int i = 0; i < it.count; i++)
         {
-            transforms[i].position[0] += velocities[i].x * dt;
-            transforms[i].position[1] += velocities[i].y * dt;
+            transforms[i].position[0] += velocities[i].speed * velocities[i].direction[0] * dt;
+            transforms[i].position[1] += velocities[i].speed * velocities[i].direction[1] * dt;
         }
     }
 }

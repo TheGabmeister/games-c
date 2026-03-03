@@ -21,7 +21,7 @@ static void set_default_physics(ecs_world_t *world, ecs_entity_t e)
     ecs_set(world, e, Transform, {
         .position = {0.0f, 0.0f}, .rotation = 0.0f, .scale = {1.0f, 1.0f}
     });
-    ecs_set(world, e, Velocity, { .x = 0.0f, .y = 0.0f });
+    ecs_set(world, e, Velocity, { .speed = 0.0f, .direction = {0.0f, 0.0f} });
 }
 
 void prefab_manager_init(ecs_world_t *world)
@@ -51,7 +51,7 @@ void prefab_manager_init(ecs_world_t *world)
     ecs_set(world, EnemyPrefab, BoxCollider, { .w = 32.0f, .h = 32.0f });
 
     set_default_physics(world, EnemyPrefab);
-    ecs_set(world, EnemyPrefab, Velocity, { .x = ENEMY_SPEED, .y = 0.0f });
+    ecs_set(world, EnemyPrefab, Velocity, { .speed = ENEMY_SPEED, .direction = {1.0f, 0.0f} });
     ecs_set(world, EnemyPrefab, Health,     { .current = 1, .max = 1 });
     ecs_set(world, EnemyPrefab, ShootTimer, { .time_remaining = -1.0f });
 
@@ -69,7 +69,7 @@ void prefab_manager_init(ecs_world_t *world)
         .color   = {255, 255, 255, 255}
     });
     set_default_physics(world, ProjectilePrefab);
-    ecs_set(world, ProjectilePrefab, Velocity, { .x = 0.0f, .y = -PROJECTILE_SPEED });
+    ecs_set(world, ProjectilePrefab, Velocity, { .speed = PROJECTILE_SPEED, .direction = {0.0f, -1.0f} });
 }
 
 ecs_entity_t prefab_instantiate(ecs_world_t *world,
@@ -137,13 +137,17 @@ ecs_entity_t prefab_instantiate(ecs_world_t *world,
     /* Override: Velocity */
     cJSON *v = cJSON_GetObjectItemCaseSensitive(overrides, "velocity");
     if (v) {
-        Velocity vel = { .x = 0.0f, .y = 0.0f };
-
+        float vx_val = 0.0f, vy_val = 0.0f;
         cJSON *vx = cJSON_GetObjectItemCaseSensitive(v, "x");
-        if (cJSON_IsNumber(vx)) vel.x = (float)vx->valuedouble;
+        if (cJSON_IsNumber(vx)) vx_val = (float)vx->valuedouble;
+        cJSON *vy_json = cJSON_GetObjectItemCaseSensitive(v, "y");
+        if (cJSON_IsNumber(vy_json)) vy_val = (float)vy_json->valuedouble;
 
-        cJSON *vy = cJSON_GetObjectItemCaseSensitive(v, "y");
-        if (cJSON_IsNumber(vy)) vel.y = (float)vy->valuedouble;
+        Velocity vel = { .speed = SDL_sqrtf(vx_val * vx_val + vy_val * vy_val) };
+        if (vel.speed > 0.0f) {
+            vel.direction[0] = vx_val / vel.speed;
+            vel.direction[1] = vy_val / vel.speed;
+        }
 
         ecs_set_id(world, e, ecs_id(Velocity), sizeof(Velocity), &vel);
     }
@@ -188,7 +192,7 @@ ecs_entity_t prefab_spawn_projectile(ecs_world_t *world, float x, float y, float
     ecs_set(world, e, Transform, {
         .position = {x, y}, .rotation = 0.0f, .scale = {1.0f, 1.0f}
     });
-    ecs_set(world, e, Velocity, { .x = 0.0f, .y = vy });
+    ecs_set(world, e, Velocity, { .speed = SDL_fabsf(vy), .direction = {0.0f, vy > 0.0f ? 1.0f : -1.0f} });
 
     return e;
 }

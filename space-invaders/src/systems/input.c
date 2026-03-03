@@ -40,8 +40,9 @@ void input_system_run(ecs_world_t *world)
         Velocity *velocities = ecs_field(&it, Velocity, 1);
         for (int i = 0; i < it.count; i++)
         {
-            velocities[i].x = dx;
-            velocities[i].y = 0.0f;
+            velocities[i].speed        = SDL_fabsf(dx);
+            velocities[i].direction[0] = (dx > 0.0f) ? 1.0f : (dx < 0.0f) ? -1.0f : 0.0f;
+            velocities[i].direction[1] = 0.0f;
         }
     }
 
