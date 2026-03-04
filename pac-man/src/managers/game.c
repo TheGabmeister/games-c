@@ -61,12 +61,12 @@ static inline void _init_managers(void)
     data_manager_init(_world);
     component_manager_init(_world);
     entity_manager_init(_world);
-    // debug_manager_init(_world);
-    // settings_manager_init(_world);
-    // input_manager_init(_world);
-    // gui_manager_init(_world);
-    // physics_manager_init(_world);
-    // system_manager_init(_world);
+    debug_manager_init(_world);
+    settings_manager_init(_world);
+    input_manager_init(_world);
+    gui_manager_init(_world);
+    physics_manager_init(_world);
+    system_manager_init(_world);
     
 }
 
@@ -84,8 +84,8 @@ static inline void _init_game(void)
   	//   	  UnloadImage(icon);
   	//   	}
   	// }
-  	//ecs_singleton_set(_world, Display, {.border = BLACK, .background = WHITE, .raster = {0, 0, RASTER_WIDTH, RASTER_HEIGHT}});
-  	//ecs_singleton_set(_world, Time, {.scale = 1});
+  	ecs_singleton_set(_world, Display, {.border = (color){0,0,0,0}, .background = (color){255,255,255,255}, .raster = {0, 0, RASTER_WIDTH, RASTER_HEIGHT}});
+  	ecs_singleton_set(_world, Time, {.scale = 1});
 }
 
 //------------------------------------------------------------------------------
