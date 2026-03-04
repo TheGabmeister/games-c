@@ -1,5 +1,7 @@
 #ifndef ENGINE_H
-#define ENIGNE_H
+#define ENGINE_H
+
+#include <stdbool.h>
 
 // Function specifiers in case library is build/used as a shared library
 // NOTE: Microsoft specifiers to tell compiler that symbols are imported/exported from a .dll

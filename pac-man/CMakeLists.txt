@@ -5,6 +5,7 @@ set(CMAKE_C_STANDARD 11)
 set(CMAKE_C_STANDARD_REQUIRED ON)
 
 add_subdirectory(vendor/sdl)
+#add_subdirectory(vendor/engine)
 add_subdirectory(vendor/flecs)
 add_subdirectory(vendor/cglm)
 
@@ -77,6 +78,7 @@ target_link_libraries(${PROJECT_NAME} PRIVATE
     SDL3::SDL3
     SDL3_mixer::SDL3_mixer
     SDL3_image::SDL3_image
+#    engine
     flecs::flecs_static
     raylib
     chipmunk_static
@@ -90,6 +92,7 @@ if(WIN32)
             $<TARGET_FILE:SDL3::SDL3>
             $<TARGET_FILE:SDL3_mixer::SDL3_mixer>
             $<TARGET_FILE:SDL3_image::SDL3_image>
+#            $<TARGET_FILE:engine>
             $<TARGET_FILE_DIR:${PROJECT_NAME}>
     )
 endif()
