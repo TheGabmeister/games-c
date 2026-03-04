@@ -1,9 +1,8 @@
 #ifndef INPUT_COMPONENT_H
 #define INPUT_COMPONENT_H
 
-#include <raylib.h>
-#include <raymath.h>
 #include <flecs.h>
+#include <engine.h>
 
 typedef struct Input
 {
@@ -13,8 +12,8 @@ typedef struct Input
   bool toggle_pause;
   bool toggle_debug;
   bool toggle_fullscreen;
-  Vector2 joystick;
-  Vector2 pointer;
+  vector2 joystick;
+  vector2 pointer;
   float wheel;
 } Input;
 

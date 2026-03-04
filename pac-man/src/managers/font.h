@@ -2,7 +2,7 @@
 #define FONT_MANAGER_H
 
 #include <flecs.h>
-#include <raylib.h>
+#include <SDL3_ttf/SDL_ttf.h>
 
 typedef enum FontName
 {
@@ -11,6 +11,6 @@ typedef enum FontName
 } FontName;
 
 void font_manager_init(ecs_world_t *world);
-Font *font_manager_get(FontName id);
+TTF_Font *font_manager_get(FontName id);
 
 #endif

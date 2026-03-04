@@ -1,5 +1,5 @@
 #include <flecs.h>
-#include <raylib.h>
+#include <SDL3/SDL.h>
 
 #include "../components/interface.h"
 #include "../components/window.h"
@@ -28,24 +28,26 @@ static void _fini(ecs_world_t *world, void *context)
 
 static float _nuklear_get_font_width(nk_handle handle, float size, const char *text, int length)
 {
-  return MeasureTextEx(*font_manager_get(FONT_CLOVER), text, size, 0).x;
+  int w, h;
+  TTF_GetStringSize(font_manager_get(FONT_CLOVER), text, (size_t)length, &w, &h);
+  return (float)w;
 }
 
 //------------------------------------------------------------------------------
 
 static void _nuklear_clipboard_copy(nk_handle user, const char *text, int length)
 {
-  SetClipboardText(text);
+  SDL_SetClipboardText(text);
 }
 
 //------------------------------------------------------------------------------
 
 static void _nuklear_clipboard_paste(nk_handle user, struct nk_text_edit *edit)
 {
-  const char *text = GetClipboardText();
+  const char *text = SDL_GetClipboardText();
   if (text == NULL)
     return;
-  nk_textedit_paste(edit, text, TextLength(text));
+  nk_textedit_paste(edit, text, (int)SDL_strlen(text));
 }
 
 //------------------------------------------------------------------------------
@@ -80,7 +82,7 @@ ecs_entity_t gui_window(ecs_world_t *world, ecs_entity_t parent, const char *nam
 {
   ecs_entity_t entity = ecs_new(world);
   unsigned int button_height = (height - (max + 1) * 4) / max;
-  ecs_set(world, entity, Window, {.name = name, .bounds = (Rectangle){x, y, width, height}, .flags = NK_WINDOW_NO_SCROLLBAR, .max = max, .button_height = button_height});
+  ecs_set(world, entity, Window, {.name = name, .bounds = (rectangle){x, y, width, height}, .flags = NK_WINDOW_NO_SCROLLBAR, .max = max, .button_height = button_height});
   ecs_add_pair(world, entity, EcsChildOf, parent);
   gui_reset(row);
   return entity;

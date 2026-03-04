@@ -2,12 +2,12 @@
 #define WINDOW_COMPONENT_H
 
 #include <flecs.h>
-#include <raylib.h>
+#include <engine.h>
 
 typedef struct Window
 {
   const char *name;
-  Rectangle bounds;
+  rectangle bounds;
   unsigned int flags;
   unsigned int max;
   unsigned int button_height;

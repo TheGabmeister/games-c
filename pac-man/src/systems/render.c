@@ -18,6 +18,7 @@
 
 #include "../managers/texture.h"
 #include "../managers/system.h"
+#include "../managers/font.h"
 
 #include <SDL3/SDL.h>
 #include <engine.h>
@@ -233,9 +234,10 @@ void render_viewports(ecs_iter_t *it)
   Viewport *viewport = ecs_field(it, Viewport, 0);
   SDL_Renderer *renderer = get_renderer();
   SDL_Texture *playfield = texture_manager_playfield();
-  // TODO: Font system still uses raylib
-  Font *font = font_manager_get(FONT_CLOVER);
-  vector2 label_size = MeasureTextEx(*font, "Connect Controller", 48, 0);
+  TTF_Font *font = font_manager_get(FONT_CLOVER);
+  int label_w, label_h;
+  TTF_GetStringSize(font, "Connect Controller", 0, &label_w, &label_h);
+  vector2 label_size = {(float)label_w, (float)label_h};
   SDL_Texture *blip = texture_manager_get(TEXTURE_BLIP);
   SDL_SetRenderTarget(renderer, playfield);
   for (int i = 0; i < it->count; ++i)
@@ -255,7 +257,12 @@ void render_viewports(ecs_iter_t *it)
     _set_tint(blip, (color){255, 0, 255, 255});
     SDL_RenderTexture(renderer, blip, &blip_src, &blip_dst);
     vector2 position = {dst_r.x - label_size.x / 2, dst_r.y - label_size.y / 2};
-    DrawTextEx(*font, "Connect Controller", position, 48, 0, (color){0, 255, 255, 255});
+    SDL_Surface *surf = TTF_RenderText_Blended(font, "Connect Controller", 0, (SDL_Color){0, 255, 255, 255});
+    SDL_Texture *text_tex = SDL_CreateTextureFromSurface(renderer, surf);
+    SDL_DestroySurface(surf);
+    rectangle text_dst = {position.x, position.y, label_size.x, label_size.y};
+    SDL_RenderTexture(renderer, text_tex, NULL, &text_dst);
+    SDL_DestroyTexture(text_tex);
   }
   SDL_SetRenderTarget(renderer, NULL);
 }

@@ -51,7 +51,7 @@ void process_input(ecs_iter_t *it)
 
   input->drag |= IsMouseButtonDown(MOUSE_LEFT_BUTTON);
   input->select |= IsMouseButtonPressed(MOUSE_LEFT_BUTTON);
-  input->pointer = Vector2Scale(Vector2Subtract(GetMousePosition(), (Vector2){display->screen.x, display->screen.y}), 1.0 / display->scale);
+  input->pointer = Vector2Scale(Vector2Subtract(GetMousePosition(), (vector2){display->screen.x, display->screen.y}), 1.0 / display->scale);
   input->wheel = GetMouseWheelMove();
 
   input->select |= IsKeyPressed(KEY_ENTER);
