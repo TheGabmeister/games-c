@@ -3,25 +3,24 @@
 
 #include "sound.h"
 
-static int frames = 0;
-
 //==============================================================================
+
+#define MAX_VOICE_TRACKS 16
 
 static MIX_Mixer *_mixer = NULL;
 static MIX_Audio *_sounds[MAX_SOUNDS];
-
-//==============================================================================
-
-static void SDLCALL _destroy_track(void *userdata, MIX_Track *track)
-{
-    (void)userdata;
-    MIX_DestroyTrack(track);
-}
+static MIX_Track *_tracks[MAX_VOICE_TRACKS];
 
 //==============================================================================
 
 static void _fini(ecs_world_t *world, void *context)
 {
+    for (int i = 0; i < MAX_VOICE_TRACKS; ++i)
+    {
+        if (_tracks[i])
+            MIX_DestroyTrack(_tracks[i]);
+        _tracks[i] = NULL;
+    }
     for (int i = 0; i < MAX_SOUNDS; ++i)
     {
         if (_sounds[i])
@@ -84,8 +83,26 @@ bool sound_manager_play(MIX_Audio *sound, float volume)
         return false;
     if (volume < 0.0f)
         volume = 0.0f;
-    // frames++;
-    // SDL_Log("%d",frames);
+
+    // Destroy stopped tracks to reclaim slots (safe from main thread)
+    for (int i = 0; i < MAX_VOICE_TRACKS; ++i)
+    {
+        if (_tracks[i] && !MIX_TrackPlaying(_tracks[i]))
+        {
+            MIX_DestroyTrack(_tracks[i]);
+            _tracks[i] = NULL;
+        }
+    }
+
+    // Find a free slot
+    int slot = -1;
+    for (int i = 0; i < MAX_VOICE_TRACKS; ++i)
+    {
+        if (!_tracks[i]) { slot = i; break; }
+    }
+    if (slot == -1)
+        return false;
+
     MIX_Track *track = MIX_CreateTrack(_mixer);
     if (!track)
         return false;
@@ -99,15 +116,11 @@ bool sound_manager_play(MIX_Audio *sound, float volume)
         MIX_DestroyTrack(track);
         return false;
     }
-    if (!MIX_SetTrackStoppedCallback(track, _destroy_track, NULL))
-    {
-        MIX_DestroyTrack(track);
-        return false;
-    }
     if (!MIX_PlayTrack(track, 0))
     {
         MIX_DestroyTrack(track);
         return false;
     }
+    _tracks[slot] = track;
     return true;
 }

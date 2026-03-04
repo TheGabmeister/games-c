@@ -19,7 +19,7 @@ void init_splash(ecs_world_t *world, ecs_entity_t parent)
 {
     vector2 position = {RASTER_WIDTH * 0.5, RASTER_HEIGHT * 0.5};
     entity_manager_spawn_image(world, parent, TEXTURE_LOGO, 1, position, (color){255,255,255,255});
-    //entity_manager_spawn_sound(world, parent, SOUND_KRANZKY, 1);
+    entity_manager_spawn_sound(world, parent, SOUND_KRANZKY, 1);
 }
 
 //------------------------------------------------------------------------------

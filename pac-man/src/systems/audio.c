@@ -39,46 +39,46 @@ static void _destroy_music_track(Track *track)
 
 static bool _start_music_track(Track *track)
 {
-  SDL_PropertiesID props;
+    SDL_PropertiesID props;
 
-  if (!_audio_ready() || !track->music)
-    return false;
+    if (!_audio_ready() || !track->music)
+        return false;
 
-  _destroy_music_track(track);
-
-  track->mix_track = MIX_CreateTrack(music_manager_mixer());
-  if (!track->mix_track)
-    return false;
-
-  if (!MIX_SetTrackAudio(track->mix_track, track->music))
-  {
     _destroy_music_track(track);
-    return false;
-  }
 
-  if (!MIX_SetTrackGain(track->mix_track, 0.0f))
-  {
-    _destroy_music_track(track);
-    return false;
-  }
+    track->mix_track = MIX_CreateTrack(music_manager_mixer());
+    if (!track->mix_track)
+        return false;
 
-  props = SDL_CreateProperties();
-  if (!props)
-  {
-    _destroy_music_track(track);
-    return false;
-  }
+    if (!MIX_SetTrackAudio(track->mix_track, track->music))
+    {
+        _destroy_music_track(track);
+        return false;
+    }
 
-  SDL_SetNumberProperty(props, MIX_PROP_PLAY_LOOPS_NUMBER, -1);
-  if (!MIX_PlayTrack(track->mix_track, props))
-  {
+    if (!MIX_SetTrackGain(track->mix_track, 0.0f))
+    {
+        _destroy_music_track(track);
+        return false;
+    }
+
+    props = SDL_CreateProperties();
+    if (!props)
+    {
+        _destroy_music_track(track);
+        return false;
+    }
+
+    SDL_SetNumberProperty(props, MIX_PROP_PLAY_LOOPS_NUMBER, -1);
+    if (!MIX_PlayTrack(track->mix_track, props))
+    {
+        SDL_DestroyProperties(props);
+        _destroy_music_track(track);
+        return false;
+    }
+
     SDL_DestroyProperties(props);
-    _destroy_music_track(track);
-    return false;
-  }
-
-  SDL_DestroyProperties(props);
-  return true;
+    return true;
 }
 
 //------------------------------------------------------------------------------
@@ -97,22 +97,22 @@ void play_sounds(ecs_iter_t *it)
 
 static inline void _update_track(Track *track, float volume, float delta)
 {
-  if (_audio_ready() && track->mix_track)
-  {
-    Sint64 frames = MIX_GetTrackPlaybackPosition(track->mix_track);
-    Sint64 ms = MIX_TrackFramesToMS(track->mix_track, frames);
+    if (_audio_ready() && track->mix_track)
+    {
+        Sint64 frames = MIX_GetTrackPlaybackPosition(track->mix_track);
+        Sint64 ms = MIX_TrackFramesToMS(track->mix_track, frames);
 
-    MIX_SetTrackGain(track->mix_track, _clamp_gain(volume));
-    if (ms >= 0)
-      track->track_time = (float)ms / 1000.0f;
-  }
-  else
-  {
-    track->track_time += delta;
-  }
-  track->state_time += delta;
-  if (track->state_time > 1)
-    track->state_time = 1;
+        MIX_SetTrackGain(track->mix_track, _clamp_gain(volume));
+        if (ms >= 0)
+            track->track_time = (float)ms / 1000.0f;
+    }
+    else
+    {
+        track->track_time += delta;
+    }
+    track->state_time += delta;
+    if (track->state_time > 1)
+        track->state_time = 1;
 }
 
 //------------------------------------------------------------------------------
