@@ -1,5 +1,6 @@
 #include <flecs.h>
 #include <raylib.h>
+#include <SDL3/SDL.h>
 
 #include "../helpers.h"
 #include "../defines.h"
@@ -33,7 +34,7 @@ static void _fini(ecs_world_t *world, void *context)
 
 static inline void *_store_entity(ecs_entity_t value)
 {
-  ecs_entity_t *pointer = RL_MALLOC(sizeof(ecs_entity_t));
+  ecs_entity_t *pointer = SDL_malloc(sizeof(ecs_entity_t));
   assert(pointer != NULL);
   *pointer = value;
   return (void *)pointer;
@@ -51,7 +52,7 @@ static inline ecs_entity_t _get_entity(void *pointer)
 static inline void _delete_entity(void *pointer)
 {
   assert(pointer != NULL);
-  RL_FREE((ecs_entity_t *)pointer);
+  SDL_free((ecs_entity_t *)pointer);
 }
 
 //------------------------------------------------------------------------------
@@ -156,9 +157,11 @@ void physics_ball(ecs_world_t *world, ecs_entity_t parent, float mass, float rad
   cpShapeSetElasticity(shape, 0.8);
   cpShapeSetCollisionType(shape, BODY_TYPE_BALL);
   cpSpaceAddShape(physics->space, shape);
-  Texture *texture = texture_manager_get(TEXTURE_SHEEP);
+  SDL_Texture *texture = texture_manager_get(TEXTURE_SHEEP);
+  float tex_w, tex_h;
+  SDL_GetTextureSize(texture, &tex_w, &tex_h);
   ecs_set(world, entity, Physical, {.body = body, .shape = shape, .type = BODY_TYPE_BALL});
-  ecs_set(world, entity, Renderable, {.texture = texture, .scale = scale * radius * 0.014, .src = (Rectangle){0, 0, texture->width, texture->height}});
+  ecs_set(world, entity, Renderable, {.texture = texture, .scale = scale * radius * 0.014, .src = (Rectangle){0, 0, tex_w, tex_h}});
   ecs_set(world, entity, Tinted, {.tint = WHITE});
   ecs_add_pair(world, entity, EcsChildOf, parent);
 }

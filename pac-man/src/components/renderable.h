@@ -4,10 +4,11 @@
 #include <flecs.h>
 #include <raylib.h>
 #include <raymath.h>
+#include <SDL3/SDL.h>
 
 typedef struct Renderable
 {
-  const Texture *texture;
+  SDL_Texture *texture;
   BlendMode blend_mode;
   Rectangle src;
   float scale;

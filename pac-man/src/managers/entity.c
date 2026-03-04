@@ -1,5 +1,7 @@
 #include <raylib.h>
 #include <raymath.h>
+#include <SDL3/SDL.h>
+#include <engine.h>
 
 #include "../components/spatial.h"
 #include "../components/tinted.h"
@@ -36,7 +38,7 @@ ecs_entity_t entity_manager_spawn_scene(ecs_world_t *world, SceneName id, Color 
 {
   ecs_entity_t entity = ecs_new(world);
   Shader *shader = shader_manager_get(shader_id);
-  Texture *texture = texture_manager_get(texture_id);
+  SDL_Texture *texture = texture_manager_get(texture_id);
   ecs_set(world, entity, Scene, {.id = id, .color = color, .shader = shader, .texture = texture});
   ecs_set(world, entity, Stateful, {.state = STATE_CREATED, .start_time = 0.3, .run_time = 86400, .stop_time = 0.3});
   ecs_set(world, entity, Transition, {.id = TRANSITION_FADE_IN});
@@ -73,8 +75,10 @@ ecs_entity_t entity_manager_spawn_debug(ecs_world_t *world, const char *text)
 ecs_entity_t entity_manager_spawn_image(ecs_world_t *world, ecs_entity_t parent, TextureName id, float scale, Vector2 position, Color tint)
 {
   ecs_entity_t entity = ecs_new(world);
-  Texture *texture = texture_manager_get(id);
-  ecs_set(world, entity, Renderable, {.texture = texture, .scale = scale, .src = (Rectangle){0, 0, texture->width, texture->height}});
+  SDL_Texture *texture = texture_manager_get(id);
+  float tex_w, tex_h;
+  SDL_GetTextureSize(texture, &tex_w, &tex_h);
+  ecs_set(world, entity, Renderable, {.texture = texture, .scale = scale, .src = (Rectangle){0, 0, tex_w, tex_h}});
   ecs_set(world, entity, Spatial, {.position = position});
   ecs_set(world, entity, Tinted, {.tint = tint});
   ecs_add_pair(world, entity, EcsChildOf, parent);
@@ -108,7 +112,8 @@ ecs_entity_t entity_manager_spawn_music(ecs_world_t *world, MusicName id, float 
 ecs_entity_t _spawn_viewport(ecs_world_t *world, ecs_entity_t parent, Vector2 size, Rectangle dst, Color background)
 {
   ecs_entity_t entity = ecs_new(world);
-  RenderTexture2D raster = LoadRenderTexture(size.x, size.y);
+  SDL_Texture *raster = SDL_CreateTexture(get_renderer(), SDL_PIXELFORMAT_RGBA8888,
+                                          SDL_TEXTUREACCESS_TARGET, (int)size.x, (int)size.y);
   Camera2D camera = {0};
   camera.target = Vector2Zero();
   camera.offset = Vector2Scale(size, 0.5f);

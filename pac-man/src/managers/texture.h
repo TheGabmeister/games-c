@@ -2,7 +2,7 @@
 #define TEXTURE_MANAGER_H
 
 #include <flecs.h>
-#include <raylib.h>
+#include <SDL3/SDL.h>
 
 typedef enum TextureName
 {
@@ -15,7 +15,7 @@ typedef enum TextureName
 } TextureName;
 
 void texture_manager_init(ecs_world_t *world);
-Texture *texture_manager_get(TextureName id);
-RenderTexture2D *texture_manager_playfield(void);
+SDL_Texture *texture_manager_get(TextureName id);
+SDL_Texture *texture_manager_playfield(void);
 
 #endif

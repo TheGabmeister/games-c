@@ -3,6 +3,7 @@
 
 #include <flecs.h>
 #include <raylib.h>
+#include <SDL3/SDL.h>
 
 typedef enum SceneName
 {
@@ -20,7 +21,7 @@ typedef struct Scene
   float value;
   Color color;
   Shader *shader;
-  Texture *texture;
+  SDL_Texture *texture;
 } Scene;
 
 ECS_COMPONENT_DECLARE(Scene);
