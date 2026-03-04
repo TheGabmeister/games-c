@@ -19,8 +19,8 @@ void update_viewport(ecs_iter_t *it)
   for (int i = it->count - 1; i >= 0; --i)
   {
     viewport[i].active = false;
-    viewport[i].pointer = (Vector2){
-        viewport[i].size.x * (input->pointer.x - viewport[i].dst.x) / viewport[i].dst.width,
-        viewport[i].size.y * (viewport[i].dst.height - input->pointer.y + viewport[i].dst.y) / viewport[i].dst.height};
+    viewport[i].pointer = (vector2){
+        viewport[i].size.x * (input->pointer.x - viewport[i].dst.x) / viewport[i].dst.w,
+        viewport[i].size.y * (viewport[i].dst.h - input->pointer.y + viewport[i].dst.y) / viewport[i].dst.h};
   }
 }

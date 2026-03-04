@@ -3,6 +3,7 @@
 
 #include <flecs.h>
 #include <raylib.h>
+#include <engine.h>
 #include <SDL3/SDL.h>
 
 typedef struct Viewport
@@ -11,13 +12,13 @@ typedef struct Viewport
   Vector2 size;
   Color background;
   Camera2D camera;
-  SDL_FRect src;
-  SDL_FRect dst;
+  rectangle src;
+  rectangle dst;
   Vector2 origin;
   float rotation;
   Color color;
-  Vector2 pointer;
-  Vector2 handle;
+  vector2 pointer;
+  vector2 handle;
   bool active;
 } Viewport;
 
