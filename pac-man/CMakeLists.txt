@@ -58,6 +58,12 @@ set(SDLIMAGE_XPM             OFF)
 set(SDLIMAGE_XV              OFF)
 add_subdirectory(vendor/sdl_image)
 
+# SDL_ttf: TrueType only
+set(SDLTTF_HARFBUZZ   OFF CACHE BOOL "" FORCE)
+set(SDLTTF_PLUTOSVG   OFF CACHE BOOL "" FORCE)
+set(SDLTTF_VENDORED   ON  CACHE BOOL "" FORCE)
+add_subdirectory(vendor/sdl_ttf)
+
 set(BUILD_DEMOS OFF CACHE BOOL "" FORCE)
 set(BUILD_SHARED OFF CACHE BOOL "" FORCE)
 set(BUILD_STATIC ON CACHE BOOL "" FORCE)
@@ -82,6 +88,7 @@ target_link_libraries(${PROJECT_NAME} PRIVATE
     SDL3::SDL3
     SDL3_mixer::SDL3_mixer
     SDL3_image::SDL3_image
+    SDL3_ttf::SDL3_ttf
     engine
     flecs::flecs_static
     raylib
@@ -96,6 +103,7 @@ if(WIN32)
             $<TARGET_FILE:SDL3::SDL3>
             $<TARGET_FILE:SDL3_mixer::SDL3_mixer>
             $<TARGET_FILE:SDL3_image::SDL3_image>
+            $<TARGET_FILE:SDL3_ttf::SDL3_ttf>
             $<TARGET_FILE:engine>
             $<TARGET_FILE_DIR:${PROJECT_NAME}>
     )
