@@ -30,7 +30,6 @@
 
 static ecs_world_t *_world = NULL;
 static Uint64 millisecsPreviousFrame = 0;
-static int frameCounter = 0;
 
 //==============================================================================
 
@@ -140,22 +139,18 @@ void game_manager_loop(void)
         while (SDL_PollEvent(&event))
         {
             if (event.type == SDL_EVENT_QUIT) {
-                running = false;
+                ecs_quit(_world);
                 break;
             }
             if (event.type == SDL_EVENT_KEY_DOWN && event.key.scancode == SDL_SCANCODE_ESCAPE) {
-                running = false;
+                ecs_quit(_world);
                 break;
             }
-			//SDL_Log("delta: %d", GetFPS());
 			
-		}
-		//SDL_Log("delta: %f", SDL_GetTicksNS());
+	    }
 
         float delta = (SDL_GetTicksNS() - millisecsPreviousFrame) / 1e9f;
-    	// Store the "previous" frame time
-   		millisecsPreviousFrame = SDL_GetTicksNS();
-		SDL_Log("delta: %f", delta);
+   		millisecsPreviousFrame = SDL_GetTicksNS(); // Store the "previous" frame time
 
         running = ecs_progress(_world, delta);
 /*        time += delta;
