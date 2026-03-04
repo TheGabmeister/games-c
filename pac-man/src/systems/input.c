@@ -1,5 +1,4 @@
-#include <raylib.h>
-#include <raymath.h>
+#include <engine.h>
 
 #include "../components/input.h"
 #include "../components/settings.h"
@@ -13,18 +12,18 @@
 
 void process_input(ecs_iter_t *it)
 {
-  /*
+  
   Input *input = ecs_singleton_get_mut(it->world, Input);
   Settings *settings = ecs_singleton_get_mut(it->world, Settings);
   Display *display = ecs_singleton_get_mut(it->world, Display);
   *input = (Input){0};
 
-  input->quit |= WindowShouldClose();
-  input->quit |= IsKeyDown(KEY_LEFT_CONTROL) && IsKeyPressed(KEY_Q);
-  input->quit |= IsKeyDown(KEY_LEFT_CONTROL) && IsKeyPressed(KEY_W);
-  input->toggle_fullscreen = IsKeyDown(KEY_LEFT_CONTROL) && IsKeyPressed(KEY_F);
-  input->toggle_pause = IsKeyPressed(KEY_P);
-
+  //input->quit |= WindowShouldClose();
+  input->quit |= is_key_pressed(KEY_LEFT_CONTROL) && is_key_pressed(KEY_Q);
+  input->quit |= is_key_pressed(KEY_LEFT_CONTROL) && is_key_pressed(KEY_W);
+  input->toggle_fullscreen = is_key_pressed(KEY_LEFT_CONTROL) && is_key_pressed(KEY_F);
+  input->toggle_pause = is_key_pressed(KEY_P);
+/*
   input->joystick.x = 0;
   input->joystick.y = 0;
   settings->gamepad = -1;
@@ -55,24 +54,24 @@ void process_input(ecs_iter_t *it)
   input->pointer = Vector2Scale(Vector2Subtract(GetMousePosition(), (vector2){display->screen.x, display->screen.y}), 1.0 / display->scale);
   input->wheel = GetMouseWheelMove();
 
-  input->select |= IsKeyPressed(KEY_ENTER);
-  input->select |= IsKeyPressed(KEY_SPACE);
-  if (IsKeyDown(KEY_A) || IsKeyDown(KEY_J) || IsKeyDown(KEY_LEFT) || IsKeyDown(KEY_KP_4))
+  input->select |= is_key_pressed(KEY_ENTER);
+  input->select |= is_key_pressed(KEY_SPACE);
+  if (is_key_pressed(KEY_A) || is_key_pressed(KEY_J) || is_key_pressed(KEY_LEFT) || is_key_pressed(KEY_KP_4))
     input->joystick.x += -1;
-  if (IsKeyDown(KEY_D) || IsKeyDown(KEY_L) || IsKeyDown(KEY_RIGHT) || IsKeyDown(KEY_KP_6))
+  if (is_key_pressed(KEY_D) || is_key_pressed(KEY_L) || is_key_pressed(KEY_RIGHT) || is_key_pressed(KEY_KP_6))
     input->joystick.x += 1;
-  if (IsKeyDown(KEY_W) || IsKeyDown(KEY_I) || IsKeyDown(KEY_UP) || IsKeyDown(KEY_KP_8))
+  if (is_key_pressed(KEY_W) || is_key_pressed(KEY_I) || is_key_pressed(KEY_UP) || is_key_pressed(KEY_KP_8))
     input->joystick.y += -1;
-  if (IsKeyDown(KEY_S) || IsKeyDown(KEY_K) || IsKeyDown(KEY_DOWN) || IsKeyDown(KEY_KP_2))
+  if (is_key_pressed(KEY_S) || is_key_pressed(KEY_K) || is_key_pressed(KEY_DOWN) || is_key_pressed(KEY_KP_2))
     input->joystick.y += 1;
 
   input->joystick.x = Clamp(input->joystick.x, -1.0, 1.0);
   input->joystick.y = Clamp(input->joystick.y, -1.0, 1.0);
   if (Vector2LengthSqr(input->joystick) < 0.3)
     input->joystick = Vector2Zero();
-
-#ifdef DEBUG
-  input->toggle_debug = IsKeyPressed(KEY_TAB);
-#endif
 */
+#ifdef DEBUG
+  input->toggle_debug = is_key_pressed(KEY_TAB);
+#endif
+
 }
