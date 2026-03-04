@@ -3,6 +3,8 @@
 
 #include "sound.h"
 
+static int frames = 0;
+
 //==============================================================================
 
 static MIX_Mixer *_mixer = NULL;
@@ -78,33 +80,34 @@ MIX_Audio *sound_manager_get(SoundName id)
 
 bool sound_manager_play(MIX_Audio *sound, float volume)
 {
-  if (!_mixer || !sound)
-    return false;
-  if (volume < 0.0f)
-    volume = 0.0f;
-
-  MIX_Track *track = MIX_CreateTrack(_mixer);
-  if (!track)
-    return false;
-  if (!MIX_SetTrackAudio(track, sound))
-  {
-    MIX_DestroyTrack(track);
-    return false;
-  }
-  if (!MIX_SetTrackGain(track, volume))
-  {
-    MIX_DestroyTrack(track);
-    return false;
-  }
-  if (!MIX_SetTrackStoppedCallback(track, _destroy_track, NULL))
-  {
-    MIX_DestroyTrack(track);
-    return false;
-  }
-  if (!MIX_PlayTrack(track, 0))
-  {
-    MIX_DestroyTrack(track);
-    return false;
-  }
-  return true;
+    if (!_mixer || !sound)
+        return false;
+    if (volume < 0.0f)
+        volume = 0.0f;
+    // frames++;
+    // SDL_Log("%d",frames);
+    MIX_Track *track = MIX_CreateTrack(_mixer);
+    if (!track)
+        return false;
+    if (!MIX_SetTrackAudio(track, sound))
+    {
+        MIX_DestroyTrack(track);
+        return false;
+    }
+    if (!MIX_SetTrackGain(track, volume))
+    {
+        MIX_DestroyTrack(track);
+        return false;
+    }
+    if (!MIX_SetTrackStoppedCallback(track, _destroy_track, NULL))
+    {
+        MIX_DestroyTrack(track);
+        return false;
+    }
+    if (!MIX_PlayTrack(track, 0))
+    {
+        MIX_DestroyTrack(track);
+        return false;
+    }
+    return true;
 }

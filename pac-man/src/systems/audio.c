@@ -85,12 +85,12 @@ static bool _start_music_track(Track *track)
 
 void play_sounds(ecs_iter_t *it)
 {
-  Audible *audible = ecs_field(it, Audible, 0);
-  for (int i = 0; i < it->count; ++i)
-  {
-    sound_manager_play(audible[i].sound, audible[i].volume);
-    ecs_delete(it->world, it->entities[i]);
-  }
+    Audible *audible = ecs_field(it, Audible, 0);
+    for (int i = 0; i < it->count; ++i)
+    {
+        sound_manager_play(audible[i].sound, audible[i].volume);
+        ecs_delete(it->world, it->entities[i]);
+    }
 }
 
 //------------------------------------------------------------------------------
