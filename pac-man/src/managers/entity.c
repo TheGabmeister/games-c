@@ -77,7 +77,7 @@ ecs_entity_t entity_manager_spawn_image(ecs_world_t *world, ecs_entity_t parent,
   SDL_Texture *texture = texture_manager_get(id);
   float tex_w, tex_h;
   SDL_GetTextureSize(texture, &tex_w, &tex_h);
-  ecs_set(world, entity, Renderable, {.texture = texture, .scale = scale, .src = (Rectangle){0, 0, tex_w, tex_h}});
+  ecs_set(world, entity, Renderable, {.texture = texture, .scale = scale, .src = (SDL_FRect){0, 0, tex_w, tex_h}});
   ecs_set(world, entity, Spatial, {.position = position});
   ecs_set(world, entity, Tinted, {.tint = tint});
   ecs_add_pair(world, entity, EcsChildOf, parent);

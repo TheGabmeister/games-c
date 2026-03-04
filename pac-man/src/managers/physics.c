@@ -160,7 +160,7 @@ void physics_ball(ecs_world_t *world, ecs_entity_t parent, float mass, float rad
   float tex_w, tex_h;
   SDL_GetTextureSize(texture, &tex_w, &tex_h);
   ecs_set(world, entity, Physical, {.body = body, .shape = shape, .type = BODY_TYPE_BALL});
-  ecs_set(world, entity, Renderable, {.texture = texture, .scale = scale * radius * 0.014, .src = (Rectangle){0, 0, tex_w, tex_h}});
+  ecs_set(world, entity, Renderable, {.texture = texture, .scale = scale * radius * 0.014, .src = (SDL_FRect){0, 0, tex_w, tex_h}});
   ecs_set(world, entity, Tinted, {.tint = WHITE});
   ecs_add_pair(world, entity, EcsChildOf, parent);
 }

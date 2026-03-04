@@ -11,8 +11,8 @@ typedef struct Viewport
   Vector2 size;
   Color background;
   Camera2D camera;
-  Rectangle src;
-  Rectangle dst;
+  SDL_FRect src;
+  SDL_FRect dst;
   Vector2 origin;
   float rotation;
   Color color;

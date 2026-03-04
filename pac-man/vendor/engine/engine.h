@@ -26,6 +26,9 @@
     #define ENGINE_API       // Functions defined as 'extern' by default (implicit specifiers)
 #endif
 
+typedef SDL_FRect rectangle;
+typedef struct { float x, y; } vector2;
+
 ENGINE_API void init_window(int width, int height, const char *title);  // Initialize window and OpenGL context
 ENGINE_API void close_window(void);                                     // Close window and unload OpenGL context
 ENGINE_API bool is_window_ready(void);

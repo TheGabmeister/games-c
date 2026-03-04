@@ -28,9 +28,9 @@
 // Helpers
 //==============================================================================
 
-static inline SDL_FRect _sdl_rect(Rectangle r)
+static inline rectangle _sdl_rect(rectangle r)
 {
-  return (SDL_FRect){r.x, r.y, r.width, r.height};
+  return (rectangle){r.x, r.y, r.w, r.h};
 }
 
 static inline void _set_tint(SDL_Texture *tex, Color c)
@@ -45,20 +45,20 @@ void refresh_display(ecs_iter_t *it)
 {
   Display *display = ecs_singleton_get_mut(it->world, Display);
 
-  display->window.width = GetScreenWidth();
-  display->window.height = GetScreenHeight();
+  display->window.w = GetScreenWidth();
+  display->window.h = GetScreenHeight();
 #ifdef MAC
   display->window.width *= GetWindowScaleDPI().x;
   display->window.height *= GetWindowScaleDPI().y;
 #endif
 
-  display->scale = MIN(display->window.width / display->raster.width, display->window.height / display->raster.height);
+  display->scale = MIN(display->window.w / display->raster.w, display->window.h / display->raster.h);
 
-  display->screen = (Rectangle){
-      (display->window.width - (display->raster.width * display->scale)) * 0.5f,
-      (display->window.height - (display->raster.height * display->scale)) * 0.5f,
-      display->raster.width * display->scale,
-      display->raster.height * display->scale};
+  display->screen = (rectangle){
+      (display->window.w - (display->raster.w * display->scale)) * 0.5f,
+      (display->window.h - (display->raster.h * display->scale)) * 0.5f,
+      display->raster.w * display->scale,
+      display->raster.h * display->scale};
 }
 
 //------------------------------------------------------------------------------
@@ -91,8 +91,8 @@ void render_scene(ecs_iter_t *it)
       {
         float w, h;
         SDL_GetTextureSize(scene[i].texture, &w, &h);
-        SDL_FRect src = {0, 0, w, h};
-        SDL_FRect dst = {0, 0, RASTER_WIDTH, RASTER_HEIGHT};
+        rectangle src = {0, 0, w, h};
+        rectangle dst = {0, 0, RASTER_WIDTH, RASTER_HEIGHT};
         SDL_RenderTexture(renderer, scene[i].texture, &src, &dst);
       }
       else
@@ -109,7 +109,7 @@ void render_scene(ecs_iter_t *it)
 
 //------------------------------------------------------------------------------
 
-static inline Vector2 _align(Vector2 position, Vector2 size, Aligned aligned)
+static inline vector2 _align(vector2 position, vector2 size, Aligned aligned)
 {
   switch (aligned.align)
   {
@@ -155,8 +155,8 @@ void render_labels(ecs_iter_t *it)
   if (time->paused)
   {
     SDL_Texture *texture = texture_manager_get(TEXTURE_BLIP);
-    SDL_FRect src = {0, 0, 3, 3};
-    SDL_FRect dst = {0, 0, RASTER_WIDTH, RASTER_HEIGHT};
+    rectangle src = {0, 0, 3, 3};
+    rectangle dst = {0, 0, RASTER_WIDTH, RASTER_HEIGHT};
     _set_tint(texture, (Color){0, 0, 0, 64});
     SDL_RenderTexture(renderer, texture, &src, &dst);
     dst.y = RASTER_HEIGHT * 0.5f - 70;
@@ -167,9 +167,9 @@ void render_labels(ecs_iter_t *it)
   for (int i = 0; i < it->count; ++i)
   {
     // TODO: Font rendering still uses raylib — migrate font system separately
-    Vector2 size = MeasureTextEx(*label[i].font, label[i].text, label[i].size, 0);
-    Vector2 position = _align(spatial[i].position, size, aligned[i]);
-    DrawTextEx(*label[i].font, label[i].text, position, label[i].size, 0, tinted[i].tint);
+//    vector2 size = MeasureTextEx(*label[i].font, label[i].text, label[i].size, 0);
+//    vector2 position = _align(spatial[i].position, size, aligned[i]);
+//    DrawTextEx(*label[i].font, label[i].text, position, label[i].size, 0, tinted[i].tint);
   }
   SDL_SetRenderTarget(renderer, NULL);
 }
@@ -186,10 +186,10 @@ void render_images(ecs_iter_t *it)
   SDL_SetRenderTarget(renderer, playfield);
   for (int i = 0; i < it->count; ++i)
   {
-    SDL_FRect src = _sdl_rect(renderable[i].src);
-    float w = renderable[i].scale * renderable[i].src.width;
-    float h = renderable[i].scale * renderable[i].src.height;
-    SDL_FRect dst = {spatial[i].position.x - w * 0.5f, spatial[i].position.y - h * 0.5f, w, h};
+    rectangle src = _sdl_rect(renderable[i].src);
+    float w = renderable[i].scale * renderable[i].src.w;
+    float h = renderable[i].scale * renderable[i].src.h;
+    rectangle dst = {spatial[i].position.x - w * 0.5f, spatial[i].position.y - h * 0.5f, w, h};
     _set_tint(renderable[i].texture, tinted[i].tint);
     SDL_RenderTextureRotated(renderer, renderable[i].texture, &src, &dst, spatial[i].rotation, NULL, SDL_FLIP_NONE);
   }
@@ -235,26 +235,26 @@ void render_viewports(ecs_iter_t *it)
   SDL_Texture *playfield = texture_manager_playfield();
   // TODO: Font system still uses raylib
   Font *font = font_manager_get(FONT_CLOVER);
-  Vector2 label_size = MeasureTextEx(*font, "Connect Controller", 48, 0);
+  vector2 label_size = MeasureTextEx(*font, "Connect Controller", 48, 0);
   SDL_Texture *blip = texture_manager_get(TEXTURE_BLIP);
   SDL_SetRenderTarget(renderer, playfield);
   for (int i = 0; i < it->count; ++i)
   {
-    Rectangle dst_r = viewport[i].dst;
+    rectangle dst_r = viewport[i].dst;
     dst_r.x += viewport[i].origin.x;
     dst_r.y += viewport[i].origin.y;
-    SDL_FRect src = _sdl_rect(viewport[i].src);
-    SDL_FRect dst = {dst_r.x - viewport[i].origin.x, dst_r.y - viewport[i].origin.y, dst_r.width, dst_r.height};
+    rectangle src = _sdl_rect(viewport[i].src);
+    rectangle dst = {dst_r.x - viewport[i].origin.x, dst_r.y - viewport[i].origin.y, dst_r.w, dst_r.h};
     SDL_FPoint center = {viewport[i].origin.x, viewport[i].origin.y};
     _set_tint(viewport[i].raster, viewport[i].color);
     SDL_RenderTextureRotated(renderer, viewport[i].raster, &src, &dst, viewport[i].rotation, &center, SDL_FLIP_NONE);
     if (viewport[i].active)
       continue;
-    SDL_FRect blip_src = {0, 0, 3, 3};
-    SDL_FRect blip_dst = {dst_r.x - dst_r.width / 2, dst_r.y - label_size.y / 2 - 7, dst_r.width, label_size.y + 10};
+    rectangle blip_src = {0, 0, 3, 3};
+    rectangle blip_dst = {dst_r.x - dst_r.w / 2, dst_r.y - label_size.y / 2 - 7, dst_r.w, label_size.y + 10};
     _set_tint(blip, (Color){255, 0, 255, 255});
     SDL_RenderTexture(renderer, blip, &blip_src, &blip_dst);
-    Vector2 position = {dst_r.x - label_size.x / 2, dst_r.y - label_size.y / 2};
+    vector2 position = {dst_r.x - label_size.x / 2, dst_r.y - label_size.y / 2};
     DrawTextEx(*font, "Connect Controller", position, 48, 0, (Color){0, 255, 255, 255});
   }
   SDL_SetRenderTarget(renderer, NULL);
@@ -270,8 +270,8 @@ void composite_display(ecs_iter_t *it)
   SDL_SetRenderTarget(renderer, NULL);
   SDL_SetRenderDrawColor(renderer, display->border.r, display->border.g, display->border.b, display->border.a);
   SDL_RenderClear(renderer);
-  SDL_FRect src = _sdl_rect(display->raster);
-  SDL_FRect dst = _sdl_rect(display->screen);
+  rectangle src = _sdl_rect(display->raster);
+  rectangle dst = _sdl_rect(display->screen);
   _set_tint(playfield, display->background);
   SDL_RenderTexture(renderer, playfield, &src, &dst);
   SDL_RenderPresent(renderer);
@@ -326,11 +326,11 @@ static void _draw_dot(cpFloat size, cpVect position, cpSpaceDebugColor color, cp
 
 static void _draw_circle(cpVect position, cpFloat angle, cpFloat radius, cpSpaceDebugColor outline, cpSpaceDebugColor fill, cpDataPointer data)
 {
-  Vector2 pos = _to_vector(position);
-  Vector2 offset = Vector2Rotate((Vector2){0, 1}, RAD2DEG * angle);
+  vector2 pos = _to_vector(position);
+  vector2 offset = vector2Rotate((vector2){0, 1}, RAD2DEG * angle);
   DrawCircleV(pos, radius + 0.1, _to_color(outline));
   DrawCircleV(pos, radius - 0.1, _to_color(fill));
-  DrawLineV(pos, Vector2Add(pos, Vector2Scale(offset, radius * 0.75)), _to_color(outline));
+  DrawLineV(pos, vector2Add(pos, vector2Scale(offset, radius * 0.75)), _to_color(outline));
 }
 
 //------------------------------------------------------------------------------
@@ -352,7 +352,7 @@ static void _draw_fat_segment(cpVect from, cpVect to, cpFloat radius, cpSpaceDeb
 
 static void _draw_polygon(int length, const cpVect *points, cpFloat radius, cpSpaceDebugColor outline, cpSpaceDebugColor fill, cpDataPointer data)
 {
-  Vector2 vertices[length + 2];
+  vector2 vertices[length + 2];
   vertices[0] = _to_vector(cpCentroidForPoly(length, points));
   for (int i = 0; i < length; ++i)
     vertices[i + 1] = _to_vector(points[length - i - 1]);

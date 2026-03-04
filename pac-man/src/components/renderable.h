@@ -10,7 +10,7 @@ typedef struct Renderable
 {
   SDL_Texture *texture;
   BlendMode blend_mode;
-  Rectangle src;
+  SDL_FRect src;
   float scale;
 } Renderable;
 
