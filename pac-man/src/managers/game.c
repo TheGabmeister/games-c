@@ -29,7 +29,6 @@
 //==============================================================================
 
 static ecs_world_t *_world = NULL;
-static Uint64 millisecsPreviousFrame = 0;
 
 //==============================================================================
 
@@ -132,8 +131,6 @@ void game_manager_loop(void)
     if (!is_window_ready())
         return;
 
-    millisecsPreviousFrame = SDL_GetTicksNS();
-
     while (running)
     {
         while (SDL_PollEvent(&event))
@@ -149,8 +146,7 @@ void game_manager_loop(void)
 			
 	    }
 
-        float delta = (SDL_GetTicksNS() - millisecsPreviousFrame) / 1e9f;
-   		millisecsPreviousFrame = SDL_GetTicksNS(); // Store the "previous" frame time
+        float delta = get_deltatime();
 
         running = ecs_progress(_world, delta);
 /*        time += delta;

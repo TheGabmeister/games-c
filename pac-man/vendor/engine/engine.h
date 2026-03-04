@@ -28,6 +28,8 @@
 ENGINE_API void init_window(int width, int height, const char *title);  // Initialize window and OpenGL context
 ENGINE_API void close_window(void);                                     // Close window and unload OpenGL context
 ENGINE_API bool is_window_ready(void); 
+ENGINE_API int get_fps(void);                                           // Return latest FPS computed from delta time
+ENGINE_API float get_deltatime(void);                                   // Compute and return seconds since last frame
 
 #endif // ENGINE_H
 

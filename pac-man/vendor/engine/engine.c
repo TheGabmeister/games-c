@@ -9,6 +9,9 @@ typedef struct Globals {
 
     SDL_Window   *window;
     SDL_Renderer *renderer;
+    Uint64 previous_ticks_ns;
+    float delta_time;
+    int fps;
 
 } Globals;
 
@@ -18,6 +21,9 @@ void init_window(int width, int height, const char *title)
 {
     GLOBALS.window   = NULL;
     GLOBALS.renderer = NULL;
+    GLOBALS.previous_ticks_ns = 0;
+    GLOBALS.delta_time = 0.0f;
+    GLOBALS.fps = 0;
 
     if (!SDL_Init(SDL_INIT_VIDEO)) {
         SDL_Log("SDL_Init failed: %s", SDL_GetError());
@@ -40,16 +46,59 @@ void init_window(int width, int height, const char *title)
     }
 
     GLOBALS.ready = true;
+    GLOBALS.previous_ticks_ns = SDL_GetTicksNS();
 }
 
 void close_window(void)
 {
-    SDL_DestroyRenderer(GLOBALS.renderer);
-    SDL_DestroyWindow(GLOBALS.window);
+    if (GLOBALS.renderer) {
+        SDL_DestroyRenderer(GLOBALS.renderer);
+    }
+    if (GLOBALS.window) {
+        SDL_DestroyWindow(GLOBALS.window);
+    }
+
+    GLOBALS.renderer = NULL;
+    GLOBALS.window = NULL;
+    GLOBALS.ready = false;
+    GLOBALS.previous_ticks_ns = 0;
+    GLOBALS.delta_time = 0.0f;
+    GLOBALS.fps = 0;
+
     SDL_Quit();
 }
 
 bool is_window_ready(void)
 {
     return GLOBALS.ready;
+}
+
+int get_fps(void)
+{
+    return GLOBALS.fps;
+}
+
+float get_deltatime(void)
+{
+    Uint64 current_ticks_ns;
+    Uint64 elapsed_ticks_ns;
+
+    if (!GLOBALS.ready) {
+        return 0.0f;
+    }
+
+    current_ticks_ns = SDL_GetTicksNS();
+    if (GLOBALS.previous_ticks_ns == 0) {
+        GLOBALS.previous_ticks_ns = current_ticks_ns;
+        GLOBALS.delta_time = 0.0f;
+        GLOBALS.fps = 0;
+        return GLOBALS.delta_time;
+    }
+
+    elapsed_ticks_ns = current_ticks_ns - GLOBALS.previous_ticks_ns;
+    GLOBALS.previous_ticks_ns = current_ticks_ns;
+    GLOBALS.delta_time = (float)elapsed_ticks_ns / 1e9f;
+    GLOBALS.fps = (GLOBALS.delta_time > 0.0f) ? (int)(1.0f / GLOBALS.delta_time) : 0;
+
+    return GLOBALS.delta_time;
 }
