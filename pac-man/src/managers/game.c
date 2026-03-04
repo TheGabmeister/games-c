@@ -12,7 +12,6 @@
 #include "sound.h"
 #include "music.h"
 #include "font.h"
-#include "shader.h"
 #include "data.h"
 #include "component.h"
 #include "entity.h"

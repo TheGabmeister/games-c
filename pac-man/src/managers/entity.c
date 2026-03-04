@@ -34,12 +34,11 @@ void entity_manager_init(ecs_world_t *world)
 
 //------------------------------------------------------------------------------
 
-ecs_entity_t entity_manager_spawn_scene(ecs_world_t *world, SceneName id, Color color, ShaderName shader_id, TextureName texture_id)
+ecs_entity_t entity_manager_spawn_scene(ecs_world_t *world, SceneName id, Color color, TextureName texture_id)
 {
   ecs_entity_t entity = ecs_new(world);
-  Shader *shader = shader_manager_get(shader_id);
   SDL_Texture *texture = texture_manager_get(texture_id);
-  ecs_set(world, entity, Scene, {.id = id, .color = color, .shader = shader, .texture = texture});
+  ecs_set(world, entity, Scene, {.id = id, .color = color, .texture = texture});
   ecs_set(world, entity, Stateful, {.state = STATE_CREATED, .start_time = 0.3, .run_time = 86400, .stop_time = 0.3});
   ecs_set(world, entity, Transition, {.id = TRANSITION_FADE_IN});
   return entity;

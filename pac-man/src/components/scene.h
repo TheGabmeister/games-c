@@ -20,7 +20,6 @@ typedef struct Scene
   float time;
   float value;
   Color color;
-  Shader *shader;
   SDL_Texture *texture;
 } Scene;
 
