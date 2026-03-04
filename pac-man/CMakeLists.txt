@@ -9,13 +9,6 @@ add_subdirectory(vendor/engine)
 add_subdirectory(vendor/flecs)
 add_subdirectory(vendor/cglm)
 
-set(BUILD_SHARED_LIBS OFF CACHE BOOL "" FORCE)
-set(CUSTOMIZE_BUILD ON CACHE BOOL "" FORCE)
-set(SUPPORT_MODULE_RAUDIO OFF CACHE BOOL "" FORCE)
-set(USE_AUDIO OFF CACHE BOOL "" FORCE) # optional but consistent
-
-add_subdirectory(vendor/raylib)
-
 # SDL_mixer: WAV, MP3 (dr_mp3), OGG Vorbis (stb_vorbis) — all header-only, no external deps
 set(SDLMIXER_WAVE              ON)
 set(SDLMIXER_MP3               ON)
@@ -91,7 +84,6 @@ target_link_libraries(${PROJECT_NAME} PRIVATE
     SDL3_ttf::SDL3_ttf
     engine
     flecs::flecs_static
-    raylib
     chipmunk_static
     cglm
 )
