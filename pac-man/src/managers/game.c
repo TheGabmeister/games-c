@@ -29,7 +29,8 @@
 //==============================================================================
 
 static ecs_world_t *_world = NULL;
-static int millisecsPreviousFrame = 0;
+static Uint64 millisecsPreviousFrame = 0;
+static int frameCounter = 0;
 
 //==============================================================================
 
@@ -132,28 +133,31 @@ void game_manager_loop(void)
     if (!is_window_ready())
         return;
 
-    Uint64 last_ticks = SDL_GetTicksNS();
+    millisecsPreviousFrame = SDL_GetTicksNS();
 
     while (running)
     {
-        // while (SDL_PollEvent(&event))
-        // {
-        //     if (event.type == SDL_EVENT_QUIT) {
-        //         running = false;
-        //         break;
-        //     }
-        //     if (event.type == SDL_EVENT_KEY_DOWN && event.key.scancode == SDL_SCANCODE_ESCAPE) {
-        //         running = false;
-        //         break;
-        //     }
-		// }
+        while (SDL_PollEvent(&event))
+        {
+            if (event.type == SDL_EVENT_QUIT) {
+                running = false;
+                break;
+            }
+            if (event.type == SDL_EVENT_KEY_DOWN && event.key.scancode == SDL_SCANCODE_ESCAPE) {
+                running = false;
+                break;
+            }
+			//SDL_Log("delta: %d", GetFPS());
+			
+		}
+		//SDL_Log("delta: %f", SDL_GetTicksNS());
 
-    double deltaTime = (SDL_GetTicks() - millisecsPreviousFrame) / 1000.0;
-    // Store the "previous" frame time
-    millisecsPreviousFrame = SDL_GetTicks();
+        float delta = (SDL_GetTicksNS() - millisecsPreviousFrame) / 1e9f;
+    	// Store the "previous" frame time
+   		millisecsPreviousFrame = SDL_GetTicksNS();
+		SDL_Log("delta: %f", delta);
 
-        SDL_Log("delta: %f", deltaTime);
-        running = ecs_progress(_world, deltaTime);
+        running = ecs_progress(_world, delta);
 /*        time += delta;
         if (!started && time > 1)
         {
