@@ -38,8 +38,16 @@ void init_window(int width, int height, const char *title)
         SDL_Quit();
         return;
     }
+
+    GLOBALS.ready = true;
 }
 
+void close_window(void)
+{
+    SDL_DestroyRenderer(GLOBALS.renderer);
+    SDL_DestroyWindow(GLOBALS.window);
+    SDL_Quit();
+}
 
 bool is_window_ready(void)
 {

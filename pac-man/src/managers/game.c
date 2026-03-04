@@ -37,7 +37,7 @@ static void _fini(ecs_world_t *world, void *context)
   // {
   //   CloseAudioDevice();
   // }
-  // CloseWindow();
+  close_window();
 }
 
 //------------------------------------------------------------------------------
@@ -54,7 +54,7 @@ static inline void _init_flecs(void)
 
 static inline void _init_sdl(void)
 {
-    //init_window
+    init_window(600, 800, "PAC-MAN");
 
     //char *mappings = LoadFileText("./res/gamecontrollerdb.txt");
     //SetGamepadMappings(mappings);
@@ -106,12 +106,7 @@ static inline void _init_game(void)
 
 static inline void _start_game(void)
 {
-#ifdef RELEASE
-  spawn_scene(_world, SCENE_SPLASH, 0);
-#endif
-#ifdef DEBUG
-  spawn_scene(_world, SCENE_TITLE, 0);
-#endif
+
 }
 
 //==============================================================================
@@ -132,7 +127,7 @@ void game_manager_loop(void)
     bool running = true;
     bool started = false;
     float time = 0;
-    if (!IsWindowReady())
+    if (!is_window_ready())
         return;
 
     while (running)
@@ -160,6 +155,6 @@ void game_manager_loop(void)
 
 void game_manager_fini(void)
 {
-  ecs_fini(_world);
-  _world = NULL;
+    ecs_fini(_world);
+    _world = NULL;
 }
