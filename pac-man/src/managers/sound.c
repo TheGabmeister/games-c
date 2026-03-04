@@ -14,8 +14,8 @@ static MIX_Audio *_sounds[MAX_SOUNDS];
 
 static void SDLCALL _destroy_track(void *userdata, MIX_Track *track)
 {
-  (void)userdata;
-  MIX_DestroyTrack(track);
+    (void)userdata;
+    MIX_DestroyTrack(track);
 }
 
 //==============================================================================
@@ -40,40 +40,40 @@ static void _fini(ecs_world_t *world, void *context)
 
 static void _load(int id, const char *name)
 {
-  char filename[256];
-  SDL_snprintf(filename, sizeof(filename), "./res/sfx/%s.wav", name);
-  _sounds[id] = MIX_LoadAudio(_mixer, filename, false);
-  if (!_sounds[id])
-    SDL_Log("Failed to load sound '%s': %s", filename, SDL_GetError());
+    char filename[256];
+    SDL_snprintf(filename, sizeof(filename), "./res/sfx/%s.wav", name);
+    _sounds[id] = MIX_LoadAudio(_mixer, filename, false);
+    if (!_sounds[id])
+        SDL_Log("Failed to load sound '%s': %s", filename, SDL_GetError());
 }
 
 //------------------------------------------------------------------------------
 
 void sound_manager_init(ecs_world_t *world)
 {
-  ecs_atfini(world, _fini, NULL);
-  if (!MIX_Init())
-  {
-    SDL_Log("MIX_Init failed: %s", SDL_GetError());
-    return;
-  }
-  _mixer = MIX_CreateMixerDevice(SDL_AUDIO_DEVICE_DEFAULT_PLAYBACK, NULL);
-  if (!_mixer)
-  {
-    SDL_Log("MIX_CreateMixerDevice failed: %s", SDL_GetError());
-    MIX_Quit();
-    return;
-  }
-  _load(SOUND_KRANZKY, "kranzky");
-  _load(SOUND_SHOOT, "shoot");
-  _load(SOUND_BOOM, "boom");
+    ecs_atfini(world, _fini, NULL);
+    if (!MIX_Init())
+    {
+        SDL_Log("MIX_Init failed: %s", SDL_GetError());
+        return;
+    }
+    _mixer = MIX_CreateMixerDevice(SDL_AUDIO_DEVICE_DEFAULT_PLAYBACK, NULL);
+    if (!_mixer)
+    {
+        SDL_Log("MIX_CreateMixerDevice failed: %s", SDL_GetError());
+        MIX_Quit();
+        return;
+    }
+    _load(SOUND_KRANZKY, "kranzky");
+    _load(SOUND_SHOOT, "shoot");
+    _load(SOUND_BOOM, "boom");
 }
 
 //------------------------------------------------------------------------------
 
 MIX_Audio *sound_manager_get(SoundName id)
 {
-  return (id < 0 || id >= MAX_SOUNDS) ? NULL : _sounds[id];
+    return (id < 0 || id >= MAX_SOUNDS) ? NULL : _sounds[id];
 }
 
 //------------------------------------------------------------------------------

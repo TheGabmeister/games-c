@@ -39,15 +39,15 @@ static void _load(int id, const char *name)
 
 void texture_manager_init(ecs_world_t *world)
 {
-  ecs_atfini(world, _fini, NULL);
-  _playfield = SDL_CreateTexture(get_renderer(), SDL_PIXELFORMAT_RGBA8888,
-                                 SDL_TEXTUREACCESS_TARGET,
-                                 RASTER_WIDTH, RASTER_HEIGHT);
-  _load(TEXTURE_LOGO,   "logo");
-  _load(TEXTURE_SHIP,   "ship");
-  _load(TEXTURE_BULLET, "bullet");
-  _load(TEXTURE_SHEEP,  "sheep");
-  _load(TEXTURE_BLIP,   "blip");
+    ecs_atfini(world, _fini, NULL);
+    _playfield = SDL_CreateTexture(get_renderer(), SDL_PIXELFORMAT_RGBA8888,
+                                  SDL_TEXTUREACCESS_TARGET,
+                                  RASTER_WIDTH, RASTER_HEIGHT);
+    _load(TEXTURE_LOGO,   "logo");
+    _load(TEXTURE_SHIP,   "ship");
+    _load(TEXTURE_BULLET, "bullet");
+    _load(TEXTURE_SHEEP,  "sheep");
+    _load(TEXTURE_BLIP,   "blip");
 }
 
 //------------------------------------------------------------------------------
