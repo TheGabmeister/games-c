@@ -1,7 +1,5 @@
 #ifdef DEBUG
 
-#include <raylib.h>
-
 #include "../defines.h"
 
 #include "../managers/texture.h"

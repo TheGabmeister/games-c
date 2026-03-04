@@ -2,8 +2,6 @@
 #define SPATIAL_COMPONENT_H
 
 #include <flecs.h>
-#include <raylib.h>
-#include <raymath.h>
 #include <engine.h>
 
 typedef struct Spatial

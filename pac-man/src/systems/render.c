@@ -123,7 +123,7 @@ static inline vector2 _align(vector2 position, vector2 size, Aligned aligned)
     position.x -= size.x;
     break;
   default:
-    TraceLog(LOG_WARNING, "bad align");
+    SDL_Log("bad align");
   }
   switch (aligned.valign)
   {
@@ -136,7 +136,7 @@ static inline vector2 _align(vector2 position, vector2 size, Aligned aligned)
     position.y -= size.y;
     break;
   default:
-    TraceLog(LOG_WARNING, "bad valign");
+    SDL_Log("bad valign");
   }
   return position;
 }

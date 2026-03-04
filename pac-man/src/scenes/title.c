@@ -32,7 +32,7 @@ static void _quit_game(ecs_world_t *world, Widget *widget)
 
 ecs_entity_t spawn_title(ecs_world_t *world, int value)
 {
-  return entity_manager_spawn_scene(world, SCENE_TITLE, DARKGRAY, MAX_TEXTURES);
+  return entity_manager_spawn_scene(world, SCENE_TITLE, (color){ 80, 80, 80, 255 } , MAX_TEXTURES);
 }
 
 //------------------------------------------------------------------------------

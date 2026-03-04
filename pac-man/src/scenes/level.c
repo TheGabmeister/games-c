@@ -10,7 +10,7 @@
 
 ecs_entity_t spawn_level(ecs_world_t *world, int value)
 {
-  return entity_manager_spawn_scene(world, SCENE_LEVEL, RED, MAX_TEXTURES);
+  return entity_manager_spawn_scene(world, SCENE_LEVEL, (color){255,0,0,0}, MAX_TEXTURES);
 }
 
 //------------------------------------------------------------------------------

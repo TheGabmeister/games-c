@@ -1,5 +1,3 @@
-#include <raylib.h>
-
 #include "../components/debug.h"
 
 #include "debug.h"

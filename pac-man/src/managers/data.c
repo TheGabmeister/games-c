@@ -21,7 +21,7 @@ void _load_data(DataName id, const char *filename)
   char *blob = LoadFileText(filename);
   if (blob == NULL)
   {
-    TraceLog(LOG_ERROR, "Cannot find %s", filename);
+    SDL_Log("Cannot find %s", filename);
     return;
   }
   cJSON *data = cJSON_Parse((const char *)blob);
@@ -29,7 +29,7 @@ void _load_data(DataName id, const char *filename)
   {
     const char *error = cJSON_GetErrorPtr();
     if (error != NULL)
-      TraceLog(LOG_ERROR, error);
+      SDL_Log(error);
     UnloadFileText((unsigned char *)blob);
     return;
   }
@@ -50,9 +50,17 @@ void _load_data(DataName id, const char *filename)
       vector[i] = value->valuedouble;
       ++i;
     }
-    Vector2 position = (Vector2){vector[0], vector[1]};
+    vector2 position = (vector2){vector[0], vector[1]};
     value = cJSON_GetObjectItemCaseSensitive(item, "tint");
-    Color tint = GetColor((unsigned int)value->valuedouble);
+
+    unsigned int hex = value->valuedouble;
+    color tint;
+
+    tint.r = (unsigned char)(hex >> 24) & 0xFF;
+    tint.g = (unsigned char)(hex >> 16) & 0xFF;
+    tint.b = (unsigned char)(hex >> 8) & 0xFF;
+    tint.a = (unsigned char)hex & 0xFF;
+
     value = cJSON_GetObjectItemCaseSensitive(item, "size");
     float size = value->valuedouble;
     if (b < MAX_SHEEP)

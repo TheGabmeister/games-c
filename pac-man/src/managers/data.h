@@ -2,9 +2,7 @@
 #define DATA_MANAGER_H
 
 #include <flecs.h>
-#include <raylib.h>
-#include <raymath.h>
-
+#include <engine.h>
 #include "../defines.h"
 
 typedef enum DataName
@@ -23,8 +21,8 @@ typedef enum DataName
 
 typedef struct Sheep
 {
-  Vector2 position;
-  Color tint;
+  vector2 position;
+  color tint;
   float size;
 } Sheep;
 

@@ -1,7 +1,6 @@
 #ifndef TRANSITION_COMPONENT_H
 #define TRANSITION_COMPONENT_H
 
-#include <raylib.h>
 #include <flecs.h>
 
 typedef enum TransitionName
