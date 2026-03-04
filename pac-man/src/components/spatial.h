@@ -4,6 +4,7 @@
 #include <flecs.h>
 #include <raylib.h>
 #include <raymath.h>
+#include <engine.h>
 
 typedef struct Spatial
 {

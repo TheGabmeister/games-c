@@ -252,10 +252,10 @@ void render_viewports(ecs_iter_t *it)
       continue;
     rectangle blip_src = {0, 0, 3, 3};
     rectangle blip_dst = {dst_r.x - dst_r.w / 2, dst_r.y - label_size.y / 2 - 7, dst_r.w, label_size.y + 10};
-    _set_tint(blip, (Color){255, 0, 255, 255});
+    _set_tint(blip, (color){255, 0, 255, 255});
     SDL_RenderTexture(renderer, blip, &blip_src, &blip_dst);
     vector2 position = {dst_r.x - label_size.x / 2, dst_r.y - label_size.y / 2};
-    DrawTextEx(*font, "Connect Controller", position, 48, 0, (Color){0, 255, 255, 255});
+    DrawTextEx(*font, "Connect Controller", position, 48, 0, (color){0, 255, 255, 255});
   }
   SDL_SetRenderTarget(renderer, NULL);
 }
@@ -307,7 +307,7 @@ void animate(ecs_iter_t *it)
     int x = (frame + animated[i].begin) * animated[i].width;
     int y = (x / tex_width) * animated[i].height;
     x %= tex_width;
-    renderable[i].src = (Rectangle){x, y, animated[i].width, animated[i].height};
+    renderable[i].src = (rectangle){x, y, animated[i].width, animated[i].height};
   }
 }
 

@@ -1,5 +1,5 @@
 #include "splash.h"
-
+#include <engine.h>
 #include "../systems/scene.h"
 
 #include "../managers/entity.h"
@@ -10,15 +10,15 @@
 
 ecs_entity_t spawn_splash(ecs_world_t *world, int value)
 {
-  return entity_manager_spawn_scene(world, SCENE_SPLASH, WHITE, MAX_TEXTURES);
+  return entity_manager_spawn_scene(world, SCENE_SPLASH, (color){255,255,255,255}, MAX_TEXTURES);
 }
 
 //------------------------------------------------------------------------------
 
 void init_splash(ecs_world_t *world, ecs_entity_t parent)
 {
-  Vector2 position = {RASTER_WIDTH * 0.5, RASTER_HEIGHT * 0.5};
-  entity_manager_spawn_image(world, parent, TEXTURE_LOGO, 1, position, WHITE);
+  vector2 position = {RASTER_WIDTH * 0.5, RASTER_HEIGHT * 0.5};
+  entity_manager_spawn_image(world, parent, TEXTURE_LOGO, 1, position, (color){255,255,255,255});
   entity_manager_spawn_sound(world, parent, SOUND_KRANZKY, 1);
 }
 

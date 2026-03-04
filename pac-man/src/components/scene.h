@@ -3,6 +3,7 @@
 
 #include <flecs.h>
 #include <raylib.h>
+#include <engine.h>
 #include <SDL3/SDL.h>
 
 typedef enum SceneName
@@ -19,7 +20,7 @@ typedef struct Scene
   SceneName id;
   float time;
   float value;
-  Color color;
+  color color;
   SDL_Texture *texture;
 } Scene;
 

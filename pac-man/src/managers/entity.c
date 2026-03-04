@@ -34,7 +34,7 @@ void entity_manager_init(ecs_world_t *world)
 
 //------------------------------------------------------------------------------
 
-ecs_entity_t entity_manager_spawn_scene(ecs_world_t *world, SceneName id, Color color, TextureName texture_id)
+ecs_entity_t entity_manager_spawn_scene(ecs_world_t *world, SceneName id, color color, TextureName texture_id)
 {
   ecs_entity_t entity = ecs_new(world);
   SDL_Texture *texture = texture_manager_get(texture_id);
@@ -71,7 +71,7 @@ ecs_entity_t entity_manager_spawn_debug(ecs_world_t *world, const char *text)
 
 //------------------------------------------------------------------------------
 
-ecs_entity_t entity_manager_spawn_image(ecs_world_t *world, ecs_entity_t parent, TextureName id, float scale, Vector2 position, Color tint)
+ecs_entity_t entity_manager_spawn_image(ecs_world_t *world, ecs_entity_t parent, TextureName id, float scale, vector2 position, color tint)
 {
   ecs_entity_t entity = ecs_new(world);
   SDL_Texture *texture = texture_manager_get(id);
@@ -127,7 +127,7 @@ ecs_entity_t _spawn_viewport(ecs_world_t *world, ecs_entity_t parent, vector2 si
 
 //------------------------------------------------------------------------------
 
-ecs_entity_t entity_manager_spawn_viewport(ecs_world_t *world, ecs_entity_t parent, Vector2 size, Rectangle dst, Color background)
+ecs_entity_t entity_manager_spawn_viewport(ecs_world_t *world, ecs_entity_t parent, vector2 size, rectangle dst, color background)
 {
   return _spawn_viewport(world, parent, size, dst, background);
 }
