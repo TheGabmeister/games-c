@@ -14,7 +14,7 @@ target_link_libraries(engine
 
 target_compile_definitions(engine
     PRIVATE
-        BUILD_LIBTYPE_SHARED
+        ENGINE_BUILD_SHARED
     INTERFACE
-        USE_LIBTYPE_SHARED
+        ENGINE_USE_SHARED
 )

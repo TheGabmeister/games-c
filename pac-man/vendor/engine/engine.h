@@ -10,13 +10,13 @@
     #if defined(__TINYC__)
         #define __declspec(x) __attribute__((x))
     #endif
-    #if defined(BUILD_LIBTYPE_SHARED)
+    #if defined(ENGINE_BUILD_SHARED)
         #define ENGINE_API __declspec(dllexport)     // We are building the library as a Win32 shared library (.dll)
-    #elif defined(USE_LIBTYPE_SHARED)
+    #elif defined(ENGINE_USE_SHARED)
         #define ENGINE_API __declspec(dllimport)     // We are using the library as a Win32 shared library (.dll)
     #endif
 #else
-    #if defined(BUILD_LIBTYPE_SHARED)
+    #if defined(ENGINE_BUILD_SHARED)
         #define ENGINE_API __attribute__((visibility("default"))) // We are building as a Unix shared library (.so/.dylib)
     #endif
 #endif
