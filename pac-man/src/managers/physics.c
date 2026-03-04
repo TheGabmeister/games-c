@@ -1,5 +1,4 @@
 #include <flecs.h>
-#include <raylib.h>
 #include <SDL3/SDL.h>
 
 #include "../helpers.h"

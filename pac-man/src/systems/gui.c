@@ -1,4 +1,5 @@
-#include <raylib.h>
+#include <SDL3/SDL.h>
+#include <engine.h>
 
 #include "../helpers.h"
 
@@ -294,8 +295,10 @@ void gui_render(ecs_iter_t *it)
 {
   Interface *interface = ecs_singleton_get_mut(it->world, Interface);
   const struct nk_command *command;
+  SDL_Renderer *renderer = get_renderer();
+  SDL_Texture *playfield = texture_manager_playfield();
   _scissoring = false;
-  BeginTextureMode(*texture_manager_playfield());
+  SDL_SetRenderTarget(renderer, playfield);
   nk_foreach(command, interface)
   {
     switch (command->type)
@@ -360,7 +363,7 @@ void gui_render(ecs_iter_t *it)
   }
   if (_scissoring)
     EndScissorMode();
-  EndTextureMode();
+  SDL_SetRenderTarget(renderer, NULL);
   nk_clear(interface);
 }
 
