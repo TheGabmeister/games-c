@@ -2,6 +2,7 @@
 
 #include <raylib.h>
 #include <flecs.h>
+#include <SDL3/SDL.h>
 
 #include "../components/display.h"
 #include "../components/time.h"
@@ -26,6 +27,8 @@
 
 //==============================================================================
 
+static SDL_Window   *window   = NULL;
+static SDL_Renderer *renderer = NULL;
 static ecs_world_t *_world = NULL;
 
 //==============================================================================
@@ -67,34 +70,55 @@ static inline void _init_raylib(void)
   flags = flags | FLAG_WINDOW_HIGHDPI;
 #endif
 
-  SetConfigFlags(flags);
-  SetTargetFPS(60);
-  SetExitKey(0);
+    SetConfigFlags(flags);
+    SetTargetFPS(60);
+    SetExitKey(0);
 
-  InitAudioDevice();
-  if (!IsAudioDeviceReady())
-  {
-    TraceLog(LOG_WARNING, "Unable to initialise audio device :(");
-  }
+    InitAudioDevice();
+    if (!IsAudioDeviceReady())
+    {
+      TraceLog(LOG_WARNING, "Unable to initialise audio device :(");
+    }
 
-  InitWindow(WINDOW_WIDTH, WINDOW_HEIGHT, GAME_NAME);
-  if (!IsWindowReady())
-  {
-    TraceLog(LOG_ERROR, "Unable to initialise OpenGL context :(");
-    return;
-  }
+    InitWindow(WINDOW_WIDTH, WINDOW_HEIGHT, GAME_NAME);
+    if (!IsWindowReady())
+    {
+      TraceLog(LOG_ERROR, "Unable to initialise OpenGL context :(");
+      return;
+    }
 
-  for (int i = 0; i < 2; ++i)
-  {
-    BeginDrawing();
-    ClearBackground(BLACK);
-    DrawTextEx(GetFontDefault(), "LOADING...", (Vector2){20, 20}, 24, 0, YELLOW);
-    EndDrawing();
-  }
+    for (int i = 0; i < 2; ++i)
+    {
+      BeginDrawing();
+      ClearBackground(BLACK);
+      DrawTextEx(GetFontDefault(), "LOADING...", (Vector2){20, 20}, 24, 0, YELLOW);
+      EndDrawing();
+    }
 
-  char *mappings = LoadFileText("./res/gamecontrollerdb.txt");
-  SetGamepadMappings(mappings);
-  UnloadFileText((unsigned char *)mappings);
+    char *mappings = LoadFileText("./res/gamecontrollerdb.txt");
+    SetGamepadMappings(mappings);
+    UnloadFileText((unsigned char *)mappings);
+
+        if (!SDL_Init(SDL_INIT_VIDEO)) {
+        SDL_Log("SDL_Init failed: %s", SDL_GetError());
+        return;
+    }
+
+    window = SDL_CreateWindow(GAME_NAME, WINDOW_WIDTH, WINDOW_HEIGHT, 0);
+    if (!window) {
+        SDL_Log("SDL_CreateWindow failed: %s", SDL_GetError());
+        SDL_Quit();
+        return;
+    }
+
+    renderer = SDL_CreateRenderer(window, NULL);
+    if (!renderer) {
+        SDL_Log("SDL_CreateRenderer failed: %s", SDL_GetError());
+        SDL_DestroyWindow(window);
+        SDL_Quit();
+        return;
+    }
+    
 }
 
 //------------------------------------------------------------------------------
@@ -161,22 +185,23 @@ void game_manager_init(void)
 
 void game_manager_loop(void)
 {
-  bool running = true;
-  bool started = false;
-  float time = 0;
-  if (!IsWindowReady())
-    return;
-  while (running)
-  {
-    float delta = GetFrameTime();
-    running = ecs_progress(_world, delta);
-    time += delta;
-    if (!started && time > 1)
+    bool running = true;
+    bool started = false;
+    float time = 0;
+    if (!IsWindowReady())
+        return;
+/*    while (running)
     {
-      _start_game();
-      started = true;
+        float delta = GetFrameTime();
+        running = ecs_progress(_world, delta);
+        time += delta;
+        if (!started && time > 1)
+        {
+            _start_game();
+            started = true;
+        }
     }
-  }
+        */
 }
 
 //------------------------------------------------------------------------------
