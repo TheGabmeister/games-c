@@ -3,6 +3,7 @@
 #include <engine.h>
 #include <flecs.h>
 #include <SDL3/SDL.h>
+#include <SDL3_image/SDL_image.h>
 
 #include "../components/display.h"
 #include "../components/time.h"
@@ -74,16 +75,15 @@ static inline void _init_managers(void)
 
 static inline void _init_game(void)
 {
-  	// if (IsWindowReady())
-  	// {
-  	//   	Texture *icon_texture = texture_manager_get(TEXTURE_SHIP);
-  	//   	if (icon_texture != NULL && IsTextureValid(*icon_texture))
-  	//   	{
-  	//   	  Image icon = LoadImageFromTexture(*icon_texture);
-  	//   	  SetWindowIcon(icon);
-  	//   	  UnloadImage(icon);
-  	//   	}
-  	// }
+  	if (is_window_ready())
+  	{
+  	  	SDL_Surface *icon = IMG_Load("./res/gfx/ship.png");
+  	  	if (icon != NULL)
+  	  	{
+  	  	  SDL_SetWindowIcon(SDL_GetRenderWindow(get_renderer()), icon);
+  	  	  SDL_DestroySurface(icon);
+  	  	}
+  	}
   	ecs_singleton_set(_world, Display, {.border = (color){0,0,0,0}, .background = (color){255,255,255,255}, .raster = {0, 0, RASTER_WIDTH, RASTER_HEIGHT}});
   	ecs_singleton_set(_world, Time, {.scale = 1});
 }
@@ -112,6 +112,7 @@ void game_manager_loop(void)
     SDL_Event event;
     bool running = true;
     bool started = false;
+    float time = 0;
 
     if (!is_window_ready())
         return;
@@ -133,11 +134,12 @@ void game_manager_loop(void)
 
         float delta = get_deltatime();
         running = ecs_progress(_world, delta);
-    	if (!started)
-    	{
-    	  	_start_game();
-    	  	started = true;
-    	}
+        time += delta;
+        if (!started && time > 1)
+        {
+            _start_game();
+            started = true;
+        }
 
     }   
 }
