@@ -30,21 +30,9 @@ static ecs_world_t *_world = NULL;
 
 //==============================================================================
 
-static void _fini(ecs_world_t *world, void *context)
-{
-  // if (IsAudioDeviceReady())
-  // {
-  //   CloseAudioDevice();
-  // }
-  close_window();
-}
-
-//------------------------------------------------------------------------------
-
 static inline void _init_flecs(void)
 {
   _world = ecs_init();
-  ecs_atfini(_world, _fini, NULL);
   // ecs_set_entity_range(_world, 1, 1000);
   // ecs_set_threads(world, 12);
 }
@@ -66,14 +54,13 @@ static inline void _init_sdl(void)
 static inline void _init_managers(void)
 {
   
-    // texture_manager_init(_world);
-    // sound_manager_init(_world);
-    // music_manager_init(_world);
-    // shader_manager_init(_world);
-    // font_manager_init(_world);
-    // data_manager_init(_world);
+    texture_manager_init(_world);
+    sound_manager_init(_world);
+    music_manager_init(_world);
+    font_manager_init(_world);
+    data_manager_init(_world);
     component_manager_init(_world);
-    // entity_manager_init(_world);
+    entity_manager_init(_world);
     // debug_manager_init(_world);
     // settings_manager_init(_world);
     // input_manager_init(_world);
@@ -161,4 +148,5 @@ void game_manager_fini(void)
 {
     ecs_fini(_world);
     _world = NULL;
+    close_window();    // SDL_Quit called last, after mixer is already destroyed
 }

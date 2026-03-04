@@ -46,7 +46,7 @@ void init_window(int width, int height, const char *title)
     GLOBALS.delta_time = 0.0f;
     GLOBALS.fps = 0;
 
-    if (!SDL_Init(SDL_INIT_VIDEO)) {
+    if (!SDL_Init(SDL_INIT_VIDEO | SDL_INIT_AUDIO)) {
         SDL_Log("SDL_Init failed: %s", SDL_GetError());
         return;
     }

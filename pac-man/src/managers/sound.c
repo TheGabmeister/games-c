@@ -20,18 +20,18 @@ static void SDLCALL _destroy_track(void *userdata, MIX_Track *track)
 
 static void _fini(ecs_world_t *world, void *context)
 {
-  for (int i = 0; i < MAX_SOUNDS; ++i)
-  {
-    if (_sounds[i])
-      MIX_DestroyAudio(_sounds[i]);
-    _sounds[i] = NULL;
-  }
-  if (_mixer)
-  {
-    MIX_DestroyMixer(_mixer);
-    _mixer = NULL;
-  }
-  MIX_Quit();
+    for (int i = 0; i < MAX_SOUNDS; ++i)
+    {
+        if (_sounds[i])
+            MIX_DestroyAudio(_sounds[i]);
+        _sounds[i] = NULL;
+    }
+    if (_mixer)
+    {
+        MIX_DestroyMixer(_mixer);
+        _mixer = NULL;
+    }
+    MIX_Quit();
 }
 
 //------------------------------------------------------------------------------
