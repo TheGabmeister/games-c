@@ -1,6 +1,7 @@
 #include "../defines.h"
 
 #include <raylib.h>
+#include <engine.h>
 #include <flecs.h>
 #include <SDL3/SDL.h>
 
@@ -28,6 +29,7 @@
 //==============================================================================
 
 static ecs_world_t *_world = NULL;
+static int millisecsPreviousFrame = 0;
 
 //==============================================================================
 
@@ -130,24 +132,36 @@ void game_manager_loop(void)
     if (!is_window_ready())
         return;
 
+    Uint64 last_ticks = SDL_GetTicksNS();
+
     while (running)
     {
-        while (SDL_PollEvent(&event))
-        {
-            if (event.type == SDL_EVENT_QUIT) {
-                running = false;
-                break;
-            }
-/*      float delta = GetFrameTime();
-        running = ecs_progress(_world, delta);
-        time += delta;
+        // while (SDL_PollEvent(&event))
+        // {
+        //     if (event.type == SDL_EVENT_QUIT) {
+        //         running = false;
+        //         break;
+        //     }
+        //     if (event.type == SDL_EVENT_KEY_DOWN && event.key.scancode == SDL_SCANCODE_ESCAPE) {
+        //         running = false;
+        //         break;
+        //     }
+		// }
+
+    double deltaTime = (SDL_GetTicks() - millisecsPreviousFrame) / 1000.0;
+    // Store the "previous" frame time
+    millisecsPreviousFrame = SDL_GetTicks();
+
+        SDL_Log("delta: %f", deltaTime);
+        running = ecs_progress(_world, deltaTime);
+/*        time += delta;
         if (!started && time > 1)
         {
             _start_game();
             started = true;
         }
             */
-        }
+        
     }   
 }
 
