@@ -1,9 +1,87 @@
-#include <raylib.h>
+#include <SDL3/SDL.h>
+#include <SDL3/SDL_properties.h>
+#include <SDL3_mixer/SDL_mixer.h>
 
 #include "../components/audible.h"
 #include "../components/track.h"
+#include "../managers/music.h"
 
 //==============================================================================
+
+static bool _audio_ready(void)
+{
+  return music_manager_mixer() != NULL;
+}
+
+//------------------------------------------------------------------------------
+
+static float _clamp_gain(float volume)
+{
+  if (volume < 0.0f)
+    return 0.0f;
+  if (volume > 1.0f)
+    return 1.0f;
+  return volume;
+}
+
+//------------------------------------------------------------------------------
+
+static void _destroy_music_track(Track *track)
+{
+  if (!track->mix_track)
+    return;
+
+  MIX_DestroyTrack(track->mix_track);
+  track->mix_track = NULL;
+}
+
+//------------------------------------------------------------------------------
+
+static bool _start_music_track(Track *track)
+{
+  SDL_PropertiesID props;
+
+  if (!_audio_ready() || !track->music)
+    return false;
+
+  _destroy_music_track(track);
+
+  track->mix_track = MIX_CreateTrack(music_manager_mixer());
+  if (!track->mix_track)
+    return false;
+
+  if (!MIX_SetTrackAudio(track->mix_track, track->music))
+  {
+    _destroy_music_track(track);
+    return false;
+  }
+
+  if (!MIX_SetTrackGain(track->mix_track, 0.0f))
+  {
+    _destroy_music_track(track);
+    return false;
+  }
+
+  props = SDL_CreateProperties();
+  if (!props)
+  {
+    _destroy_music_track(track);
+    return false;
+  }
+
+  SDL_SetNumberProperty(props, MIX_PROP_PLAY_LOOPS_NUMBER, -1);
+  if (!MIX_PlayTrack(track->mix_track, props))
+  {
+    SDL_DestroyProperties(props);
+    _destroy_music_track(track);
+    return false;
+  }
+
+  SDL_DestroyProperties(props);
+  return true;
+}
+
+//------------------------------------------------------------------------------
 
 void play_sounds(ecs_iter_t *it)
 {
@@ -19,11 +97,14 @@ void play_sounds(ecs_iter_t *it)
 
 static inline void _update_track(Track *track, float volume, float delta)
 {
-  if (IsAudioDeviceReady())
+  if (_audio_ready() && track->mix_track)
   {
-    SetMusicVolume(*track->music, volume);
-    UpdateMusicStream(*track->music);
-    track->track_time = GetMusicTimePlayed(*track->music);
+    Sint64 frames = MIX_GetTrackPlaybackPosition(track->mix_track);
+    Sint64 ms = MIX_TrackFramesToMS(track->mix_track, frames);
+
+    MIX_SetTrackGain(track->mix_track, _clamp_gain(volume));
+    if (ms >= 0)
+      track->track_time = (float)ms / 1000.0f;
   }
   else
   {
@@ -45,9 +126,7 @@ void play_music(ecs_iter_t *it)
     switch (track[i].state)
     {
     case TRACK_WAITING:
-      if (IsAudioDeviceReady())
-        PlayMusicStream(*track[i].music);
-      new_state = TRACK_STARTING;
+      new_state = _start_music_track(&track[i]) ? TRACK_STARTING : TRACK_STOPPED;
       break;
     case TRACK_STARTING:
       _update_track(&track[i], track[i].volume * track[i].state_time, it->delta_time * 4);
@@ -76,12 +155,13 @@ void play_music(ecs_iter_t *it)
         new_state = TRACK_STOPPED;
       break;
     case TRACK_STOPPED:
-      if (IsAudioDeviceReady())
-        StopMusicStream(*track[i].music);
+      if (track[i].mix_track)
+        MIX_StopTrack(track[i].mix_track, 0);
+      _destroy_music_track(&track[i]);
       ecs_delete(it->world, it->entities[i]);
       break;
     default:
-      TraceLog(LOG_WARNING, "bad audio state");
+      SDL_LogWarn(SDL_LOG_CATEGORY_AUDIO, "bad audio state");
       break;
     }
     if (new_state != MAX_TRACKS)

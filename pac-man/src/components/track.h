@@ -1,8 +1,8 @@
 #ifndef TRACK_COMPONENT_H
 #define TRACK_COMPONENT_H
 
-#include <raylib.h>
 #include <flecs.h>
+#include <SDL3_mixer/SDL_mixer.h>
 
 typedef enum TrackState
 {
@@ -19,7 +19,8 @@ typedef enum TrackState
 
 typedef struct Track
 {
-  Music *music;
+  MIX_Audio *music;
+  MIX_Track *mix_track;
   TrackState state;
   float volume;
   float length;

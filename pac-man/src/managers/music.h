@@ -1,8 +1,8 @@
 #ifndef MUSIC_MANAGER_H
 #define MUSIC_MANAGER_H
 
-#include <raylib.h>
 #include <flecs.h>
+#include <SDL3_mixer/SDL_mixer.h>
 
 typedef enum MusicName
 {
@@ -11,7 +11,8 @@ typedef enum MusicName
 } MusicName;
 
 void music_manager_init(ecs_world_t *world);
-Music *music_manager_get(MusicName id);
+MIX_Audio *music_manager_get(MusicName id);
+MIX_Mixer *music_manager_mixer(void);
 void music_manager_volume(ecs_world_t *world, ecs_entity_t id, float volume);
 void music_manager_mute(ecs_world_t *world, ecs_entity_t id);
 void music_manager_unmute(ecs_world_t *world, ecs_entity_t id);

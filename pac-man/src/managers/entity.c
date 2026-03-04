@@ -102,7 +102,7 @@ ecs_entity_t entity_manager_spawn_sound(ecs_world_t *world, ecs_entity_t parent,
 ecs_entity_t entity_manager_spawn_music(ecs_world_t *world, MusicName id, float volume)
 {
   ecs_entity_t entity = ecs_new(world);
-  Music *music = music_manager_get(id);
+  MIX_Audio *music = music_manager_get(id);
   ecs_set(world, entity, Track, {.music = music, .volume = volume});
   return entity;
 }
