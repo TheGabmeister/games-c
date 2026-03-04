@@ -2,8 +2,6 @@
 #define ENTITY_MANAGER_H
 
 #include <flecs.h>
-#include <raylib.h>
-#include <raymath.h>
 #include <engine.h>
 
 #include "../components/scene.h"
@@ -23,11 +21,11 @@ ECS_TAG_DECLARE(DebugTag);
 
 void entity_manager_init(ecs_world_t *world);
 
-ecs_entity_t entity_manager_spawn_label(ecs_world_t *world, ecs_entity_t parent, FontName id, const char *message, HorizontalAlignment align, VerticalAlignment valign, float size, Vector2 position, Color tint);
+ecs_entity_t entity_manager_spawn_label(ecs_world_t *world, ecs_entity_t parent, FontName id, const char *message, HorizontalAlignment align, VerticalAlignment valign, float size, vector2 position, color tint);
 ecs_entity_t entity_manager_spawn_debug(ecs_world_t *world, const char *message);
 ecs_entity_t entity_manager_spawn_image(ecs_world_t *world, ecs_entity_t parent, TextureName id, float scale, vector2 position, color tint);
 ecs_entity_t entity_manager_spawn_sound(ecs_world_t *world, ecs_entity_t parent, SoundName id, float volume);
 ecs_entity_t entity_manager_spawn_music(ecs_world_t *world, MusicName id, float volume);
-ecs_entity_t entity_manager_spawn_viewport(ecs_world_t *world, ecs_entity_t parent, vector2 size, Rectangle dst, color background);
+ecs_entity_t entity_manager_spawn_viewport(ecs_world_t *world, ecs_entity_t parent, vector2 size, rectangle dst, color background);
 
 #endif

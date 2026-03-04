@@ -30,6 +30,14 @@ typedef SDL_FRect rectangle;
 typedef SDL_Color color;
 typedef struct { float x, y; } vector2;
 
+// 2D camera
+typedef struct camera {
+    vector2 offset;         
+    vector2 target;         
+    float rotation;         
+    float zoom;             
+} camera;
+
 ENGINE_API void init_window(int width, int height, const char *title);  // Initialize window and OpenGL context
 ENGINE_API void close_window(void);                                     // Close window and unload OpenGL context
 ENGINE_API bool is_window_ready(void);

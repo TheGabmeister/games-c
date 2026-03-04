@@ -1,8 +1,5 @@
-#include <raylib.h>
-#include <raymath.h>
-#include <SDL3/SDL.h>
 #include <engine.h>
-
+#include <SDL3/SDL.h>
 #include "../components/spatial.h"
 #include "../components/tinted.h"
 #include "../components/interface.h"
@@ -49,7 +46,7 @@ ecs_entity_t entity_manager_spawn_scene(ecs_world_t *world, SceneName id, color 
 ecs_entity_t entity_manager_spawn_label(ecs_world_t *world, ecs_entity_t parent, FontName id, const char *text, HorizontalAlignment align, VerticalAlignment valign, float size, vector2 position, color tint)
 {
   ecs_entity_t entity = ecs_new(world);
-  Font *font = font_manager_get(id);
+  TTF_Font *font = font_manager_get(id);
   ecs_set(world, entity, Label, {.font = font, .text = text, .size = size});
   ecs_set(world, entity, Spatial, {.position = position});
   ecs_set(world, entity, Aligned, {.align = align, .valign = valign});
@@ -113,14 +110,14 @@ ecs_entity_t _spawn_viewport(ecs_world_t *world, ecs_entity_t parent, vector2 si
   ecs_entity_t entity = ecs_new(world);
   SDL_Texture *raster = SDL_CreateTexture(get_renderer(), SDL_PIXELFORMAT_RGBA8888,
                                           SDL_TEXTUREACCESS_TARGET, (int)size.x, (int)size.y);
-  Camera2D camera = {0};
-  glm_vec2_zero(camera.target);
-  glm_vec2_scale(size, 0.5f, camera.offset);
-  camera.rotation = 0.0f;
-  camera.zoom = 10.0f;
+  camera cam = {0};
+  cam.target = (vector2){0.0f, 0.0f};
+  cam.offset = (vector2){size.x * 0.5f, size.y * 0.5f};
+  cam.rotation = 0.0f;
+  cam.zoom = 10.0f;
   rectangle src = {0, 0, size.x, size.y};
   vector2 origin = {dst.w * 0.5, dst.h * 0.5};
-  ecs_set(world, entity, Viewport, {.raster = raster, .size = size, .background = background, .camera = camera, .src = src, .dst = dst, .origin = origin, .rotation = 0, .color = (color){255, 255, 255, 255}});
+  ecs_set(world, entity, Viewport, {.raster = raster, .size = size, .background = background, .cam = cam, .src = src, .dst = dst, .origin = origin, .rotation = 0, .color = (color){255, 255, 255, 255}});
   ecs_add_pair(world, entity, EcsChildOf, parent);
   return entity;
 }

@@ -11,7 +11,7 @@ typedef struct Viewport
   SDL_Texture *raster;
   vector2 size;
   color background;
-  Camera2D camera;
+  camera cam;
   rectangle src;
   rectangle dst;
   vector2 origin;

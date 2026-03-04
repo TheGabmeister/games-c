@@ -13,6 +13,7 @@
 
 void process_input(ecs_iter_t *it)
 {
+  /*
   Input *input = ecs_singleton_get_mut(it->world, Input);
   Settings *settings = ecs_singleton_get_mut(it->world, Settings);
   Display *display = ecs_singleton_get_mut(it->world, Display);
@@ -73,4 +74,5 @@ void process_input(ecs_iter_t *it)
 #ifdef DEBUG
   input->toggle_debug = IsKeyPressed(KEY_TAB);
 #endif
+*/
 }

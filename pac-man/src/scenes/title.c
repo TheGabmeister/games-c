@@ -39,8 +39,8 @@ ecs_entity_t spawn_title(ecs_world_t *world, int value)
 
 void init_title(ecs_world_t *world, ecs_entity_t parent)
 {
-  Vector2 position = {RASTER_WIDTH * 0.5, 50};
-  entity_manager_spawn_label(world, parent, FONT_CLOVER, "Choose a Game!", ALIGN_CENTRE, VALIGN_TOP, 50, position, ORANGE);
+  vector2 position = {RASTER_WIDTH * 0.5, 50};
+  entity_manager_spawn_label(world, parent, FONT_CLOVER, "Choose a Game!", ALIGN_CENTRE, VALIGN_TOP, 50, position, (color){ 255, 161, 0, 255 });
   ecs_entity_t window = gui_window(world, parent, "Starter Kit", 0.5 * (RASTER_WIDTH - 480), 150, 480, 240, 0, 5);
   gui_button(world, window, "Meesta Collecta", 0, _play_game);
   gui_button(world, window, "99 Sheep", 0, _play_game);
