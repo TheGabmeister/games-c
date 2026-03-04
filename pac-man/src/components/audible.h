@@ -7,7 +7,7 @@
 
 typedef struct Audible
 {
-  Sound *sound;
+  MIX_Audio *sound;
   float volume;
 } Audible;
 

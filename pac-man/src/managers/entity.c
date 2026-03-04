@@ -90,7 +90,7 @@ ecs_entity_t entity_manager_spawn_image(ecs_world_t *world, ecs_entity_t parent,
 ecs_entity_t entity_manager_spawn_sound(ecs_world_t *world, ecs_entity_t parent, SoundName id, float volume)
 {
   ecs_entity_t entity = ecs_new(world);
-  Sound *sound = sound_manager_get(id);
+  MIX_Audio *sound = sound_manager_get(id);
   ecs_set(world, entity, Audible, {.sound = sound, .volume = volume});
   if (parent != 0)
     ecs_add_pair(world, entity, EcsChildOf, parent);

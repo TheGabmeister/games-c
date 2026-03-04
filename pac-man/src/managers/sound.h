@@ -2,6 +2,7 @@
 #define SOUND_MANAGER_H
 
 #include <flecs.h>
+#include <SDL3_mixer/SDL_mixer.h>
 
 typedef enum SoundName
 {
@@ -12,6 +13,7 @@ typedef enum SoundName
 } SoundName;
 
 void sound_manager_init(ecs_world_t *world);
-Sound *sound_manager_get(SoundName id);
+MIX_Audio *sound_manager_get(SoundName id);
+bool sound_manager_play(MIX_Audio *sound, float volume);
 
 #endif
