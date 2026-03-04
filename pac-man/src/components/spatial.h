@@ -7,7 +7,7 @@
 
 typedef struct Spatial
 {
-  Vector2 position;
+  vector2 position;
   float rotation;
 } Spatial;
 

@@ -33,7 +33,7 @@ static inline rectangle _sdl_rect(rectangle r)
   return (rectangle){r.x, r.y, r.w, r.h};
 }
 
-static inline void _set_tint(SDL_Texture *tex, Color c)
+static inline void _set_tint(SDL_Texture *tex, color c)
 {
   SDL_SetTextureColorMod(tex, c.r, c.g, c.b);
   SDL_SetTextureAlphaMod(tex, c.a);
@@ -157,11 +157,11 @@ void render_labels(ecs_iter_t *it)
     SDL_Texture *texture = texture_manager_get(TEXTURE_BLIP);
     rectangle src = {0, 0, 3, 3};
     rectangle dst = {0, 0, RASTER_WIDTH, RASTER_HEIGHT};
-    _set_tint(texture, (Color){0, 0, 0, 64});
+    _set_tint(texture, (color){0, 0, 0, 64});
     SDL_RenderTexture(renderer, texture, &src, &dst);
     dst.y = RASTER_HEIGHT * 0.5f - 70;
     dst.h = 120;
-    _set_tint(texture, ORANGE);
+    _set_tint(texture, (color){255, 161, 0, 255});
     SDL_RenderTexture(renderer, texture, &src, &dst);
   }
   for (int i = 0; i < it->count; ++i)

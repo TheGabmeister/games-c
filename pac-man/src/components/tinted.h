@@ -2,11 +2,11 @@
 #define TINTED_COMPONENT_H
 
 #include <flecs.h>
-#include <raylib.h>
+#include <engine.h>
 
 typedef struct Tinted
 {
-  Color tint;
+  color tint;
 } Tinted;
 
 ECS_COMPONENT_DECLARE(Tinted);
