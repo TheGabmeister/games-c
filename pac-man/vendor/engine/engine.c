@@ -78,6 +78,11 @@ int get_fps(void)
     return GLOBALS.fps;
 }
 
+SDL_Renderer *get_renderer(void)
+{
+    return GLOBALS.renderer;
+}
+
 float get_deltatime(void)
 {
     Uint64 current_ticks_ns;

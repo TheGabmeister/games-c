@@ -2,6 +2,7 @@
 #define ENGINE_H
 
 #include <stdbool.h>
+#include <SDL3/SDL.h>
 
 // Function specifiers in case library is build/used as a shared library
 // NOTE: Microsoft specifiers to tell compiler that symbols are imported/exported from a .dll
@@ -27,9 +28,10 @@
 
 ENGINE_API void init_window(int width, int height, const char *title);  // Initialize window and OpenGL context
 ENGINE_API void close_window(void);                                     // Close window and unload OpenGL context
-ENGINE_API bool is_window_ready(void); 
+ENGINE_API bool is_window_ready(void);
 ENGINE_API int get_fps(void);                                           // Return latest FPS computed from delta time
 ENGINE_API float get_deltatime(void);                                   // Compute and return seconds since last frame
+ENGINE_API SDL_Renderer *get_renderer(void);                            // Return the SDL renderer
 
 #endif // ENGINE_H
 
