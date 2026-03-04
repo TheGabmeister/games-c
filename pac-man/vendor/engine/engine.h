@@ -29,6 +29,8 @@
 typedef SDL_FRect rectangle;
 typedef SDL_Color color;
 typedef struct { float x, y; } vector2;
+typedef struct { float x, y, z; } vector3;
+typedef struct { float x, y, z, w; } vector4;
 
 // 2D camera
 typedef struct camera {

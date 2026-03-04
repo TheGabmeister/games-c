@@ -135,16 +135,16 @@ void physics_manager_init(ecs_world_t *world)
 void physics_manager_set_properties(ecs_world_t *world, float gravity, float damping)
 {
   const Physics *physics = ecs_singleton_get(world, Physics);
-  cpSpaceSetGravity(physics->space, _from_vector((Vector2){0, gravity}));
+  cpSpaceSetGravity(physics->space, _from_vector((vector2){0, gravity}));
   cpSpaceSetDamping(physics->space, damping);
 }
 
 //------------------------------------------------------------------------------
 
-void physics_ball(ecs_world_t *world, ecs_entity_t parent, float mass, float radius, Vector2 position)
+void physics_ball(ecs_world_t *world, ecs_entity_t parent, float mass, float radius, vector2 position)
 {
   float scale = 0.25;
-  position = Vector2Scale(position, scale);
+  position = (vector2){position.x*scale, position.y*scale};
   const Physics *physics = ecs_singleton_get(world, Physics);
   ecs_entity_t entity = ecs_new(world);
   cpBody *body = cpBodyNew(mass, cpMomentForCircle(mass, 0, radius * 0.9, cpvzero));
@@ -167,7 +167,7 @@ void physics_ball(ecs_world_t *world, ecs_entity_t parent, float mass, float rad
 
 //------------------------------------------------------------------------------
 
-void physics_line(ecs_world_t *world, ecs_entity_t parent, Vector2 from, Vector2 to, float radius)
+void physics_line(ecs_world_t *world, ecs_entity_t parent, vector2 from, vector2 to, float radius)
 {
   const Physics *physics = ecs_singleton_get(world, Physics);
   ecs_entity_t entity = ecs_new(world);
@@ -184,7 +184,7 @@ void physics_line(ecs_world_t *world, ecs_entity_t parent, Vector2 from, Vector2
 
 //------------------------------------------------------------------------------
 
-void physics_box(ecs_world_t *world, ecs_entity_t parent, Vector2 position)
+void physics_box(ecs_world_t *world, ecs_entity_t parent, vector2 position)
 {
   const Physics *physics = ecs_singleton_get(world, Physics);
   ecs_entity_t entity = ecs_new(world);
@@ -203,7 +203,7 @@ void physics_box(ecs_world_t *world, ecs_entity_t parent, Vector2 position)
 
 //------------------------------------------------------------------------------
 
-void physics_wedge(ecs_world_t *world, ecs_entity_t parent, Vector2 position, int corner)
+void physics_wedge(ecs_world_t *world, ecs_entity_t parent, vector2 position, int corner)
 {
   const Physics *physics = ecs_singleton_get(world, Physics);
   ecs_entity_t entity = ecs_new(world);
@@ -242,8 +242,8 @@ static void _draw_dot(cpFloat size, cpVect position, cpSpaceDebugColor color, cp
 
 static void _draw_circle(cpVect position, cpFloat angle, cpFloat radius, cpSpaceDebugColor outline, cpSpaceDebugColor fill, cpDataPointer data)
 {
-  Vector2 pos = _to_vector(position);
-  Vector2 offset = Vector2Rotate((Vector2){0, 1}, RAD2DEG * angle);
+  vector2 pos = _to_vector(position);
+  vector2 offset = Vector2Rotate((vector2){0, 1}, RAD2DEG * angle);
   DrawCircleV(pos, radius + 0.1, _to_color(outline));
   DrawCircleV(pos, radius - 0.1, _to_color(fill));
   DrawLineV(pos, Vector2Add(pos, Vector2Scale(offset, radius * 0.75)), _to_color(outline));
@@ -268,7 +268,7 @@ static void _draw_fat_segment(cpVect from, cpVect to, cpFloat radius, cpSpaceDeb
 
 static void _draw_polygon(int length, const cpVect *points, cpFloat radius, cpSpaceDebugColor outline, cpSpaceDebugColor fill, cpDataPointer data)
 {
-  Vector2 vertices[length + 2];
+  vector2 vertices[length + 2];
   vertices[0] = _to_vector(cpCentroidForPoly(length, points));
   for (int i = 0; i < length; ++i)
     vertices[i + 1] = _to_vector(points[length - i - 1]);

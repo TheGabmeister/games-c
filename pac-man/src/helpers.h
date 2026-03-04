@@ -1,24 +1,31 @@
-#include <raylib.h>
-#include <raymath.h>
+#include <engine.h>
 #include <chipmunk/chipmunk.h>
 
 //==============================================================================
 
-static inline cpVect _from_vector(Vector2 position)
+static inline cpVect _from_vector(vector2 position)
 {
   return (cpVect){position.x, position.y};
 }
 
 //------------------------------------------------------------------------------
 
-static inline Vector2 _to_vector(cpVect position)
+static inline vector2 _to_vector(cpVect position)
 {
-  return (Vector2){position.x, position.y};
+  return (vector2){position.x, position.y};
 }
 
 //------------------------------------------------------------------------------
 
-static inline Color _to_color(cpSpaceDebugColor color)
+static inline color _to_color(cpSpaceDebugColor col)
 {
-  return ColorFromNormalized((Vector4){color.r, color.g, color.b, color.a});
+	color result;
+
+    result.r = (unsigned char)(col.r*255.0f);
+    result.g = (unsigned char)(col.g*255.0f);
+    result.b = (unsigned char)(col.b*255.0f);
+    result.a = (unsigned char)(col.a*255.0f);
+
+    return result;
+
 }

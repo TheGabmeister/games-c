@@ -2,16 +2,15 @@
 #define COLLISION_COMPONENT_H
 
 #include <flecs.h>
-#include <raylib.h>
-#include <raymath.h>
+#include <engine.h>
 
 #include "physical.h"
 
 typedef struct Collision
 {
   ecs_entity_t entities[2];
-  Vector2 contacts[2];
-  Vector2 normal;
+  vector2 contacts[2];
+  vector2 normal;
   float energy;
 } Collision;
 
