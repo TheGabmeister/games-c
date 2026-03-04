@@ -1,4 +1,4 @@
-#include <raylib.h>
+#include <SDL3/SDL.h>
 
 #include "../components/settings.h"
 
@@ -11,21 +11,28 @@
 int _load_storage_value(unsigned int position)
 {
     int value = 0;
-    int dataSize = 0;
-    unsigned char *fileData = LoadFileData(STORAGE_DATA_FILE, &dataSize);
+    size_t dataSize = 0;
+    unsigned char *fileData = SDL_LoadFile(STORAGE_DATA_FILE, &dataSize);
 
     if (fileData != NULL)
     {
-        if (dataSize < ((int)(position*4))) TraceLog(LOG_WARNING, "FILEIO: [%s] Failed to find storage position: %i", STORAGE_DATA_FILE, position);
+        if (dataSize < ((size_t)((position + 1) * sizeof(int))))
+        {
+            SDL_LogWarn(SDL_LOG_CATEGORY_APPLICATION,
+                        "FILEIO: [%s] Failed to find storage position: %u",
+                        STORAGE_DATA_FILE, position);
+        }
         else
         {
             int *dataPtr = (int *)fileData;
             value = dataPtr[position];
         }
 
-        UnloadFileData(fileData);
+        SDL_free(fileData);
 
-        TraceLog(LOG_INFO, "FILEIO: [%s] Loaded storage value: %i", STORAGE_DATA_FILE, value);
+        SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION,
+                    "FILEIO: [%s] Loaded storage value: %i",
+                    STORAGE_DATA_FILE, value);
     }
 
     return value;
@@ -34,29 +41,31 @@ int _load_storage_value(unsigned int position)
 bool _save_storage_value(unsigned int position, int value)
 {
     bool success = false;
-    int dataSize = 0;
-    unsigned int newDataSize = 0;
-    unsigned char *fileData = LoadFileData(STORAGE_DATA_FILE, &dataSize);
+    size_t dataSize = 0;
+    size_t newDataSize = 0;
+    unsigned char *fileData = SDL_LoadFile(STORAGE_DATA_FILE, &dataSize);
     unsigned char *newFileData = NULL;
 
     if (fileData != NULL)
     {
-        if (dataSize <= (position*sizeof(int)))
+        if (dataSize <= ((size_t)position * sizeof(int)))
         {
             // Increase data size up to position and store value
-            newDataSize = (position + 1)*sizeof(int);
-            newFileData = (unsigned char *)RL_REALLOC(fileData, newDataSize);
+            newDataSize = (position + 1) * sizeof(int);
+            newFileData = (unsigned char *)SDL_realloc(fileData, newDataSize);
 
             if (newFileData != NULL)
             {
-                // RL_REALLOC succeded
+                // SDL_realloc succeeded
                 int *dataPtr = (int *)newFileData;
                 dataPtr[position] = value;
             }
             else
             {
-                // RL_REALLOC failed
-                TraceLog(LOG_WARNING, "FILEIO: [%s] Failed to realloc data (%u), position in bytes (%u) bigger than actual file size", STORAGE_DATA_FILE, dataSize, position*sizeof(int));
+                // SDL_realloc failed
+                SDL_LogWarn(SDL_LOG_CATEGORY_APPLICATION,
+                            "FILEIO: [%s] Failed to realloc data (%zu), position in bytes (%zu) bigger than actual file size",
+                            STORAGE_DATA_FILE, dataSize, (size_t)position * sizeof(int));
 
                 // We store the old size of the file
                 newFileData = fileData;
@@ -74,24 +83,30 @@ bool _save_storage_value(unsigned int position, int value)
             dataPtr[position] = value;
         }
 
-        success = SaveFileData(STORAGE_DATA_FILE, newFileData, newDataSize);
-        RL_FREE(newFileData);
+        success = SDL_SaveFile(STORAGE_DATA_FILE, newFileData, newDataSize);
+        SDL_free(newFileData);
 
-        TraceLog(LOG_INFO, "FILEIO: [%s] Saved storage value: %i", STORAGE_DATA_FILE, value);
+        SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION,
+                    "FILEIO: [%s] Saved storage value: %i",
+                    STORAGE_DATA_FILE, value);
     }
     else
     {
-        TraceLog(LOG_INFO, "FILEIO: [%s] File created successfully", STORAGE_DATA_FILE);
+        SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION,
+                    "FILEIO: [%s] File created successfully",
+                    STORAGE_DATA_FILE);
 
-        dataSize = (position + 1)*sizeof(int);
-        fileData = (unsigned char *)RL_MALLOC(dataSize);
+        dataSize = (position + 1) * sizeof(int);
+        fileData = (unsigned char *)SDL_malloc(dataSize);
         int *dataPtr = (int *)fileData;
         dataPtr[position] = value;
 
-        success = SaveFileData(STORAGE_DATA_FILE, fileData, dataSize);
-        UnloadFileData(fileData);
+        success = SDL_SaveFile(STORAGE_DATA_FILE, fileData, dataSize);
+        SDL_free(fileData);
 
-        TraceLog(LOG_INFO, "FILEIO: [%s] Saved storage value: %i", STORAGE_DATA_FILE, value);
+        SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION,
+                    "FILEIO: [%s] Saved storage value: %i",
+                    STORAGE_DATA_FILE, value);
     }
 
     return success;
