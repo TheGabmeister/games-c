@@ -27,20 +27,17 @@
 
 //==============================================================================
 
-static SDL_Window   *window   = NULL;
-static SDL_Renderer *renderer = NULL;
 static ecs_world_t *_world = NULL;
 
 //==============================================================================
 
-static void
-_fini(ecs_world_t *world, void *context)
+static void _fini(ecs_world_t *world, void *context)
 {
-  if (IsAudioDeviceReady())
-  {
-    CloseAudioDevice();
-  }
-  CloseWindow();
+  // if (IsAudioDeviceReady())
+  // {
+  //   CloseAudioDevice();
+  // }
+  // CloseWindow();
 }
 
 //------------------------------------------------------------------------------
@@ -57,27 +54,7 @@ static inline void _init_flecs(void)
 
 static inline void _init_sdl(void)
 {
-
-
-    if (!SDL_Init(SDL_INIT_VIDEO)) {
-        SDL_Log("SDL_Init failed: %s", SDL_GetError());
-        return;
-    }
-
-    window = SDL_CreateWindow(GAME_NAME, WINDOW_WIDTH, WINDOW_HEIGHT, 0);
-    if (!window) {
-        SDL_Log("SDL_CreateWindow failed: %s", SDL_GetError());
-        SDL_Quit();
-        return;
-    }
-
-    renderer = SDL_CreateRenderer(window, NULL);
-    if (!renderer) {
-        SDL_Log("SDL_CreateRenderer failed: %s", SDL_GetError());
-        SDL_DestroyWindow(window);
-        SDL_Quit();
-        return;
-    }
+    //init_window
 
     //char *mappings = LoadFileText("./res/gamecontrollerdb.txt");
     //SetGamepadMappings(mappings);
