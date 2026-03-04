@@ -18,7 +18,8 @@ static void _fini(ecs_world_t *world, void *context)
 
 void _load_data(DataName id, const char *filename)
 {
-  char *blob = LoadFileText(filename);
+  size_t size;
+  char *blob = SDL_LoadFile(filename, &size);
   if (blob == NULL)
   {
     SDL_Log("Cannot find %s", filename);
@@ -30,7 +31,7 @@ void _load_data(DataName id, const char *filename)
     const char *error = cJSON_GetErrorPtr();
     if (error != NULL)
       SDL_Log(error);
-    UnloadFileText((unsigned char *)blob);
+    SDL_free(blob);
     return;
   }
   float vector[3];
@@ -69,7 +70,7 @@ void _load_data(DataName id, const char *filename)
       ++b;
     }
   }
-  UnloadFileText((unsigned char *)blob);
+  SDL_free(blob);
   cJSON_Delete(data);
 }
 

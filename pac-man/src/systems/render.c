@@ -46,12 +46,10 @@ void refresh_display(ecs_iter_t *it)
 {
   Display *display = ecs_singleton_get_mut(it->world, Display);
 
-  display->window.w = GetScreenWidth();
-  display->window.h = GetScreenHeight();
-#ifdef MAC
-  display->window.width *= GetWindowScaleDPI().x;
-  display->window.height *= GetWindowScaleDPI().y;
-#endif
+  int w, h;
+  SDL_GetWindowSizeInPixels(SDL_GetRenderWindow(get_renderer()), &w, &h);
+  display->window.w = (float)w;
+  display->window.h = (float)h;
 
   display->scale = MIN(display->window.w / display->raster.w, display->window.h / display->raster.h);
 
@@ -321,6 +319,7 @@ void animate(ecs_iter_t *it)
 //==============================================================================
 // Physics debug draw — still uses raylib primitives, needs porting
 //==============================================================================
+/*
 
 #ifdef DEBUG
 
@@ -452,4 +451,7 @@ cpSpaceDebugDrawOptions *physics_debug_options(void)
   return &_options;
 }
 
+
+
 #endif
+*/

@@ -1,5 +1,4 @@
-#include <raylib.h>
-#include <raymath.h>
+#include <cglm/cglm.h>
 
 #include "../defines.h"
 
@@ -37,14 +36,14 @@ void transition(ecs_iter_t *it)
       transition[i].wait -= time->delta;
       break;
     case TRANSITION_FADE_IN:
-      transition[i].fade = Clamp(transition[i].time * 4, 0, 1);
+      transition[i].fade = glm_clamp(transition[i].time * 4, 0, 1);
       break;
     case TRANSITION_HOLDING:
       transition[i].fade = 1;
       transition[i].hold -= time->delta;
       break;
     case TRANSITION_FADE_OUT:
-      transition[i].fade = Clamp(1 - transition[i].time * 4, 0, 1);
+      transition[i].fade = glm_clamp(1 - transition[i].time * 4, 0, 1);
       break;
     };
     transition[i].time += time->delta;

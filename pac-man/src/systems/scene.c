@@ -103,22 +103,21 @@ static inline void _unpause(ecs_world_t *world)
 
 static inline void _process_input(ecs_world_t *world, Input *input, Time *time, bool allow_pause)
 {
-  bool paused = time->paused;
-  if (input->toggle_pause || (input->quit && time->paused))
-    time->paused = !time->paused;
-  if (input->toggle_fullscreen)
-  {
-    time->paused = true;
-    ToggleFullscreen();
-  }
-  if (IsWindowResized() || !IsWindowFocused())
-    time->paused = true;
-  if (!allow_pause)
-    time->paused = false;
-  if (!paused && time->paused)
-    _pause(world);
-  else if (paused && !time->paused)
-    _unpause(world);
+    bool paused = time->paused;
+    if (input->toggle_pause || (input->quit && time->paused))
+        time->paused = !time->paused;
+    if (input->toggle_fullscreen)
+    {
+        time->paused = true;
+    }
+    // if (IsWindowResized() || !IsWindowFocused())
+    //     time->paused = true;
+    // if (!allow_pause)
+    //     time->paused = false;
+    // if (!paused && time->paused)
+    //     _pause(world);
+    // else if (paused && !time->paused)
+    //     _unpause(world);
 }
 
 //------------------------------------------------------------------------------
