@@ -9,14 +9,14 @@
 typedef struct Viewport
 {
   SDL_Texture *raster;
-  Vector2 size;
-  Color background;
+  vector2 size;
+  color background;
   Camera2D camera;
   rectangle src;
   rectangle dst;
-  Vector2 origin;
+  vector2 origin;
   float rotation;
-  Color color;
+  color color;
   vector2 pointer;
   vector2 handle;
   bool active;

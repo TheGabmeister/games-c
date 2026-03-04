@@ -27,6 +27,7 @@
 #endif
 
 typedef SDL_FRect rectangle;
+typedef SDL_Color color;
 typedef struct { float x, y; } vector2;
 
 ENGINE_API void init_window(int width, int height, const char *title);  // Initialize window and OpenGL context

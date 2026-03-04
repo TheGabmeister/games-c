@@ -108,7 +108,7 @@ ecs_entity_t entity_manager_spawn_music(ecs_world_t *world, MusicName id, float 
 
 //------------------------------------------------------------------------------
 
-ecs_entity_t _spawn_viewport(ecs_world_t *world, ecs_entity_t parent, Vector2 size, Rectangle dst, Color background)
+ecs_entity_t _spawn_viewport(ecs_world_t *world, ecs_entity_t parent, vector2 size, rectangle dst, color background)
 {
   ecs_entity_t entity = ecs_new(world);
   SDL_Texture *raster = SDL_CreateTexture(get_renderer(), SDL_PIXELFORMAT_RGBA8888,
@@ -118,8 +118,8 @@ ecs_entity_t _spawn_viewport(ecs_world_t *world, ecs_entity_t parent, Vector2 si
   camera.offset = Vector2Scale(size, 0.5f);
   camera.rotation = 0.0f;
   camera.zoom = 10.0f;
-  Rectangle src = {0, 0, size.x, size.y};
-  Vector2 origin = {dst.width * 0.5, dst.height * 0.5};
+  rectangle src = {0, 0, size.x, size.y};
+  vector2 origin = {dst.w * 0.5, dst.h * 0.5};
   ecs_set(world, entity, Viewport, {.raster = raster, .size = size, .background = background, .camera = camera, .src = src, .dst = dst, .origin = origin, .rotation = 0, .color = WHITE});
   ecs_add_pair(world, entity, EcsChildOf, parent);
   return entity;
