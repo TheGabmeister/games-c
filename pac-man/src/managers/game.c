@@ -89,25 +89,25 @@ static inline void _init_managers(void)
 
 static inline void _init_game(void)
 {
-  if (IsWindowReady())
-  {
-    Texture *icon_texture = texture_manager_get(TEXTURE_SHIP);
-    if (icon_texture != NULL && IsTextureValid(*icon_texture))
-    {
-      Image icon = LoadImageFromTexture(*icon_texture);
-      SetWindowIcon(icon);
-      UnloadImage(icon);
-    }
-  }
-  //ecs_singleton_set(_world, Display, {.border = BLACK, .background = WHITE, .raster = {0, 0, RASTER_WIDTH, RASTER_HEIGHT}});
-  //ecs_singleton_set(_world, Time, {.scale = 1});
+  	// if (IsWindowReady())
+  	// {
+  	//   	Texture *icon_texture = texture_manager_get(TEXTURE_SHIP);
+  	//   	if (icon_texture != NULL && IsTextureValid(*icon_texture))
+  	//   	{
+  	//   	  Image icon = LoadImageFromTexture(*icon_texture);
+  	//   	  SetWindowIcon(icon);
+  	//   	  UnloadImage(icon);
+  	//   	}
+  	// }
+  	//ecs_singleton_set(_world, Display, {.border = BLACK, .background = WHITE, .raster = {0, 0, RASTER_WIDTH, RASTER_HEIGHT}});
+  	//ecs_singleton_set(_world, Time, {.scale = 1});
 }
 
 //------------------------------------------------------------------------------
 
 static inline void _start_game(void)
 {
-
+    spawn_scene(_world, SCENE_SPLASH, 0);
 }
 
 //==============================================================================
@@ -127,7 +127,7 @@ void game_manager_loop(void)
     SDL_Event event;
     bool running = true;
     bool started = false;
-    float time = 0;
+
     if (!is_window_ready())
         return;
 
@@ -147,16 +147,13 @@ void game_manager_loop(void)
 	    }
 
         float delta = get_deltatime();
-
         running = ecs_progress(_world, delta);
-/*        time += delta;
-        if (!started && time > 1)
-        {
-            _start_game();
-            started = true;
-        }
-            */
-        
+    	if (!started)
+    	{
+    	  	_start_game();
+    	  	started = true;
+    	}
+
     }   
 }
 
