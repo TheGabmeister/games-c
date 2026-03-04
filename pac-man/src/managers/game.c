@@ -1,6 +1,5 @@
 #include "../defines.h"
 
-#include <raylib.h>
 #include <engine.h>
 #include <flecs.h>
 #include <SDL3/SDL.h>
@@ -67,22 +66,22 @@ static inline void _init_sdl(void)
 
 static inline void _init_managers(void)
 {
-  /*
-    texture_manager_init(_world);
-    sound_manager_init(_world);
-    music_manager_init(_world);
-    shader_manager_init(_world);
-    font_manager_init(_world);
-    data_manager_init(_world);
+  
+    // texture_manager_init(_world);
+    // sound_manager_init(_world);
+    // music_manager_init(_world);
+    // shader_manager_init(_world);
+    // font_manager_init(_world);
+    // data_manager_init(_world);
     component_manager_init(_world);
-    entity_manager_init(_world);
-    debug_manager_init(_world);
-    settings_manager_init(_world);
-    input_manager_init(_world);
-    gui_manager_init(_world);
-    physics_manager_init(_world);
-    system_manager_init(_world);
-    */
+    // entity_manager_init(_world);
+    // debug_manager_init(_world);
+    // settings_manager_init(_world);
+    // input_manager_init(_world);
+    // gui_manager_init(_world);
+    // physics_manager_init(_world);
+    // system_manager_init(_world);
+    
 }
 
 //------------------------------------------------------------------------------

@@ -66,7 +66,7 @@ static inline void _fini(ecs_world_t *world, Scene *scene, ecs_entity_t entity)
 
 ecs_entity_t spawn_scene(ecs_world_t *world, SceneName id, int value)
 {
-  return _targets[id].spawn(world, value);
+    return _targets[id].spawn(world, value);
 }
 
 //------------------------------------------------------------------------------
