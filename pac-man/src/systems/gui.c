@@ -98,51 +98,52 @@ static inline color _from_color(struct nk_color c)
 
 void gui_update(ecs_iter_t *it)
 {
-  Interface *interface = ecs_field(it, Interface, 0);
-  Window *window = ecs_field(it, Window, 1);
-  Widget *widget = ecs_field(it, Widget, 2);
-  bool hover = false;
-  if (nk_begin(interface, window->name, _to_rect(window->bounds), window->flags))
-  {
-    for (int i = 0; i < it->count; ++i)
+    Interface *interface = ecs_field(it, Interface, 0);
+    Window *window = ecs_field(it, Window, 1);
+    Widget *widget = ecs_field(it, Widget, 2);
+    bool hover = false;
+    if (nk_begin(interface, window->name, _to_rect(window->bounds), window->flags))
     {
-      if (i == 0 || widget[i].type == WIDGET_SEPARATOR)
-      {
-        int count = (i == 0) ? 1 : 0;
-        for (int j = i + 1; j < it->count; ++j, ++count)
-          if (widget[j].type == WIDGET_SEPARATOR)
-            break;
-        nk_layout_row_static(interface, window->button_height, window->bounds.w, 1);
-        if (nk_widget_is_hovered(interface))
+        for (int i = 0; i < it->count; ++i)
         {
-          hover = true;
-          _hovered = it->entities[i];
+            if (i == 0 || widget[i].type == WIDGET_SEPARATOR)
+            {
+                int count = (i == 0) ? 1 : 0;
+                for (int j = i + 1; j < it->count; ++j, ++count)
+                    if (widget[j].type == WIDGET_SEPARATOR)
+                    break;
+                nk_layout_row_static(interface, window->button_height, window->bounds.w, 1);
+                if (nk_widget_is_hovered(interface))
+                {
+                  hover = true;
+                  _hovered = it->entities[i];
+                }
+            }
+            if (nk_widget_is_hovered(interface))
+            {
+                hover = true;
+                _hovered = it->entities[i];
+            }
+            switch (widget[i].type)
+            {
+            case WIDGET_LABEL:
+                nk_label(interface, widget[i].name, NK_TEXT_CENTERED);
+                break;
+            case WIDGET_BUTTON:
+                if (nk_button_label(interface, widget[i].name))
+                    widget[i].callback(it->world, &widget[i]);
+                break;
+            case WIDGET_SLIDER:
+                if (nk_slider_float(interface, 0, &widget[i].value, 100, 0.1))
+                    widget[i].callback(it->world, &widget[i]);
+                break;
+            }
         }
-      }
-      if (nk_widget_is_hovered(interface))
-      {
-        hover = true;
-        _hovered = it->entities[i];
-      }
-      switch (widget[i].type)
-      {
-      case WIDGET_LABEL:
-        nk_label(interface, widget[i].name, NK_TEXT_CENTERED);
-        break;
-      case WIDGET_BUTTON:
-        if (nk_button_label(interface, widget[i].name))
-          widget[i].callback(it->world, &widget[i]);
-        break;
-      case WIDGET_SLIDER:
-        if (nk_slider_float(interface, 0, &widget[i].value, 100, 0.1))
-          widget[i].callback(it->world, &widget[i]);
-        break;
-      }
     }
-  }
-  nk_end(interface);
-  if (!hover)
-    _hovered = 0;
+    nk_end(interface);
+    if (!hover)
+        _hovered = 0;
+
 }
 
 //------------------------------------------------------------------------------
@@ -306,78 +307,78 @@ static inline void _custom(const struct nk_command *command)
 
 void gui_render(ecs_iter_t *it)
 {
-  Interface *interface = ecs_singleton_get_mut(it->world, Interface);
-  const struct nk_command *command;
-  _renderer = get_renderer();
-  SDL_Texture *playfield = texture_manager_playfield();
-  _scissoring = false;
-  SDL_SetRenderTarget(_renderer, playfield);
-  nk_foreach(command, interface)
-  {
-    switch (command->type)
+    Interface *interface = ecs_singleton_get_mut(it->world, Interface);
+    const struct nk_command *command;
+    _renderer = get_renderer();
+    SDL_Texture *playfield = texture_manager_playfield();
+    _scissoring = false;
+    SDL_SetRenderTarget(_renderer, playfield);
+    nk_foreach(command, interface)
     {
-    case NK_COMMAND_NOP:
-      break;
-    case NK_COMMAND_SCISSOR:
-      _scissor((const struct nk_command_scissor *)command);
-      break;
-    case NK_COMMAND_LINE:
-      _line(command);
-      break;
-    case NK_COMMAND_CURVE:
-      _curve(command);
-      break;
-    case NK_COMMAND_RECT:
-      _rect((const struct nk_command_rect *)command);
-      break;
-    case NK_COMMAND_RECT_FILLED:
-      _rect_filled((const struct nk_command_rect_filled *)command);
-      break;
-    case NK_COMMAND_RECT_MULTI_COLOR:
-      _rect_multi_color(command);
-      break;
-    case NK_COMMAND_CIRCLE:
-      _circle(command);
-      break;
-    case NK_COMMAND_CIRCLE_FILLED:
-      _circle_filled((const struct nk_command_circle_filled *)command);
-      break;
-    case NK_COMMAND_ARC:
-      _arc(command);
-      break;
-    case NK_COMMAND_ARC_FILLED:
-      _arc_filled(command);
-      break;
-    case NK_COMMAND_TRIANGLE:
-      _triangle(command);
-      break;
-    case NK_COMMAND_TRIANGLE_FILLED:
-      _triangle_filled((struct nk_command_triangle_filled *)command);
-      break;
-    case NK_COMMAND_POLYGON:
-      _polygon(command);
-      break;
-    case NK_COMMAND_POLYGON_FILLED:
-      _polygon_filled(command);
-      break;
-    case NK_COMMAND_POLYLINE:
-      _polyline(command);
-      break;
-    case NK_COMMAND_TEXT:
-      _text((const struct nk_command_text *)command);
-      break;
-    case NK_COMMAND_IMAGE:
-      _image(command);
-      break;
-    case NK_COMMAND_CUSTOM:
-      _custom(command);
-      break;
+        switch (command->type)
+        {
+        case NK_COMMAND_NOP:
+        break;
+        case NK_COMMAND_SCISSOR:
+        _scissor((const struct nk_command_scissor *)command);
+        break;
+        case NK_COMMAND_LINE:
+        _line(command);
+        break;
+        case NK_COMMAND_CURVE:
+        _curve(command);
+        break;
+        case NK_COMMAND_RECT:
+        _rect((const struct nk_command_rect *)command);
+        break;
+        case NK_COMMAND_RECT_FILLED:
+        _rect_filled((const struct nk_command_rect_filled *)command);
+        break;
+        case NK_COMMAND_RECT_MULTI_COLOR:
+        _rect_multi_color(command);
+        break;
+        case NK_COMMAND_CIRCLE:
+        _circle(command);
+        break;
+        case NK_COMMAND_CIRCLE_FILLED:
+        _circle_filled((const struct nk_command_circle_filled *)command);
+        break;
+        case NK_COMMAND_ARC:
+        _arc(command);
+        break;
+        case NK_COMMAND_ARC_FILLED:
+        _arc_filled(command);
+        break;
+        case NK_COMMAND_TRIANGLE:
+        _triangle(command);
+        break;
+        case NK_COMMAND_TRIANGLE_FILLED:
+        _triangle_filled((struct nk_command_triangle_filled *)command);
+        break;
+        case NK_COMMAND_POLYGON:
+        _polygon(command);
+        break;
+        case NK_COMMAND_POLYGON_FILLED:
+        _polygon_filled(command);
+        break;
+        case NK_COMMAND_POLYLINE:
+        _polyline(command);
+        break;
+        case NK_COMMAND_TEXT:
+        _text((const struct nk_command_text *)command);
+        break;
+        case NK_COMMAND_IMAGE:
+        _image(command);
+        break;
+        case NK_COMMAND_CUSTOM:
+        _custom(command);
+        break;
+        }
     }
-  }
-  if (_scissoring)
-    SDL_SetRenderClipRect(_renderer, NULL);
-  SDL_SetRenderTarget(_renderer, NULL);
-  nk_clear(interface);
+    if (_scissoring)
+        SDL_SetRenderClipRect(_renderer, NULL);
+    SDL_SetRenderTarget(_renderer, NULL);
+    nk_clear(interface);
 }
 
 //------------------------------------------------------------------------------

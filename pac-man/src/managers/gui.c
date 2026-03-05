@@ -19,61 +19,61 @@ static struct nk_user_font _font = {0};
 
 static void _fini(ecs_world_t *world, void *context)
 {
-  Interface *interface = ecs_singleton_get_mut(world, Interface);
-  nk_free(interface);
-  ecs_singleton_modified(world, Interface);
+    Interface *interface = ecs_singleton_get_mut(world, Interface);
+    nk_free(interface);
+    ecs_singleton_modified(world, Interface);
 }
 
 //------------------------------------------------------------------------------
 
 static float _nuklear_get_font_width(nk_handle handle, float size, const char *text, int length)
 {
-  int w, h;
-  TTF_GetStringSize(font_manager_get(FONT_CLOVER), text, (size_t)length, &w, &h);
-  return (float)w;
+    int w, h;
+    TTF_GetStringSize(font_manager_get(FONT_CLOVER), text, (size_t)length, &w, &h);
+    return (float)w;
 }
 
 //------------------------------------------------------------------------------
 
 static void _nuklear_clipboard_copy(nk_handle user, const char *text, int length)
 {
-  SDL_SetClipboardText(text);
+    SDL_SetClipboardText(text);
 }
 
 //------------------------------------------------------------------------------
 
 static void _nuklear_clipboard_paste(nk_handle user, struct nk_text_edit *edit)
 {
-  const char *text = SDL_GetClipboardText();
-  if (text == NULL)
-    return;
-  nk_textedit_paste(edit, text, (int)SDL_strlen(text));
+    const char *text = SDL_GetClipboardText();
+    if (text == NULL)
+      return;
+    nk_textedit_paste(edit, text, (int)SDL_strlen(text));
 }
 
 //------------------------------------------------------------------------------
 
 static void _remove_window(ecs_iter_t *it)
 {
-  Window *window = ecs_field(it, Window, 0);
-  Interface *interface = ecs_singleton_get_mut(it->world, Interface);
-  for (int i = 0; i < it->count; ++i)
-  {
-    nk_window_close(interface, window[i].name);
-  }
-  ecs_singleton_modified(it->world, Interface);
+    Window *window = ecs_field(it, Window, 0);
+    Interface *interface = ecs_singleton_get_mut(it->world, Interface);
+    for (int i = 0; i < it->count; ++i)
+    {
+        nk_window_close(interface, window[i].name);
+    }
+    ecs_singleton_modified(it->world, Interface);
 }
 
 //------------------------------------------------------------------------------
 
 void gui_manager_init(ecs_world_t *world)
 {
-  ecs_atfini(world, _fini, NULL);
-  ecs_singleton_set(world, Interface, {.clip = {.copy = _nuklear_clipboard_copy, .paste = _nuklear_clipboard_paste}});
-  _font = (struct nk_user_font){.height = GUI_FONT_HEIGHT, .width = _nuklear_get_font_width};
-  Interface *interface = ecs_singleton_get_mut(world, Interface);
-  nk_init_default(interface, &_font);
-  ecs_singleton_modified(world, Interface);
-  ECS_OBSERVER(world, _remove_window, EcsOnRemove, Window);
+    ecs_atfini(world, _fini, NULL);
+    ecs_singleton_set(world, Interface, {.clip = {.copy = _nuklear_clipboard_copy, .paste = _nuklear_clipboard_paste}});
+    _font = (struct nk_user_font){.height = GUI_FONT_HEIGHT, .width = _nuklear_get_font_width};
+    Interface *interface = ecs_singleton_get_mut(world, Interface);
+    nk_init_default(interface, &_font);
+    ecs_singleton_modified(world, Interface);
+    ECS_OBSERVER(world, _remove_window, EcsOnRemove, Window);
 }
 
 //------------------------------------------------------------------------------
@@ -102,28 +102,28 @@ ecs_entity_t gui_label(ecs_world_t *world, ecs_entity_t window, const char *name
 
 ecs_entity_t gui_button(ecs_world_t *world, ecs_entity_t window, const char *name, int value, widgetCallback callback)
 {
-  ecs_entity_t entity = ecs_new(world);
-  ecs_set(world, entity, Widget, {.type = WIDGET_BUTTON, .name = name, .value = value, .callback = callback});
-  ecs_add_pair(world, entity, EcsChildOf, window);
-  return entity;
+    ecs_entity_t entity = ecs_new(world);
+    ecs_set(world, entity, Widget, {.type = WIDGET_BUTTON, .name = name, .value = value, .callback = callback});
+    ecs_add_pair(world, entity, EcsChildOf, window);
+    return entity;
 }
 
 //------------------------------------------------------------------------------
 
 ecs_entity_t gui_slider(ecs_world_t *world, ecs_entity_t window, float value, widgetCallback callback)
 {
-  ecs_entity_t entity = ecs_new(world);
-  ecs_set(world, entity, Widget, {.type = WIDGET_SLIDER, .value = value, .callback = callback});
-  ecs_add_pair(world, entity, EcsChildOf, window);
-  return entity;
+    ecs_entity_t entity = ecs_new(world);
+    ecs_set(world, entity, Widget, {.type = WIDGET_SLIDER, .value = value, .callback = callback});
+    ecs_add_pair(world, entity, EcsChildOf, window);
+    return entity;
 }
 
 //------------------------------------------------------------------------------
 
 ecs_entity_t gui_separator(ecs_world_t *world, ecs_entity_t window)
 {
-  ecs_entity_t entity = ecs_new(world);
-  ecs_set(world, entity, Widget, {.type = WIDGET_SEPARATOR});
-  ecs_add_pair(world, entity, EcsChildOf, window);
-  return entity;
+    ecs_entity_t entity = ecs_new(world);
+    ecs_set(world, entity, Widget, {.type = WIDGET_SEPARATOR});
+    ecs_add_pair(world, entity, EcsChildOf, window);
+    return entity;
 }
