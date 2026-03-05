@@ -165,10 +165,18 @@ void render_labels(ecs_iter_t *it)
   }
   for (int i = 0; i < it->count; ++i)
   {
-    // TODO: Font rendering still uses raylib — migrate font system separately
-//    vector2 size = MeasureTextEx(*label[i].font, label[i].text, label[i].size, 0);
-//    vector2 position = _align(spatial[i].position, size, aligned[i]);
-//    DrawTextEx(*label[i].font, label[i].text, position, label[i].size, 0, tinted[i].tint);
+ 
+      TTF_SetFontSize(label[i].font, label[i].size);
+      int tw, th;
+      TTF_GetStringSize(label[i].font, label[i].text, 0, &tw, &th);
+      vector2 size = {(float)tw, (float)th};
+      vector2 position = _align(spatial[i].position, size, aligned[i]);
+      SDL_Surface *surf = TTF_RenderText_Blended(label[i].font, label[i].text, 0, tinted[i].tint);
+      SDL_Texture *text_tex = SDL_CreateTextureFromSurface(renderer, surf);
+      SDL_DestroySurface(surf);
+      rectangle text_dst = {position.x, position.y, size.x, size.y};
+      SDL_RenderTexture(renderer, text_tex, NULL, &text_dst);
+      SDL_DestroyTexture(text_tex);
   }
   SDL_SetRenderTarget(renderer, NULL);
 }

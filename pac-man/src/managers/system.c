@@ -37,8 +37,8 @@ void system_manager_init(ecs_world_t *world)
     ECS_SYSTEM(world, refresh_display, EcsOnLoad, [out] $Display);
     ECS_SYSTEM(world, progress_time, EcsOnLoad, [inout] $Time);
     ECS_SYSTEM(world, process_input, EcsOnLoad, [out] $Input, [inout] $Settings, [in] $Display);
-    ECS_SYSTEM(world, gui_input, EcsPostLoad, [inout] $Interface, [in] $Input, [in] $Settings, [in] Window);
-    ECS_SYSTEM(world, gui_update, EcsPreUpdate, [inout] $Interface, [in] Window(up), [inout] ?Widget);
+//    ECS_SYSTEM(world, gui_input, EcsPostLoad, [inout] $Interface, [in] $Input, [in] $Settings, [in] Window);
+//    ECS_SYSTEM(world, gui_update, EcsPreUpdate, [inout] $Interface, [in] Window(up), [inout] ?Widget);
     ECS_SYSTEM(world, transition, EcsPreUpdate, [in] $Time, [inout] Transition);
     ECS_SYSTEM(world, state_machine, EcsPreUpdate, [in] $Time, [inout] Stateful);
     ECS_SYSTEM(world, update_viewport, EcsOnUpdate, [in] $Input, [inout] Viewport);
@@ -55,7 +55,7 @@ void system_manager_init(ecs_world_t *world)
     ECS_SYSTEM(world, render_scene, EcsOnStore, [in] Scene, [in] Stateful, [in] Transition, [out] $Display, [in] $Time);
     ECS_SYSTEM(world, render_viewports, EcsOnStore, [in] Viewport);
     ECS_SYSTEM(world, render_physical, EcsOnStore, [in] Renderable, [in] Physical, [in] Tinted, [in] ?Transition);
-    ECS_SYSTEM(world, gui_render, EcsOnStore, [inout] $Interface);
+//    ECS_SYSTEM(world, gui_render, EcsOnStore, [inout] $Interface);
     ECS_SYSTEM(world, render_images, EcsOnStore, [in] Renderable, [in] Spatial, [in] Tinted);
     ECS_SYSTEM(world, render_labels, EcsOnStore, [in] $Time, [in] Label, [in] Aligned, [in] Spatial, [in] Tinted);
 #ifdef DEBUG
