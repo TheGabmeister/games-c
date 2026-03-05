@@ -22,6 +22,7 @@
 #include "input.h"
 #include "gui.h"
 #include "physics.h"
+#include "hud.h"
 
 #include "game.h"
 
@@ -67,6 +68,7 @@ static inline void _init_managers(void)
     input_manager_init(_world);
     gui_manager_init(_world);
     physics_manager_init(_world);
+    hud_manager_init(_world);
     system_manager_init(_world);
     
 }

@@ -10,6 +10,7 @@
 #include "../systems/physics.h"
 #include "../systems/viewport.h"
 #include "../systems/time.h"
+#include "../systems/hud.h"
 
 #ifdef DEBUG
 #include "../systems/debug.h"
@@ -58,6 +59,7 @@ void system_manager_init(ecs_world_t *world)
 //    ECS_SYSTEM(world, gui_render, EcsOnStore, [inout] $Interface);
     ECS_SYSTEM(world, render_images, EcsOnStore, [in] Renderable, [in] Spatial, [in] Tinted);
     ECS_SYSTEM(world, render_labels, EcsOnStore, [in] $Time, [in] Label, [in] Aligned, [in] Spatial, [in] Tinted);
+    ECS_SYSTEM(world, render_hud, EcsOnStore, [in] HudRect);
 #ifdef DEBUG
     ECS_SYSTEM(world, debug_physics, EcsOnStore, [in] $Physics, [in] $Debug, [inout] Viewport);
     ECS_SYSTEM(world, debug_render, EcsOnStore, [in] Label, [in] $Debug, DebugTag);

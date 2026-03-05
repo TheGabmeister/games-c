@@ -6,6 +6,7 @@
 
 #include "../managers/entity.h"
 #include "../managers/gui.h"
+#include "../managers/hud.h"
 
 #include "../defines.h"
 
@@ -39,6 +40,7 @@ ecs_entity_t spawn_title(ecs_world_t *world, int value)
 
 void init_title(ecs_world_t *world, ecs_entity_t parent)
 {
+    // These gui_button 
     vector2 position = {RASTER_WIDTH * 0.5, 50};
     entity_manager_spawn_label(world, parent, FONT_CLOVER, "Choose a Game!", ALIGN_CENTRE, VALIGN_TOP, 50, position, (color){ 255, 161, 0, 255 });
     ecs_entity_t window = gui_window(world, parent, "Starter Kit", 0.5 * (RASTER_WIDTH - 480), 150, 480, 240, 0, 5);
@@ -47,6 +49,8 @@ void init_title(ecs_world_t *world, ecs_entity_t parent)
     gui_button(world, window, "Scorched Golf", 0, _play_game);
     gui_button(world, window, "Breakdown", 0, _play_game);
     gui_button(world, window, "Quit to Desktop", 0, _quit_game);
+
+    hud_manager_spawn_rect(world, parent, (rectangle){280, 200, 80, 80}, (color){255, 0, 0, 255});
     _quit = false;
     _play = false;
 }

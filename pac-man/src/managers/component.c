@@ -21,6 +21,7 @@
 #include "../components/animated.h"
 #include "../components/stateful.h"
 #include "../components/aligned.h"
+#include "../components/hud_rect.h"
 
 #include "component.h"
 
@@ -59,4 +60,5 @@ void component_manager_init(ecs_world_t *world)
   ECS_COMPONENT_DEFINE(world, Animated);
   ECS_COMPONENT_DEFINE(world, Stateful);
   ECS_COMPONENT_DEFINE(world, Aligned);
+  ECS_COMPONENT_DEFINE(world, HudRect);
 }
