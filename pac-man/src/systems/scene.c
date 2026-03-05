@@ -150,6 +150,8 @@ void update_scene(ecs_iter_t *it)
     case STATE_CREATED:
     {
       _init(it->world, &scene[i], it->entities[i]);
+      stateful[i].state = STATE_STARTING;
+      stateful[i].timer = 0;
       break;
     }
     case STATE_STARTING:
