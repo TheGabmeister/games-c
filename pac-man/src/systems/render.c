@@ -287,7 +287,14 @@ void composite_display(ecs_iter_t *it)
   rectangle dst = _sdl_rect(display->screen);
   _set_tint(playfield, display->background);
   SDL_RenderTexture(renderer, playfield, &src, &dst);
-  SDL_RenderPresent(renderer);
+}
+
+//------------------------------------------------------------------------------
+
+void present_display(ecs_iter_t *it)
+{
+    (void)it;
+    SDL_RenderPresent(get_renderer());
 }
 
 //------------------------------------------------------------------------------

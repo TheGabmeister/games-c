@@ -10,6 +10,7 @@ void render_images(ecs_iter_t *it);
 void render_physical(ecs_iter_t *it);
 void render_viewports(ecs_iter_t *it);
 void composite_display(ecs_iter_t *it);
+void present_display(ecs_iter_t *it);
 void animate(ecs_iter_t *it);
 
 #endif

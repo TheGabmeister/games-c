@@ -66,6 +66,8 @@ void system_manager_init(ecs_world_t *world)
     ECS_SYSTEM(world, debug_display, EcsOnStore, [in] $Display, [in] $Debug);
 #endif
     ECS_SYSTEM(world, composite_display, EcsOnStore, [in] $Display);
+    ECS_SYSTEM(world, gui_render, EcsOnStore, 0);
+    ECS_SYSTEM(world, present_display, EcsOnStore, 0);
 
     _viewport_query = ecs_system_get(world, render_viewports)->query;
     

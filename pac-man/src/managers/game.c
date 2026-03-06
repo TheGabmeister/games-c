@@ -66,9 +66,9 @@ static inline void _init_managers(void)
     debug_manager_init(_world);
     settings_manager_init(_world);
     input_manager_init(_world);
-    gui_manager_init(_world);
     physics_manager_init(_world);
     hud_manager_init(_world);
+    gui_manager_init(_world);
     system_manager_init(_world);
     
 }
@@ -123,6 +123,7 @@ void game_manager_loop(void)
     {
         while (SDL_PollEvent(&event))
         {
+            gui_manager_handle_event(&event);
             if (event.type == SDL_EVENT_QUIT) {
                 ecs_quit(_world);
                 break;
@@ -131,8 +132,7 @@ void game_manager_loop(void)
                 ecs_quit(_world);
                 break;
             }
-			
-	    }
+        }
 
         float delta = get_deltatime();
         running = ecs_progress(_world, delta);
