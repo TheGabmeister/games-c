@@ -38,7 +38,8 @@ typedef struct JumpTarget
 
 JumpTarget _targets[] = {[SCENE_TITLE] = {.spawn = spawn_title, .init = init_title, .update = update_title, .fini = fini_title},
                          [SCENE_SPLASH] = {.spawn = spawn_splash, .init = init_splash, .update = update_splash, .fini = fini_splash},
-                         [SCENE_LEVEL] = {.spawn = spawn_level, .init = init_level, .update = update_level, .fini = fini_level}};
+                         [SCENE_LEVEL] = {.spawn = spawn_level, .init = init_level, .update = update_level, .fini = fini_level}
+                        };
 
 //==============================================================================
 
@@ -112,110 +113,108 @@ static inline void _process_input(ecs_world_t *world, Input *input, Time *time, 
     }
     // if (IsWindowResized() || !IsWindowFocused())
     //     time->paused = true;
-    // if (!allow_pause)
-    //     time->paused = false;
-    // if (!paused && time->paused)
-    //     _pause(world);
-    // else if (paused && !time->paused)
-    //     _unpause(world);
+     if (!allow_pause)
+         time->paused = false;
+     if (!paused && time->paused)
+         _pause(world);
+     else if (paused && !time->paused)
+         _unpause(world);
 }
 
 //------------------------------------------------------------------------------
 
 void update_scene(ecs_iter_t *it)
 {
-  Scene *scene = ecs_field(it, Scene, 0);
-  Stateful *stateful = ecs_field(it, Stateful, 1);
-  Transition *transition = ecs_field(it, Transition, 2);
-  Time *time = ecs_field(it, Time, 3);
-  Input *input = ecs_field(it, Input, 4);
-  Settings *settings = ecs_field(it, Settings, 5);
-  bool allow_paused = true;
-  for (int i = 0; i < it->count; ++i)
-  {
-    switch (scene[i].id)
+    Scene *scene = ecs_field(it, Scene, 0);
+    Stateful *stateful = ecs_field(it, Stateful, 1);
+    Transition *transition = ecs_field(it, Transition, 2);
+    Time *time = ecs_field(it, Time, 3);
+    Input *input = ecs_field(it, Input, 4);
+    Settings *settings = ecs_field(it, Settings, 5);
+    bool allow_paused = true;
+    for (int i = 0; i < it->count; ++i)
     {
-    case SCENE_SPLASH:
-    case SCENE_TITLE:
-    {
-      allow_paused = false;
-    }
-    }
-  }
-  _process_input(it->world, input, time, allow_paused);
-  for (int i = 0; i < it->count; ++i)
-  {
-    switch (stateful[i].state)
-    {
-    case STATE_CREATED:
-    {
-      _init(it->world, &scene[i], it->entities[i]);
-      stateful[i].state = STATE_STARTING;
-      stateful[i].timer = 0;
-      break;
-    }
-    case STATE_STARTING:
-    {
-      if (stateful[i].transitioned)
-      {
-        transition[i].complete = false;
-        transition[i].id = TRANSITION_FADE_IN;
-        transition[i].time = 0;
-        transition[i].fade = 0;
         switch (scene[i].id)
         {
-        case SCENE_TITLE:
+            case SCENE_SPLASH:
+            case SCENE_TITLE:
+            {
+                allow_paused = false;
+            }
+        }
+    }
+    _process_input(it->world, input, time, allow_paused);
+    for (int i = 0; i < it->count; ++i)
+    {
+        switch (stateful[i].state)
         {
-          if (_music != 0 && !_menu)
-          {
-            music_manager_stop(it->world, _music);
-            _music = 0;
-          }
-          if (_music == 0)
-          {
-            _music = entity_manager_spawn_music(it->world, MUSIC_ROCK_VOMIT, 1);
-          }
-          _menu = true;
+            case STATE_CREATED:
+            {
+                _init(it->world, &scene[i], it->entities[i]);
+                break;
+            }
+            case STATE_STARTING:
+            {
+              if (stateful[i].transitioned)
+              {
+                transition[i].complete = false;
+                transition[i].id = TRANSITION_FADE_IN;
+                transition[i].time = 0;
+                transition[i].fade = 0;
+                switch (scene[i].id)
+                {
+                case SCENE_TITLE:
+                {
+                  if (_music != 0 && !_menu)
+                  {
+                    music_manager_stop(it->world, _music);
+                    _music = 0;
+                  }
+                  if (_music == 0)
+                  {
+                    _music = entity_manager_spawn_music(it->world, MUSIC_ROCK_VOMIT, 1);
+                  }
+                  _menu = true;
+                  break;
+                }
+                case SCENE_LEVEL:
+                {
+                  if (_music != 0)
+                  {
+                    music_manager_stop(it->world, _music);
+                    _music = 0;
+                  }
+                  _menu = false;
+                  break;
+                }
+                }
+              }
+              break;
+            }
+            case STATE_RUNNING:
+            {
+              if (!_update(it->world, &scene[i], it->entities[i], input, time, settings))
+                stateful[i].run_time = 0;
+              break;
+            }
+            case STATE_STOPPING:
+            {
+              if (stateful[i].transitioned)
+              {
+                transition[i].complete = false;
+                transition[i].id = TRANSITION_FADE_OUT;
+                transition[i].time = 0;
+              }
+              break;
+            }
+            case STATE_STOPPED:
+        {
+          _fini(it->world, &scene[i], it->entities[i]);
           break;
         }
-        case SCENE_LEVEL:
-        {
-          if (_music != 0)
-          {
-            music_manager_stop(it->world, _music);
-            _music = 0;
-          }
-          _menu = false;
-          break;
         }
-        }
-      }
-      break;
+        scene[i].time += time->delta;
     }
-    case STATE_RUNNING:
-    {
-      if (!_update(it->world, &scene[i], it->entities[i], input, time, settings))
-        stateful[i].run_time = 0;
-      break;
-    }
-    case STATE_STOPPING:
-    {
-      if (stateful[i].transitioned)
-      {
-        transition[i].complete = false;
-        transition[i].id = TRANSITION_FADE_OUT;
-        transition[i].time = 0;
-      }
-      break;
-    }
-    case STATE_STOPPED:
-    {
-      _fini(it->world, &scene[i], it->entities[i]);
-      break;
-    }
-    }
-    scene[i].time += time->delta;
-  }
 }
 
 //------------------------------------------------------------------------------
