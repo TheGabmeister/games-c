@@ -63,7 +63,7 @@ static inline void _init_managers(void)
     data_manager_init(_world);
     component_manager_init(_world);
     entity_manager_init(_world);
-    debug_manager_init(_world);
+    //debug_manager_init(_world);
     settings_manager_init(_world);
     input_manager_init(_world);
     physics_manager_init(_world);
@@ -142,6 +142,9 @@ void game_manager_loop(void)
             _start_game();
             started = true;
         }
+
+        ecs_entities_t entities = ecs_get_entities(_world);
+        SDL_Log("%d", entities.alive_count);
 
     }   
 }
