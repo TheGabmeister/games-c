@@ -6,6 +6,7 @@
 #include <SDL3_image/SDL_image.h>
 
 #include "../components/display.h"
+#include "../components/input.h"
 #include "../components/time.h"
 #include "../systems/scene.h"
 
@@ -125,14 +126,18 @@ void game_manager_loop(void)
             // For mouse input
             engine_process_event(&event);
 
-            if (event.type == SDL_EVENT_QUIT) {
+            const Input *input = ecs_singleton_get(_world, Input);
+            if (input && input->quit)
                 ecs_quit(_world);
-                break;
-            }
-            if (event.type == SDL_EVENT_KEY_DOWN && event.key.scancode == SDL_SCANCODE_ESCAPE) {
-                ecs_quit(_world);
-                break;
-            }
+
+            // if (event.type == SDL_EVENT_QUIT) {
+            //     ecs_quit(_world);
+            //     break;
+            // }
+            // if (event.type == SDL_EVENT_KEY_DOWN && event.key.scancode == SDL_SCANCODE_ESCAPE) {
+            //     ecs_quit(_world);
+            //     break;
+            // }
 
 	    }
 

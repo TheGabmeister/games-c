@@ -14,8 +14,8 @@ typedef struct Globals {
     int fps;
 
     struct {
-        bool currentKeyState[SDL_NUM_SCANCODES];
-        bool previousKeyState[SDL_NUM_SCANCODES];
+        bool currentKeyState[SDL_SCANCODE_COUNT];
+        bool previousKeyState[SDL_SCANCODE_COUNT];
     } Keyboard;
 
     struct {
@@ -97,14 +97,14 @@ SDL_Renderer *get_renderer(void)
 
 bool is_key_down(int key)
 {
-    if (key > 0 && key < SDL_NUM_SCANCODES)
+    if (key > 0 && key < SDL_SCANCODE_COUNT)
         return GLOBALS.Keyboard.currentKeyState[key];
     return false;
 }
 
 bool is_key_pressed(int key)
 {
-    if (key > 0 && key < SDL_NUM_SCANCODES)
+    if (key > 0 && key < SDL_SCANCODE_COUNT)
         return GLOBALS.Keyboard.currentKeyState[key] && !GLOBALS.Keyboard.previousKeyState[key];
     return false;
 }
@@ -149,9 +149,9 @@ static SDL_MouseButtonFlags _mouse_button_mask(int button)
 void engine_begin_frame(void)
 {
     // Keyboard
-    SDL_memcpy(GLOBALS.Keyboard.previousKeyState, GLOBALS.Keyboard.currentKeyState, SDL_NUM_SCANCODES * sizeof(bool));
+    SDL_memcpy(GLOBALS.Keyboard.previousKeyState, GLOBALS.Keyboard.currentKeyState, SDL_SCANCODE_COUNT * sizeof(bool));
     const bool *sdl_keys = SDL_GetKeyboardState(NULL);
-    SDL_memcpy(GLOBALS.Keyboard.currentKeyState, sdl_keys, SDL_NUM_SCANCODES * sizeof(bool));
+    SDL_memcpy(GLOBALS.Keyboard.currentKeyState, sdl_keys, SDL_SCANCODE_COUNT * sizeof(bool));
 
     // Mouse
     GLOBALS.Mouse.previousButtons = GLOBALS.Mouse.currentButtons;
