@@ -6,6 +6,7 @@ typedef struct Globals {
 
     const char *title;                  // Window text title const pointer
     bool ready;                         // Check if window has been initialized successfully
+    bool should_close;                  // Set when SDL_EVENT_QUIT is received
 
     SDL_Window   *window;
     SDL_Renderer *renderer;
@@ -163,6 +164,13 @@ void engine_process_event(SDL_Event *event)
 {
     if (event->type == SDL_EVENT_MOUSE_WHEEL)
         GLOBALS.Mouse.wheelY += event->wheel.y;
+    else if (event->type == SDL_EVENT_QUIT)
+        GLOBALS.should_close = true;
+}
+
+bool window_should_close(void)
+{
+    return GLOBALS.should_close;
 }
 
 bool is_mouse_button_down(int button)

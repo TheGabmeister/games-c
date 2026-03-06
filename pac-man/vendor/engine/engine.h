@@ -218,6 +218,7 @@ typedef enum {
 ENGINE_API void init_window(int width, int height, const char *title);  
 ENGINE_API void close_window(void);                                     
 ENGINE_API bool is_window_ready(void);
+ENGINE_API bool window_should_close(void);
 ENGINE_API int get_fps(void);                                          
 ENGINE_API float get_deltatime(void);                                   
 ENGINE_API SDL_Renderer *get_renderer(void);                            

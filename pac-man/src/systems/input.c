@@ -18,7 +18,7 @@ void process_input(ecs_iter_t *it)
   Display *display = ecs_singleton_get_mut(it->world, Display);
   *input = (Input){0};
 
-  //input->quit |= WindowShouldClose();
+  input->quit |= window_should_close();
   bool ctrl_down = is_key_down(KEY_LEFT_CONTROL) || is_key_down(KEY_RIGHT_CONTROL);
   input->quit |= ctrl_down && is_key_pressed(KEY_Q);
   input->quit |= ctrl_down && is_key_pressed(KEY_W);
