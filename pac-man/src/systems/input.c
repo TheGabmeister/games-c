@@ -23,11 +23,11 @@ void process_input(ecs_iter_t *it)
   input->quit |= is_key_pressed(KEY_LEFT_CONTROL) && is_key_pressed(KEY_W);
   input->toggle_fullscreen = is_key_pressed(KEY_LEFT_CONTROL) && is_key_pressed(KEY_F);
   input->toggle_pause = is_key_pressed(KEY_P);
-/*
+
   input->joystick.x = 0;
   input->joystick.y = 0;
   settings->gamepad = -1;
-  for (int i = 0; i < 4; ++i)
+/*  for (int i = 0; i < 4; ++i)
   {
     if (!IsGamepadAvailable(i))
       continue;

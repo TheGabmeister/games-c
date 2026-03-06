@@ -1,19 +1,9 @@
 #include "engine.h"
 #include <SDL3/SDL.h>
 
-#ifndef MAX_KEYBOARD_KEYS
-    #define MAX_KEYBOARD_KEYS            512        // Maximum number of keyboard keys supported
-#endif
-#ifndef MAX_KEY_PRESSED_QUEUE
-    #define MAX_KEY_PRESSED_QUEUE         16        // Maximum number of keys in the key input queue
-#endif
-#ifndef MAX_CHAR_PRESSED_QUEUE
-    #define MAX_CHAR_PRESSED_QUEUE        16        // Maximum number of characters in the char input queue
-#endif
-
 // Core global state context data
 typedef struct Globals {
-    
+
     const char *title;                  // Window text title const pointer
     bool ready;                         // Check if window has been initialized successfully
 
@@ -24,14 +14,8 @@ typedef struct Globals {
     int fps;
 
     struct {
-        int exitKey;                    // Default exit key
-        char currentKeyState[MAX_KEYBOARD_KEYS];        // Registers current frame key state
-        char previousKeyState[MAX_KEYBOARD_KEYS];       // Registers previous frame key stat
-        char keyRepeatInFrame[MAX_KEYBOARD_KEYS];       // Registers key repeats for current fram
-        int keyPressedQueue[MAX_KEY_PRESSED_QUEUE];     // Input keys queue
-        int keyPressedQueueCount;       // Input keys queue coun
-        int charPressedQueue[MAX_CHAR_PRESSED_QUEUE];   // Input characters queue (unicode)
-        int charPressedQueueCount;      // Input characters queue count
+        bool currentKeyState[SDL_NUM_SCANCODES];
+        bool previousKeyState[SDL_NUM_SCANCODES];
     } Keyboard;
 
     struct {
@@ -113,26 +97,16 @@ SDL_Renderer *get_renderer(void)
 
 bool is_key_down(int key)
 {
-    bool down = false;
-
-    if ((key > 0) && (key < MAX_KEYBOARD_KEYS))
-    {
-        if (GLOBALS.Keyboard.currentKeyState[key] == 1) down = true;
-    }
-
-    return down;
+    if (key > 0 && key < SDL_NUM_SCANCODES)
+        return GLOBALS.Keyboard.currentKeyState[key];
+    return false;
 }
 
 bool is_key_pressed(int key)
 {
-    bool pressed = false;
-
-    if ((key > 0) && (key < MAX_KEYBOARD_KEYS))
-    {
-        if ((GLOBALS.Keyboard.previousKeyState[key] == 0) && (GLOBALS.Keyboard.currentKeyState[key] == 1)) pressed = true;
-    }
-
-    return pressed;
+    if (key > 0 && key < SDL_NUM_SCANCODES)
+        return GLOBALS.Keyboard.currentKeyState[key] && !GLOBALS.Keyboard.previousKeyState[key];
+    return false;
 }
 
 float get_deltatime(void)
@@ -174,6 +148,12 @@ static SDL_MouseButtonFlags _mouse_button_mask(int button)
 
 void engine_begin_frame(void)
 {
+    // Keyboard
+    SDL_memcpy(GLOBALS.Keyboard.previousKeyState, GLOBALS.Keyboard.currentKeyState, SDL_NUM_SCANCODES * sizeof(bool));
+    const bool *sdl_keys = SDL_GetKeyboardState(NULL);
+    SDL_memcpy(GLOBALS.Keyboard.currentKeyState, sdl_keys, SDL_NUM_SCANCODES * sizeof(bool));
+
+    // Mouse
     GLOBALS.Mouse.previousButtons = GLOBALS.Mouse.currentButtons;
     GLOBALS.Mouse.currentButtons = SDL_GetMouseState(&GLOBALS.Mouse.x, &GLOBALS.Mouse.y);
     GLOBALS.Mouse.wheelY = 0.0f;
