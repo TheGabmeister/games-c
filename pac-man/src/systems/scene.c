@@ -75,7 +75,7 @@ static inline void _pause(ecs_world_t *world)
   if (_paused == 0)
   {
     _paused = entity_manager_spawn_label(world, 0, FONT_CLOVER, "PAUSED", ALIGN_CENTRE, VALIGN_MIDDLE, 100, (vector2){RASTER_WIDTH * 0.5, RASTER_HEIGHT * 0.5}, (color){ 80, 80, 80, 255 });
-    //ShowCursor();
+    SDL_ShowCursor();
     if (_music != 0)
     {
       music_manager_mute(world, _music);
@@ -89,7 +89,7 @@ static inline void _unpause(ecs_world_t *world)
 {
   if (_paused != 0)
   {
-    //HideCursor();
+    SDL_HideCursor();
     ecs_delete(world, _paused);
     _paused = 0;
     if (_music != 0)

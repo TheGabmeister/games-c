@@ -31,53 +31,53 @@ static SDL_Renderer *_renderer = NULL;
 
 void gui_input(ecs_iter_t *it)
 {
-  Interface *interface = ecs_field(it, Interface, 0);
-  Input *input = ecs_field(it, Input, 1);
-  Window *window = ecs_field(it, Window, 3);
-  _pointer.x = 0.5 * RASTER_WIDTH;
-  unsigned int max = 0;
-  for (int i = 0; i < it->count; ++i)
-  {
-    if (window[i].max > max)
-      max = window[i].max;
-  }
-  max -= 1;
-  if (_timer > 0)
-  {
-    if (input->joystick.y < -0.1)
+    Interface *interface = ecs_field(it, Interface, 0);
+    Input *input = ecs_field(it, Input, 1);
+    Window *window = ecs_field(it, Window, 3);
+    _pointer.x = 0.5 * RASTER_WIDTH;
+    unsigned int max = 0;
+    for (int i = 0; i < it->count; ++i)
     {
-      _pointer.y -= window->button_height;
-      _timer = -0.15;
-      _mode = false;
+        if (window[i].max > max)
+            max = window[i].max;
     }
-    if (input->joystick.y > 0.1)
+    max -= 1;
+    if (_timer > 0)
     {
-      _pointer.y += window->button_height;
-      _timer = -0.15;
-      _mode = false;
+        if (input->joystick.y < -0.1)
+        {
+            _pointer.y -= window->button_height;
+            _timer = -0.15;
+            _mode = false;
+        }
+        if (input->joystick.y > 0.1)
+        {
+            _pointer.y += window->button_height;
+            _timer = -0.15;
+            _mode = false;
+        }
     }
-  }
-  _timer += it->delta_time;
-  float clamp_min = window->bounds.y + window->button_height * 0.5f;
-  float clamp_max = window->bounds.y + window->bounds.h - window->button_height * 0.5f;
-  _pointer.y = MAX(clamp_min, MIN(clamp_max, _pointer.y));
-  vector2 delta = {_mouse.x - input->pointer.x, _mouse.y - input->pointer.y};
-  _mouse = input->pointer;
-  if (delta.x * delta.x + delta.y * delta.y > 0.1 || _mode)
-  {
-    _pointer = _mouse;
-    SDL_ShowCursor();
-    _mode = true;
-  }
-  else if (!_mode)
-  {
-    SDL_HideCursor();
-  }
-  nk_input_begin(interface);
-  nk_input_motion(interface, _pointer.x, _pointer.y);
-  nk_input_scroll(interface, (struct nk_vec2){0, input->wheel});
-  nk_input_button(interface, NK_BUTTON_LEFT, _pointer.x, _pointer.y, input->select);
-  nk_input_end(interface);
+    _timer += it->delta_time;
+    float clamp_min = window->bounds.y + window->button_height * 0.5f;
+    float clamp_max = window->bounds.y + window->bounds.h - window->button_height * 0.5f;
+    _pointer.y = MAX(clamp_min, MIN(clamp_max, _pointer.y));
+    vector2 delta = {_mouse.x - input->pointer.x, _mouse.y - input->pointer.y};
+    _mouse = input->pointer;
+    if (delta.x * delta.x + delta.y * delta.y > 0.1 || _mode)
+    {
+        _pointer = _mouse;
+        SDL_ShowCursor();
+        _mode = true;
+    }
+    else if (!_mode)
+    {
+        SDL_HideCursor();
+    }
+    nk_input_begin(interface);
+    nk_input_motion(interface, _pointer.x, _pointer.y);
+    nk_input_scroll(interface, (struct nk_vec2){0, input->wheel});
+    nk_input_button(interface, NK_BUTTON_LEFT, _pointer.x, _pointer.y, input->select);
+    nk_input_end(interface);
 }
 
 //------------------------------------------------------------------------------
@@ -284,19 +284,19 @@ static inline void _polyline(const struct nk_command *command)
 
 static inline void _text(const struct nk_command_text *command)
 {
-  color fore = _from_color(command->foreground);
-  color back = _from_color(command->background);
-  SDL_SetRenderDrawColor(_renderer, back.r, back.g, back.b, back.a);
-  SDL_FRect bg_rect = {command->x, command->y, command->w, command->h};
-  SDL_RenderFillRect(_renderer, &bg_rect);
-  SDL_Surface *surf = TTF_RenderText_Blended(font_manager_get(FONT_CLOVER), command->string, (size_t)command->length, (SDL_Color){fore.r, fore.g, fore.b, fore.a});
-  if (surf)
-  {
-    SDL_Texture *tex = SDL_CreateTextureFromSurface(_renderer, surf);
-    SDL_DestroySurface(surf);
-    SDL_FRect dst = {command->x, command->y, command->w, command->h};
-    SDL_RenderTexture(_renderer, tex, NULL, &dst);
-    SDL_DestroyTexture(tex);
+    color fore = _from_color(command->foreground);
+    color back = _from_color(command->background);
+    SDL_SetRenderDrawColor(_renderer, back.r, back.g, back.b, back.a);
+    SDL_FRect bg_rect = {command->x, command->y, command->w, command->h};
+    SDL_RenderFillRect(_renderer, &bg_rect);
+    SDL_Surface *surf = TTF_RenderText_Blended(font_manager_get(FONT_CLOVER), command->string, (size_t)command->length, (SDL_Color){fore.r, fore.g, fore.b, fore.a});
+    if (surf)
+    {
+        SDL_Texture *tex = SDL_CreateTextureFromSurface(_renderer, surf);
+        SDL_DestroySurface(surf);
+        SDL_FRect dst = {command->x, command->y, command->w, command->h};
+        SDL_RenderTexture(_renderer, tex, NULL, &dst);
+        SDL_DestroyTexture(tex);
   }
 }
 
@@ -304,14 +304,14 @@ static inline void _text(const struct nk_command_text *command)
 
 static inline void _image(const struct nk_command *command)
 {
-  SDL_Log("Unimplemented Nuklear Command: image");
+    SDL_Log("Unimplemented Nuklear Command: image");
 }
 
 //------------------------------------------------------------------------------
 
 static inline void _custom(const struct nk_command *command)
 {
-  SDL_Log("Unimplemented Nuklear Command: custom");
+    SDL_Log("Unimplemented Nuklear Command: custom");
 }
 
 //------------------------------------------------------------------------------
