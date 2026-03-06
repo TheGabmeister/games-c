@@ -19,9 +19,10 @@ void process_input(ecs_iter_t *it)
   *input = (Input){0};
 
   //input->quit |= WindowShouldClose();
-  input->quit |= is_key_pressed(KEY_LEFT_CONTROL) && is_key_pressed(KEY_Q);
-  input->quit |= is_key_pressed(KEY_LEFT_CONTROL) && is_key_pressed(KEY_W);
-  input->toggle_fullscreen = is_key_pressed(KEY_LEFT_CONTROL) && is_key_pressed(KEY_F);
+  bool ctrl_down = is_key_down(KEY_LEFT_CONTROL) || is_key_down(KEY_RIGHT_CONTROL);
+  input->quit |= ctrl_down && is_key_pressed(KEY_Q);
+  input->quit |= ctrl_down && is_key_pressed(KEY_W);
+  input->toggle_fullscreen = ctrl_down && is_key_pressed(KEY_F);
   input->toggle_pause = is_key_pressed(KEY_P);
 
   input->joystick.x = 0;

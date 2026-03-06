@@ -123,22 +123,12 @@ void game_manager_loop(void)
         engine_begin_frame();
         while (SDL_PollEvent(&event))
         {
-            // For mouse input
+           
             engine_process_event(&event);
-
-            const Input *input = ecs_singleton_get(_world, Input);
-            if (input && input->quit)
+            if (event.type == SDL_EVENT_QUIT) {
                 ecs_quit(_world);
-
-            // if (event.type == SDL_EVENT_QUIT) {
-            //     ecs_quit(_world);
-            //     break;
-            // }
-            // if (event.type == SDL_EVENT_KEY_DOWN && event.key.scancode == SDL_SCANCODE_ESCAPE) {
-            //     ecs_quit(_world);
-            //     break;
-            // }
-
+                break;
+            }
 	    }
 
         float delta = get_deltatime();
