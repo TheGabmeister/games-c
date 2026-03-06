@@ -58,13 +58,13 @@ void process_input(ecs_iter_t *it)
 
   input->select |= is_key_pressed(KEY_ENTER);
   input->select |= is_key_pressed(KEY_SPACE);
-  if (is_key_pressed(KEY_A) || is_key_pressed(KEY_J) || is_key_pressed(KEY_LEFT) || is_key_pressed(KEY_KP_4))
+  if (is_key_down(KEY_A) || is_key_down(KEY_J) || is_key_down(KEY_LEFT) || is_key_down(KEY_KP_4))
     input->joystick.x += -1;
-  if (is_key_pressed(KEY_D) || is_key_pressed(KEY_L) || is_key_pressed(KEY_RIGHT) || is_key_pressed(KEY_KP_6))
+  if (is_key_down(KEY_D) || is_key_down(KEY_L) || is_key_down(KEY_RIGHT) || is_key_down(KEY_KP_6))
     input->joystick.x += 1;
-  if (is_key_pressed(KEY_W) || is_key_pressed(KEY_I) || is_key_pressed(KEY_UP) || is_key_pressed(KEY_KP_8))
+  if (is_key_down(KEY_W) || is_key_down(KEY_I) || is_key_down(KEY_UP) || is_key_down(KEY_KP_8))
     input->joystick.y += -1;
-  if (is_key_pressed(KEY_S) || is_key_pressed(KEY_K) || is_key_pressed(KEY_DOWN) || is_key_pressed(KEY_KP_2))
+  if (is_key_down(KEY_S) || is_key_down(KEY_K) || is_key_down(KEY_DOWN) || is_key_down(KEY_KP_2))
     input->joystick.y += 1;
 
   // input->joystick.x = Clamp(input->joystick.x, -1.0, 1.0);
