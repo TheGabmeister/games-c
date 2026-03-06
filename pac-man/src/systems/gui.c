@@ -26,7 +26,7 @@ void gui_render(ecs_iter_t *it)
     char buf[64];
     SDL_snprintf(buf, sizeof(buf), "Entities: %d", count);
 
-    if (nk_begin(ctx, "Debug", nk_rect(10, 10, 160, 55),
+    if (nk_begin(ctx, "Debug", nk_rect(10, 10, 160, 80),
         NK_WINDOW_BORDER | NK_WINDOW_TITLE | NK_WINDOW_MOVABLE))
     {
         nk_layout_row_dynamic(ctx, 18, 1);
