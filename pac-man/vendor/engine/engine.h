@@ -226,8 +226,14 @@ ENGINE_API bool is_window_ready(void);
 ENGINE_API int get_fps(void);                                          
 ENGINE_API float get_deltatime(void);                                   
 ENGINE_API SDL_Renderer *get_renderer(void);                            
-ENGINE_API bool is_key_down(int key); 
-ENGINE_API bool is_key_pressed(int key); 
+ENGINE_API bool is_key_down(int key);
+ENGINE_API bool is_key_pressed(int key);
+ENGINE_API void engine_begin_frame(void);
+ENGINE_API void engine_process_event(SDL_Event *event);
+ENGINE_API bool is_mouse_button_down(int button);
+ENGINE_API bool is_mouse_button_pressed(int button);
+ENGINE_API vector2 get_mouse_position(void);
+ENGINE_API float get_mouse_wheel_move(void);
 
 #endif // ENGINE_H
 

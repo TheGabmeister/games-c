@@ -49,10 +49,11 @@ void process_input(ecs_iter_t *it)
       input->joystick.y += 1;
   }
 */
-  input->drag |= IsMouseButtonDown(MOUSE_LEFT_BUTTON);
-  input->select |= IsMouseButtonPressed(MOUSE_LEFT_BUTTON);
-  input->pointer = Vector2Scale(Vector2Subtract(GetMousePosition(), (vector2){display->screen.x, display->screen.y}), 1.0 / display->scale);
-  input->wheel = GetMouseWheelMove();
+  input->drag |= is_mouse_button_down(MOUSE_BUTTON_LEFT);
+  input->select |= is_mouse_button_pressed(MOUSE_BUTTON_LEFT);
+  vector2 _mpos = get_mouse_position();
+  input->pointer = (vector2){ (_mpos.x - display->screen.x) / display->scale, (_mpos.y - display->screen.y) / display->scale };
+  input->wheel = get_mouse_wheel_move();
 
   input->select |= is_key_pressed(KEY_ENTER);
   input->select |= is_key_pressed(KEY_SPACE);

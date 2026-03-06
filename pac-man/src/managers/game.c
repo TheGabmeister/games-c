@@ -119,8 +119,12 @@ void game_manager_loop(void)
 
     while (running)
     {
+        engine_begin_frame();
         while (SDL_PollEvent(&event))
         {
+            // For mouse input
+            engine_process_event(&event);
+
             if (event.type == SDL_EVENT_QUIT) {
                 ecs_quit(_world);
                 break;
@@ -129,7 +133,7 @@ void game_manager_loop(void)
                 ecs_quit(_world);
                 break;
             }
-			
+
 	    }
 
         float delta = get_deltatime();
@@ -140,8 +144,8 @@ void game_manager_loop(void)
             _start_game();
             started = true;
         }
-        ecs_entities_t entities = ecs_get_entities(_world);
-        SDL_Log("%d", entities.count);
+        //ecs_entities_t entities = ecs_get_entities(_world);
+        //SDL_Log("%d", entities.count);
 
     }   
 }

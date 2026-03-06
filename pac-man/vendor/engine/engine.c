@@ -34,6 +34,13 @@ typedef struct Globals {
         int charPressedQueueCount;      // Input characters queue count
     } Keyboard;
 
+    struct {
+        SDL_MouseButtonFlags currentButtons;
+        SDL_MouseButtonFlags previousButtons;
+        float x, y;
+        float wheelY;
+    } Mouse;
+
 } Globals;
 
 Globals GLOBALS = { 0 };   
@@ -151,4 +158,51 @@ float get_deltatime(void)
     GLOBALS.fps = (GLOBALS.delta_time > 0.0f) ? (int)(1.0f / GLOBALS.delta_time) : 0;
 
     return GLOBALS.delta_time;
+}
+
+static SDL_MouseButtonFlags _mouse_button_mask(int button)
+{
+    switch (button) {
+        case MOUSE_BUTTON_LEFT:   return SDL_BUTTON_LMASK;
+        case MOUSE_BUTTON_RIGHT:  return SDL_BUTTON_RMASK;
+        case MOUSE_BUTTON_MIDDLE: return SDL_BUTTON_MMASK;
+        case MOUSE_BUTTON_SIDE:   return SDL_BUTTON_X1MASK;
+        case MOUSE_BUTTON_EXTRA:  return SDL_BUTTON_X2MASK;
+        default: return 0;
+    }
+}
+
+void engine_begin_frame(void)
+{
+    GLOBALS.Mouse.previousButtons = GLOBALS.Mouse.currentButtons;
+    GLOBALS.Mouse.currentButtons = SDL_GetMouseState(&GLOBALS.Mouse.x, &GLOBALS.Mouse.y);
+    GLOBALS.Mouse.wheelY = 0.0f;
+}
+
+void engine_process_event(SDL_Event *event)
+{
+    if (event->type == SDL_EVENT_MOUSE_WHEEL)
+        GLOBALS.Mouse.wheelY += event->wheel.y;
+}
+
+bool is_mouse_button_down(int button)
+{
+    return (GLOBALS.Mouse.currentButtons & _mouse_button_mask(button)) != 0;
+}
+
+bool is_mouse_button_pressed(int button)
+{
+    SDL_MouseButtonFlags mask = _mouse_button_mask(button);
+    return (GLOBALS.Mouse.currentButtons & mask) != 0 &&
+           (GLOBALS.Mouse.previousButtons & mask) == 0;
+}
+
+vector2 get_mouse_position(void)
+{
+    return (vector2){ GLOBALS.Mouse.x, GLOBALS.Mouse.y };
+}
+
+float get_mouse_wheel_move(void)
+{
+    return GLOBALS.Mouse.wheelY;
 }
