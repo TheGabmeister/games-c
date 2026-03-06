@@ -66,4 +66,6 @@ void component_manager_init(ecs_world_t *world)
   ecs_add_id(world, ecs_id(Display), EcsSingleton);
   ecs_add_id(world, ecs_id(Physics), EcsSingleton);
   ecs_add_id(world, ecs_id(Time), EcsSingleton);
+  ecs_add_id(world, ecs_id(Interface), EcsSingleton);
+
 }

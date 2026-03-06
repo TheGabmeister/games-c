@@ -102,7 +102,18 @@ void gui_update(ecs_iter_t *it)
     Window *window = ecs_field(it, Window, 1);
     Widget *widget = ecs_field(it, Widget, 2);
     bool hover = false;
-    if (nk_begin(interface, window->name, _to_rect(window->bounds), window->flags))
+
+    // Make sure every window has a unique name to prevent error in nuklear
+    ecs_entity_t window_entity = ecs_field_src(it, 1);
+    char window_id[64];
+    const char *window_name = window->name;
+    if (window_entity != 0)
+    {
+        SDL_snprintf(window_id, sizeof(window_id), "window_%llu", (unsigned long long)window_entity);
+        window_name = window_id;
+    }
+
+    if (nk_begin_titled(interface, window_name, window->name, _to_rect(window->bounds), window->flags))
     {
         for (int i = 0; i < it->count; ++i)
         {

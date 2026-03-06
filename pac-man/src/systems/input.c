@@ -48,7 +48,7 @@ void process_input(ecs_iter_t *it)
     if (IsGamepadButtonDown(i, GAMEPAD_BUTTON_LEFT_FACE_DOWN))
       input->joystick.y += 1;
   }
-
+*/
   input->drag |= IsMouseButtonDown(MOUSE_LEFT_BUTTON);
   input->select |= IsMouseButtonPressed(MOUSE_LEFT_BUTTON);
   input->pointer = Vector2Scale(Vector2Subtract(GetMousePosition(), (vector2){display->screen.x, display->screen.y}), 1.0 / display->scale);
@@ -65,11 +65,11 @@ void process_input(ecs_iter_t *it)
   if (is_key_pressed(KEY_S) || is_key_pressed(KEY_K) || is_key_pressed(KEY_DOWN) || is_key_pressed(KEY_KP_2))
     input->joystick.y += 1;
 
-  input->joystick.x = Clamp(input->joystick.x, -1.0, 1.0);
-  input->joystick.y = Clamp(input->joystick.y, -1.0, 1.0);
-  if (Vector2LengthSqr(input->joystick) < 0.3)
-    input->joystick = Vector2Zero();
-*/
+  // input->joystick.x = Clamp(input->joystick.x, -1.0, 1.0);
+  // input->joystick.y = Clamp(input->joystick.y, -1.0, 1.0);
+  // if (Vector2LengthSqr(input->joystick) < 0.3)
+  //   input->joystick = Vector2Zero();
+
 #ifdef DEBUG
   input->toggle_debug = is_key_pressed(KEY_TAB);
 #endif
