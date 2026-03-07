@@ -3,6 +3,8 @@
 #include <stdbool.h>
 #include <stdint.h>
 
+#define CYAN ((Color){ 0, 255, 255, 255 })
+
 /* ---- Dimensions ---------------------------------------------------- */
 #define MAZE_COLS       28
 #define MAZE_ROWS       31

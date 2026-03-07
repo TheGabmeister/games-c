@@ -1,4 +1,5 @@
 #include "renderer.h"
+#include "maze.h"
 #include "pellet.h"
 #include <math.h>
 

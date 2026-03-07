@@ -34,12 +34,14 @@ static const LevelParams LEVEL_PARAMS[] = {
 };
 #define LEVEL_PARAMS_COUNT (int)(sizeof(LEVEL_PARAMS)/sizeof(LEVEL_PARAMS[0]))
 
+#define BASE_TILE_SPEED  9.5f   /* tiles/s at 100% — speed fractions scale from this */
+
 static void apply_level_params(GameState *gs) {
     int idx = gs->score_state.level - 1;
     if (idx >= LEVEL_PARAMS_COUNT) idx = LEVEL_PARAMS_COUNT - 1;
     const LevelParams *p = &LEVEL_PARAMS[idx];
-    gs->pacman_speed           = p->pacman_speed * TILE_SIZE;
-    gs->ghost_speed            = p->ghost_speed  * TILE_SIZE;
+    gs->pacman_speed           = p->pacman_speed * BASE_TILE_SPEED * TILE_SIZE;
+    gs->ghost_speed            = p->ghost_speed  * BASE_TILE_SPEED * TILE_SIZE;
     gs->frightened_duration    = p->frightened_duration;
     gs->pellets.frightened_duration = p->frightened_duration;
 }
