@@ -22,8 +22,8 @@ static inline rectangle _sdl_rect(rectangle r)
 
 static inline void _set_tint(SDL_Texture *tex, color c)
 {
-  SDL_SetTextureColorMod(tex, c.r, c.g, c.b);
-  SDL_SetTextureAlphaMod(tex, c.a);
+    SDL_SetTextureColorMod(tex, c.r, c.g, c.b);
+    SDL_SetTextureAlphaMod(tex, c.a);
 }
 
 

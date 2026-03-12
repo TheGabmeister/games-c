@@ -1,11 +1,11 @@
-#include "managers/game.h"
+#include "game.h"
 
 //==============================================================================
 
 int main(void)
 {
-  game_manager_init();
-  game_manager_loop();
-  game_manager_fini();
+  game_init();
+  game_loop();
+  game_fini();
   return 0;
 }

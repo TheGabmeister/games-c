@@ -152,11 +152,6 @@ typedef enum {
     KEY_KP_EQUAL        = SDL_SCANCODE_KP_EQUALS,
 } KeyboardKey;
 
-// Add backwards compatibility support for deprecated names
-#define MOUSE_LEFT_BUTTON   MOUSE_BUTTON_LEFT
-#define MOUSE_RIGHT_BUTTON  MOUSE_BUTTON_RIGHT
-#define MOUSE_MIDDLE_BUTTON MOUSE_BUTTON_MIDDLE
-
 // Mouse buttons
 typedef enum {
     MOUSE_BUTTON_LEFT    = 0,       

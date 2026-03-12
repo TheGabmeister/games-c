@@ -1,20 +1,20 @@
-#include "../defines.h"
+#include "defines.h"
 
 #include <engine.h>
 #include <flecs.h>
 #include <SDL3/SDL.h>
 #include <SDL3_image/SDL_image.h>
 
-#include "../components/input.h"
+#include "components/input.h"
 
 
-#include "texture.h"
-#include "sound.h"
-#include "music.h"
-#include "component.h"
-#include "entity.h"
-#include "system.h"
-#include "input.h"
+#include "managers/texture.h"
+#include "managers/sound.h"
+#include "managers/music.h"
+#include "managers/component.h"
+#include "managers/entity.h"
+#include "managers/system.h"
+#include "managers/input.h"
 
 #include "game.h"
 
@@ -51,15 +51,16 @@ static inline void _init_managers(void)
     texture_manager_init(_world);
     sound_manager_init(_world);
     music_manager_init(_world);
-    font_manager_init(_world);
-    data_manager_init(_world);
+    //font_manager_init(_world);
+    //data_manager_init(_world);
     component_manager_init(_world);
-    entity_manager_init(_world);
-    debug_manager_init(_world);
-    settings_manager_init(_world);
     input_manager_init(_world);
-    gui_manager_init(_world);
-    physics_manager_init(_world);
+    entity_manager_init(_world);
+    //debug_manager_init(_world);
+    //settings_manager_init(_world);
+    
+    //gui_manager_init(_world);
+    //physics_manager_init(_world);
     system_manager_init(_world);
     
 }
@@ -79,17 +80,13 @@ static inline void _init_game(void)
   	}
 
 }
-
-//------------------------------------------------------------------------------
-
 static inline void _start_game(void)
 {
     
 }
 
-//==============================================================================
 
-void game_manager_init(void)
+void game_init(void)
 {
   _init_sdl();
   _init_flecs();
@@ -99,7 +96,7 @@ void game_manager_init(void)
 
 //------------------------------------------------------------------------------
 
-void game_manager_loop(void)
+void game_loop(void)
 {
     SDL_Event event;
     bool running = true;
@@ -131,9 +128,7 @@ void game_manager_loop(void)
     }   
 }
 
-//------------------------------------------------------------------------------
-
-void game_manager_fini(void)
+void game_fini(void)
 {
     ecs_fini(_world);
     _world = NULL;
