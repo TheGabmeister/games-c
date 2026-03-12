@@ -7,7 +7,6 @@ set(CMAKE_C_STANDARD_REQUIRED ON)
 add_subdirectory(vendor/sdl)
 add_subdirectory(vendor/engine)
 add_subdirectory(vendor/flecs)
-add_subdirectory(vendor/cglm)
 
 # SDL_mixer: WAV, MP3 (dr_mp3), OGG Vorbis (stb_vorbis) — all header-only, no external deps
 set(SDLMIXER_WAVE              ON)
@@ -57,25 +56,13 @@ set(SDLTTF_PLUTOSVG   OFF CACHE BOOL "" FORCE)
 set(SDLTTF_VENDORED   ON  CACHE BOOL "" FORCE)
 add_subdirectory(vendor/sdl_ttf)
 
-set(BUILD_DEMOS OFF CACHE BOOL "" FORCE)
-set(BUILD_SHARED OFF CACHE BOOL "" FORCE)
-set(BUILD_STATIC ON CACHE BOOL "" FORCE)
-add_subdirectory(vendor/Chipmunk2D)
-
-
 file(GLOB_RECURSE MY_SOURCES CONFIGURE_DEPENDS "${CMAKE_CURRENT_SOURCE_DIR}/src/*.c")
 add_executable(${PROJECT_NAME} 
     ${MY_SOURCES}
-    vendor/cjson/cJSON.c
-    vendor/tinyfiledialogs/tinyfiledialogs.c
     )
 
 target_include_directories(${PROJECT_NAME} PRIVATE
-    src/
     vendor/nuklear
-    vendor/cjson
-    vendor/tinyfiledialogs
-    vendor/Chipmunk2D/include
 )
 target_link_libraries(${PROJECT_NAME} PRIVATE
     SDL3::SDL3
@@ -84,8 +71,6 @@ target_link_libraries(${PROJECT_NAME} PRIVATE
     SDL3_ttf::SDL3_ttf
     engine
     flecs::flecs_static
-    chipmunk_static
-    cglm
 )
 
 # Copy SDL3 shared library next to the executable on Windows
@@ -101,11 +86,11 @@ if(WIN32)
     )
 endif()
 
-set(RES_SOURCE_DIR "${CMAKE_CURRENT_SOURCE_DIR}/res")
+set(RES_SOURCE_DIR "${CMAKE_CURRENT_SOURCE_DIR}/assets")
 add_custom_target(copy_resources
     COMMAND ${CMAKE_COMMAND} -E copy_directory
             "${RES_SOURCE_DIR}"
-            "$<TARGET_FILE_DIR:${PROJECT_NAME}>/res"
+            "$<TARGET_FILE_DIR:${PROJECT_NAME}>/assets"
     COMMENT "Copying res folder next to executable"
 )
 add_dependencies(${PROJECT_NAME} copy_resources) # Force copy even when only building executable
