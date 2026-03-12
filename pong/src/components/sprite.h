@@ -4,13 +4,13 @@
 #include <flecs.h>
 #include <SDL3/SDL.h>
 
-typedef struct Renderable
+typedef struct Sprite
 {
   SDL_Texture *texture;
   SDL_FRect src;
   float scale;
-} Renderable;
+} Sprite;
 
-ECS_COMPONENT_DECLARE(Renderable);
+ECS_COMPONENT_DECLARE(Sprite);
 
 #endif

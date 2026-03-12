@@ -1,14 +1,14 @@
-#ifndef SPATIAL_COMPONENT_H
-#define SPATIAL_COMPONENT_H
+#ifndef TRANSFORM_COMPONENT_H
+#define TRANSFORM_COMPONENT_H
 
 #include <flecs.h>
 #include <engine.h>
 
-typedef struct Spatial
+typedef struct Transform
 {
   vector2 position;
   float rotation;
-} Spatial;
+} Transform;
 
 ECS_COMPONENT_DECLARE(Transform);
 

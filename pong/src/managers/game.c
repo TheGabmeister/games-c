@@ -5,24 +5,16 @@
 #include <SDL3/SDL.h>
 #include <SDL3_image/SDL_image.h>
 
-#include "../components/display.h"
 #include "../components/input.h"
-#include "../components/time.h"
-#include "../systems/scene.h"
+
 
 #include "texture.h"
 #include "sound.h"
 #include "music.h"
-#include "font.h"
-#include "data.h"
 #include "component.h"
 #include "entity.h"
 #include "system.h"
-#include "settings.h"
-#include "debug.h"
 #include "input.h"
-#include "gui.h"
-#include "physics.h"
 
 #include "game.h"
 
@@ -85,15 +77,14 @@ static inline void _init_game(void)
   	  	  SDL_DestroySurface(icon);
   	  	}
   	}
-  	ecs_singleton_set(_world, Display, {.border = (color){0,0,0,0}, .background = (color){255,255,255,255}, .raster = {0, 0, RASTER_WIDTH, RASTER_HEIGHT}});
-  	ecs_singleton_set(_world, Time, {.scale = 1});
+
 }
 
 //------------------------------------------------------------------------------
 
 static inline void _start_game(void)
 {
-    spawn_scene(_world, SCENE_SPLASH, 0);
+    
 }
 
 //==============================================================================

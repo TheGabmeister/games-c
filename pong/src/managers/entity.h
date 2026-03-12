@@ -4,11 +4,6 @@
 #include <flecs.h>
 #include <engine.h>
 
-#include "../components/scene.h"
-#include "../components/label.h"
-#include "../components/aligned.h"
-
-#include "../managers/font.h"
 #include "../managers/texture.h"
 #include "../managers/sound.h"
 #include "../managers/music.h"
@@ -21,7 +16,6 @@ ECS_TAG_DECLARE(DebugTag);
 
 void entity_manager_init(ecs_world_t *world);
 
-ecs_entity_t entity_manager_spawn_label(ecs_world_t *world, ecs_entity_t parent, FontName id, const char *message, HorizontalAlignment align, VerticalAlignment valign, float size, vector2 position, color tint);
 ecs_entity_t entity_manager_spawn_debug(ecs_world_t *world, const char *message);
 ecs_entity_t entity_manager_spawn_image(ecs_world_t *world, ecs_entity_t parent, TextureName id, float scale, vector2 position, color tint);
 ecs_entity_t entity_manager_spawn_sound(ecs_world_t *world, ecs_entity_t parent, SoundName id, float volume);

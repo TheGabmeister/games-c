@@ -1,7 +1,6 @@
 #include <SDL3/SDL.h>
 #include <SDL3_mixer/SDL_mixer.h>
 
-#include "../components/track.h"
 
 #include "music.h"
 
@@ -76,43 +75,4 @@ MIX_Audio *music_manager_get(MusicName id)
 MIX_Mixer *music_manager_mixer(void)
 {
   return _mixer;
-}
-
-//------------------------------------------------------------------------------
-
-void music_manager_volume(ecs_world_t *world, ecs_entity_t id, float volume)
-{
-  Track *track = ecs_get_mut(world, id, Track);
-  track->volume = volume;
-  ecs_modified(world, id, Track);
-}
-
-//------------------------------------------------------------------------------
-
-void music_manager_mute(ecs_world_t *world, ecs_entity_t id)
-{
-  Track *track = ecs_get_mut(world, id, Track);
-  track->state = TRACK_MUTING;
-  track->state_time = 0;
-  ecs_modified(world, id, Track);
-}
-
-//------------------------------------------------------------------------------
-
-void music_manager_unmute(ecs_world_t *world, ecs_entity_t id)
-{
-  Track *track = ecs_get_mut(world, id, Track);
-  track->state = TRACK_UNMUTING;
-  track->state_time = 0;
-  ecs_modified(world, id, Track);
-}
-
-//------------------------------------------------------------------------------
-
-void music_manager_stop(ecs_world_t *world, ecs_entity_t id)
-{
-  Track *track = ecs_get_mut(world, id, Track);
-  track->state = TRACK_STOPPING;
-  track->state_time = 0;
-  ecs_modified(world, id, Track);
 }
