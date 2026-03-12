@@ -108,13 +108,13 @@ void game_loop(void)
 
     while (running)
     {
-        engine_begin_frame();
+       
         while (SDL_PollEvent(&event))
         {
-            engine_process_event(&event);
+           
 	    }
 
-        float delta = get_deltatime();
+        float delta = get_delta_time();
         running = ecs_progress(_world, delta);
         time += delta;
         if (!started && time > 1)

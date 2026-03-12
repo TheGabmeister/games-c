@@ -18,7 +18,7 @@ void system_manager_init(ecs_world_t *world)
     ecs_atfini(world, _fini, NULL);
 //   ECS_SYSTEM(world, refresh_display, EcsOnLoad, [out] Display);
 //   ECS_SYSTEM(world, progress_time, EcsOnLoad, [inout] Time);
-//   ECS_SYSTEM(world, process_input, EcsOnLoad, [out] Input, [inout] Settings, [in] Display);
+   ECS_SYSTEM(world, process_input, EcsOnLoad, [out] Input);
 //    ECS_SYSTEM(world, gui_input, EcsPostLoad, [inout] Interface, [in] Input, [in] Settings, [in] Window);
 //    ECS_SYSTEM(world, gui_update, EcsPreUpdate, [inout] Interface, [in] Window(up), [inout] Widget);
 //    ECS_SYSTEM(world, transition, EcsPreUpdate, [in] Time, [inout] Transition);
