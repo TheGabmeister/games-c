@@ -6,7 +6,10 @@ typedef struct Globals {
 
     SDL_Window   *window;
     SDL_Renderer *renderer;
-    bool ready;                         // Check if window has been initialized successfully
+    bool ready;   
+    Uint64 previous_ticks_ns;
+    float delta_time;
+    int fps;                      // Check if window has been initialized successfully
 
 } Globals;
 
@@ -55,28 +58,32 @@ void close_window(void)
 
 float get_delta_time(void)
 {
-    static Uint64 previous_counter = 0;
-    const Uint64 current_counter = SDL_GetPerformanceCounter();
-    const Uint64 frequency = SDL_GetPerformanceFrequency();
+    Uint64 current_ticks_ns;
+    Uint64 elapsed_ticks_ns;
 
-    if (frequency == 0) {
+    if (!GLOBALS.ready) {
         return 0.0f;
     }
 
-    if (previous_counter == 0) {
-        previous_counter = current_counter;
-        return 0.0f;
+    current_ticks_ns = SDL_GetTicksNS();
+    if (GLOBALS.previous_ticks_ns == 0) {
+        GLOBALS.previous_ticks_ns = current_ticks_ns;
+        GLOBALS.delta_time = 0.0f;
+        GLOBALS.fps = 0;
+        return GLOBALS.delta_time;
     }
 
-    const Uint64 elapsed = current_counter - previous_counter;
-    previous_counter = current_counter;
+    elapsed_ticks_ns = current_ticks_ns - GLOBALS.previous_ticks_ns;
+    GLOBALS.previous_ticks_ns = current_ticks_ns;
+    GLOBALS.delta_time = (float)elapsed_ticks_ns / 1e9f;
+    GLOBALS.fps = (GLOBALS.delta_time > 0.0f) ? (int)(1.0f / GLOBALS.delta_time) : 0;
 
-    return (float)((double)elapsed / (double)frequency);
+    return GLOBALS.delta_time;
 }
 
 int get_fps(void)
 {
-    return 0;
+    return GLOBALS.fps;
 }
 
 SDL_Renderer *get_renderer(void)
