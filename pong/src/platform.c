@@ -4,39 +4,18 @@
 // Core global state context data
 typedef struct Globals {
 
-    const char *title;                  // Window text title const pointer
-    bool ready;                         // Check if window has been initialized successfully
-    bool should_close;                  // Set when SDL_EVENT_QUIT is received
-
     SDL_Window   *window;
     SDL_Renderer *renderer;
-
-    struct {
-        bool currentKeyState[SDL_SCANCODE_COUNT];
-        bool previousKeyState[SDL_SCANCODE_COUNT];
-    } Keyboard;
-
-    struct {
-        SDL_MouseButtonFlags currentButtons;
-        SDL_MouseButtonFlags previousButtons;
-        float x, y;
-        float wheelY;
-    } Mouse;
+    bool ready;                         // Check if window has been initialized successfully
 
 } Globals;
 
 Globals GLOBALS = { 0 };   
-static Uint64 PREVIOUS_TICKS_NS = 0;
-static float DELTA_TIME_SECONDS = 0.0f;
-static int FPS = 0;
 
 void init_window(int width, int height, const char *title)
 {
     GLOBALS.window   = NULL;
     GLOBALS.renderer = NULL;
-    PREVIOUS_TICKS_NS = 0;
-    DELTA_TIME_SECONDS = 0.0f;
-    FPS = 0;
 
     if (!SDL_Init(SDL_INIT_VIDEO | SDL_INIT_AUDIO)) {
         SDL_Log("SDL_Init failed: %s", SDL_GetError());
@@ -57,9 +36,6 @@ void init_window(int width, int height, const char *title)
         SDL_Quit();
         return;
     }
-
-    GLOBALS.ready = true;
-    PREVIOUS_TICKS_NS = SDL_GetTicksNS();
 }
 
 void close_window(void)
@@ -73,46 +49,34 @@ void close_window(void)
 
     GLOBALS.renderer = NULL;
     GLOBALS.window = NULL;
-    GLOBALS.ready = false;
-    PREVIOUS_TICKS_NS = 0;
-    DELTA_TIME_SECONDS = 0.0f;
-    FPS = 0;
 
     SDL_Quit();
 }
 
-bool is_window_ready(void)
-{
-    return GLOBALS.ready;
-}
-
 float get_delta_time(void)
 {
-    if ((SDL_WasInit(SDL_INIT_VIDEO) & SDL_INIT_VIDEO) == 0) {
+    static Uint64 previous_counter = 0;
+    const Uint64 current_counter = SDL_GetPerformanceCounter();
+    const Uint64 frequency = SDL_GetPerformanceFrequency();
+
+    if (frequency == 0) {
         return 0.0f;
     }
 
-    Uint64 current_ticks_ns = SDL_GetTicksNS();
-
-    if (PREVIOUS_TICKS_NS == 0) {
-        PREVIOUS_TICKS_NS = current_ticks_ns;
-        DELTA_TIME_SECONDS = 0.0f;
-        FPS = 0;
-        return DELTA_TIME_SECONDS;
+    if (previous_counter == 0) {
+        previous_counter = current_counter;
+        return 0.0f;
     }
 
-    Uint64 elapsed_ticks_ns = current_ticks_ns - PREVIOUS_TICKS_NS;
-    PREVIOUS_TICKS_NS = current_ticks_ns;
+    const Uint64 elapsed = current_counter - previous_counter;
+    previous_counter = current_counter;
 
-    DELTA_TIME_SECONDS = (float)((double)elapsed_ticks_ns / 1000000000.0);
-    FPS = (DELTA_TIME_SECONDS > 0.0f) ? (int)(1.0f / DELTA_TIME_SECONDS) : 0;
-
-    return DELTA_TIME_SECONDS;
+    return (float)((double)elapsed / (double)frequency);
 }
 
 int get_fps(void)
 {
-    return FPS;
+    return 0;
 }
 
 SDL_Renderer *get_renderer(void)
@@ -120,3 +84,7 @@ SDL_Renderer *get_renderer(void)
     return GLOBALS.renderer;
 }
 
+bool is_window_ready(void)
+{
+    return GLOBALS.ready;
+}
