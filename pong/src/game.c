@@ -22,28 +22,7 @@
 
 static ecs_world_t *_world = NULL;
 
-//==============================================================================
 
-static inline void _init_flecs(void)
-{
-  _world = ecs_init();
-  // ecs_set_entity_range(_world, 1, 1000);
-  // ecs_set_threads(world, 12);
-}
-
-//------------------------------------------------------------------------------
-
-static inline void _init_sdl(void)
-{
-    init_window(600, 800, "PAC-MAN");
-
-    //char *mappings = LoadFileText("./res/gamecontrollerdb.txt");
-    //SetGamepadMappings(mappings);
-    //UnloadFileText((unsigned char *)mappings);
-    
-}
-
-//------------------------------------------------------------------------------
 
 static inline void _init_managers(void)
 {
@@ -65,33 +44,12 @@ static inline void _init_managers(void)
     
 }
 
-//------------------------------------------------------------------------------
-
-static inline void _init_game(void)
-{
-  	if (is_window_ready())
-  	{
-  	  	// SDL_Surface *icon = IMG_Load("./res/gfx/ship.png");
-  	  	// if (icon != NULL)
-  	  	// {
-  	  	//   SDL_SetWindowIcon(SDL_GetRenderWindow(get_renderer()), icon);
-  	  	//   SDL_DestroySurface(icon);
-  	  	// }
-  	}
-
-}
-static inline void _start_game(void)
-{
-    
-}
-
 
 void game_init(void)
 {
-  _init_sdl();
-  _init_flecs();
-  _init_managers();
-  _init_game();
+    init_window(600, 800, "PAC-MAN");
+    _world = ecs_init();
+    _init_managers();
 }
 
 //------------------------------------------------------------------------------
@@ -100,7 +58,6 @@ void game_loop(void)
 {
     SDL_Event event;
     bool running = true;
-    bool started = false;
     float time = 0;
 
     if (!is_window_ready())
@@ -123,11 +80,7 @@ void game_loop(void)
         float delta = get_delta_time();
         running = ecs_progress(_world, delta);
         time += delta;
-        if (!started && time > 1)
-        {
-            _start_game();
-            started = true;
-        }
+
         //ecs_entities_t entities = ecs_get_entities(_world);
         //SDL_Log("%d", entities.count);
 
