@@ -2,7 +2,7 @@
 #define ENTITY_MANAGER_H
 
 #include <flecs.h>
-#include <engine.h>
+#include "../platform.h"
 
 #include "../managers/texture.h"
 #include "../managers/sound.h"

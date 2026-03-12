@@ -5,7 +5,6 @@ set(CMAKE_C_STANDARD 11)
 set(CMAKE_C_STANDARD_REQUIRED ON)
 
 add_subdirectory(vendor/sdl)
-add_subdirectory(vendor/engine)
 add_subdirectory(vendor/flecs)
 
 # SDL_mixer: WAV, MP3 (dr_mp3), OGG Vorbis (stb_vorbis) — all header-only, no external deps
@@ -69,7 +68,6 @@ target_link_libraries(${PROJECT_NAME} PRIVATE
     SDL3_mixer::SDL3_mixer
     SDL3_image::SDL3_image
     SDL3_ttf::SDL3_ttf
-    engine
     flecs::flecs_static
 )
 
@@ -81,7 +79,6 @@ if(WIN32)
             $<TARGET_FILE:SDL3_mixer::SDL3_mixer>
             $<TARGET_FILE:SDL3_image::SDL3_image>
             $<TARGET_FILE:SDL3_ttf::SDL3_ttf>
-            $<TARGET_FILE:engine>
             $<TARGET_FILE_DIR:${PROJECT_NAME}>
     )
 endif()

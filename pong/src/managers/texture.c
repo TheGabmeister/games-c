@@ -2,7 +2,7 @@
 
 #include <SDL3/SDL.h>
 #include <SDL3_image/SDL_image.h>
-#include <engine.h>
+#include "../platform.h"
 
 #include "texture.h"
 

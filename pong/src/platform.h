@@ -1,5 +1,5 @@
-#ifndef ENGINE_H
-#define ENGINE_H
+#ifndef PLATFORM_H
+#define PLATFORM_H
 
 #include <stdbool.h>
 #include <SDL3/SDL.h>
@@ -11,19 +11,19 @@
     #if defined(__TINYC__)
         #define __declspec(x) __attribute__((x))
     #endif
-    #if defined(ENGINE_BUILD_SHARED)
-        #define ENGINE_API __declspec(dllexport)     // We are building the library as a Win32 shared library (.dll)
-    #elif defined(ENGINE_USE_SHARED)
-        #define ENGINE_API __declspec(dllimport)     // We are using the library as a Win32 shared library (.dll)
+    #if defined(PLATFORM_BUILD_SHARED)
+        #define PLATFORM_API __declspec(dllexport)     // We are building the library as a Win32 shared library (.dll)
+    #elif defined(PLATFORM_USE_SHARED)
+        #define PLATFORM_API __declspec(dllimport)     // We are using the library as a Win32 shared library (.dll)
     #endif
 #else
-    #if defined(ENGINE_BUILD_SHARED)
-        #define ENGINE_API __attribute__((visibility("default"))) // We are building as a Unix shared library (.so/.dylib)
+    #if defined(PLATFORM_BUILD_SHARED)
+        #define PLATFORM_API __attribute__((visibility("default"))) // We are building as a Unix shared library (.so/.dylib)
     #endif
 #endif
 
-#ifndef ENGINE_API
-    #define ENGINE_API       // Functions defined as 'extern' by default (implicit specifiers)
+#ifndef PLATFORM_API
+    #define PLATFORM_API       // Functions defined as 'extern' by default (implicit specifiers)
 #endif
 
 typedef SDL_FRect rectangle;
@@ -210,21 +210,21 @@ typedef enum {
     GAMEPAD_AXIS_RIGHT_TRIGGER = 5     
 } GamepadAxis;
 
-ENGINE_API void init_window(int width, int height, const char *title);  
-ENGINE_API void close_window(void);                                     
-ENGINE_API bool is_window_ready(void);
-ENGINE_API bool window_should_close(void);
-ENGINE_API int get_fps(void);                                          
-ENGINE_API float get_deltatime(void);                                   
-ENGINE_API SDL_Renderer *get_renderer(void);                            
-ENGINE_API bool is_key_down(int key);
-ENGINE_API bool is_key_pressed(int key);
-ENGINE_API void engine_begin_frame(void);
-ENGINE_API void engine_process_event(SDL_Event *event);
-ENGINE_API bool is_mouse_button_down(int button);
-ENGINE_API bool is_mouse_button_pressed(int button);
-ENGINE_API vector2 get_mouse_position(void);
-ENGINE_API float get_mouse_wheel_move(void);
+void init_window(int width, int height, const char *title);  
+void close_window(void);                                     
+bool is_window_ready(void);
+bool window_should_close(void);
+int get_fps(void);                                          
+float get_deltatime(void);                                   
+SDL_Renderer *get_renderer(void);                            
+bool is_key_down(int key);
+bool is_key_pressed(int key);
+void engine_begin_frame(void);
+void engine_process_event(SDL_Event *event);
+bool is_mouse_button_down(int button);
+bool is_mouse_button_pressed(int button);
+vector2 get_mouse_position(void);
+float get_mouse_wheel_move(void);
 
-#endif // ENGINE_H
+#endif // PLATFORM_H
 
