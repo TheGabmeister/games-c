@@ -71,12 +71,12 @@ static inline void _init_game(void)
 {
   	if (is_window_ready())
   	{
-  	  	SDL_Surface *icon = IMG_Load("./res/gfx/ship.png");
-  	  	if (icon != NULL)
-  	  	{
-  	  	  SDL_SetWindowIcon(SDL_GetRenderWindow(get_renderer()), icon);
-  	  	  SDL_DestroySurface(icon);
-  	  	}
+  	  	// SDL_Surface *icon = IMG_Load("./res/gfx/ship.png");
+  	  	// if (icon != NULL)
+  	  	// {
+  	  	//   SDL_SetWindowIcon(SDL_GetRenderWindow(get_renderer()), icon);
+  	  	//   SDL_DestroySurface(icon);
+  	  	// }
   	}
 
 }
@@ -111,7 +111,13 @@ void game_loop(void)
        
         while (SDL_PollEvent(&event))
         {
-           
+            if (event.type == SDL_EVENT_QUIT) {
+                ecs_quit(_world);
+            }
+
+            if (event.type == SDL_EVENT_KEY_DOWN && event.key.key == SDLK_ESCAPE) {
+                ecs_quit(_world);
+            }
 	    }
 
         float delta = get_delta_time();

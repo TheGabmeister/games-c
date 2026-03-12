@@ -28,11 +28,11 @@ static void _fini(ecs_world_t *world, void *context)
 
 static void _load(int id, const char *name)
 {
-  char filename[256];
-  SDL_snprintf(filename, sizeof(filename), "./res/gfx/%s.png", name);
-  _textures[id] = IMG_LoadTexture(get_renderer(), filename);
-  if (!_textures[id])
-    SDL_Log("Failed to load texture '%s': %s", filename, SDL_GetError());
+    // char filename[256];
+    // SDL_snprintf(filename, sizeof(filename), "./res/gfx/%s.png", name);
+    // _textures[id] = IMG_LoadTexture(get_renderer(), filename);
+    // if (!_textures[id])
+    //   SDL_Log("Failed to load texture '%s': %s", filename, SDL_GetError());
 }
 
 //------------------------------------------------------------------------------

@@ -39,6 +39,9 @@ void init_window(int width, int height, const char *title)
         SDL_Quit();
         return;
     }
+
+    GLOBALS.ready = true;
+    GLOBALS.previous_ticks_ns = SDL_GetTicksNS();
 }
 
 void close_window(void)

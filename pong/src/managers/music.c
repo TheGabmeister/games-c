@@ -33,11 +33,11 @@ static void _fini(ecs_world_t *world, void *context)
 
 static void _load(int id, const char *name)
 {
-  char filename[256];
-  SDL_snprintf(filename, sizeof(filename), "./res/mp3/%s.mp3", name);
-  _music[id] = MIX_LoadAudio(_mixer, filename, false);
-  if (!_music[id])
-    SDL_Log("Failed to load music '%s': %s", filename, SDL_GetError());
+  // char filename[256];
+  // SDL_snprintf(filename, sizeof(filename), "./res/mp3/%s.mp3", name);
+  // _music[id] = MIX_LoadAudio(_mixer, filename, false);
+  // if (!_music[id])
+  //   SDL_Log("Failed to load music '%s': %s", filename, SDL_GetError());
 }
 
 //------------------------------------------------------------------------------
