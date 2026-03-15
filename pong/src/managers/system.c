@@ -13,7 +13,6 @@
 #include "../components/ball.h"
 #include "../components/collider.h"
 #include "../components/collision.h"
-#include "../components/label.h"
 
 #ifdef DEBUG
 #include "../systems/debug.h"

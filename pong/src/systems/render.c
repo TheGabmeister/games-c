@@ -4,7 +4,6 @@
 #include "../components/sprite.h"
 #include "../components/shape.h"
 #include "../components/collider.h"
-#include "../components/label.h"
 
 #include "../managers/system.h"
 
