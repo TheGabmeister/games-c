@@ -47,7 +47,7 @@ static inline void _init_managers(void)
 
 void game_init(void)
 {
-    init_window(800, 600, "PONG");
+    init_window(WINDOW_WIDTH, WINDOW_HEIGHT, GAME_NAME);
     _world = ecs_init();
     _init_managers();
 }
