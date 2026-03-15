@@ -4,9 +4,7 @@
 
 #include "paddle.h"
 
-#define PADDLE_SPEED 300.0f
-
-//==============================================================================
+static const float PADDLE_SPEED = 300.0f;
 
 void move_paddles(ecs_iter_t *it)
 {
