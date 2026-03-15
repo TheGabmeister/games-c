@@ -4,7 +4,6 @@
 #include "../components/sprite.h"
 #include "../components/shape.h"
 #include "../components/collider.h"
-#include "../components/debug.h"
 
 #include "../managers/system.h"
 
@@ -28,6 +27,13 @@ static inline void _set_tint(SDL_Texture *tex, SDL_Color c)
     SDL_SetTextureAlphaMod(tex, c.a);
 }
 
+
+static bool _show_colliders = false;
+
+void toggle_show_colliders(void)
+{
+    _show_colliders = !_show_colliders;
+}
 
 void render_clear(ecs_iter_t *it)
 {
@@ -95,8 +101,7 @@ void render_shapes(ecs_iter_t *it)
 
 void render_colliders(ecs_iter_t *it)
 {
-    const Debug *debug = ecs_singleton_get(it->world, Debug);
-    if (!debug || !debug->show_colliders) return;
+    if (!_show_colliders) return;
 
     Collider  *collider  = ecs_field(it, Collider,  0);
     Transform *transform = ecs_field(it, Transform, 1);

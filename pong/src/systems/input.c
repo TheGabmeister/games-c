@@ -1,9 +1,9 @@
 #include "../platform.h"
 
 #include "../components/input.h"
-#include "../components/debug.h"
 
 #include "input.h"
+#include "render.h"
 
 #include "../defines.h"
 
@@ -32,9 +32,6 @@ void process_input(ecs_iter_t *it)
     static bool prev_f1 = false;
     bool f1 = keys[SDL_SCANCODE_F1];
     if (f1 && !prev_f1)
-    {
-        Debug *debug = ecs_singleton_get_mut(it->world, Debug);
-        debug->show_colliders = !debug->show_colliders;
-    }
+        toggle_show_colliders();
     prev_f1 = f1;
 }
