@@ -19,6 +19,7 @@
 #include "components/velocity.h"
 #include "components/collider.h"
 #include "components/label.h"
+#include "components/score_label.h"
 #include "components/transform.h"
 #include "managers/system.h"
 #include "managers/input.h"
@@ -80,12 +81,14 @@ static void _load_level(void)
 
     // Score labels
     ecs_entity_t s1 = ecs_new(_world);
-    ecs_set(_world, s1, Label,     {.text = "0", .color = {255, 255, 255, 255}, .scale = 4.0f});
-    ecs_set(_world, s1, Transform, {.position = {WINDOW_WIDTH * 0.25f, 30}});
+    ecs_set(_world, s1, Label,      {.text = "0", .color = {255, 255, 255, 255}, .scale = 4.0f});
+    ecs_set(_world, s1, Transform,  {.position = {WINDOW_WIDTH * 0.25f, 30}});
+    ecs_set(_world, s1, ScoreLabel, {.player = 1});
 
     ecs_entity_t s2 = ecs_new(_world);
-    ecs_set(_world, s2, Label,     {.text = "0", .color = {255, 255, 255, 255}, .scale = 4.0f});
-    ecs_set(_world, s2, Transform, {.position = {WINDOW_WIDTH * 0.75f, 30}});
+    ecs_set(_world, s2, Label,      {.text = "0", .color = {255, 255, 255, 255}, .scale = 4.0f});
+    ecs_set(_world, s2, Transform,  {.position = {WINDOW_WIDTH * 0.75f, 30}});
+    ecs_set(_world, s2, ScoreLabel, {.player = 2});
 }
 
 void game_init(void)

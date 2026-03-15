@@ -2,6 +2,7 @@
 #include "../components/velocity.h"
 #include "../components/ball.h"
 #include "../components/shape.h"
+#include "../components/score.h"
 #include "../defines.h"
 
 #include "ball.h"
@@ -30,9 +31,15 @@ void update_ball(ecs_iter_t *it)
         if (by - bh <= 0 || by + bh >= WINDOW_HEIGHT)
             velocity[i].value.y = -velocity[i].value.y;
 
-        // Goal (left/right wall) — respawn at center
+        // Goal (left/right wall) — award point and respawn
         if (bx - bw <= 0 || bx + bw >= WINDOW_WIDTH)
         {
+            Score *score = ecs_singleton_get_mut(it->world, Score);
+            if (bx - bw <= 0)
+                score->p2++;
+            else
+                score->p1++;
+
             transform[i].position = ball[i].spawn;
             velocity[i].value.x   = -velocity[i].value.x;
         }
