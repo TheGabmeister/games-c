@@ -1,7 +1,6 @@
 #include "../components/transform.h"
 #include "../components/velocity.h"
 #include "../components/ball.h"
-#include "../components/paddle.h"
 #include "../components/shape.h"
 #include "../defines.h"
 
@@ -36,38 +35,6 @@ void update_ball(ecs_iter_t *it)
         {
             transform[i].position = ball[i].spawn;
             velocity[i].value.x   = -velocity[i].value.x;
-            continue;
         }
-
-        // Paddle bounce
-        ecs_query_t *q = ecs_query(it->world, {
-            .terms = {
-                { ecs_id(Paddle),    .inout = EcsIn },
-                { ecs_id(Transform), .inout = EcsIn },
-                { ecs_id(Shape),     .inout = EcsIn },
-            }
-        });
-
-        ecs_iter_t pit = ecs_query_iter(it->world, q);
-        while (ecs_query_next(&pit))
-        {
-            Transform *pt = ecs_field(&pit, Transform, 1);
-            Shape     *ps = ecs_field(&pit, Shape,     2);
-
-            for (int j = 0; j < pit.count; ++j)
-            {
-                float pw = ps[j].rectangle.width  * 0.5f;
-                float ph = ps[j].rectangle.height * 0.5f;
-                float px = pt[j].position.x;
-                float py = pt[j].position.y;
-
-                bool overlap_x = bx + bw > px - pw && bx - bw < px + pw;
-                bool overlap_y = by + bh > py - ph && by - bh < py + ph;
-
-                if (overlap_x && overlap_y)
-                    velocity[i].value.x = -velocity[i].value.x;
-            }
-        }
-        ecs_query_fini(q);
     }
 }
