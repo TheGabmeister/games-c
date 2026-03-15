@@ -57,14 +57,3 @@ ecs_entity_t spawn_shape(ecs_world_t *world, ecs_entity_t parent, Shape shape, v
     return entity;
 }
 
-//------------------------------------------------------------------------------
-
-ecs_entity_t spawn_music(ecs_world_t *world, MusicName id, float volume)
-{
-    ecs_entity_t entity = ecs_new(world);
-    MIX_Audio *music = music_manager_get(id);
-    //ecs_set(world, entity, Track, {.music = music, .volume = volume});
-    return entity;
-}
-
-

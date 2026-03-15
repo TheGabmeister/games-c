@@ -6,7 +6,6 @@
 #include <SDL3/SDL.h>
 #include "../defines.h"
 #include "../event_bus.h"
-#include "../managers/sound.h"
 
 #include "collision.h"
 
