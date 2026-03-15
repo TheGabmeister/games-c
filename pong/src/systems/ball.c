@@ -14,6 +14,7 @@ void update_ball(ecs_iter_t *it)
     Transform *transform = ecs_field(it, Transform, 0);
     Velocity  *velocity  = ecs_field(it, Velocity,  1);
     Ball      *ball      = ecs_field(it, Ball,      2);
+    Shape     *shape     = ecs_field(it, Shape,     3);
 
     for (int i = 0; i < it->count; ++i)
     {
@@ -23,10 +24,11 @@ void update_ball(ecs_iter_t *it)
 
         float bx = transform[i].position.x;
         float by = transform[i].position.y;
-        float br = ball[i].speed * 0.5f;  // treat speed as diameter for hit radius
+        float bw = shape[i].rectangle.width  * 0.5f;
+        float bh = shape[i].rectangle.height * 0.5f;
 
         // Wall bounce (top/bottom)
-        if (by - br <= 0 || by + br >= WINDOW_HEIGHT)
+        if (by - bh <= 0 || by + bh >= WINDOW_HEIGHT)
             velocity[i].value.y = -velocity[i].value.y;
 
         // Paddle bounce
@@ -51,8 +53,8 @@ void update_ball(ecs_iter_t *it)
                 float px = pt[j].position.x;
                 float py = pt[j].position.y;
 
-                bool overlap_x = bx + br > px - pw && bx - br < px + pw;
-                bool overlap_y = by + br > py - ph && by - br < py + ph;
+                bool overlap_x = bx + bw > px - pw && bx - bw < px + pw;
+                bool overlap_y = by + bh > py - ph && by - bh < py + ph;
 
                 if (overlap_x && overlap_y)
                     velocity[i].value.x = -velocity[i].value.x;
