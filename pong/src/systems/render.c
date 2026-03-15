@@ -3,6 +3,8 @@
 #include "../components/transform.h"
 #include "../components/sprite.h"
 #include "../components/shape.h"
+#include "../components/collider.h"
+#include "../components/debug.h"
 
 #include "../managers/system.h"
 
@@ -83,6 +85,47 @@ void render_shapes(ecs_iter_t *it)
                 SDL_RenderLine(renderer, x1, y1, x2, y2);
                 SDL_RenderLine(renderer, x2, y2, x3, y3);
                 SDL_RenderLine(renderer, x3, y3, x1, y1);
+                break;
+            }
+        }
+    }
+}
+
+//==============================================================================
+
+void render_colliders(ecs_iter_t *it)
+{
+    const Debug *debug = ecs_singleton_get(it->world, Debug);
+    if (!debug || !debug->show_colliders) return;
+
+    Collider  *collider  = ecs_field(it, Collider,  0);
+    Transform *transform = ecs_field(it, Transform, 1);
+    SDL_Renderer *renderer = get_renderer();
+    SDL_SetRenderDrawColor(renderer, 0, 255, 0, 255);
+
+    for (int i = 0; i < it->count; ++i)
+    {
+        float cx = transform[i].position.x;
+        float cy = transform[i].position.y;
+
+        switch (collider[i].type)
+        {
+            case COLLIDER_RECT:
+            {
+                float hw = collider[i].rect.width  * 0.5f;
+                float hh = collider[i].rect.height * 0.5f;
+                SDL_FRect dst = {cx - hw, cy - hh, collider[i].rect.width, collider[i].rect.height};
+                SDL_RenderRect(renderer, &dst);
+                break;
+            }
+            case COLLIDER_CIRCLE:
+            {
+                float r = collider[i].circle.radius;
+                for (float dy = -r; dy <= r; dy += 1.0f)
+                {
+                    float dx = SDL_sqrtf(r * r - dy * dy);
+                    SDL_RenderLine(renderer, cx - dx, cy + dy, cx + dx, cy + dy);
+                }
                 break;
             }
         }

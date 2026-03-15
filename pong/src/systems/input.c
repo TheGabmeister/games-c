@@ -1,6 +1,7 @@
 #include "../platform.h"
 
 #include "../components/input.h"
+#include "../components/debug.h"
 
 #include "input.h"
 
@@ -26,4 +27,14 @@ void process_input(ecs_iter_t *it)
         input->move_p2 = -1;
     else if (keys[SDL_SCANCODE_DOWN])
         input->move_p2 = 1;
+
+    // F1 toggle debug colliders (edge-triggered)
+    static bool prev_f1 = false;
+    bool f1 = keys[SDL_SCANCODE_F1];
+    if (f1 && !prev_f1)
+    {
+        Debug *debug = ecs_singleton_ensure(it->world, Debug);
+        debug->show_colliders = !debug->show_colliders;
+    }
+    prev_f1 = f1;
 }
