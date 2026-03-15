@@ -9,6 +9,7 @@
 #include "../components/score.h"
 #include "../components/collider.h"
 #include "../components/collision.h"
+#include "../components/label.h"
 #include "component.h"
 
 //==============================================================================
@@ -34,6 +35,7 @@ void component_manager_init(ecs_world_t *world)
     ECS_COMPONENT_DEFINE(world, Score);
     ECS_COMPONENT_DEFINE(world, Collider);
     ECS_COMPONENT_DEFINE(world, Collision);
+    ECS_COMPONENT_DEFINE(world, Label);
     ecs_singleton_set(world, Input, {0});
     ecs_singleton_set(world, Score, {0});
 

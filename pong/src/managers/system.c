@@ -13,6 +13,7 @@
 #include "../components/ball.h"
 #include "../components/collider.h"
 #include "../components/collision.h"
+#include "../components/label.h"
 
 #ifdef DEBUG
 #include "../systems/debug.h"
@@ -41,6 +42,7 @@ void system_manager_init(ecs_world_t *world)
     ECS_SYSTEM(world, render_clear, EcsPreStore, 0);
     ECS_SYSTEM(world, render_shapes, EcsOnStore, [in] Shape, [in] Transform);
     ECS_SYSTEM(world, render_sprites, EcsOnStore, [in] Sprite, [in] Transform);
+    ECS_SYSTEM(world, render_labels, EcsOnStore, [in] Label, [in] Transform);
     ECS_SYSTEM(world, render_colliders, EcsOnStore, [in] Collider, [in] Transform);
     ECS_SYSTEM(world, render_present, EcsPostFrame, 0);
 #ifdef DEBUG

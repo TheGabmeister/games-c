@@ -4,6 +4,7 @@
 #include "../components/sprite.h"
 #include "../components/shape.h"
 #include "../components/collider.h"
+#include "../components/label.h"
 
 #include "../managers/system.h"
 
@@ -134,6 +135,28 @@ void render_colliders(ecs_iter_t *it)
                 break;
             }
         }
+    }
+}
+
+//==============================================================================
+
+void render_labels(ecs_iter_t *it)
+{
+    Label     *label     = ecs_field(it, Label,     0);
+    Transform *transform = ecs_field(it, Transform, 1);
+    SDL_Renderer *renderer = get_renderer();
+
+    for (int i = 0; i < it->count; ++i)
+    {
+        SDL_SetRenderDrawColor(renderer, label[i].color.r, label[i].color.g,
+                               label[i].color.b, label[i].color.a);
+        float s = label[i].scale;
+        if (s <= 0.0f) s = 1.0f;
+        SDL_SetRenderScale(renderer, s, s);
+        float x = transform[i].position.x / s;
+        float y = transform[i].position.y / s;
+        SDL_RenderDebugText(renderer, x, y, label[i].text);
+        SDL_SetRenderScale(renderer, 1.0f, 1.0f);
     }
 }
 

@@ -18,6 +18,8 @@
 #include "components/ball.h"
 #include "components/velocity.h"
 #include "components/collider.h"
+#include "components/label.h"
+#include "components/transform.h"
 #include "managers/system.h"
 #include "managers/input.h"
 
@@ -75,6 +77,15 @@ static void _load_level(void)
     ecs_set(_world, b, Ball,     {.speed = ball_speed, .spawn = ball_spawn});
     ecs_set(_world, b, Velocity, {.value = {ball_speed, ball_speed}});
     ecs_set(_world, b, Collider, {.layer = 1, .mask = 2, .type = COLLIDER_RECT, .rect = {12, 12}});
+
+    // Score labels
+    ecs_entity_t s1 = ecs_new(_world);
+    ecs_set(_world, s1, Label,     {.text = "0", .color = {255, 255, 255, 255}, .scale = 4.0f});
+    ecs_set(_world, s1, Transform, {.position = {WINDOW_WIDTH * 0.25f, 30}});
+
+    ecs_entity_t s2 = ecs_new(_world);
+    ecs_set(_world, s2, Label,     {.text = "0", .color = {255, 255, 255, 255}, .scale = 4.0f});
+    ecs_set(_world, s2, Transform, {.position = {WINDOW_WIDTH * 0.75f, 30}});
 }
 
 void game_init(void)
