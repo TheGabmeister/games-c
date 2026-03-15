@@ -4,6 +4,7 @@
 #include "../components/shape.h"
 #include "../defines.h"
 #include "../event_bus.h"
+#include "../managers/sound.h"
 
 #include "ball.h"
 
@@ -29,7 +30,10 @@ void update_ball(ecs_iter_t *it)
 
         // Wall bounce (top/bottom)
         if (by - bh <= 0 || by + bh >= WINDOW_HEIGHT)
+        {
             velocity[i].value.y = -velocity[i].value.y;
+            event_bus_publish(EVENT_PLAY_SOUND, &(PlaySoundData){ .id = SOUND_BUMP, .volume = 1.0f });
+        }
 
         // Goal (left/right wall) — publish event and respawn
         if (bx - bw <= 0 || bx + bw >= WINDOW_WIDTH)

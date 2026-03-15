@@ -5,6 +5,8 @@
 
 #include <SDL3/SDL.h>
 #include "../defines.h"
+#include "../event_bus.h"
+#include "../managers/sound.h"
 
 #include "collision.h"
 
@@ -201,5 +203,6 @@ void apply_bounce(ecs_iter_t *it)
             velocity[i].value.x = -velocity[i].value.x;
         if (n.y != 0.0f && velocity[i].value.y * n.y < 0.0f)
             velocity[i].value.y = -velocity[i].value.y;
+        event_bus_publish(EVENT_PLAY_SOUND, &(PlaySoundData){ .id = SOUND_BUMP, .volume = 1.0f });
     }
 }
