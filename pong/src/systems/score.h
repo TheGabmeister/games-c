@@ -3,6 +3,7 @@
 
 #include <flecs.h>
 
-void sync_score_labels(ecs_iter_t *it);
+void goal_clear(ecs_iter_t *it);
+void score_observers_init(ecs_world_t *world);
 
 #endif
