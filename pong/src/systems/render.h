@@ -3,15 +3,9 @@
 
 #include <flecs.h>
 
-void refresh_display(ecs_iter_t *it);
-void render_scene(ecs_iter_t *it);
+void render_clear(ecs_iter_t *it);
+void render_present(ecs_iter_t *it);
 void render_shapes(ecs_iter_t *it);
 void render_sprites(ecs_iter_t *it);
-void render_labels(ecs_iter_t *it);
-void render_images(ecs_iter_t *it);
-void render_physical(ecs_iter_t *it);
-void render_viewports(ecs_iter_t *it);
-void composite_display(ecs_iter_t *it);
-void animate(ecs_iter_t *it);
 
 #endif

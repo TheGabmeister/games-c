@@ -28,8 +28,10 @@ void system_manager_init(ecs_world_t *world)
     ECS_SYSTEM(world, debug_input, EcsPostUpdate, [in] Input, [out] Debug);
     ECS_SYSTEM(world, debug_scene, EcsPostUpdate, [in] Scene, [in] Stateful, [out] Debug);
 #endif
+    ECS_SYSTEM(world, render_clear, EcsPreStore, 0);
     ECS_SYSTEM(world, render_shapes, EcsOnStore, [in] Shape, [in] Transform);
     ECS_SYSTEM(world, render_sprites, EcsOnStore, [in] Sprite, [in] Transform);
+    ECS_SYSTEM(world, render_present, EcsPostFrame, 0);
 #ifdef DEBUG
     ECS_SYSTEM(world, debug_physics, EcsOnStore, [in] Physics, [in] Debug, [inout] Viewport);
     ECS_SYSTEM(world, debug_render, EcsOnStore, [in] Label, [in] Debug, DebugTag);

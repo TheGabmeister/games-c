@@ -27,6 +27,20 @@ static inline void _set_tint(SDL_Texture *tex, SDL_Color c)
 }
 
 
+void render_clear(ecs_iter_t *it)
+{
+    SDL_Renderer *renderer = get_renderer();
+    SDL_SetRenderDrawColor(renderer, 0, 0, 0, 255);
+    SDL_RenderClear(renderer);
+}
+
+void render_present(ecs_iter_t *it)
+{
+    SDL_RenderPresent(get_renderer());
+}
+
+//==============================================================================
+
 void render_shapes(ecs_iter_t *it)
 {
     Shape *shape = ecs_field(it, Shape, 0);
