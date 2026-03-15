@@ -14,7 +14,6 @@
 #include "../components/collider.h"
 #include "../components/collision.h"
 #include "../components/label.h"
-#include "../systems/score.h"
 
 #ifdef DEBUG
 #include "../systems/debug.h"
@@ -35,7 +34,6 @@ void system_manager_init(ecs_world_t *world)
    ECS_SYSTEM(world, collision_detect, EcsPostUpdate, 0);
    ECS_SYSTEM(world, apply_bounce,    EcsOnValidate, [inout] Velocity, [in] Collision);
 
-   score_observers_init(world);
 //    ECS_SYSTEM(world, physics_update, EcsOnValidate, [in] Time, [inout] Physics);
 //    ECS_SYSTEM(world, physics_collide, EcsOnValidate, [in] Physics, [inout] Collision);
 #ifdef DEBUG

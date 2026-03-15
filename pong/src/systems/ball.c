@@ -2,7 +2,6 @@
 #include "../components/velocity.h"
 #include "../components/ball.h"
 #include "../components/shape.h"
-#include "../components/goal_scored.h"
 #include "../defines.h"
 
 #include "ball.h"
@@ -31,20 +30,9 @@ void update_ball(ecs_iter_t *it)
         if (by - bh <= 0 || by + bh >= WINDOW_HEIGHT)
             velocity[i].value.y = -velocity[i].value.y;
 
-        // Goal (left/right wall) — emit event and respawn
+        // Goal (left/right wall) — respawn
         if (bx - bw <= 0 || bx + bw >= WINDOW_WIDTH)
         {
-            GoalScored goal = { .player = (bx + bw >= WINDOW_WIDTH) ? 1 : 2 };
-            ecs_enqueue(it->world, &(ecs_event_desc_t){
-                .event = ecs_id(GoalScored),
-                .entity = it->entities[i],
-                .ids = &(ecs_type_t){
-                    .array = (ecs_id_t[]){ ecs_id(GoalScored) },
-                    .count = 1
-                },
-                .param = &goal
-            });
-
             transform[i].position = ball[i].spawn;
             velocity[i].value.x   = -velocity[i].value.x;
         }
