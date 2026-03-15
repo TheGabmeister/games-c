@@ -1,45 +1,20 @@
-#include <SDL3/SDL.h>
-#include <SDL3/SDL_properties.h>
-#include <SDL3_mixer/SDL_mixer.h>
+#include "audio.h"
 
-#include "../components/audible.h"
-#include "../managers/music.h"
+#include "../event_bus.h"
+#include "../managers/sound.h"
 
 //==============================================================================
 
-static bool _audio_ready(void)
+static void _on_play_sound(const void *data)
 {
-  return music_manager_mixer() != NULL;
+    const PlaySoundData *e = data;
+    MIX_Audio *sound = sound_manager_get((SoundName)e->id);
+    sound_manager_play(sound, e->volume);
 }
 
 //------------------------------------------------------------------------------
 
-static float _clamp_gain(float volume)
+void audio_init(void)
 {
-  if (volume < 0.0f)
-    return 0.0f;
-  if (volume > 1.0f)
-    return 1.0f;
-  return volume;
-}
-
-void play_sounds(ecs_iter_t *it)
-{
-    Audible *audible = ecs_field(it, Audible, 0);
-    for (int i = 0; i < it->count; ++i)
-    {
-        sound_manager_play(audible[i].sound, audible[i].volume);
-        ecs_delete(it->world, it->entities[i]);
-    }
-}
-
-//------------------------------------------------------------------------------
-
-
-
-//------------------------------------------------------------------------------
-
-void play_music(ecs_iter_t *it)
-{
-
+    event_bus_subscribe(EVENT_PLAY_SOUND, _on_play_sound);
 }

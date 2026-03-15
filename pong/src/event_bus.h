@@ -3,12 +3,18 @@
 
 typedef enum {
     EVENT_GOAL_SCORED,
+    EVENT_PLAY_SOUND,
     EVENT_COUNT
 } EventType;
 
 typedef struct {
     int player;
 } GoalScoredData;
+
+typedef struct {
+    int   id;      // cast to SoundName
+    float volume;
+} PlaySoundData;
 
 typedef void (*EventCallback)(const void *data);
 

@@ -1,7 +1,6 @@
 #include "../components/transform.h"
 #include "../components/input.h"
 #include "../components/sprite.h"
-#include "../components/audible.h"
 #include "../components/velocity.h"
 #include "../components/shape.h"
 #include "../components/ball.h"
@@ -25,7 +24,6 @@ void component_manager_init(ecs_world_t *world)
     ECS_COMPONENT_DEFINE(world, Transform);
     ECS_COMPONENT_DEFINE(world, Sprite);
     ECS_COMPONENT_DEFINE(world, Input);
-    ECS_COMPONENT_DEFINE(world, Audible);
     ECS_COMPONENT_DEFINE(world, Velocity);
     ECS_COMPONENT_DEFINE(world, Shape);
     ECS_COMPONENT_DEFINE(world, Ball);

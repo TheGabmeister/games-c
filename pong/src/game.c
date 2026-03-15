@@ -24,6 +24,7 @@
 
 #include "event_bus.h"
 #include "score.h"
+#include "systems/audio.h"
 #include "ui.h"
 #include "game.h"
 
@@ -87,6 +88,7 @@ void game_init(void)
     init_window(WINDOW_WIDTH, WINDOW_HEIGHT, GAME_NAME);
     event_bus_init();
     score_init();
+    audio_init();
     _world = ecs_init();
     _init_managers();
     _load_level();
