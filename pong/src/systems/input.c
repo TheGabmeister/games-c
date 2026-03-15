@@ -33,7 +33,7 @@ void process_input(ecs_iter_t *it)
     bool f1 = keys[SDL_SCANCODE_F1];
     if (f1 && !prev_f1)
     {
-        Debug *debug = ecs_singleton_ensure(it->world, Debug);
+        Debug *debug = ecs_singleton_get_mut(it->world, Debug);
         debug->show_colliders = !debug->show_colliders;
     }
     prev_f1 = f1;

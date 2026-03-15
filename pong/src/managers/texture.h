@@ -6,12 +6,12 @@
 
 typedef enum TextureName
 {
-  TEXTURE_LOGO,
-  TEXTURE_SHIP,
-  TEXTURE_BULLET,
-  TEXTURE_SHEEP,
-  TEXTURE_BLIP,
-  MAX_TEXTURES
+    TEXTURE_LOGO,
+    TEXTURE_SHIP,
+    TEXTURE_BULLET,
+    TEXTURE_SHEEP,
+    TEXTURE_BLIP,
+    MAX_TEXTURES
 } TextureName;
 
 void texture_manager_init(ecs_world_t *world);
