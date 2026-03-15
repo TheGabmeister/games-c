@@ -68,7 +68,8 @@ static void _load_level(void)
         .color = {255, 255, 255, 255},
         .rectangle = {12, 12}
     }, (vector2){WINDOW_WIDTH * 0.5f, WINDOW_HEIGHT * 0.5f});
-    ecs_set(_world, b, Ball,     {.speed = ball_speed});
+    vector2 ball_spawn = {WINDOW_WIDTH * 0.5f, WINDOW_HEIGHT * 0.5f};
+    ecs_set(_world, b, Ball,     {.speed = ball_speed, .spawn = ball_spawn});
     ecs_set(_world, b, Velocity, {.value = {ball_speed, ball_speed}});
 }
 

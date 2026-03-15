@@ -31,6 +31,14 @@ void update_ball(ecs_iter_t *it)
         if (by - bh <= 0 || by + bh >= WINDOW_HEIGHT)
             velocity[i].value.y = -velocity[i].value.y;
 
+        // Goal (left/right wall) — respawn at center
+        if (bx - bw <= 0 || bx + bw >= WINDOW_WIDTH)
+        {
+            transform[i].position = ball[i].spawn;
+            velocity[i].value.x   = -velocity[i].value.x;
+            continue;
+        }
+
         // Paddle bounce
         ecs_query_t *q = ecs_query(it->world, {
             .terms = {
