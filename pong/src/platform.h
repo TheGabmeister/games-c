@@ -26,8 +26,6 @@
     #define PLATFORM_API       // Functions defined as 'extern' by default (implicit specifiers)
 #endif
 
-typedef SDL_FRect rectangle;
-typedef SDL_Color color;
 typedef struct { float x, y; } vector2;
 typedef struct { float x, y, z; } vector3;
 typedef struct { float x, y, z, w; } vector4;

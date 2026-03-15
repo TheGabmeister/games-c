@@ -14,6 +14,7 @@
 #include "managers/component.h"
 #include "managers/entity.h"
 #include "components/shape.h"
+#include "components/paddle.h"
 #include "managers/system.h"
 #include "managers/input.h"
 
@@ -54,8 +55,10 @@ static void _load_level(void)
         .rectangle = {20, 80}
     };
 
-    spawn_shape(_world, 0, paddle, (vector2){50, WINDOW_HEIGHT * 0.5f});
-    spawn_shape(_world, 0, paddle, (vector2){WINDOW_WIDTH - 50, WINDOW_HEIGHT * 0.5f});
+    ecs_entity_t p1 = spawn_shape(_world, 0, paddle, (vector2){50, WINDOW_HEIGHT * 0.5f});
+    ecs_entity_t p2 = spawn_shape(_world, 0, paddle, (vector2){WINDOW_WIDTH - 50, WINDOW_HEIGHT * 0.5f});
+    ecs_set(_world, p1, Paddle, {.player = 1});
+    ecs_set(_world, p2, Paddle, {.player = 2});
 }
 
 void game_init(void)

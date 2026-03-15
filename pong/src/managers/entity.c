@@ -34,7 +34,7 @@ ecs_entity_t spawn_debug(ecs_world_t *world, const char *text)
 
 //------------------------------------------------------------------------------
 
-ecs_entity_t spawn_entity(ecs_world_t *world, ecs_entity_t parent, TextureName id, float scale, vector2 position, color tint)
+ecs_entity_t spawn_entity(ecs_world_t *world, ecs_entity_t parent, TextureName id, float scale, vector2 position, SDL_Color tint)
 {
     ecs_entity_t entity = ecs_new(world);
     SDL_Texture *texture = texture_manager_get(id);

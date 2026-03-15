@@ -15,12 +15,12 @@
 // Helpers
 //==============================================================================
 
-static inline rectangle _sdl_rect(rectangle r)
+static inline SDL_FRect _sdl_rect(SDL_FRect r)
 {
-  return (rectangle){r.x, r.y, r.w, r.h};
+  return (SDL_FRect){r.x, r.y, r.w, r.h};
 }
 
-static inline void _set_tint(SDL_Texture *tex, color c)
+static inline void _set_tint(SDL_Texture *tex, SDL_Color c)
 {
     SDL_SetTextureColorMod(tex, c.r, c.g, c.b);
     SDL_SetTextureAlphaMod(tex, c.a);
@@ -41,7 +41,7 @@ void render_shapes(ecs_iter_t *it)
             {
                 float w = shape[i].rectangle.width;
                 float h = shape[i].rectangle.height;
-                rectangle dst = {spatial[i].position.x - w * 0.5f, spatial[i].position.y - h * 0.5f, w, h};
+                SDL_FRect dst = {spatial[i].position.x - w * 0.5f, spatial[i].position.y - h * 0.5f, w, h};
                 SDL_RenderFillRect(renderer, &dst);
                 break;
             }
@@ -84,10 +84,10 @@ void render_sprites(ecs_iter_t *it)
     SDL_Renderer *renderer = get_renderer();
     for (int i = 0; i < it->count; ++i)
     {
-      rectangle src = _sdl_rect(sprite[i].src);
+      SDL_FRect src = _sdl_rect(sprite[i].src);
       float w = sprite[i].scale * sprite[i].src.w;
       float h = sprite[i].scale * sprite[i].src.h;
-      rectangle dst = {spatial[i].position.x - w * 0.5f, spatial[i].position.y - h * 0.5f, w, h};
+      SDL_FRect dst = {spatial[i].position.x - w * 0.5f, spatial[i].position.y - h * 0.5f, w, h};
       SDL_RenderTextureRotated(renderer, sprite[i].texture, &src, &dst, spatial[i].rotation, NULL, SDL_FLIP_NONE);
     }
 }
