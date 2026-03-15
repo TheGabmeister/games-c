@@ -18,12 +18,11 @@
 #include "components/ball.h"
 #include "components/velocity.h"
 #include "components/collider.h"
-#include "components/label.h"
-#include "components/score_label.h"
 #include "components/transform.h"
 #include "managers/system.h"
 #include "managers/input.h"
 
+#include "ui.h"
 #include "game.h"
 
 //==============================================================================
@@ -79,16 +78,6 @@ static void _load_level(void)
     ecs_set(_world, b, Velocity, {.value = {ball_speed, ball_speed}});
     ecs_set(_world, b, Collider, {.layer = 1, .mask = 2, .type = COLLIDER_RECT, .rect = {12, 12}});
 
-    // Score labels
-    ecs_entity_t s1 = ecs_new(_world);
-    ecs_set(_world, s1, Label,      {.text = "0", .color = {255, 255, 255, 255}, .scale = 4.0f});
-    ecs_set(_world, s1, Transform,  {.position = {WINDOW_WIDTH * 0.25f, 30}});
-    ecs_set(_world, s1, ScoreLabel, {.player = 1});
-
-    ecs_entity_t s2 = ecs_new(_world);
-    ecs_set(_world, s2, Label,      {.text = "0", .color = {255, 255, 255, 255}, .scale = 4.0f});
-    ecs_set(_world, s2, Transform,  {.position = {WINDOW_WIDTH * 0.75f, 30}});
-    ecs_set(_world, s2, ScoreLabel, {.player = 2});
 }
 
 void game_init(void)
@@ -126,6 +115,8 @@ void game_loop(void)
 
         float delta = get_delta_time();
         running = ecs_progress(_world, delta);
+        ui_render(_world);
+        SDL_RenderPresent(get_renderer());
         time += delta;
 
         //ecs_entities_t entities = ecs_get_entities(_world);

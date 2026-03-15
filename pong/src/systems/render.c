@@ -43,12 +43,6 @@ void render_clear(ecs_iter_t *it)
     SDL_RenderClear(renderer);
 }
 
-void render_present(ecs_iter_t *it)
-{
-    SDL_RenderPresent(get_renderer());
-}
-
-//==============================================================================
 
 void render_shapes(ecs_iter_t *it)
 {
@@ -138,29 +132,6 @@ void render_colliders(ecs_iter_t *it)
     }
 }
 
-//==============================================================================
-
-void render_labels(ecs_iter_t *it)
-{
-    Label     *label     = ecs_field(it, Label,     0);
-    Transform *transform = ecs_field(it, Transform, 1);
-    SDL_Renderer *renderer = get_renderer();
-
-    for (int i = 0; i < it->count; ++i)
-    {
-        SDL_SetRenderDrawColor(renderer, label[i].color.r, label[i].color.g,
-                               label[i].color.b, label[i].color.a);
-        float s = label[i].scale;
-        if (s <= 0.0f) s = 1.0f;
-        SDL_SetRenderScale(renderer, s, s);
-        float x = transform[i].position.x / s;
-        float y = transform[i].position.y / s;
-        SDL_RenderDebugText(renderer, x, y, label[i].text);
-        SDL_SetRenderScale(renderer, 1.0f, 1.0f);
-    }
-}
-
-//==============================================================================
 
 void render_sprites(ecs_iter_t *it)
 {
