@@ -13,6 +13,7 @@
 #include "managers/music.h"
 #include "managers/component.h"
 #include "managers/entity.h"
+#include "components/shape.h"
 #include "managers/system.h"
 #include "managers/input.h"
 
@@ -45,11 +46,24 @@ static inline void _init_managers(void)
 }
 
 
+static void _load_level(void)
+{
+    Shape paddle = {
+        .type = SHAPE_RECTANGLE,
+        .color = {255, 255, 255, 255},
+        .rectangle = {20, 80}
+    };
+
+    spawn_shape(_world, 0, paddle, (vector2){50, WINDOW_HEIGHT * 0.5f});
+    spawn_shape(_world, 0, paddle, (vector2){WINDOW_WIDTH - 50, WINDOW_HEIGHT * 0.5f});
+}
+
 void game_init(void)
 {
     init_window(WINDOW_WIDTH, WINDOW_HEIGHT, GAME_NAME);
     _world = ecs_init();
     _init_managers();
+    _load_level();
 }
 
 //------------------------------------------------------------------------------
