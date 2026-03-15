@@ -1,6 +1,6 @@
 #include "ui.h"
 
-#include "components/score.h"
+#include "score.h"
 #include "platform.h"
 #include "defines.h"
 
@@ -8,9 +8,9 @@
 
 //==============================================================================
 
-void ui_render(ecs_world_t *world)
+void ui_render(void)
 {
-    const Score *score = ecs_singleton_get(world, Score);
+    const Score *score = score_get();
     SDL_Renderer *renderer = get_renderer();
 
     float scale = 4.0f;

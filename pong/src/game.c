@@ -22,6 +22,8 @@
 #include "managers/system.h"
 #include "managers/input.h"
 
+#include "event_bus.h"
+#include "score.h"
 #include "ui.h"
 #include "game.h"
 
@@ -83,6 +85,8 @@ static void _load_level(void)
 void game_init(void)
 {
     init_window(WINDOW_WIDTH, WINDOW_HEIGHT, GAME_NAME);
+    event_bus_init();
+    score_init();
     _world = ecs_init();
     _init_managers();
     _load_level();
@@ -115,7 +119,7 @@ void game_loop(void)
 
         float delta = get_delta_time();
         running = ecs_progress(_world, delta);
-        ui_render(_world);
+        ui_render();
         SDL_RenderPresent(get_renderer());
         time += delta;
 
