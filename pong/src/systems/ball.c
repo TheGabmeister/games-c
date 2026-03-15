@@ -4,6 +4,7 @@
 #include "../components/shape.h"
 #include "../defines.h"
 #include "../event_bus.h"
+#include "../managers/audio.h"
 
 #include "ball.h"
 

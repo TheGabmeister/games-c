@@ -9,8 +9,7 @@
 
 
 #include "managers/texture.h"
-#include "managers/sound.h"
-#include "managers/music.h"
+#include "managers/audio.h"
 #include "managers/component.h"
 #include "managers/entity.h"
 #include "components/shape.h"
@@ -24,7 +23,6 @@
 
 #include "event_bus.h"
 #include "score.h"
-#include "systems/audio.h"
 #include "ui.h"
 #include "game.h"
 
@@ -38,8 +36,6 @@ static inline void _init_managers(void)
 {
   
     texture_manager_init(_world);
-    sound_manager_init(_world);
-    music_manager_init(_world);
     //font_manager_init(_world);
     //data_manager_init(_world);
     component_manager_init(_world);
@@ -88,7 +84,7 @@ void game_init(void)
     init_window(WINDOW_WIDTH, WINDOW_HEIGHT, GAME_NAME);
     event_bus_init();
     score_init();
-    audio_init();
+    audio_init();  // opens mixer, loads sounds, subscribes to events
     _world = ecs_init();
     _init_managers();
     _load_level();
@@ -135,5 +131,6 @@ void game_fini(void)
 {
     ecs_fini(_world);
     _world = NULL;
+    audio_fini();
     close_window();    // SDL_Quit called last, after mixer is already destroyed
 }
