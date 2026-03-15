@@ -14,7 +14,6 @@
 #include "../components/collider.h"
 #include "../components/collision.h"
 #include "../components/label.h"
-#include "../components/goal_scored.h"
 #include "../systems/score.h"
 
 #ifdef DEBUG
@@ -31,7 +30,6 @@ void system_manager_init(ecs_world_t *world)
     ecs_atfini(world, _fini, NULL);
    ECS_SYSTEM(world, process_input,    EcsOnLoad,     [out] Input);
    ECS_SYSTEM(world, collision_clear,  EcsPreUpdate,  [in]  Collision);
-   ECS_SYSTEM(world, goal_clear,      EcsPreUpdate,  [in]  GoalScored);
    ECS_SYSTEM(world, move_paddles,    EcsOnUpdate,   [in]  Paddle,    [inout] Transform);
    ECS_SYSTEM(world, update_ball,     EcsOnUpdate,   [inout] Transform, [inout] Velocity, [in] Ball, [in] Shape);
    ECS_SYSTEM(world, collision_detect, EcsPostUpdate, 0);

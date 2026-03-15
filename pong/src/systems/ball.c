@@ -34,8 +34,16 @@ void update_ball(ecs_iter_t *it)
         // Goal (left/right wall) — emit event and respawn
         if (bx - bw <= 0 || bx + bw >= WINDOW_WIDTH)
         {
-            int scorer = (bx + bw >= WINDOW_WIDTH) ? 1 : 2;
-            ecs_set(it->world, it->entities[i], GoalScored, { .player = scorer });
+            GoalScored goal = { .player = (bx + bw >= WINDOW_WIDTH) ? 1 : 2 };
+            ecs_enqueue(it->world, &(ecs_event_desc_t){
+                .event = ecs_id(GoalScored),
+                .entity = it->entities[i],
+                .ids = &(ecs_type_t){
+                    .array = (ecs_id_t[]){ ecs_id(GoalScored) },
+                    .count = 1
+                },
+                .param = &goal
+            });
 
             transform[i].position = ball[i].spawn;
             velocity[i].value.x   = -velocity[i].value.x;
