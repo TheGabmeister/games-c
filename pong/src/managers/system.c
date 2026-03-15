@@ -1,5 +1,6 @@
 #include "system.h"
 
+#include "../components/shape.h"
 #include "../systems/render.h"
 #include "../systems/input.h"
 #include "../systems/audio.h"
@@ -23,6 +24,7 @@ void system_manager_init(ecs_world_t *world)
     ECS_SYSTEM(world, debug_input, EcsPostUpdate, [in] Input, [out] Debug);
     ECS_SYSTEM(world, debug_scene, EcsPostUpdate, [in] Scene, [in] Stateful, [out] Debug);
 #endif
+    ECS_SYSTEM(world, render_shapes, EcsOnStore, [in] Shape, [in] Transform);
     ECS_SYSTEM(world, render_sprites, EcsOnStore, [in] Sprite, [in] Transform);
 #ifdef DEBUG
     ECS_SYSTEM(world, debug_physics, EcsOnStore, [in] Physics, [in] Debug, [inout] Viewport);
