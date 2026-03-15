@@ -9,6 +9,7 @@ typedef enum SoundName
     SOUND_KRANZKY,
     SOUND_SHOOT,
     SOUND_BOOM,
+    SOUND_BUMP,
     MAX_SOUNDS
 } SoundName;
 
