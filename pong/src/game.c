@@ -15,6 +15,8 @@
 #include "managers/entity.h"
 #include "components/shape.h"
 #include "components/paddle.h"
+#include "components/ball.h"
+#include "components/velocity.h"
 #include "managers/system.h"
 #include "managers/input.h"
 
@@ -59,6 +61,15 @@ static void _load_level(void)
     ecs_entity_t p2 = spawn_shape(_world, 0, paddle, (vector2){WINDOW_WIDTH - 50, WINDOW_HEIGHT * 0.5f});
     ecs_set(_world, p1, Paddle, {.player = 1});
     ecs_set(_world, p2, Paddle, {.player = 2});
+
+    float ball_speed = 400.0f;
+    ecs_entity_t b = spawn_shape(_world, 0, (Shape){
+        .type = SHAPE_RECTANGLE,
+        .color = {255, 255, 255, 255},
+        .rectangle = {12, 12}
+    }, (vector2){WINDOW_WIDTH * 0.5f, WINDOW_HEIGHT * 0.5f});
+    ecs_set(_world, b, Ball,     {.speed = ball_speed});
+    ecs_set(_world, b, Velocity, {.value = {ball_speed, ball_speed}});
 }
 
 void game_init(void)

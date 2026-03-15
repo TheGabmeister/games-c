@@ -5,8 +5,11 @@
 #include "../systems/input.h"
 #include "../systems/audio.h"
 #include "../systems/paddle.h"
+#include "../systems/ball.h"
 #include "../components/paddle.h"
 #include "../components/transform.h"
+#include "../components/velocity.h"
+#include "../components/ball.h"
 
 #ifdef DEBUG
 #include "../systems/debug.h"
@@ -22,6 +25,7 @@ void system_manager_init(ecs_world_t *world)
     ecs_atfini(world, _fini, NULL);
    ECS_SYSTEM(world, process_input, EcsOnLoad, [out] Input);
    ECS_SYSTEM(world, move_paddles, EcsOnUpdate, [in] Paddle, [inout] Transform);
+   ECS_SYSTEM(world, update_ball,  EcsOnUpdate, [inout] Transform, [inout] Velocity, [in] Ball);
 //    ECS_SYSTEM(world, physics_update, EcsOnValidate, [in] Time, [inout] Physics);
 //    ECS_SYSTEM(world, physics_collide, EcsOnValidate, [in] Physics, [inout] Collision);
 #ifdef DEBUG
