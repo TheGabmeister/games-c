@@ -16,6 +16,5 @@ typedef enum TextureName
 
 void texture_manager_init(ecs_world_t *world);
 SDL_Texture *texture_manager_get(TextureName id);
-SDL_Texture *texture_manager_playfield(void);
 
 #endif

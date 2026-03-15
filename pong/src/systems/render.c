@@ -4,7 +4,6 @@
 #include "../components/sprite.h"
 #include "../components/shape.h"
 
-#include "../managers/texture.h"
 #include "../managers/system.h"
 
 #include <SDL3/SDL.h>
@@ -33,8 +32,6 @@ void render_shapes(ecs_iter_t *it)
     Shape *shape = ecs_field(it, Shape, 0);
     Transform *spatial = ecs_field(it, Transform, 1);
     SDL_Renderer *renderer = get_renderer();
-    SDL_Texture *playfield = texture_manager_playfield();
-    SDL_SetRenderTarget(renderer, playfield);
     for (int i = 0; i < it->count; ++i)
     {
         SDL_SetRenderDrawColor(renderer, shape[i].color.r, shape[i].color.g, shape[i].color.b, shape[i].color.a);
@@ -76,7 +73,6 @@ void render_shapes(ecs_iter_t *it)
             }
         }
     }
-    SDL_SetRenderTarget(renderer, NULL);
 }
 
 //==============================================================================
@@ -86,8 +82,6 @@ void render_sprites(ecs_iter_t *it)
     Sprite *sprite = ecs_field(it, Sprite, 0);
     Transform *spatial = ecs_field(it, Transform, 1);
     SDL_Renderer *renderer = get_renderer();
-    SDL_Texture *playfield = texture_manager_playfield();
-    SDL_SetRenderTarget(renderer, playfield);
     for (int i = 0; i < it->count; ++i)
     {
       rectangle src = _sdl_rect(sprite[i].src);
@@ -96,5 +90,4 @@ void render_sprites(ecs_iter_t *it)
       rectangle dst = {spatial[i].position.x - w * 0.5f, spatial[i].position.y - h * 0.5f, w, h};
       SDL_RenderTextureRotated(renderer, sprite[i].texture, &src, &dst, spatial[i].rotation, NULL, SDL_FLIP_NONE);
     }
-    SDL_SetRenderTarget(renderer, NULL);
 }
