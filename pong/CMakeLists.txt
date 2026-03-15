@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.20)
-project(pacman C)
+project(pong C)
 
 set(CMAKE_C_STANDARD 11)
 set(CMAKE_C_STANDARD_REQUIRED ON)
@@ -60,9 +60,6 @@ add_executable(${PROJECT_NAME}
     ${MY_SOURCES}
     )
 
-target_include_directories(${PROJECT_NAME} PRIVATE
-    vendor/nuklear
-)
 target_link_libraries(${PROJECT_NAME} PRIVATE
     SDL3::SDL3
     SDL3_mixer::SDL3_mixer
