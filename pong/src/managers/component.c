@@ -24,5 +24,4 @@ void component_manager_init(ecs_world_t *world)
 
     ecs_add_id(world, ecs_id(Input), EcsSingleton);
 
-
 }

@@ -47,7 +47,7 @@ static inline void _init_managers(void)
 
 void game_init(void)
 {
-    init_window(600, 800, "PAC-MAN");
+    init_window(800, 600, "PONG");
     _world = ecs_init();
     _init_managers();
 }
