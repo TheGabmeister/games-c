@@ -26,29 +26,6 @@ set(SDLMIXER_VOC               OFF)
 set(SDLMIXER_AU                OFF)
 add_subdirectory(vendor/sdl_mixer)
 
-# SDL_image: JPEG (stb), PNG, TIFF only
-set(SDLIMAGE_VENDORED        ON)
-set(SDLIMAGE_BACKEND_STB     ON)
-set(SDLIMAGE_ANI             OFF)
-set(SDLIMAGE_AVIF            OFF)
-set(SDLIMAGE_BMP             ON)
-set(SDLIMAGE_GIF             OFF)
-set(SDLIMAGE_JPG             ON)
-set(SDLIMAGE_JXL             OFF)
-set(SDLIMAGE_LBM             OFF)
-set(SDLIMAGE_PCX             OFF)
-set(SDLIMAGE_PNG             ON)
-set(SDLIMAGE_PNM             OFF)
-set(SDLIMAGE_QOI             OFF)
-set(SDLIMAGE_SVG             OFF)
-set(SDLIMAGE_TGA             OFF)
-set(SDLIMAGE_TIF             OFF)
-set(SDLIMAGE_WEBP            OFF)
-set(SDLIMAGE_XCF             OFF)
-set(SDLIMAGE_XPM             OFF)
-set(SDLIMAGE_XV              OFF)
-add_subdirectory(vendor/sdl_image)
-
 # SDL_ttf: TrueType only
 set(SDLTTF_HARFBUZZ   OFF CACHE BOOL "" FORCE)
 set(SDLTTF_PLUTOSVG   OFF CACHE BOOL "" FORCE)
@@ -63,7 +40,6 @@ add_executable(${PROJECT_NAME}
 target_link_libraries(${PROJECT_NAME} PRIVATE
     SDL3::SDL3
     SDL3_mixer::SDL3_mixer
-    SDL3_image::SDL3_image
     SDL3_ttf::SDL3_ttf
     flecs::flecs_static
 )
@@ -74,7 +50,6 @@ if(WIN32)
         COMMAND ${CMAKE_COMMAND} -E copy_if_different
             $<TARGET_FILE:SDL3::SDL3>
             $<TARGET_FILE:SDL3_mixer::SDL3_mixer>
-            $<TARGET_FILE:SDL3_image::SDL3_image>
             $<TARGET_FILE:SDL3_ttf::SDL3_ttf>
             $<TARGET_FILE_DIR:${PROJECT_NAME}>
     )

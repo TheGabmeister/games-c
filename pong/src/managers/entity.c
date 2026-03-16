@@ -33,20 +33,6 @@ ecs_entity_t spawn_debug(ecs_world_t *world, const char *text)
 
 //------------------------------------------------------------------------------
 
-ecs_entity_t spawn_entity(ecs_world_t *world, ecs_entity_t parent, TextureName id, float scale, vector2 position, SDL_Color tint)
-{
-    ecs_entity_t entity = ecs_new(world);
-    SDL_Texture *texture = texture_manager_get(id);
-    float tex_w, tex_h;
-    SDL_GetTextureSize(texture, &tex_w, &tex_h);
-    ecs_set(world, entity, Sprite, {.texture = texture, .scale = scale, .src = (SDL_FRect){0, 0, tex_w, tex_h}});
-    ecs_set(world, entity, Transform, {.position = position});
-    ecs_add_pair(world, entity, EcsChildOf, parent);
-    return entity;
-}
-
-//------------------------------------------------------------------------------
-
 ecs_entity_t spawn_shape(ecs_world_t *world, ecs_entity_t parent, Shape shape, vector2 position)
 {
     ecs_entity_t entity = ecs_new(world);

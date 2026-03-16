@@ -3,12 +3,9 @@
 #include "platform.h"
 #include <flecs.h>
 #include <SDL3/SDL.h>
-#include <SDL3_image/SDL_image.h>
 
 #include "components/input.h"
 
-
-#include "managers/texture.h"
 #include "managers/audio.h"
 #include "managers/component.h"
 #include "managers/entity.h"
@@ -34,18 +31,9 @@ static ecs_world_t *_world = NULL;
 
 static inline void _init_managers(void)
 {
-  
-    texture_manager_init(_world);
-    //font_manager_init(_world);
-    //data_manager_init(_world);
     component_manager_init(_world);
     input_manager_init(_world);
     entity_manager_init(_world);
-    //debug_manager_init(_world);
-    //settings_manager_init(_world);
-    
-    //gui_manager_init(_world);
-    //physics_manager_init(_world);
     system_manager_init(_world);
     
 }
