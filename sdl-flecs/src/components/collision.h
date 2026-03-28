@@ -2,7 +2,7 @@
 #define COLLISION_COMPONENT_H
 
 #include <flecs.h>
-#include <engine.h>
+#include "platform.h"
 
 #include "physical.h"
 

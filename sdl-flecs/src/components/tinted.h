@@ -2,7 +2,7 @@
 #define TINTED_COMPONENT_H
 
 #include <flecs.h>
-#include <engine.h>
+#include "platform.h"
 
 typedef struct Tinted
 {

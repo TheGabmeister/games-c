@@ -2,7 +2,7 @@
 #define ENTITY_MANAGER_H
 
 #include <flecs.h>
-#include <engine.h>
+#include "platform.h"
 
 #include "../components/scene.h"
 #include "../components/label.h"

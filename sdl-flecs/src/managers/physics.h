@@ -2,7 +2,7 @@
 #define PHYSICS_MANAGER_H
 
 #include <flecs.h>
-#include <engine.h>
+#include "platform.h"
 
 #include "../components/physics.h"
 

@@ -1,4 +1,4 @@
-#include <engine.h>
+#include "platform.h"
 #include <SDL3/SDL.h>
 #include "../components/spatial.h"
 #include "../components/tinted.h"

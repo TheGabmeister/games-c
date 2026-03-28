@@ -2,7 +2,7 @@
 #define VIEWPORT_COMPONENT_H
 
 #include <flecs.h>
-#include <engine.h>
+#include "platform.h"
 #include <SDL3/SDL.h>
 
 typedef struct Viewport

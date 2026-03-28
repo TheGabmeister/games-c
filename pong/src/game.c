@@ -35,7 +35,6 @@ static inline void _init_managers(void)
     input_manager_init(_world);
     entity_manager_init(_world);
     system_manager_init(_world);
-    
 }
 
 

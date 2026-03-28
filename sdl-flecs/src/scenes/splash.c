@@ -1,5 +1,5 @@
 #include "splash.h"
-#include <engine.h>
+#include "platform.h"
 #include "../systems/scene.h"
 
 #include "../managers/entity.h"
