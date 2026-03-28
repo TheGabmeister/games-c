@@ -15,7 +15,8 @@ static MIX_Audio *_sounds[SOUND_COUNT];
 static void _on_play_sound(const void *data)
 {
     const PlaySoundData *e = data;
-    if (e->id < 0 || e->id >= SOUND_COUNT) return;
+    if (!_mixer || !e || e->id < 0 || e->id >= SOUND_COUNT) return;
+    if (!_sounds[e->id]) return;
     MIX_PlayAudio(_mixer, _sounds[e->id]);
 }
 
@@ -47,10 +48,18 @@ void audio_fini(void)
 {
     for (int i = 0; i < SOUND_COUNT; i++)
     {
-        MIX_DestroyAudio(_sounds[i]);
-        _sounds[i] = NULL;
+        if (_sounds[i])
+        {
+            MIX_DestroyAudio(_sounds[i]);
+            _sounds[i] = NULL;
+        }
     }
-    MIX_DestroyMixer(_mixer);
-    _mixer = NULL;
+
+    if (_mixer)
+    {
+        MIX_DestroyMixer(_mixer);
+        _mixer = NULL;
+    }
+
     MIX_Quit();
 }

@@ -134,6 +134,7 @@ void collision_detect(ecs_iter_t *it)
     // Collect all collidable entities
     _Entry entries[MAX_COLLIDABLES];
     int count = 0;
+    bool overflow = false;
 
     ecs_iter_t qit = ecs_query_iter(it->world, _q);
     while (ecs_query_next(&qit))
@@ -141,8 +142,14 @@ void collision_detect(ecs_iter_t *it)
         Transform *t = ecs_field(&qit, Transform, 0);
         Collider  *c = ecs_field(&qit, Collider,  1);
 
-        for (int i = 0; i < qit.count && count < MAX_COLLIDABLES; ++i)
+        for (int i = 0; i < qit.count; ++i)
         {
+            if (count >= MAX_COLLIDABLES)
+            {
+                overflow = true;
+                break;
+            }
+
             _Entry e = {
                 .entity = qit.entities[i],
                 .x      = t[i].position.x,
@@ -165,6 +172,15 @@ void collision_detect(ecs_iter_t *it)
 
             entries[count++] = e;
         }
+
+        if (overflow)
+            break;
+    }
+
+    if (overflow) {
+        SDL_LogWarn(SDL_LOG_CATEGORY_APPLICATION,
+                    "collision_detect: collider count exceeded MAX_COLLIDABLES (%d); extra colliders were skipped",
+                    MAX_COLLIDABLES);
     }
 
     // Test all pairs

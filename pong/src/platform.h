@@ -38,7 +38,7 @@ typedef struct camera {
     float zoom;             
 } camera;
 
-void init_window(int width, int height, const char *title);  
+bool init_window(int width, int height, const char *title);
 void close_window(void);                                     
 bool is_window_ready(void);
 float get_delta_time(void);

@@ -13,35 +13,39 @@ typedef struct Globals {
 
 } Globals;
 
-Globals GLOBALS = { 0 };   
+static Globals GLOBALS = { 0 };
 
-void init_window(int width, int height, const char *title)
+static void _reset_globals(void)
 {
-    GLOBALS.window   = NULL;
-    GLOBALS.renderer = NULL;
+    GLOBALS = (Globals){0};
+}
+
+bool init_window(int width, int height, const char *title)
+{
+    _reset_globals();
 
     if (!SDL_Init(SDL_INIT_VIDEO | SDL_INIT_AUDIO)) {
         SDL_Log("SDL_Init failed: %s", SDL_GetError());
-        return;
+        return false;
     }
 
     GLOBALS.window = SDL_CreateWindow(title, width, height, 0);
     if (!GLOBALS.window) {
         SDL_Log("SDL_CreateWindow failed: %s", SDL_GetError());
-        SDL_Quit();
-        return;
+        close_window();
+        return false;
     }
 
     GLOBALS.renderer = SDL_CreateRenderer(GLOBALS.window, NULL);
     if (!GLOBALS.renderer) {
         SDL_Log("SDL_CreateRenderer failed: %s", SDL_GetError());
-        SDL_DestroyWindow(GLOBALS.window);
-        SDL_Quit();
-        return;
+        close_window();
+        return false;
     }
 
     GLOBALS.ready = true;
     GLOBALS.previous_ticks_ns = SDL_GetTicksNS();
+    return true;
 }
 
 void close_window(void)
@@ -53,9 +57,7 @@ void close_window(void)
         SDL_DestroyWindow(GLOBALS.window);
     }
 
-    GLOBALS.renderer = NULL;
-    GLOBALS.window = NULL;
-
+    _reset_globals();
     SDL_Quit();
 }
 

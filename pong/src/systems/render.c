@@ -21,12 +21,6 @@ static inline SDL_FRect _sdl_rect(SDL_FRect r)
   return (SDL_FRect){r.x, r.y, r.w, r.h};
 }
 
-static inline void _set_tint(SDL_Texture *tex, SDL_Color c)
-{
-    SDL_SetTextureColorMod(tex, c.r, c.g, c.b);
-    SDL_SetTextureAlphaMod(tex, c.a);
-}
-
 
 static bool _show_colliders = false;
 
@@ -37,6 +31,7 @@ void toggle_show_colliders(void)
 
 void render_clear(ecs_iter_t *it)
 {
+    (void)it;
     SDL_Renderer *renderer = get_renderer();
     SDL_SetRenderDrawColor(renderer, 0, 0, 0, 255);
     SDL_RenderClear(renderer);

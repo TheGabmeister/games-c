@@ -2,7 +2,9 @@
 
 int main(void)
 {
-    game_init();
+    if (!game_init())
+        return 1;
+
     game_loop();
     game_fini();
     return 0;

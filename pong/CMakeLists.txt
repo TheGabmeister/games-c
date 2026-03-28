@@ -37,6 +37,23 @@ add_executable(${PROJECT_NAME}
     ${MY_SOURCES}
     )
 
+if(MSVC)
+    target_compile_options(${PROJECT_NAME} PRIVATE /W4 /permissive-)
+else()
+    target_compile_options(${PROJECT_NAME} PRIVATE -Wall -Wextra -Wpedantic)
+endif()
+
+option(PONG_ENABLE_ASAN "Enable AddressSanitizer for the pong target" OFF)
+if(PONG_ENABLE_ASAN)
+    if(MSVC)
+        target_compile_options(${PROJECT_NAME} PRIVATE /fsanitize=address)
+        target_link_options(${PROJECT_NAME} PRIVATE /INCREMENTAL:NO /fsanitize=address)
+    else()
+        target_compile_options(${PROJECT_NAME} PRIVATE -fsanitize=address -fno-omit-frame-pointer)
+        target_link_options(${PROJECT_NAME} PRIVATE -fsanitize=address)
+    endif()
+endif()
+
 target_link_libraries(${PROJECT_NAME} PRIVATE
     SDL3::SDL3
     SDL3_mixer::SDL3_mixer

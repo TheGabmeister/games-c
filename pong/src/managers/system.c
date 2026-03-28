@@ -17,14 +17,8 @@
 #include "../systems/debug.h"
 #endif
 
-static void _fini(ecs_world_t *world, void *context)
-{
-}
-
-
 void system_manager_init(ecs_world_t *world)
 {
-    ecs_atfini(world, _fini, NULL);
    ECS_SYSTEM(world, process_input,    EcsOnLoad,     [out] Input);
    ECS_SYSTEM(world, collision_clear,  EcsPreUpdate,  [in]  Collision);
    ECS_SYSTEM(world, move_paddles,    EcsOnUpdate,   [in]  Paddle,    [inout] Transform);

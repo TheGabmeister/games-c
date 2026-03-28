@@ -46,15 +46,15 @@ static void _load_level(void)
         .rectangle = {20, 80}
     };
 
-    ecs_entity_t p1 = spawn_shape(_world, 0, paddle, (vector2){50, WINDOW_HEIGHT * 0.5f});
-    ecs_entity_t p2 = spawn_shape(_world, 0, paddle, (vector2){WINDOW_WIDTH - 50, WINDOW_HEIGHT * 0.5f});
+    ecs_entity_t p1 = entity_manager_spawn_shape(_world, 0, paddle, (vector2){50, WINDOW_HEIGHT * 0.5f});
+    ecs_entity_t p2 = entity_manager_spawn_shape(_world, 0, paddle, (vector2){WINDOW_WIDTH - 50, WINDOW_HEIGHT * 0.5f});
     ecs_set(_world, p1, Paddle,   {.player = 1});
     ecs_set(_world, p2, Paddle,   {.player = 2});
     ecs_set(_world, p1, Collider, {.layer = 2, .mask = 1, .type = COLLIDER_RECT, .rect = {20, 80}});
     ecs_set(_world, p2, Collider, {.layer = 2, .mask = 1, .type = COLLIDER_RECT, .rect = {20, 80}});
 
     float ball_speed = 400.0f;
-    ecs_entity_t b = spawn_shape(_world, 0, (Shape){
+    ecs_entity_t b = entity_manager_spawn_shape(_world, 0, (Shape){
         .type = SHAPE_RECTANGLE,
         .color = {255, 255, 255, 255},
         .rectangle = {12, 12}
@@ -66,15 +66,26 @@ static void _load_level(void)
 
 }
 
-void game_init(void)
+bool game_init(void)
 {
-    init_window(WINDOW_WIDTH, WINDOW_HEIGHT, GAME_NAME);
+    if (!init_window(WINDOW_WIDTH, WINDOW_HEIGHT, GAME_NAME))
+        return false;
+
     event_bus_init();
     score_init();
     audio_init();  // opens mixer, loads sounds, subscribes to events
     _world = ecs_init();
+    if (!_world)
+    {
+        SDL_Log("ecs_init failed");
+        audio_fini();
+        close_window();
+        return false;
+    }
+
     _init_managers();
     _load_level();
+    return true;
 }
 
 //------------------------------------------------------------------------------
@@ -83,9 +94,8 @@ void game_loop(void)
 {
     SDL_Event event;
     bool running = true;
-    float time = 0;
 
-    if (!is_window_ready())
+    if (!is_window_ready() || !_world)
         return;
 
     while (running)
@@ -106,7 +116,6 @@ void game_loop(void)
         running = ecs_progress(_world, delta);
         ui_render();
         SDL_RenderPresent(get_renderer());
-        time += delta;
 
         //ecs_entities_t entities = ecs_get_entities(_world);
         //SDL_Log("%d", entities.count);
@@ -116,8 +125,11 @@ void game_loop(void)
 
 void game_fini(void)
 {
-    ecs_fini(_world);
-    _world = NULL;
+    if (_world)
+    {
+        ecs_fini(_world);
+        _world = NULL;
+    }
     audio_fini();
     close_window();    // SDL_Quit called last, after mixer is already destroyed
 }
