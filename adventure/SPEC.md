@@ -36,6 +36,7 @@ Non-goals for the first playable version:
 | Playfield | 960 x 720 |
 | Framing | Centered 4:3 playfield with black pillarbox bars on the left and right |
 | Background | Black |
+| Window title | "Adventure" |
 | Art style | Stylized rectangles with bright cores, outline accents, and lightweight particle effects |
 
 ### 2.1 Visual style
@@ -44,6 +45,46 @@ Non-goals for the first playable version:
 - Glow is simulated with layered translucent geometry, not a post-process bloom pass.
 - Dark rooms use a circular visibility mask centered on the player.
 - Maze rooms should be visually distinguishable through small tint and layout differences, not heavy decoration.
+- Fog of war in dark rooms is rendered by drawing the room normally, then compositing a black overlay texture with a transparent circular cutout centered on the player. Use `SDL_BLENDMODE_BLEND` on the overlay. The mask texture can be generated once at startup. Clip the overlay to the playfield bounds only.
+
+### 2.3 Entity dimensions
+
+All entities are rectangles or composed rectangles. Reference sizes for collision and rendering:
+
+| Entity | Size (px) | Notes |
+|--------|-----------|-------|
+| Player | 16 x 16 | Square |
+| Yorgle | 28 x 20 | Wider body, arrow-shaped head composed of rects |
+| Grundle | 24 x 18 | Slightly smaller than Yorgle |
+| Rhindle | 24 x 18 | Same frame as Grundle, distinguished by color |
+| Bat body | 12 x 10 | Small core rectangle |
+| Bat wings | 24 x 6 each side | Two rects that toggle vertical offset for flap animation |
+| Key | 10 x 18 | Vertical rectangle with a small horizontal crossbar rect at top |
+| Sword | 6 x 28 | Tall narrow vertical rectangle |
+| Magnet | 16 x 16 | U-shape approximated: two vertical rects plus a bottom horizontal rect |
+| Bridge | 40 x 8 | Wide horizontal rectangle |
+| Chalice | 12 x 20 | Tall rectangle with wider base rect |
+| Secret dot | 6 x 6 | Collision/pickup radius; invisible |
+
+These sizes are starting points. Tune during play so entities feel correct relative to 16 px room wall thickness and exit gap widths.
+
+### 2.4 Particle effects
+
+Particles are small colored rectangles with a lifetime, velocity, and fade.
+
+| Trigger | Count | Lifetime | Behavior |
+|---------|-------|----------|----------|
+| Item pickup | 6-8 sparks | 0.3 s | Burst outward from item position, fade alpha |
+| Item drop | 4-6 sparks | 0.2 s | Small burst downward |
+| Dragon death | 12-16 sparks | 0.5 s | Burst outward in dragon's color |
+| Player death | 8-10 sparks | 0.4 s | Burst in red |
+| Gate open | 6 sparks | 0.3 s | Rise upward from gate span in key color |
+| Gate close | 4 sparks | 0.2 s | Fall downward from gate span |
+| Chalice shimmer | 1-2 per frame | 0.6 s | Slow random drift, gold color, continuous |
+| Player trail | 1 per 3 frames | 0.15 s | Single rect at previous position, quick fade |
+| Bat swap | 6 sparks | 0.3 s | Purple burst at swap location |
+
+Particle rects are 2 x 2 or 3 x 3 px. No rotation. Velocity 40-120 px/s depending on effect.
 
 ### 2.2 Palette
 
@@ -69,6 +110,7 @@ Game scenes:
 
 - `SCENE_MENU`
 - `SCENE_PLAYING`
+- `SCENE_PAUSED`
 - `SCENE_DEATH_FREEZE`
 - `SCENE_VICTORY`
 
@@ -173,6 +215,9 @@ Transition behavior:
 Boundary walls:
 
 - Generated automatically from room size and exit gaps.
+- Wall thickness is 16 px.
+- Boundary walls sit inside the playfield rect (i.e., the outer edge of the wall aligns with the playfield edge, the inner edge is 16 px inward).
+- Exit gaps are openings in the boundary wall. Gap width must be at least 32 px (2x player width) for comfortable passage.
 - Should not need to be hand-authored per room except for special gates.
 
 Interior walls:
@@ -189,6 +234,12 @@ Castle gates are special wall spans at castle entrances.
 - Closed gates are solid collision.
 - Open gates remove collision only for the gate span, not for the whole border wall.
 - If a gate closes while an entity overlaps it, push that entity to the nearest valid side and keep the gate closed.
+
+Gate rendering:
+
+- Closed gates are rendered in the matching key color (gold, dark gray, or white) with a subtle pulsing glow to distinguish them from normal walls.
+- Open gates are not rendered (the gap appears as a normal exit).
+- Gate open/close transitions are instant (no animation), but accompanied by a particle burst and sound.
 
 ### 5.5 Bridge sockets
 
@@ -218,7 +269,8 @@ Gameplay:
 
 - `WASD` or arrow keys: move
 - `Space` or `Enter`: interact, pick up, swap, or drop
-- `Escape`: return to menu from menu/victory scenes; during play it may quit to menu if implemented
+- `Escape`: return to menu from menu/victory scenes; during play, opens a pause that freezes simulation (press Escape again to resume, or a third option to quit to menu)
+- `P`: toggle pause (alias for Escape during play)
 
 Title menu:
 
@@ -277,6 +329,11 @@ Carrier rules:
 - The player does not carry dragons
 - A carried entity inherits the carrier's room id and follows a local offset
 
+Carried item rendering offset:
+
+- Player-carried items render centered 20 px below the player center (fixed offset, does not change with movement direction). This keeps it simple and avoids visual jitter during diagonal movement.
+- Bat-carried entities render centered 12 px below the bat center.
+
 ### 7.2 Object list
 
 | Object | Role |
@@ -333,6 +390,7 @@ Recommended first version:
 - The secret dot is not rendered and has no glow.
 - It should still have a small pickup radius, larger than 1 px, so the Easter egg is achievable without pixel-perfect movement.
 - The dot is never randomized in Game 3.
+- Specific placement (which room holds the dot, which wall/room requires the bridge) is deferred to room authoring. The room data should include comments marking these locations.
 
 ## 8. Enemies
 
@@ -359,6 +417,13 @@ Behavior rules:
 - Idle dragons drift around a home room or nearby linked rooms.
 - Yorgle flees when the gold key is in the same room and within a defined influence range.
 
+Dragon cross-room navigation:
+
+- When chasing a player in a different room, the dragon needs to pick an exit. Use a simple BFS pre-computed room distance table (only ~30 rooms, computed once at game start). The dragon moves toward the exit whose destination room is closest to the player's current room.
+- If multiple exits are equidistant, pick the one closest to the dragon's current position.
+- Idle dragons may wander through exits at low probability (e.g., ~5% chance per second to pick a random adjacent exit and drift toward it). They slowly bias back toward their home room when far away.
+- An idle dragon that spots the player (player enters the same room, or dragon wanders into the player's room) immediately transitions to CHASE.
+
 Recommended combat fairness rule:
 
 - After room transition, give the player and chasing dragon a very short re-entry grace window, such as 0.2 seconds, before a bite can occur.
@@ -383,6 +448,7 @@ Implementation guardrails:
 
 - The bat should have a swap cooldown so it does not thrash every frame while overlapping several objects.
 - While a dragon is carried by the bat, that dragon's movement and bite logic are suspended.
+- When the bat releases a dragon (by swapping it for something else), the dragon re-enters `DRAGON_IDLE`. It will then transition to `DRAGON_CHASE` normally if the player is within aggression range. This means a bat-delivered dragon is a delayed threat, not an instant kill.
 
 ## 9. Game Modes
 
@@ -422,6 +488,12 @@ Randomization constraints:
 - Prefer asset-backed `.wav` or `.ogg` files loaded through SDL3_mixer
 - Procedural synthesis is optional later, not required for the first milestone
 
+Asset sourcing strategy:
+
+- Generate all sound effects using jsfxr (https://sfxr.me/) and export as `.wav` files into `assets/sfx/`
+- Name files by event: `sfx_pickup.wav`, `sfx_drop.wav`, `sfx_dragon_bite.wav`, `sfx_dragon_death.wav`, `sfx_gate_open.wav`, `sfx_gate_close.wav`, `sfx_bat_swap.wav`, `sfx_win.wav`, `sfx_wall_bump.wav`, `sfx_bridge.wav`
+- The existing `assets/sfx_bump.ogg` from the Pong template can be removed or repurposed
+
 | Event | Sound direction |
 |-------|-----------------|
 | Pickup | Short ascending bleep |
@@ -439,7 +511,9 @@ Randomization constraints:
 
 ### 11.1 Title screen
 
-- Rendered with SDL_ttf, not `SDL_RenderDebugText`, because title text needs controlled sizing
+- Rendered with SDL_ttf using `assets/fonts/press_start_2p/PressStart2P-Regular.ttf`
+- PressStart2P is used for all game text (title, HUD timer, victory screen). It is a clean pixel font that matches the retro rectangle aesthetic.
+- Title text at large point size, menu options and HUD at smaller point size
 - Shows title plus three mode options
 - Shows simple control hint at the bottom
 
@@ -454,14 +528,15 @@ Recommended text:
 
 ### 11.2 In-game HUD
 
-- Show elapsed time in the top-right of the playfield
+- Show elapsed time in the top-right of the playfield in MM:SS format
+- Timer only advances during `SCENE_PLAYING` (paused during death freeze and pause)
 - No score display
 - No inventory panel in the first version
 
 ### 11.3 Victory screen
 
 - Centered victory message
-- Completion time
+- Completion time in MM:SS.ms format (e.g., "02:34.7") for speedrun precision
 - Game mode label
 - Prompt to return to the menu
 
@@ -470,6 +545,12 @@ Recommended text:
 - Freeze on the last gameplay frame
 - No extra overlay required
 - Optional subtle red flash or brief audio stinger is acceptable
+
+### 11.5 Pause overlay
+
+- When paused, display "PAUSED" centered on the playfield
+- Show "RESUME: ESC / P" and "QUIT: Q" hints below
+- Dim the game frame slightly (draw a semi-transparent black rect over the playfield)
 
 ## 12. Technical Architecture
 
@@ -513,6 +594,7 @@ Use a small central `GameState` struct for scene-level state:
 typedef enum GameScene {
     SCENE_MENU,
     SCENE_PLAYING,
+    SCENE_PAUSED,
     SCENE_DEATH_FREEZE,
     SCENE_VICTORY
 } GameScene;
@@ -571,6 +653,43 @@ Recommended system flow:
 | `EcsOnStore` | `render_particles` | Draw active effects |
 
 UI rendering remains outside ECS in `ui_render()` after `ecs_progress()`.
+
+### 12.6 Collision layers
+
+Use bitmask layer/mask filtering from the existing collision system:
+
+```c
+#define COL_LAYER_PLAYER  (1 << 0)
+#define COL_LAYER_WALL    (1 << 1)
+#define COL_LAYER_DRAGON  (1 << 2)
+#define COL_LAYER_ITEM    (1 << 3)
+#define COL_LAYER_BAT     (1 << 4)
+```
+
+| Entity | Layer | Mask (collides with) |
+|--------|-------|----------------------|
+| Player | `PLAYER` | `WALL`, `DRAGON`, `ITEM`, `BAT` |
+| Dragon | `DRAGON` | `WALL`, `PLAYER`, `BAT` |
+| Item | `ITEM` | `WALL`, `PLAYER`, `BAT` |
+| Bat | `BAT` | `WALL`, `PLAYER`, `DRAGON`, `ITEM` |
+| Wall | `WALL` | (static, no mask needed) |
+
+Notes:
+
+- Items do not collide with each other or with dragons.
+- Carried entities have their collider disabled (no layer/mask) while attached. Re-enable on drop.
+- Gate wall segments use `COL_LAYER_WALL` and are added/removed from collision when the gate state changes.
+
+### 12.7 Interaction priority
+
+When multiple collisions resolve in the same frame, use this priority order:
+
+1. **Sword kills dragon** — If the player carries the sword and overlaps a dragon, the dragon dies. The player is not bitten.
+2. **Dragon bites player** — If a dragon overlaps the player and the player does not carry the sword, death occurs.
+3. **Bat steal** — If the bat overlaps the player's carried item, the bat swaps.
+4. **Player interact** — Pickup, swap, or drop resolved from the interact button press.
+
+The sword-vs-bite priority ensures the player is never killed on the same frame they would have slain the dragon.
 
 ### 12.6 Room data structures
 
@@ -632,6 +751,16 @@ Authoring rules:
 - Glow should be integrated as a rendering pass over visible entities, not as separate gameplay entities
 - Fog of war should be clipped to the playfield only, not the whole 1280 x 720 window
 
+### 12.10 Debug controls
+
+Retain and extend the template's debug features:
+
+- `F1`: toggle collision rectangle overlay (existing)
+- `F2`: toggle room info overlay (room id, name, entity count in current room)
+- `F3`: toggle entity list overlay (all entities with room id and state, useful for verifying off-screen simulation)
+
+Debug overlays render on top of everything, outside the ECS pipeline, in `ui_render()`.
+
 ## 13. Files To Create Or Modify
 
 ### New files
@@ -688,6 +817,8 @@ Authoring rules:
 - `src/managers/system.h`
 - `src/ui.c`
 - `src/ui.h`
+- `CMakeLists.txt` (rename executable from `pong` to `adventure`)
+- `CLAUDE.md` (update build instructions and architecture description to reflect Adventure)
 
 ### Files to remove after migration
 
@@ -704,10 +835,10 @@ Authoring rules:
 
 ### 14.1 Build and run
 
-```powershell
+```bash
 cmake --preset default
 cmake --build build
-.\build\Debug\adventure.exe
+./build/Debug/adventure.exe
 ```
 
 ### 14.2 Manual checklist
