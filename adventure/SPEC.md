@@ -50,7 +50,7 @@ Non-goals for the first playable version:
 
 - Walls, items, creatures, and room features are rendered as rectangles or small compositions of rectangles.
 - Glow is faked with layered translucent geometry, not post-processing.
-- Dark rooms are rendered normally first, then covered by a black overlay with a circular transparent cutout centered on the player.
+- Dark rooms are rendered normally first, then covered by a black overlay with a circular transparent cutout centered on the player. Cutout radius is about 120 px (tunable). The mask texture is generated once at startup using `SDL_BLENDMODE_BLEND`.
 - Maze rooms should be distinguishable through small tint and layout changes, not by adding noisy decoration.
 
 ### 2.2 Palette
@@ -367,7 +367,7 @@ Rendering offsets:
 | Gold key | Opens gold castle gate when in same room |
 | Black key | Opens black castle gate when in same room |
 | White key | Opens white castle gate when in same room |
-| Magnet | Pulls nearby items in same room |
+| Magnet | Attracts two nearest movable entities globally (see 7.5) |
 | Bridge | Opens authored bridge sockets |
 | Chalice | Win condition |
 | Secret dot | Hidden Easter egg trigger |
@@ -390,11 +390,20 @@ Recommended first version:
 
 ### 7.5 Magnet
 
-- Affects only items in the same room
-- Does not affect dragons, bat, or player
-- Does not pull through solid walls or closed gates
-- Has no effect while carried
-- Pulled items should settle into a small orbit distance instead of stacking at one point
+Original-faithful behavior:
+
+- Attracts the **two nearest** movable entities by world distance (items and dragons, not the bat or player)
+- Works **globally** across all rooms, not just the current room
+- Pulls **through walls** — no collision on the pull path
+- **Always active** whether carried by the player, dropped on the ground, or carried by the bat
+- Pull speed is slow, about 30 px/s
+- When an attracted entity is in a different room, it moves toward the nearest exit leading closer to the magnet's room (uses the same BFS room distance table as dragon navigation)
+- Attracted entities that reach the magnet's room continue moving directly toward the magnet's position
+- Pulled entities settle into a small orbit distance instead of stacking at one exact point
+- The magnet does not attract the player, the bat, or itself
+- **Implementation note**: `magnet_pull` moves attracted entities by directly updating their `Transform` position, bypassing the normal velocity/collision pipeline. This is how pull-through-walls works — the magnet ignores wall collision intentionally.
+
+This makes the magnet a powerful but double-edged tool: it can pull a distant key toward a gate, but it may also drag a dragon into the player's room unexpectedly.
 
 ### 7.6 Bridge
 
@@ -424,9 +433,9 @@ Recommended first version:
 
 | Dragon | Speed | Aggression | Notes |
 |--------|-------|------------|------|
-| Yorgle | 80 px/s | Low | Flees gold key, loosely guards chalice |
-| Grundle | 120 px/s | Medium | Guards black-key-area valuables |
-| Rhindle | 160 px/s | High | Fastest and most relentless |
+| Yorgle | 80 px/s | Low, ~200 px range | Flees gold key, loosely guards chalice |
+| Grundle | 120 px/s | Medium, ~350 px range | Guards black-key-area valuables |
+| Rhindle | 160 px/s | High, ~500 px range | Fastest and most relentless |
 
 Dragon states:
 
@@ -440,12 +449,12 @@ Behavior rules:
 
 - No full pathfinding inside a room; use direct steering
 - Chasing dragons may follow through exits
-- Idle dragons wander around home room or nearby rooms
-- Yorgle flees if gold key is nearby in the same room
+- Idle dragons wander around home room or nearby rooms. About 5% chance per second to pick a random adjacent exit and drift toward it. Bias back toward home room when more than 2 rooms away.
+- Yorgle flees if gold key is nearby in the same room (within ~150 px)
 
 Cross-room navigation:
 
-- Precompute a simple room-distance table at startup
+- Precompute a BFS room-distance table at startup (shared with `magnet_pull` — see 7.5). Only ~30 rooms, so this is a small 30x30 int table.
 - A dragon chasing a player in another room heads toward the exit whose destination minimizes distance to the player's room
 - Ties are broken by choosing the nearest exit in local space
 
@@ -699,7 +708,7 @@ Recommended system flow:
 | `EcsOnUpdate` | `player_intent` | Convert input to movement and action intent |
 | `EcsOnUpdate` | `dragon_ai` | Update dragon behavior |
 | `EcsOnUpdate` | `bat_ai` | Update bat movement and swaps |
-| `EcsOnUpdate` | `magnet_pull` | Pull valid items toward active magnet |
+| `EcsOnUpdate` | `magnet_pull` | Find two nearest movable entities globally and pull toward magnet |
 | `EcsOnUpdate` | `carry_sync` | Attach carried entities to carriers |
 | `EcsOnUpdate` | `move_entities` | Apply velocity |
 | `EcsPostUpdate` | `collision_detect` | Populate `Collision` components |
@@ -887,6 +896,7 @@ Debug overlays render in `ui_render()` above the gameplay frame.
 - `src/managers/system.h`
 - `src/ui.c`
 - `src/ui.h`
+- `CMakeLists.txt` (rename executable from `pong` to `adventure`)
 - `CLAUDE.md`
 - `AGENTS.md`
 
@@ -924,7 +934,7 @@ cmake --build build
 - Dragon bites trigger death freeze and respawn
 - Bat roams and swaps without overlap thrashing
 - Keys open and close the correct gates
-- Magnet pulls only valid items and respects walls
+- Magnet attracts two nearest movable entities globally, including cross-room pulls and dragons
 - Bridge activates only authored sockets
 - Dark rooms apply fog only inside playfield
 - Chalice carried into throne room triggers victory
