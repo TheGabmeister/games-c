@@ -56,10 +56,7 @@ set(SDLTTF_PLUTOSVG   OFF CACHE BOOL "" FORCE)
 set(SDLTTF_VENDORED   ON  CACHE BOOL "" FORCE)
 add_subdirectory(vendor/sdl_ttf)
 
-set(BUILD_DEMOS OFF CACHE BOOL "" FORCE)
-set(BUILD_SHARED OFF CACHE BOOL "" FORCE)
-set(BUILD_STATIC ON CACHE BOOL "" FORCE)
-add_subdirectory(vendor/Chipmunk2D)
+add_subdirectory(vendor/box2d)
 
 
 file(GLOB_RECURSE MY_SOURCES CONFIGURE_DEPENDS "${CMAKE_CURRENT_SOURCE_DIR}/src/*.c")
@@ -74,7 +71,7 @@ target_include_directories(${PROJECT_NAME} PRIVATE
     vendor/nuklear
     vendor/cjson
     vendor/tinyfiledialogs
-    vendor/Chipmunk2D/include
+    vendor/box2d/include
 )
 target_link_libraries(${PROJECT_NAME} PRIVATE
     SDL3::SDL3
@@ -82,7 +79,7 @@ target_link_libraries(${PROJECT_NAME} PRIVATE
     SDL3_image::SDL3_image
     SDL3_ttf::SDL3_ttf
     flecs::flecs_static
-    chipmunk_static
+    box2d
     cglm
 )
 

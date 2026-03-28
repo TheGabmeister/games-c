@@ -136,7 +136,7 @@ void debug_physics(ecs_iter_t *it)
       continue;
     BeginTextureMode(viewport[i].raster);
     BeginMode2D(viewport[i].camera);
-    cpSpaceDebugDraw(physics->space, physics_debug_options());
+    b2World_Draw(physics->world, physics_debug_options());
     EndMode2D();
     EndTextureMode();
   }

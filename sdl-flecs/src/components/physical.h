@@ -2,7 +2,7 @@
 #define PHYSICAL_COMPONENT_H
 
 #include <flecs.h>
-#include <chipmunk/chipmunk_structs.h>
+#include <box2d/box2d.h>
 
 typedef enum BodyType
 {
@@ -14,15 +14,15 @@ typedef enum BodyType
 
 typedef struct Joint
 {
-  cpBody *body;
-  cpConstraint *constraint;
+  b2BodyId body;
+  b2JointId joint;
 } Joint;
 
 typedef struct Physical
 {
   BodyType type;
-  cpBody *body;
-  cpShape *shape;
+  b2BodyId body;
+  b2ShapeId shape;
   Joint joints[9];
   int owner;
   int team;

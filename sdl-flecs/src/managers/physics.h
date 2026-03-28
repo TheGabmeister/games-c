@@ -14,7 +14,7 @@ void physics_box(ecs_world_t *world, ecs_entity_t parent, vector2 position);
 void physics_wedge(ecs_world_t *world, ecs_entity_t parent, vector2 position, int corner);
 
 #ifdef DEBUG
-cpSpaceDebugDrawOptions *physics_debug_options(void);
+b2DebugDraw *physics_debug_options(void);
 #endif
 
 #endif
