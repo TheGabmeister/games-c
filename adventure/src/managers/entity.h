@@ -4,13 +4,8 @@
 #include <flecs.h>
 #include "../platform.h"
 
-#include "../components/shape.h"
-
-ECS_TAG_DECLARE(DebugTag);
-
 void entity_manager_init(ecs_world_t *world);
-
-ecs_entity_t entity_manager_spawn_debug(ecs_world_t *world, const char *message);
-ecs_entity_t entity_manager_spawn_shape(ecs_world_t *world, ecs_entity_t parent, Shape shape, vector2 position);
+void entity_manager_spawn_world(ecs_world_t *world, int game_mode);
+void entity_manager_clear_gameplay(ecs_world_t *world);
 
 #endif

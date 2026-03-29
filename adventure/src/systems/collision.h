@@ -5,6 +5,5 @@
 
 void collision_clear(ecs_iter_t *it);
 void collision_detect(ecs_iter_t *it);
-void apply_bounce(ecs_iter_t *it);
 
 #endif

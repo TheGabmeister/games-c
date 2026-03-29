@@ -3,10 +3,9 @@
 
 #include <flecs.h>
 
-void toggle_show_colliders(void);
 void render_clear(ecs_iter_t *it);
-void render_shapes(ecs_iter_t *it);
+void render_room(ecs_iter_t *it);
+void render_entities(ecs_iter_t *it);
 void render_colliders(ecs_iter_t *it);
-void render_sprites(ecs_iter_t *it);
 
 #endif

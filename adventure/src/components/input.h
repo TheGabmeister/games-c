@@ -2,14 +2,18 @@
 #define INPUT_COMPONENT_H
 
 #include <flecs.h>
-#include "../platform.h"
+#include <stdbool.h>
 
 typedef struct Input
 {
     bool quit;
-    bool toggle_pause;
-    int move_p1;
-    int move_p2;
+    bool pause_pressed;
+    bool interact_pressed;
+    bool debug_toggle_collision_pressed;
+    bool debug_toggle_room_info_pressed;
+    bool debug_toggle_entity_list_pressed;
+    float move_x;
+    float move_y;
 } Input;
 
 ECS_COMPONENT_DECLARE(Input);
