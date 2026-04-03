@@ -29,8 +29,8 @@ bool is_key_down(int key);
 bool is_key_pressed(int key);
 void platform_begin_frame(void);
 void platform_process_event(SDL_Event *event);
-bool is_mouse_button_down(int button);
-bool is_mouse_button_pressed(int button);
+bool is_mouse_button_down(SDL_MouseButtonFlags button);
+bool is_mouse_button_pressed(SDL_MouseButtonFlags button);
 vector2 get_mouse_position(void);
 float get_mouse_wheel_move(void);
 

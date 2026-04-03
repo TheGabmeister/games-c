@@ -135,17 +135,6 @@ float get_deltatime(void)
     return GLOBALS.delta_time;
 }
 
-static SDL_MouseButtonFlags _mouse_button_mask(int button)
-{
-    switch (button) {
-        case MOUSE_BUTTON_LEFT:   return SDL_BUTTON_LMASK;
-        case MOUSE_BUTTON_RIGHT:  return SDL_BUTTON_RMASK;
-        case MOUSE_BUTTON_MIDDLE: return SDL_BUTTON_MMASK;
-        case MOUSE_BUTTON_SIDE:   return SDL_BUTTON_X1MASK;
-        case MOUSE_BUTTON_EXTRA:  return SDL_BUTTON_X2MASK;
-        default: return 0;
-    }
-}
 
 void platform_begin_frame(void)
 {
@@ -173,16 +162,15 @@ bool window_should_close(void)
     return GLOBALS.should_close;
 }
 
-bool is_mouse_button_down(int button)
+bool is_mouse_button_down(SDL_MouseButtonFlags button)
 {
-    return (GLOBALS.Mouse.currentButtons & _mouse_button_mask(button)) != 0;
+    return (GLOBALS.Mouse.currentButtons & button) != 0;
 }
 
-bool is_mouse_button_pressed(int button)
+bool is_mouse_button_pressed(SDL_MouseButtonFlags button)
 {
-    SDL_MouseButtonFlags mask = _mouse_button_mask(button);
-    return (GLOBALS.Mouse.currentButtons & mask) != 0 &&
-           (GLOBALS.Mouse.previousButtons & mask) == 0;
+    return (GLOBALS.Mouse.currentButtons & button) != 0 &&
+           (GLOBALS.Mouse.previousButtons & button) == 0;
 }
 
 vector2 get_mouse_position(void)
