@@ -1,5 +1,9 @@
 #include "platform.h"
+#include "game.h"
+#include "resources.h"
+#include "audio.h"
 #include <SDL3/SDL.h>
+#include <SDL3/SDL_main.h>
 
 // Core global state context data
 typedef struct Globals {
@@ -192,4 +196,56 @@ float get_mouse_wheel_move(void)
 void request_close(void)
 {
     GLOBALS.should_close = true;
+}
+
+int main(int argc, char *argv[])
+{
+    (void)argc;
+    (void)argv;
+
+    GameConfig config = game_config();
+
+    init_window(config.screen_width, config.screen_height, config.title);
+    if (!is_window_ready())
+        return 1;
+
+    if (!res_init()) {
+        close_window();
+        return 1;
+    }
+
+    audio_init();
+
+    SDL_SetRenderDrawBlendMode(get_renderer(), SDL_BLENDMODE_BLEND);
+
+    game_init();
+
+    /* --- Main loop --- */
+    SDL_Event event;
+    while (!window_should_close()) {
+        engine_begin_frame();
+        while (SDL_PollEvent(&event))
+            engine_process_event(&event);
+
+        float dt = get_deltatime();
+
+        game_update(dt);
+
+        SDL_SetRenderDrawColor(get_renderer(),
+            config.clear_color.r, config.clear_color.g,
+            config.clear_color.b, config.clear_color.a);
+        SDL_RenderClear(get_renderer());
+
+        game_draw();
+
+        SDL_RenderPresent(get_renderer());
+    }
+
+    /* --- Shutdown (order matters) --- */
+    game_shutdown();
+    res_free_all();
+    res_shutdown();
+    audio_shutdown();
+    close_window();
+    return 0;
 }

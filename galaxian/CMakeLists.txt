@@ -56,7 +56,7 @@ set(SDLTTF_VENDORED   ON  CACHE BOOL "" FORCE)
 add_subdirectory(vendor/sdl_ttf)
 
 add_executable(${PROJECT_NAME}
-    src/main.c
+    src/game.c
     src/platform.c
     src/game_state.c
     src/resources.c
