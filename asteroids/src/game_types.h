@@ -59,6 +59,14 @@ typedef enum ActionType {
     MAX_ACTION
 } ActionType;
 
+#define MAX_KEYS_PER_ACTION 2
+
+typedef struct ActionInput {
+    int keys[MAX_KEYS_PER_ACTION];
+    int keyCount;
+    int button;
+} ActionInput;
+
 typedef enum GameState {
     STATE_TITLE,
     STATE_PLAYING,
@@ -133,6 +141,8 @@ typedef struct Game {
 } Game;
 
 typedef struct GameContext {
+    int gamepadIndex;
+    ActionInput actionInputs[MAX_ACTION];
     Game game;
     Ship ship;
     Bullet bullets[MAX_BULLETS];

@@ -3,6 +3,7 @@
 #include "bullets.h"
 #include "game_flow.h"
 #include "game_types.h"
+#include "input.h"
 #include "particles.h"
 #include "ship.h"
 #include "ui.h"
@@ -14,6 +15,7 @@ int main(void)
     SetTargetFPS(60);
 
     GameContext ctx = { 0 };
+    InputSetDefault(&ctx);
     BackgroundInitStars(&ctx);
 
     while (!WindowShouldClose()) {

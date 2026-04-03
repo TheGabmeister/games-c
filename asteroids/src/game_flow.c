@@ -4,6 +4,7 @@
 #include "background.h"
 #include "bullets.h"
 #include "collisions.h"
+#include "input.h"
 #include "ship.h"
 
 #include <string.h>
