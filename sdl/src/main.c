@@ -15,20 +15,20 @@ int main(int argc, char *argv[])
     SDL_Log("SDL3_ttf version: %d.%d.%d", SDL_TTF_MAJOR_VERSION, SDL_TTF_MINOR_VERSION, SDL_TTF_MICRO_VERSION);
 
     SDL_Event event;
-    bool running = true;
 
-     if (!is_window_ready())
-        return;
+    if (!is_window_ready())
+        return 1;
 
-    while (running) {
+    SDL_Renderer *renderer = get_renderer();
+
+    while (!window_should_close()) {
         engine_begin_frame();
         while (SDL_PollEvent(&event))
         {
             engine_process_event(&event);
-	    }
+        }
 
         float delta = get_deltatime();
-
 
         SDL_SetRenderDrawColor(renderer, 25, 25, 50, 255);
         SDL_RenderClear(renderer);
@@ -40,9 +40,6 @@ int main(int argc, char *argv[])
         SDL_RenderPresent(renderer);
     }
 
-    SDL_DestroyRenderer(renderer);
-    SDL_DestroyWindow(window);
-    TTF_Quit();
-    SDL_Quit();
+    close_window();
     return 0;
 }
