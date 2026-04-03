@@ -1,4 +1,7 @@
 #ifndef GAME_H
 #define GAME_H
 
-#endif
+void game_init(void);
+void game_shutdown(void);
+
+#endif // GAME_H

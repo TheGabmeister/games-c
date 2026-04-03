@@ -1,4 +1,6 @@
 #include "platform.h"
+#include "game.h"
+#include "scene.h"
 
 #include <SDL3/SDL_main.h>
 
@@ -7,11 +9,12 @@ int main(int argc, char *argv[])
     (void)argc;
     (void)argv;
 
-    init_window(600, 800, "sdl-only");
+    init_window(800, 600, "2D Game Template");
 
-    if (!is_window_ready()) {
+    if (!is_window_ready())
         return 1;
-    }
+
+    game_init();
 
     SDL_Event event;
 
@@ -23,10 +26,13 @@ int main(int argc, char *argv[])
             platform_process_event(&event);
         }
 
-        (void)get_deltatime();
+        float dt = get_deltatime();
+        scene_update(dt);
+        scene_draw();
     }
-    
-    close_window();    // SDL_Quit called last
+
+    game_shutdown();
+    close_window();
 
     return 0;
 }

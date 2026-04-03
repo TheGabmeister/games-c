@@ -4,9 +4,11 @@
 // Core global state context data
 typedef struct Globals {
 
-    const char *title;                  // Window text title const pointer
-    bool ready;                         // Check if window has been initialized successfully
-    bool should_close;                  // Set when SDL_EVENT_QUIT is received
+    const char *title;
+    bool ready;
+    bool should_close;
+    int width;
+    int height;
 
     SDL_Window   *window;
     SDL_Renderer *renderer;
@@ -37,8 +39,10 @@ void init_window(int width, int height, const char *title)
     GLOBALS.previous_ticks_ns = 0;
     GLOBALS.delta_time = 0.0f;
     GLOBALS.fps = 0;
+    GLOBALS.width = width;
+    GLOBALS.height = height;
 
-    if (!SDL_Init(SDL_INIT_VIDEO | SDL_INIT_AUDIO)) {
+    if (!SDL_Init(SDL_INIT_VIDEO)) {
         SDL_Log("SDL_Init failed: %s", SDL_GetError());
         return;
     }
@@ -84,6 +88,21 @@ void close_window(void)
 bool is_window_ready(void)
 {
     return GLOBALS.ready;
+}
+
+void request_close(void)
+{
+    GLOBALS.should_close = true;
+}
+
+int get_window_width(void)
+{
+    return GLOBALS.width;
+}
+
+int get_window_height(void)
+{
+    return GLOBALS.height;
 }
 
 int get_fps(void)
