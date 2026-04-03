@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.24)
-project(sdl-only C)
+project(sdl_only C)
 
 set(CMAKE_C_STANDARD 17)
 
@@ -8,10 +8,10 @@ set(SDL_TEST_LIBRARY OFF CACHE BOOL "" FORCE)
 add_subdirectory(vendor/sdl)
 
 
-add_executable(hello_sdl
+add_executable(${PROJECT_NAME}
     src/main.c
 )
-target_link_libraries(hello_sdl PRIVATE
+target_link_libraries(${PROJECT_NAME} PRIVATE
     SDL3::SDL3
 )
 
