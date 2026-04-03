@@ -14,7 +14,7 @@ int main(void)
     SetTargetFPS(60);
 
     GameContext ctx = { 0 };
-    GameFlowBoot(&ctx);
+    BackgroundInitStars(&ctx);
 
     while (!WindowShouldClose()) {
         float dt = GetFrameTime();

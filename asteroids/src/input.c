@@ -1,5 +1,9 @@
 #include "input.h"
 
+// While ctx is not used in this project, it is here to indicate that 
+// it can be used to change your controls in different game contexts:
+// i.e. during gameplay, in a menu, in a cutscene, etc.
+
 bool InputActionPressed(const GameContext *ctx, ActionType action)
 {
     (void)ctx;

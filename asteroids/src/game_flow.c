@@ -52,14 +52,6 @@ static void UpdateWaveProgression(GameContext *ctx, float dt)
     }
 }
 
-void GameFlowBoot(GameContext *ctx)
-{
-    memset(ctx, 0, sizeof(*ctx));
-    BackgroundInitStars(ctx);
-    ctx->game.state = STATE_TITLE;
-    ctx->game.highScore = 0;
-}
-
 void GameFlowUpdateTitle(GameContext *ctx, float dt)
 {
     (void)dt;
