@@ -2,6 +2,7 @@
 #include "config.h"
 #include "draw.h"
 #include "input.h"
+#include "window.h"
 #include <SDL3/SDL.h>
 
 static bool g_running;
@@ -46,15 +47,7 @@ void game_run(const Scene *initial_scene)
         if (dt > MAX_FRAME_DT) dt = MAX_FRAME_DT;
         accumulator += dt;
 
-        /* Events */
-        SDL_Event event;
-        while (SDL_PollEvent(&event)) {
-            if (event.type == SDL_EVENT_QUIT) {
-                g_running = false;
-            }
-        }
-
-        /* Input snapshot */
+        if (!window_poll_events()) g_running = false;
         input_update();
 
         /* Fixed timestep updates */
