@@ -4,6 +4,7 @@
 #include "../input.h"
 #include "../draw.h"
 #include "../collectible.h"
+#include "../gamestate.h"
 #include <stdio.h>
 
 typedef struct {
@@ -13,8 +14,6 @@ typedef struct {
 } Player;
 
 static Player player;
-static int score;
-static int health;
 
 static void play_init(void)
 {
@@ -27,8 +26,7 @@ static void play_init(void)
         .speed = 250.0f,
     };
 
-    score  = 0;
-    health = 3;
+    gamestate_reset();
 
     collectibles_init();
     collectible_spawn(COLLECTIBLE_COIN,   100, 150);
@@ -63,7 +61,7 @@ static void play_update(float dt)
     if (player.rect.x + player.rect.w > w) player.rect.x = w - player.rect.w;
     if (player.rect.y + player.rect.h > h) player.rect.y = h - player.rect.h;
 
-    collectibles_update(player.rect, &score, &health);
+    collectibles_update(player.rect, gamestate_get());
 }
 
 static void play_draw(void)
@@ -80,7 +78,8 @@ static void play_draw(void)
 
     // HUD
     char buf[64];
-    snprintf(buf, sizeof(buf), "FPS: %d  |  Score: %d  |  HP: %d", get_fps(), score, health);
+    GameState *gs = gamestate_get();
+    snprintf(buf, sizeof(buf), "FPS: %d  |  Score: %d  |  HP: %d", get_fps(), gs->score, gs->health);
     draw_text(buf, 10, 10, 2.0f, COLOR_YELLOW);
     draw_text("WASD / Arrows: Move  |  ESC: Menu", 10, 40, 1.0f, COLOR_GRAY);
 

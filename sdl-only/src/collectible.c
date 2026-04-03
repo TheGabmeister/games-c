@@ -29,7 +29,7 @@ void collectible_spawn(CollectibleType type, float x, float y)
     }
 }
 
-void collectibles_update(rectangle player_rect, int *out_score, int *out_health)
+void collectibles_update(rectangle player_rect, GameState *state)
 {
     for (int i = 0; i < MAX_COLLECTIBLES; i++) {
         if (!collectibles[i].active) continue;
@@ -38,9 +38,9 @@ void collectibles_update(rectangle player_rect, int *out_score, int *out_health)
         collectibles[i].active = false;
 
         switch (collectibles[i].type) {
-            case COLLECTIBLE_COIN:   *out_score  += 10; break;
-            case COLLECTIBLE_HEALTH: *out_health += 1;  break;
-            case COLLECTIBLE_STAR:   *out_score  += 50; break;
+            case COLLECTIBLE_COIN:   state->score  += 10; break;
+            case COLLECTIBLE_HEALTH: state->health += 1;  break;
+            case COLLECTIBLE_STAR:   state->score  += 50; break;
             default: break;
         }
     }

@@ -2,6 +2,7 @@
 #define COLLECTIBLE_H
 
 #include "platform.h"
+#include "gamestate.h"
 #include <stdbool.h>
 
 #define MAX_COLLECTIBLES 64
@@ -21,7 +22,7 @@ typedef struct {
 
 void collectibles_init(void);
 void collectible_spawn(CollectibleType type, float x, float y);
-void collectibles_update(rectangle player_rect, int *out_score, int *out_health);
+void collectibles_update(rectangle player_rect, GameState *state);
 void collectibles_draw(void);
 int  collectibles_remaining(void);
 
