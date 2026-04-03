@@ -1,308 +1,479 @@
-# Galaxian — Modernized Clone Specification
+# Galaxian - Modernized Clone Specification
 
 ## Overview
 
-A modernized Galaxian clone built with SDL3 primitive rendering (no sprites or textures). Same core mechanics as the 1979 arcade original — fixed-formation enemies, dive-bombing attacks, single-bullet shooting — but with a **neon-geometry aesthetic** inspired by games like Geometry Wars. All visuals are rendered using `draw_rect`, `draw_circle`, `draw_line`, `draw_rect_outline`, and direct SDL render calls for triangles/polygons.
+This project is a modernized Galaxian remake built on the existing SDL3 template.
+The goal is to preserve the classic fixed-shooter loop and enemy attack patterns
+while presenting them with a cleaner neon-vector look, stronger screen effects,
+and tighter presentation than the 1979 original.
 
-**Resolution:** 600 x 800 (portrait, matching the existing window config)
-**No audio.** Audio module is initialized but unused.
+Version 1 scope:
 
----
+- Single-player keyboard controls only
+- Primitive-rendered gameplay entities and effects
+- Menu, gameplay, and game-over flow
+- Session-only high score tracking
+- No authored audio in the first milestone
+
+Version 1 non-goals:
+
+- Online leaderboards
+- Save files or persistent profile data
+- Power-ups, weapon upgrades, or alternate ships
+- Co-op / versus play
+- Texture-based ship or enemy art
+
+Technical assumptions:
+
+- Window resolution stays `600 x 800` in portrait orientation
+- Gameplay visuals use primitive drawing only; UI text may use `SDL_ttf`
+- Rendering helpers should live in `drawing.c/.h`; gameplay code should not
+  scatter direct SDL rendering calls across state files
+- The audio module may still be initialized by the app shell, but gameplay
+  should not depend on audio assets in this milestone
+
+## Design Pillars
+
+- Keep the Galaxian risk/reward loop: enemies hold formation, then peel off
+  into dangerous dives that are worth more points while in flight
+- Readability first: bullets, hit reactions, convoy attacks, and score events
+  must remain easy to parse even with glow-heavy visuals
+- Modern presentation, classic rules: update the art direction and transitions
+  without changing the one-shot weapon, grounded movement, or stage flow
+- Small-engine-friendly implementation: data-oriented gameplay code, minimal
+  global state, and clean integration with the existing wrapper modules
 
 ## Game States
 
-Using the existing `game_state` system:
+Use the existing `game_state` system.
 
 | ID | State | Purpose |
 |----|-------|---------|
-| `STATE_MENU` | Title Screen | Animated logo, "PRESS ENTER TO START", high score display |
-| `STATE_GAMEPLAY` | Main Game | The Galaxian gameplay loop |
-| `STATE_GAME_OVER` | Game Over | Final score, high score update, "PRESS ENTER TO RESTART" |
+| `STATE_MENU` | Title Screen | Animated logo, attract background, controls, session high score |
+| `STATE_GAMEPLAY` | Main Game | Stage intro, active play, respawn handling, stage clear flow |
+| `STATE_GAME_OVER` | Game Over | Final score, new high score callout, restart prompt |
 
-Add `STATE_GAME_OVER` to the `GameStateID` enum.
+Notes:
 
----
+- Add `STATE_GAME_OVER` to `GameStateID`
+- Keep `STATE_PAUSE` reserved in the enum for later, but do not implement it in v1
+- `main.c` should register all three active states and start in `STATE_MENU`
 
-## Gameplay Mechanics
-
-### Player
-- Positioned near the bottom of the screen (y ≈ 720)
-- Moves left/right with **Arrow Keys** or **A/D**
-- Fires with **Space** (single bullet on screen at a time — faithful to original)
-- 3 lives at start; lost when hit by an enemy or enemy bullet
-- Brief invincibility flash (~2 seconds) after respawning
-- Clamped to screen bounds with a small margin
-
-### Enemies
-
-Three types, arranged in a grid formation near the top:
-
-| Type | Rows | Points | Color | Shape |
-|------|------|--------|-------|-------|
-| **Drone** | 2 bottom rows (rows 4-5) | 30 | Blue | Small diamond |
-| **Escort** | 2 middle rows (rows 2-3) | 60 | Red | Hexagon |
-| **Flagship** | 1 top row (row 1) | 150 (solo) / 300 (with escorts) | Yellow/Gold | Large circle with inner ring |
-
-**Formation:** 10 columns x 5 rows = 50 enemies per stage. The entire formation drifts left and right in a slow sinusoidal sway.
-
-**Dive attacks:**
-- Enemies periodically peel off from the formation and dive toward the player in **curved Bézier paths**
-- Drones dive solo
-- Escorts dive solo or in pairs
-- Flagships dive with 0-2 escorts flanking them (bonus points if flagship killed while escorted)
-- Diving enemies fire 1-2 bullets during their run
-- After a dive, surviving enemies loop back up and rejoin the formation
-- Dive frequency increases as fewer enemies remain and as stages progress
-
-### Bullets
-- **Player bullet:** Travels straight up. Only 1 on screen at a time.
-- **Enemy bullets:** Travel downward with slight tracking toward the player's x-position. Max 4-6 on screen at once.
-
-### Collision
-- Rectangle vs. rectangle AABB for simplicity (hitboxes slightly smaller than visual shapes for fairness)
-
-### Scoring & Progression
-- Points per enemy kill (see table above)
-- Flagship bonus: 300 if killed while diving with escorts, 150 if solo
-- Stage clears when all 50 enemies are destroyed
-- Next stage: enemies dive sooner, fire more often, bullets slightly faster
-- **High score** persisted in memory for the session (no file I/O needed)
-
-### Lives & Game Over
-- Start with 3 lives, displayed as small ship icons in the HUD
-- Extra life at 10,000 points (one-time)
-- Game over when lives reach 0 → transition to `STATE_GAME_OVER`
-
----
-
-## Visual Design
-
-### Aesthetic: Neon Geometry
-
-Everything is rendered with primitive shapes, lines, and circles. The look is clean vector-style graphics with glow effects achieved through layered semi-transparent shapes.
-
-### Color Palette
-
-| Element | Primary | Glow/Trail |
-|---------|---------|------------|
-| Background | Near-black (#0A0A1A) | — |
-| Player | Bright cyan (#00FFFF) | Cyan at 30% alpha |
-| Drones | Electric blue (#4488FF) | Blue at 30% alpha |
-| Escorts | Hot red (#FF3344) | Red at 30% alpha |
-| Flagships | Gold (#FFDD00) | Yellow at 30% alpha |
-| Player bullet | White (#FFFFFF) | Cyan at 40% alpha |
-| Enemy bullets | Orange-red (#FF6633) | Red at 40% alpha |
-| Explosions | White → Yellow → Orange → Red (fading) | — |
-| Stars | White, dim gray, pale blue (randomized) | — |
-| UI Text | White | — |
-
-### Entity Rendering (All Primitive Shapes)
-
-**Player ship:**
-- Main body: upward-pointing triangle drawn with 3 `draw_line` calls
-- Two small "wing" rectangles on the sides
-- A "thruster glow": 2-3 small circles at the base with decreasing alpha (animated flicker)
-- Glow outline: same triangle shape drawn slightly larger at low alpha
-
-**Drones:**
-- Small rotated square (diamond) drawn with 4 `draw_line` calls
-- Faint glow outline at low alpha
-
-**Escorts:**
-- Hexagon drawn with 6 `draw_line` calls
-- Inner filled circle
-- Glow outline
-
-**Flagships:**
-- Large filled circle (`draw_circle`)
-- Inner ring (`draw_circle` slightly smaller, or `draw_rect_outline` circle approximation)
-- Small radiating lines around the circumference (crown/star motif)
-- Pulsing glow: outer circle at low alpha that scales up and down
-
-**Player bullet:**
-- Tall thin rectangle with a bright core
-- Trailing glow: 2-3 fading rectangles behind it
-
-**Enemy bullets:**
-- Small filled circle
-- Short trailing line behind it
-
-### Visual Effects
-
-**Starfield background:**
-- 3 layers of stars (far, mid, near) scrolling downward at different speeds for parallax
-- Far: tiny 1px dots, dim. Mid: 2px, medium brightness. Near: 3px, bright.
-- ~80 stars total, wrapping around when they scroll off-screen
-
-**Explosions (particle system):**
-- On enemy death: burst of 12-20 particles radiating outward from the center
-- Each particle: small filled circle or short line, colored based on the enemy type
-- Particles have velocity, fade out over 0.4-0.8 seconds, and shrink
-- Flagships get a bigger, more dramatic explosion (more particles, wider spread)
-
-**Player death:**
-- Larger explosion with white/cyan particles
-- Brief screen flash (full-screen white rect at low alpha, fading over 0.2s)
-
-**Thruster trail (player):**
-- Small particles emitted from the bottom of the ship each frame
-- Drift downward slightly, fade quickly (0.2s lifetime)
-- Color: orange → yellow → transparent
-
-**Formation shimmer:**
-- Enemies in formation have a subtle brightness oscillation (sine wave offset per row) to make the grid feel alive
-
-**Dive trail:**
-- Diving enemies leave a faint trail of dots/small circles along their path
-- Trail fades over ~0.5 seconds
-
-**Screen shake:**
-- On player death: brief 0.3s screen shake (random x/y offset on the camera/render offset, decaying)
-
-**UI pulse:**
-- "PRESS ENTER" text blinks via alpha oscillation (sine wave)
-
----
-
-## HUD Layout
-
-```
-┌──────────────────────────────────────┐
-│  SCORE: 003250        HI: 012400     │  ← top bar, white text
-│                                      │
-│         [enemy formation]            │
-│                                      │
-│                                      │
-│                                      │
-│              [play area]             │
-│                                      │
-│                                      │
-│            [player ship]             │
-│  ♦ ♦ ♦                  STAGE 3      │  ← bottom bar: lives + stage
-└──────────────────────────────────────┘
-```
-
-- Score and high score at the top (left and right aligned)
-- Lives as small ship silhouettes (miniature triangles) at bottom-left
-- Current stage number at bottom-right
-
----
-
-## File Structure
-
-New source files to create:
-
-| File | Purpose |
-|------|---------|
-| `src/galaxian.h` | Shared constants, structs (Player, Enemy, Bullet, Particle), enums, formation config |
-| `src/galaxian.c` | Core game data: formation layout, dive path definitions, difficulty curves |
-| `src/state_menu.c` | Title screen state |
-| `src/state_gameplay.c` | Main gameplay state (update + draw for all entities) |
-| `src/state_gameover.c` | Game over screen state |
-| `src/particles.h` | Particle system interface |
-| `src/particles.c` | Particle spawning, updating, and rendering |
-
-All new `.c` files get added to `CMakeLists.txt`'s `add_executable()`.
-
----
-
-## Key Data Structures
-
-```c
-// In galaxian.h
-
-#define MAX_ENEMIES       50
-#define MAX_PARTICLES     512
-#define MAX_ENEMY_BULLETS 8
-#define FORMATION_COLS    10
-#define FORMATION_ROWS    5
-
-typedef enum { ENEMY_DRONE, ENEMY_ESCORT, ENEMY_FLAGSHIP } EnemyType;
-typedef enum { ENEMY_IN_FORMATION, ENEMY_DIVING, ENEMY_RETURNING, ENEMY_DEAD } EnemyState;
-
-typedef struct {
-    float x, y;
-    float vel_x;
-    bool alive;
-    bool invincible;        // respawn grace period
-    float invincible_timer;
-    int lives;
-    int score;
-    int high_score;
-    int stage;
-} Player;
-
-typedef struct {
-    EnemyType type;
-    EnemyState state;
-    float x, y;              // current position
-    float form_x, form_y;    // home position in formation
-    float dive_t;            // parametric t along dive Bézier curve (0..1)
-    float dive_speed;
-    bool alive;
-    float shimmer_offset;    // per-enemy brightness oscillation phase
-} Enemy;
-
-typedef struct {
-    float x, y;
-    float vel_y;
-    bool active;
-    bool is_player;          // true = player bullet, false = enemy bullet
-    float vel_x;             // slight tracking for enemy bullets
-} Bullet;
-
-typedef struct {
-    float x, y;
-    float vx, vy;
-    float life;              // remaining life in seconds
-    float max_life;
-    float size;
-    SDL_Color color;
-    bool active;
-} Particle;
-```
-
----
-
-## Dive Path System
-
-Diving enemies follow cubic Bézier curves with 4 control points:
-
-1. **Start:** Enemy's current formation position
-2. **Control 1:** Offset to one side (creates the initial swoop)
-3. **Control 2:** Near the player's x-position, below mid-screen
-4. **End:** Off-screen bottom (or loop-back point)
-
-If the enemy survives the dive (goes off-screen bottom), it wraps around and returns to its formation slot from the top via a gentler curve.
-
-Multiple pre-defined path templates are mirrored and varied randomly:
-- **Swoop Left:** Curves left then cuts across toward the player
-- **Swoop Right:** Mirror of swoop left
-- **Center Dive:** Drops nearly straight down with a slight S-curve
-- **Wide Loop:** Sweeps out wide, then loops back — used by flagships
-
----
-
-## Difficulty Progression
-
-| Stage | Dive Interval | Enemy Bullet Speed | Max Simultaneous Divers | Enemy Bullet Count |
-|-------|--------------|-------------------|------------------------|--------------------|
-| 1 | 3.0s | 150 px/s | 2 | 1 per dive |
-| 2 | 2.5s | 170 px/s | 2 | 1-2 per dive |
-| 3 | 2.0s | 190 px/s | 3 | 1-2 per dive |
-| 4 | 1.7s | 210 px/s | 3 | 2 per dive |
-| 5+ | 1.5s | 230 px/s | 4 | 2 per dive |
-
-Values are clamped at stage 5 levels.
-
----
-
-## Controls Summary
+## Controls
 
 | Key | Action |
 |-----|--------|
 | Left Arrow / A | Move left |
 | Right Arrow / D | Move right |
 | Space | Fire |
-| Enter | Start game / Restart |
-| Escape | Quit to menu (from gameplay) / Quit application (from menu) |
+| Enter | Start game / Restart from game over |
+| Escape | Return to title from gameplay, quit app from menu/game over |
+
+Control notes:
+
+- The player moves only on the X axis
+- Firing is edge-triggered; holding `Space` should not autofire
+- If the player returns to title from gameplay, the current run is abandoned
+
+## Playfield Layout
+
+Screen layout constants:
+
+- Window: `600 x 800`
+- Top HUD band: `48 px`
+- Bottom HUD band: `48 px`
+- Playfield bounds: `x = 24..576`, `y = 72..752`
+- Player spawn position: centered horizontally, `y = 724`
+- Player horizontal margin from walls: `24 px`
+
+Formation layout:
+
+- Logical formation grid: `10 columns x 6 rows`
+- Horizontal slot spacing: `40 px`
+- Vertical slot spacing: `34 px`
+- Formation anchor: centered on screen, top row starting near `y = 120`
+- The formation itself sways horizontally by about `+/- 28 px`
+- Sway is smooth and periodic, not stepped like Space Invaders
+
+Classic-inspired row occupancy for each new stage:
+
+| Row | Occupied Columns | Enemy Type | Count |
+|-----|------------------|------------|-------|
+| 0 | 4-5 | Flagship | 2 |
+| 1 | 2-7 | Escort | 6 |
+| 2 | 1-8 | Raider | 8 |
+| 3 | 0-9 | Drone | 10 |
+| 4 | 0-9 | Drone | 10 |
+| 5 | 0-9 | Drone | 10 |
+
+Total starting enemies per stage: `46`
+
+## Core Gameplay
+
+### Player
+
+- Starts with `3` lives
+- Moves at `320 px/s`
+- Can have only one player bullet active at a time
+- Respawns after a `0.9s` delay if lives remain
+- Gains `2.0s` of invulnerability after respawn
+- Flashes while invulnerable and cannot fire during the respawn delay
+- Collision uses a forgiving hitbox smaller than the rendered ship silhouette
+
+### Enemy Types
+
+Use four enemy classes so the remake preserves the original scoring ladder and
+formation structure.
+
+| Type | Formation Rows | Score In Formation | Score In Flight | Visual Direction |
+|------|----------------|--------------------|-----------------|------------------|
+| `Drone` | Rows 3-5 | 30 | 60 | Small cyan-blue diamond |
+| `Raider` | Row 2 | 40 | 80 | Angular violet kite |
+| `Escort` | Row 1 | 50 | 100 | Red hexagon with bright core |
+| `Flagship` | Row 0 | 60 | 150 / convoy bonus | Gold ring with crown lines |
+
+Flagship convoy scoring:
+
+- `200` if the flagship is destroyed while diving with one escort
+- `300` if the flagship is destroyed while diving with two escorts before both escorts die
+- `800` if the flagship is destroyed after both escorts in a two-escort convoy have already been destroyed
+
+### Enemy Formation Rules
+
+- Enemies return to their original home slot after a completed dive
+- Solo dives should prefer enemies on the outer edges of currently occupied rows
+- Flagships may launch convoy attacks with up to two living escorts taken from the nearest valid escort slots
+- Only one flagship-led convoy may be active at a time
+- Enemies in formation continue their idle shimmer while the whole formation sways
+- If a row has gaps, home slots remain fixed; surviving enemies do not collapse inward
+
+### Dive Rules
+
+- First attack begins about `1.25s` after the stage intro ends
+- Diving enemies follow authored cubic Bezier paths
+- Paths are mirrored left/right variants with small deterministic offsets so they
+  feel alive without becoming random noise
+- Drones and Raiders mostly dive solo
+- Escorts may dive solo or as a synchronized pair
+- Flagships strongly prefer convoy dives when escorts are available
+- Diving enemies may fire only while above a soft lower firing line near `y = 680`
+- Surviving divers exit off-screen and return from above to rejoin formation
+
+Suggested path families:
+
+- `HookLeft`: peel left, arc down, cross inward
+- `HookRight`: mirrored version of `HookLeft`
+- `CenterS`: shallow S-curve through center lane
+- `WideLoop`: broader path for flagship convoy attacks
+- `ReturnArc`: re-entry curve from above the top HUD into the enemy's home slot
+
+Recommended dive durations:
+
+- Drone: `1.8s`
+- Raider: `2.0s`
+- Escort: `2.0s`
+- Flagship convoy: `2.3s`
+
+### Swarm / Endgame Behavior
+
+Late-stage cleanup should feel more aggressive.
+
+- Trigger swarm mode when `3` or fewer enemies remain, or when all Drones and Raiders are gone
+- In swarm mode, attack cadence becomes much faster and enemies stop lingering in formation
+- Swarm mode ends when the stage ends or the player loses a life
+- After a player death, surviving enemies should return to a stable formation state before play resumes
+
+### Bullets
+
+Player bullet:
+
+- Speed: `620 px/s` straight upward
+- Width/height target: roughly `4 x 16 px`
+- Despawns on enemy hit or when leaving the top of the screen
+
+Enemy bullets:
+
+- Max simultaneous enemy bullets: `6`
+- Speed is stage-dependent
+- Fired with slight X velocity based on player position at fire time
+- No homing after launch
+- Cleared when the player loses a life or when a stage ends
+
+### Collision Rules
+
+- Use AABB collision for all gameplay interactions
+- Player ship hitbox should be about `70%` of the rendered ship width
+- Enemy hitboxes should be slightly inset from their glow layers
+- Player bullets can hit diving or in-formation enemies
+- Enemy bullets never collide with other enemies
+- The player dies on contact with an enemy body or an enemy bullet
+
+### Lives, Extra Life, and Game Over
+
+- One bonus life at `7000` points
+- Losing a life does not reset the stage; remaining enemies stay dead
+- On player death, clear active enemy bullets, trigger explosion/screen shake,
+  then begin respawn if lives remain
+- If no lives remain, transition to `STATE_GAME_OVER` after the death sequence
+- Session high score updates immediately when the score exceeds it
+
+### Stage Flow
+
+Per-stage loop:
+
+1. Show `STAGE N` overlay for about `1.0s`
+2. Spawn the full formation in its home slots
+3. Run attack/formation gameplay
+4. Trigger a short clear delay when all enemies are destroyed
+5. Advance to the next stage with harder parameters
+
+Run reset rules:
+
+- Starting a new run resets score, lives, stage number, formation, bullets, and particles
+- Session high score survives until the application closes
+
+## Difficulty Progression
+
+| Stage | Attack Interval | Enemy Bullet Speed | Max Active Divers | Bullet Pattern |
+|-------|-----------------|--------------------|-------------------|----------------|
+| 1 | 3.00s | 170 px/s | 2 | Mostly single shots |
+| 2 | 2.55s | 185 px/s | 2 | Some double-shot dives |
+| 3 | 2.20s | 200 px/s | 3 | Double shots common |
+| 4 | 1.90s | 220 px/s | 3 | Faster escorts and convoys |
+| 5+ | 1.65s | 240 px/s | 4 | Aggressive swarm cleanup |
+
+Scaling rules:
+
+- Clamp the table at stage 5 values
+- Also shorten the delay before the first attack by `0.05s` per stage down to a floor of `0.8s`
+- Slightly increase formation sway speed after stage 3
+
+## Visual Direction
+
+### Aesthetic
+
+The remake should look like a neon-arcade cabinet interpretation of Galaxian:
+sharp line work, bold silhouettes, layered glow, and restrained particle use.
+The screen must remain readable at gameplay speed.
+
+### Palette
+
+| Element | Primary | Secondary / Glow |
+|---------|---------|------------------|
+| Background | `#090B16` | `#11162A` |
+| Player | `#4DF6FF` | `#00C8FF` |
+| Drone | `#4A8DFF` | `#8CC7FF` |
+| Raider | `#9B6BFF` | `#C8A7FF` |
+| Escort | `#FF4A5E` | `#FF9A8A` |
+| Flagship | `#FFD44D` | `#FFF1A8` |
+| Player Bullet | `#FFFFFF` | `#7DF9FF` |
+| Enemy Bullet | `#FF7A3D` | `#FFC16E` |
+| HUD Text | `#F5F7FF` | `#7AA2FF` |
+
+### Rendering Rules
+
+Gameplay state code should rely on helper functions in `drawing.c/.h`. If the
+current helpers are not enough, extend that module with primitives such as:
+
+- `draw_triangle_outline(...)`
+- `draw_polygon_outline(...)`
+- `draw_ring(...)`
+- `draw_glow_circle(...)`
+
+Avoid calling raw SDL render APIs directly from `state_gameplay.c` except for
+temporary debugging.
+
+### Entity Readability
+
+Player ship:
+
+- Main silhouette is a triangle with two short wing bars
+- Thruster glow flickers subtly while alive
+- Invulnerability flash alternates visible/hidden at about `12 Hz`
+
+Enemy silhouettes:
+
+- Drone: diamond outline plus faint inner core
+- Raider: narrow four-point kite
+- Escort: thicker hex outline with a center dot
+- Flagship: circular core, inner ring, short crown rays
+
+Bullets:
+
+- Player bullet should be brighter and slimmer than enemy bullets
+- Enemy bullets should have a small tail or spark so their travel direction is obvious
+
+### Effects
+
+Background:
+
+- Three-layer starfield with slow downward drift
+- About `80` total stars across all layers
+- Stars wrap vertically
+
+Particles:
+
+- Enemy death: `12-20` particles based on enemy type
+- Flagship death: `24-32` particles and a larger glow burst
+- Player death: strongest particle burst plus white-cyan flash
+
+Camera / screen feedback:
+
+- `0.25s` decaying screen shake on player death
+- Tiny `0.08s` nudge on flagship destruction
+- Menu and game-over prompts pulse by alpha, not scale
+
+## HUD And Screen Flow
+
+Top HUD:
+
+- Left: `SCORE`
+- Right: `HI SCORE`
+- Use zero-padded numeric formatting for score display
+
+Bottom HUD:
+
+- Left: remaining lives as miniature ship icons
+- Right: current stage number
+
+Menu screen:
+
+- Title logo centered in upper third
+- Small attract-mode formation or drifting enemies behind the title
+- Session high score shown prominently
+- One-line controls hint near the bottom
+
+Game-over screen:
+
+- `GAME OVER` headline
+- Final score
+- High score or `NEW HIGH SCORE` callout when relevant
+- `PRESS ENTER TO PLAY AGAIN`
+
+## Implementation Structure
+
+Recommended new source files:
+
+| File | Purpose |
+|------|---------|
+| `src/galaxian.h` | Shared constants, enums, and gameplay structs |
+| `src/galaxian.c` | Formation setup, attack selection, path generation, difficulty helpers |
+| `src/state_menu.c` | Title screen logic and rendering |
+| `src/state_gameplay.c` | Main gameplay state |
+| `src/state_gameover.c` | Game-over screen logic |
+| `src/particles.h` | Particle system interface |
+| `src/particles.c` | Particle storage, update, and draw |
+
+Also update:
+
+- `src/main.c` to register the new states and start at the menu
+- `src/game_state.h` to add `STATE_GAME_OVER`
+- `src/drawing.h` and `src/drawing.c` if extra primitive helpers are needed
+- `CMakeLists.txt` to compile every new `.c` file
+
+## Data Model
+
+Keep score/session state separate from the player entity. The original draft put
+score, stage, and high score inside `Player`, which makes ownership muddy.
+
+```c
+// galaxian.h
+
+#define MAX_ENEMIES       46
+#define MAX_PARTICLES     768
+#define MAX_ENEMY_BULLETS 6
+#define FORMATION_COLS    10
+#define FORMATION_ROWS    6
+
+typedef enum {
+    ENEMY_DRONE,
+    ENEMY_RAIDER,
+    ENEMY_ESCORT,
+    ENEMY_FLAGSHIP
+} EnemyType;
+
+typedef enum {
+    ENEMY_IN_FORMATION,
+    ENEMY_DIVING,
+    ENEMY_RETURNING,
+    ENEMY_SWARMING,
+    ENEMY_DEAD
+} EnemyState;
+
+typedef enum {
+    BULLET_NONE,
+    BULLET_PLAYER,
+    BULLET_ENEMY
+} BulletOwner;
+
+typedef struct {
+    vector2 position;
+    float speed;
+    bool alive;
+    bool invulnerable;
+    float invulnerable_timer;
+    float respawn_timer;
+} Player;
+
+typedef struct {
+    EnemyType type;
+    EnemyState state;
+    int slot_row;
+    int slot_col;
+    vector2 home_position;
+    vector2 position;
+    float path_t;
+    float path_duration;
+    float shimmer_phase;
+    int shots_remaining;
+    bool alive;
+    bool reserved_for_convoy;
+} Enemy;
+
+typedef struct {
+    vector2 position;
+    vector2 velocity;
+    BulletOwner owner;
+    bool active;
+} Bullet;
+
+typedef struct {
+    vector2 position;
+    vector2 velocity;
+    float life;
+    float max_life;
+    float size;
+    SDL_Color color;
+    bool active;
+} Particle;
+
+typedef struct {
+    Player player;
+    Enemy enemies[MAX_ENEMIES];
+    Bullet player_bullet;
+    Bullet enemy_bullets[MAX_ENEMY_BULLETS];
+    Particle particles[MAX_PARTICLES];
+    int score;
+    int high_score;
+    int stage;
+    int lives;
+    bool extra_life_awarded;
+    bool swarm_mode;
+    float stage_intro_timer;
+    float stage_clear_timer;
+    float attack_timer;
+    float first_attack_delay;
+    int active_divers;
+} GameplayStateData;
+```
+
+## Acceptance Criteria
+
+- The game boots into a menu state instead of immediately entering gameplay
+- A full run can progress through multiple stages and reach game over without crashes
+- Stage setup creates a `46`-enemy formation with the row occupancy described above
+- The player can never have more than one bullet active at a time
+- Convoy dives, swarm behavior, scoring, and extra-life rules match this spec
+- All gameplay ships, enemies, bullets, particles, and HUD embellishments render
+  without texture assets, except for font rendering
+- Session high score persists between runs until the executable closes
