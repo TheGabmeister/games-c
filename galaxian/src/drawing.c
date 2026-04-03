@@ -1,6 +1,10 @@
 #include "drawing.h"
 #include <math.h>
 
+#ifndef M_PI
+#define M_PI 3.14159265358979323846
+#endif
+
 void draw_texture(SDL_Texture *texture, float x, float y)
 {
     if (!texture) return;
@@ -101,4 +105,42 @@ void draw_circle(float cx, float cy, float radius, SDL_Color color)
             err += 2 * (y - x) + 1;
         }
     }
+}
+
+void draw_circle_outline(float cx, float cy, float radius, SDL_Color color)
+{
+    SDL_Renderer *renderer = get_renderer();
+    SDL_SetRenderDrawColor(renderer, color.r, color.g, color.b, color.a);
+
+    int segs = (int)(radius * 4);
+    if (segs < 16) segs = 16;
+    if (segs > 64) segs = 64;
+
+    float step = 2.0f * (float)M_PI / segs;
+    float px = cx + radius;
+    float py = cy;
+
+    for (int i = 1; i <= segs; i++) {
+        float a  = i * step;
+        float nx = cx + cosf(a) * radius;
+        float ny = cy + sinf(a) * radius;
+        SDL_RenderLine(renderer, px, py, nx, ny);
+        px = nx;
+        py = ny;
+    }
+}
+
+void draw_triangle(float x1, float y1, float x2, float y2,
+                   float x3, float y3, SDL_Color color)
+{
+    SDL_FColor fc = {
+        color.r / 255.0f, color.g / 255.0f,
+        color.b / 255.0f, color.a / 255.0f
+    };
+    SDL_Vertex verts[3] = {
+        { {x1, y1}, fc, {0, 0} },
+        { {x2, y2}, fc, {0, 0} },
+        { {x3, y3}, fc, {0, 0} },
+    };
+    SDL_RenderGeometry(get_renderer(), NULL, verts, 3, NULL, 0);
 }

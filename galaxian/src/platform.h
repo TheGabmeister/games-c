@@ -208,5 +208,6 @@ bool is_mouse_button_down(int button);
 bool is_mouse_button_pressed(int button);
 vector2 get_mouse_position(void);
 float get_mouse_wheel_move(void);
+void request_close(void);
 
 #endif // PLATFORM_H

@@ -1,80 +1,69 @@
-/**********************************************************************************************
-*
-*   raylib - Advance Game template
-*
-*   Ending Screen Functions Definitions (Init, Update, Draw, Unload)
-*
-*   Copyright (c) 2014-2022 Ramon Santamaria (@raysan5)
-*
-*   This software is provided "as-is", without any express or implied warranty. In no event
-*   will the authors be held liable for any damages arising from the use of this software.
-*
-*   Permission is granted to anyone to use this software for any purpose, including commercial
-*   applications, and to alter it and redistribute it freely, subject to the following restrictions:
-*
-*     1. The origin of this software must not be misrepresented; you must not claim that you
-*     wrote the original software. If you use this software in a product, an acknowledgment
-*     in the product documentation would be appreciated but is not required.
-*
-*     2. Altered source versions must be plainly marked as such, and must not be misrepresented
-*     as being the original software.
-*
-*     3. This notice may not be removed or altered from any source distribution.
-*
-**********************************************************************************************/
-
 #include "raylib.h"
 #include "screens.h"
+#include "game_types.h"
+#include "drawing.h"
 
-//----------------------------------------------------------------------------------
-// Module Variables Definition (local)
-//----------------------------------------------------------------------------------
-static int framesCounter = 0;
 static int finishScreen = 0;
+static float blinkTimer = 0;
+static Star stars[STAR_COUNT];
 
-//----------------------------------------------------------------------------------
-// Ending Screen Functions Definition
-//----------------------------------------------------------------------------------
-
-// Ending Screen Initialization logic
 void InitEndingScreen(void)
 {
-    // TODO: Initialize ENDING screen variables here!
-    framesCounter = 0;
     finishScreen = 0;
+    blinkTimer = 0;
+    InitStars(stars);
 }
 
-// Ending Screen Update logic
 void UpdateEndingScreen(void)
 {
-    // TODO: Update ENDING screen variables here!
+    float dt = GetFrameTime();
+    blinkTimer += dt;
+    UpdateStars(stars, dt);
 
-    // Press enter or tap to return to TITLE screen
-    if (IsKeyPressed(KEY_ENTER) || IsGestureDetected(GESTURE_TAP))
+    if (IsKeyPressed(KEY_ENTER))
     {
         finishScreen = 1;
-        PlaySound(fxCoin);
     }
 }
 
-// Ending Screen Draw logic
 void DrawEndingScreen(void)
 {
-    // TODO: Draw ENDING screen here!
-    DrawRectangle(0, 0, GetScreenWidth(), GetScreenHeight(), BLUE);
+    DrawStars(stars);
 
-    Vector2 pos = { 20, 10 };
-    DrawTextEx(font, "ENDING SCREEN", pos, font.baseSize*3.0f, 4, DARKBLUE);
-    DrawText("PRESS ENTER or TAP to RETURN to TITLE SCREEN", 120, 220, 20, DARKBLUE);
+    // GAME OVER title
+    const char *title = "GAME OVER";
+    int titleSize = 50;
+    int tw = MeasureText(title, titleSize);
+    int tx = SCREEN_W / 2 - tw / 2;
+    int ty = 150;
+    DrawText(title, tx + 2, ty + 2, titleSize, Fade((Color){ 255, 50, 50, 255 }, 0.4f));
+    DrawText(title, tx, ty, titleSize, (Color){ 255, 50, 50, 255 });
+
+    // Final score
+    const char *scoreText = TextFormat("SCORE: %d", appState.lastScore);
+    int sw = MeasureText(scoreText, 30);
+    DrawText(scoreText, SCREEN_W / 2 - sw / 2, 280, 30, WHITE);
+
+    // Wave reached
+    const char *waveText = TextFormat("WAVE: %d", appState.lastWave);
+    int ww = MeasureText(waveText, 24);
+    DrawText(waveText, SCREEN_W / 2 - ww / 2, 330, 24, COL_UI_CYAN);
+
+    // High score
+    const char *hsText = TextFormat("HIGH SCORE: %d", appState.highScore);
+    int hw = MeasureText(hsText, 24);
+    DrawText(hsText, SCREEN_W / 2 - hw / 2, 400, 24, COL_UI_CYAN);
+
+    // Blinking prompt
+    if (fmodf(blinkTimer, 1.0f) < 0.6f) {
+        const char *prompt = "PRESS ENTER TO PLAY AGAIN";
+        int pw = MeasureText(prompt, 20);
+        DrawText(prompt, SCREEN_W / 2 - pw / 2, 480, 20, WHITE);
+    }
 }
 
-// Ending Screen Unload logic
-void UnloadEndingScreen(void)
-{
-    // TODO: Unload ENDING screen variables here!
-}
+void UnloadEndingScreen(void) { }
 
-// Ending Screen should finish?
 int FinishEndingScreen(void)
 {
     return finishScreen;

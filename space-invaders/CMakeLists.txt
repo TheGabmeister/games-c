@@ -17,19 +17,7 @@ set_target_properties(${PROJECT_NAME} PROPERTIES
 
 set_property(TARGET ${PROJECT_NAME} PROPERTY VS_DEBUGGER_WORKING_DIRECTORY $<TARGET_FILE_DIR:${PROJECT_NAME}>)
 
-if ("${PLATFORM}" STREQUAL "Web")
-    add_custom_command(
-        TARGET ${PROJECT_NAME} PRE_BUILD
-        COMMAND ${CMAKE_COMMAND} -E copy_directory ${CMAKE_SOURCE_DIR}/src/resources $<TARGET_FILE_DIR:${PROJECT_NAME}>/../resources
-    )
-    #DEPENDS ${PROJECT_NAME}
-else()
-    add_custom_command(
-        TARGET ${PROJECT_NAME} POST_BUILD
-        COMMAND ${CMAKE_COMMAND} -E copy_directory ${CMAKE_SOURCE_DIR}/src/resources $<TARGET_FILE_DIR:${PROJECT_NAME}>/resources
-    )
-    #DEPENDS ${PROJECT_NAME}
-endif()
+# No runtime resources needed (primitive-only rendering)
 
 #set(raylib_VERBOSE 1)
 target_link_libraries(${PROJECT_NAME} raylib)

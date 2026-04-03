@@ -7,7 +7,10 @@
       "Bash(cmake --build build --config Release)",
       "Bash(cmake -S . -B build)",
       "Bash(cmake -B build -G \"Visual Studio 18 2026\" -A x64 -Wno-dev)",
-      "Bash(cmake -S . -B build -G \"Visual Studio 18 2026\" -A x64 -Wno-dev)"
+      "Bash(cmake -S . -B build -G \"Visual Studio 18 2026\" -A x64 -Wno-dev)",
+      "Bash(cmake .. -G \"MinGW Makefiles\")",
+      "Bash(cmake ..)",
+      "Bash(cmake --build .)"
     ]
   }
 }

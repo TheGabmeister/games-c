@@ -70,4 +70,11 @@ void draw_line(float x1, float y1, float x2, float y2, SDL_Color color);
 /* Filled circle (midpoint algorithm) */
 void draw_circle(float cx, float cy, float radius, SDL_Color color);
 
+/* Circle outline (ring) */
+void draw_circle_outline(float cx, float cy, float radius, SDL_Color color);
+
+/* Filled triangle */
+void draw_triangle(float x1, float y1, float x2, float y2,
+                   float x3, float y3, SDL_Color color);
+
 #endif /* DRAWING_H */

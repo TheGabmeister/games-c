@@ -200,3 +200,8 @@ float get_mouse_wheel_move(void)
 {
     return GLOBALS.Mouse.wheelY;
 }
+
+void request_close(void)
+{
+    GLOBALS.should_close = true;
+}

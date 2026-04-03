@@ -98,6 +98,9 @@ void UpdateLogoScreen(void)
 // Logo Screen Draw logic
 void DrawLogoScreen(void)
 {
+    // White background so the logo animation is visible on the dark game background
+    DrawRectangle(0, 0, GetScreenWidth(), GetScreenHeight(), RAYWHITE);
+
     if (state == 0)         // Draw blinking top-left square corner
     {
         if ((framesCounter/10)%2) DrawRectangle(logoPositionX, logoPositionY, 16, 16, BLACK);

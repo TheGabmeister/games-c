@@ -1,48 +1,48 @@
 #ifndef SCREENS_H
 #define SCREENS_H
 
-// Types and Structures Definition
-typedef enum GameScreen { UNKNOWN = -1, LOGO = 0, TITLE, OPTIONS, GAMEPLAY, ENDING } GameScreen;
+#include "raylib.h"
 
-// Global Variables Declaration (shared by several modules)
+// Screen flow: LOGO -> TITLE -> GAMEPLAY -> ENDING
+typedef enum GameScreen { UNKNOWN = -1, LOGO = 0, TITLE, GAMEPLAY, ENDING } GameScreen;
+
+// Shared app state (persists across screens within a session)
+typedef struct {
+    int highScore;
+    int lastScore;
+    int lastWave;
+} AppState;
+
+// Global variables shared between modules
 extern GameScreen currentScreen;
-extern Font font;
-extern Music music;
-extern Sound fxCoin;
+extern AppState appState;
 
 #ifdef __cplusplus
-extern "C" {            // Prevents name mangling of functions
+extern "C" {
 #endif
 
-// Logo Screen Functions Declaration
+// Logo Screen
 void InitLogoScreen(void);
 void UpdateLogoScreen(void);
 void DrawLogoScreen(void);
 void UnloadLogoScreen(void);
 int FinishLogoScreen(void);
 
-// Title Screen Functions Declaration
+// Title Screen
 void InitTitleScreen(void);
 void UpdateTitleScreen(void);
 void DrawTitleScreen(void);
 void UnloadTitleScreen(void);
 int FinishTitleScreen(void);
 
-// Options Screen Functions Declaration
-void InitOptionsScreen(void);
-void UpdateOptionsScreen(void);
-void DrawOptionsScreen(void);
-void UnloadOptionsScreen(void);
-int FinishOptionsScreen(void);
-
-// Gameplay Screen Functions Declaration
+// Gameplay Screen
 void InitGameplayScreen(void);
 void UpdateGameplayScreen(void);
 void DrawGameplayScreen(void);
 void UnloadGameplayScreen(void);
 int FinishGameplayScreen(void);
 
-// Ending Screen Functions Declaration
+// Ending Screen
 void InitEndingScreen(void);
 void UpdateEndingScreen(void);
 void DrawEndingScreen(void);

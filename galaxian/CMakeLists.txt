@@ -62,6 +62,11 @@ add_executable(${PROJECT_NAME}
     src/resources.c
     src/drawing.c
     src/audio.c
+    src/galaxian.c
+    src/particles.c
+    src/state_menu.c
+    src/state_gameplay.c
+    src/state_gameover.c
 )
 target_link_libraries(${PROJECT_NAME} PRIVATE
     SDL3::SDL3

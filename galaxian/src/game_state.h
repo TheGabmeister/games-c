@@ -45,8 +45,7 @@ typedef enum {
     STATE_MENU,
     STATE_GAMEPLAY,
     STATE_PAUSE,
-    /* STATE_SETTINGS, */
-    /* STATE_GAME_OVER, */
+    STATE_GAME_OVER,
     STATE_COUNT
 } GameStateID;
 

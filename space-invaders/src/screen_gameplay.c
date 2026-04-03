@@ -1,48 +1,35 @@
 #include "raylib.h"
 #include "screens.h"
+#include "gameplay.h"
 
-// Module Variables Definition (local)
-static int framesCounter = 0;
-static int finishScreen = 0;
+static GameState game;
+static int finishScreen;
 
-// Gameplay Screen Initialization logic
 void InitGameplayScreen(void)
 {
-    // TODO: Initialize GAMEPLAY screen variables here!
-    framesCounter = 0;
     finishScreen = 0;
+    GameInit(&game);
 }
 
-// Gameplay Screen Update logic
 void UpdateGameplayScreen(void)
 {
-    // TODO: Update GAMEPLAY screen variables here!
+    float dt = GetFrameTime();
+    GameUpdate(&game, dt, &appState.highScore);
 
-    // Press enter or tap to change to ENDING screen
-    if (IsKeyPressed(KEY_ENTER) || IsGestureDetected(GESTURE_TAP))
-    {
+    if (GameShouldEnd(&game)) {
+        appState.lastScore = game.score;
+        appState.lastWave = game.wave;
         finishScreen = 1;
-        PlaySound(fxCoin);
     }
 }
 
-// Gameplay Screen Draw logic
 void DrawGameplayScreen(void)
 {
-    // TODO: Draw GAMEPLAY screen here!
-    DrawRectangle(0, 0, GetScreenWidth(), GetScreenHeight(), PURPLE);
-    Vector2 pos = { 20, 10 };
-    DrawTextEx(font, "GAMEPLAY SCREEN", pos, font.baseSize*3.0f, 4, MAROON);
-    DrawText("PRESS ENTER or TAP to JUMP to ENDING SCREEN", 130, 220, 20, MAROON);
+    GameDraw(&game);
 }
 
-// Gameplay Screen Unload logic
-void UnloadGameplayScreen(void)
-{
-    // TODO: Unload GAMEPLAY screen variables here!
-}
+void UnloadGameplayScreen(void) { }
 
-// Gameplay Screen should finish?
 int FinishGameplayScreen(void)
 {
     return finishScreen;
