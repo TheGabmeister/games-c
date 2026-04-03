@@ -31,7 +31,6 @@ void audio_shutdown(void)
         MIX_DestroyMixer(mixer);
         mixer = NULL;
     }
-    MIX_Quit();
 }
 
 MIX_Mixer *get_mixer(void)

@@ -202,7 +202,7 @@ float get_deltatime(void);
 SDL_Renderer *get_renderer(void);
 bool is_key_down(int key);
 bool is_key_pressed(int key);
-void engine_begin_frame(void);
+void platform_begin_frame(void);
 void engine_process_event(SDL_Event *event);
 bool is_mouse_button_down(int button);
 bool is_mouse_button_pressed(int button);

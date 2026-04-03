@@ -6,13 +6,13 @@ This file provides guidance to coding agents working in this repository.
 
 ```powershell
 # Configure (Visual Studio 18 2026 generator, x64)
-cmake -S . -B build-codex -G "Visual Studio 18 2026" -A x64 -Wno-dev
+cmake -S . -B build -G "Visual Studio 18 2026" -A x64 -Wno-dev
 
 # Build
-cmake --build build-codex --config Debug
+cmake --build build --config Debug
 
 # Run
-.\build-codex\Debug\galaxian.exe
+.\build\Debug\galaxian.exe
 ```
 
 Dependencies (`SDL3`, `SDL3_image`, `SDL3_mixer`, `SDL3_ttf`) live in `vendor/`
@@ -51,7 +51,7 @@ Application entry point.
 
 Main loop order:
 
-1. `engine_begin_frame()`
+1. `platform_begin_frame()`
 2. `SDL_PollEvent()` + `engine_process_event()`
 3. `get_deltatime()` -> `game_state_update(dt)`
 4. Clear -> `game_state_draw()` -> `SDL_RenderPresent()`

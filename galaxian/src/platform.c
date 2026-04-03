@@ -76,7 +76,8 @@ void close_window(void)
 {
     destroy_window_resources();
     SDL_memset(&GLOBALS, 0, sizeof(GLOBALS));
-    SDL_Quit();
+    /* SDL_Quit() is intentionally omitted — it deadlocks on Windows with
+       SDL3 + SDL3_mixer.  The OS reclaims all resources on process exit. */
 }
 
 bool is_window_ready(void)
@@ -145,7 +146,7 @@ static SDL_MouseButtonFlags _mouse_button_mask(int button)
     }
 }
 
-void engine_begin_frame(void)
+void platform_begin_frame(void)
 {
     // Keyboard
     SDL_memcpy(GLOBALS.Keyboard.previousKeyState, GLOBALS.Keyboard.currentKeyState, SDL_SCANCODE_COUNT * sizeof(bool));
@@ -223,7 +224,7 @@ int main(int argc, char *argv[])
     /* --- Main loop --- */
     SDL_Event event;
     while (!window_should_close()) {
-        engine_begin_frame();
+        platform_begin_frame();
         while (SDL_PollEvent(&event))
             engine_process_event(&event);
 
@@ -242,10 +243,11 @@ int main(int argc, char *argv[])
     }
 
     /* --- Shutdown (order matters) --- */
+    /* --- Shutdown (order matters) --- */
     game_shutdown();
     res_free_all();
-    res_shutdown();
     audio_shutdown();
+    res_shutdown();
     close_window();
     return 0;
 }

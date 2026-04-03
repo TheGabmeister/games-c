@@ -114,7 +114,6 @@ void res_shutdown(void)
 
     resources_ready = false;
     default_font_path[0] = '\0';
-    TTF_Quit();
 }
 
 const char *res_default_font_path(void)
