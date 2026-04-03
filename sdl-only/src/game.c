@@ -1,5 +1,6 @@
 #include "game.h"
 #include "platform.h"
+#include "input.h"
 #include "draw.h"
 #include "scene.h"
 #include <stdio.h>
@@ -18,10 +19,10 @@ static void title_update(float dt)
 {
     (void)dt;
 
-    if (is_key_pressed(SDL_SCANCODE_RETURN))
+    if (action_pressed(ACTION_CONFIRM))
         scene_set(play_scene());
 
-    if (is_key_pressed(SDL_SCANCODE_ESCAPE))
+    if (action_pressed(ACTION_CANCEL))
         request_close();
 }
 
@@ -81,19 +82,19 @@ static void play_init(void)
 
 static void play_update(float dt)
 {
-    if (is_key_pressed(SDL_SCANCODE_ESCAPE)) {
+    if (action_pressed(ACTION_CANCEL)) {
         scene_set(title_scene());
         return;
     }
 
     // Movement
-    if (is_key_down(SDL_SCANCODE_W) || is_key_down(SDL_SCANCODE_UP))
+    if (action_down(ACTION_UP))
         player.rect.y -= player.speed * dt;
-    if (is_key_down(SDL_SCANCODE_S) || is_key_down(SDL_SCANCODE_DOWN))
+    if (action_down(ACTION_DOWN))
         player.rect.y += player.speed * dt;
-    if (is_key_down(SDL_SCANCODE_A) || is_key_down(SDL_SCANCODE_LEFT))
+    if (action_down(ACTION_LEFT))
         player.rect.x -= player.speed * dt;
-    if (is_key_down(SDL_SCANCODE_D) || is_key_down(SDL_SCANCODE_RIGHT))
+    if (action_down(ACTION_RIGHT))
         player.rect.x += player.speed * dt;
 
     // Clamp to window

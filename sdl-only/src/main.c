@@ -1,4 +1,5 @@
 #include "platform.h"
+#include "input.h"
 #include "game.h"
 #include "scene.h"
 
@@ -14,16 +15,18 @@ int main(int argc, char *argv[])
     if (!is_window_ready())
         return 1;
 
+    input_init();
     game_init();
 
     SDL_Event event;
 
     while (!window_should_close())
     {
-        platform_begin_frame();
+        input_begin_frame();
         while (SDL_PollEvent(&event))
         {
             platform_process_event(&event);
+            input_process_event(&event);
         }
 
         float dt = get_deltatime();
