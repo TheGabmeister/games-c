@@ -15,6 +15,8 @@ add_executable(${PROJECT_NAME}
     src/draw.c
     src/scene.c
     src/game.c
+    src/scenes/title_scene.c
+    src/scenes/play_scene.c
 )
 target_link_libraries(${PROJECT_NAME} PRIVATE
     SDL3::SDL3
