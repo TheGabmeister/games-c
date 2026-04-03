@@ -87,7 +87,14 @@ FetchContent_Declare(
 
 FetchContent_MakeAvailable(SDL3 SDL3_image SDL3_mixer SDL3_ttf)
 
-add_executable(hello_sdl src/main.c src/platform.c)
+add_executable(hello_sdl
+    src/main.c
+    src/platform.c
+    src/game_state.c
+    src/resources.c
+    src/drawing.c
+    src/audio.c
+)
 target_link_libraries(hello_sdl PRIVATE
     SDL3::SDL3
     SDL3_image::SDL3_image
