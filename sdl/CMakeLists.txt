@@ -5,6 +5,8 @@ set(CMAKE_C_STANDARD 17)
 
 include(FetchContent)
 
+set(SDL_TEST_LIBRARY OFF CACHE BOOL "" FORCE)
+
 FetchContent_Declare(
     SDL3
     URL https://github.com/libsdl-org/SDL/releases/download/release-3.4.2/SDL3-3.4.2.tar.gz
