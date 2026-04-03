@@ -1,17 +1,3 @@
-/*******************************************************************************************
-*
-*   raylib game template
-*
-*   <Game title>
-*   <Game description>
-*
-*   This game has been created using raylib (www.raylib.com)
-*   raylib is licensed under an unmodified zlib/libpng license (View raylib.h for details)
-*
-*   Copyright (c) 2021 Ramon Santamaria (@raysan5)
-*
-********************************************************************************************/
-
 #include "raylib.h"
 #include "screens.h"    // NOTE: Declares global (extern) variables and screens functions
 
@@ -19,18 +5,14 @@
     #include <emscripten/emscripten.h>
 #endif
 
-//----------------------------------------------------------------------------------
 // Shared Variables Definition (global)
 // NOTE: Those variables are shared between modules through screens.h
-//----------------------------------------------------------------------------------
 GameScreen currentScreen = LOGO;
 Font font = { 0 };
 Music music = { 0 };
 Sound fxCoin = { 0 };
 
-//----------------------------------------------------------------------------------
 // Global Variables Definition (local to this module)
-//----------------------------------------------------------------------------------
 static const int screenWidth = 800;
 static const int screenHeight = 450;
 
@@ -41,9 +23,7 @@ static bool transFadeOut = false;
 static int transFromScreen = -1;
 static GameScreen transToScreen = UNKNOWN;
 
-//----------------------------------------------------------------------------------
 // Module Functions Declaration
-//----------------------------------------------------------------------------------
 static void ChangeToScreen(int screen);     // Change to screen, no transition effect
 
 static void TransitionToScreen(int screen); // Request transition to next screen
@@ -52,20 +32,16 @@ static void DrawTransition(void);           // Draw transition effect (full-scre
 
 static void UpdateDrawFrame(void);          // Update and draw one frame
 
-//----------------------------------------------------------------------------------
+
 // Program main entry point
-//----------------------------------------------------------------------------------
 int main(void)
 {
-    // Initialization
-    //---------------------------------------------------------
     InitWindow(screenWidth, screenHeight, "raylib game template");
 
-    InitAudioDevice();      // Initialize audio device
+    InitAudioDevice();      
 
-    // Load global data (assets that must be available in all screens, i.e. font)
     font = LoadFont("resources/mecha.png");
-    //music = LoadMusicStream("resources/ambient.ogg"); // TODO: Load music
+    //music = LoadMusicStream("resources/ambient.ogg");
     fxCoin = LoadSound("resources/coin.wav");
 
     SetMusicVolume(music, 1.0f);
@@ -114,9 +90,7 @@ int main(void)
     return 0;
 }
 
-//----------------------------------------------------------------------------------
 // Module Functions Definition
-//----------------------------------------------------------------------------------
 // Change to next screen, no transition
 static void ChangeToScreen(int screen)
 {
@@ -220,8 +194,6 @@ static void DrawTransition(void)
 // Update and draw game frame
 static void UpdateDrawFrame(void)
 {
-    // Update
-    //----------------------------------------------------------------------------------
     //UpdateMusicStream(music);       // NOTE: Music keeps playing between screens
 
     if (!onTransition)
@@ -269,10 +241,7 @@ static void UpdateDrawFrame(void)
         }
     }
     else UpdateTransition();    // Update transition (fade-in, fade-out)
-    //----------------------------------------------------------------------------------
 
-    // Draw
-    //----------------------------------------------------------------------------------
     BeginDrawing();
 
         ClearBackground(RAYWHITE);
@@ -293,5 +262,4 @@ static void UpdateDrawFrame(void)
         //DrawFPS(10, 10);
 
     EndDrawing();
-    //----------------------------------------------------------------------------------
 }
