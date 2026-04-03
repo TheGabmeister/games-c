@@ -1,5 +1,6 @@
 #include "resources.h"
 #include "platform.h"
+#include "audio.h"
 #include <string.h>
 
 /* --- Texture cache --- */
@@ -14,7 +15,6 @@ static int texture_count = 0;
 
 SDL_Texture *res_load_texture(const char *path)
 {
-    /* Return cached */
     for (int i = 0; i < texture_count; i++) {
         if (strcmp(textures[i].path, path) == 0)
             return textures[i].texture;
@@ -51,7 +51,6 @@ static int font_count = 0;
 
 TTF_Font *res_load_font(const char *path, float pt_size)
 {
-    /* Return cached (same path + same size) */
     for (int i = 0; i < font_count; i++) {
         if (fonts[i].pt_size == pt_size && strcmp(fonts[i].path, path) == 0)
             return fonts[i].font;
@@ -76,74 +75,55 @@ TTF_Font *res_load_font(const char *path, float pt_size)
     return font;
 }
 
-/* --- Sound cache --- */
+/* --- Audio cache (shared for sounds and music) --- */
 
 typedef struct {
     char path[256];
-    Mix_Chunk *chunk;
-} SoundEntry;
+    MIX_Audio *audio;
+} AudioEntry;
 
-static SoundEntry sounds[MAX_SOUNDS];
-static int sound_count = 0;
+static AudioEntry audio_entries[MAX_AUDIO];
+static int audio_count = 0;
 
-Mix_Chunk *res_load_sound(const char *path)
+static MIX_Audio *load_audio_cached(const char *path, bool predecode)
 {
-    for (int i = 0; i < sound_count; i++) {
-        if (strcmp(sounds[i].path, path) == 0)
-            return sounds[i].chunk;
+    for (int i = 0; i < audio_count; i++) {
+        if (strcmp(audio_entries[i].path, path) == 0)
+            return audio_entries[i].audio;
     }
 
-    if (sound_count >= MAX_SOUNDS) {
-        SDL_Log("res_load_sound: cache full (%d)", MAX_SOUNDS);
+    if (audio_count >= MAX_AUDIO) {
+        SDL_Log("res_load_audio: cache full (%d)", MAX_AUDIO);
         return NULL;
     }
 
-    Mix_Chunk *chunk = Mix_LoadWAV(path);
-    if (!chunk) {
-        SDL_Log("res_load_sound: failed to load '%s': %s", path, SDL_GetError());
+    MIX_Mixer *mixer = get_mixer();
+    if (!mixer) {
+        SDL_Log("res_load_audio: audio not initialized (call audio_init first)");
         return NULL;
     }
 
-    SoundEntry *e = &sounds[sound_count++];
+    MIX_Audio *audio = MIX_LoadAudio(mixer, path, predecode);
+    if (!audio) {
+        SDL_Log("res_load_audio: failed to load '%s': %s", path, SDL_GetError());
+        return NULL;
+    }
+
+    AudioEntry *e = &audio_entries[audio_count++];
     strncpy(e->path, path, sizeof(e->path) - 1);
     e->path[sizeof(e->path) - 1] = '\0';
-    e->chunk = chunk;
-    return chunk;
+    e->audio = audio;
+    return audio;
 }
 
-/* --- Music cache --- */
-
-typedef struct {
-    char path[256];
-    Mix_Music *music;
-} MusicEntry;
-
-static MusicEntry musics[MAX_MUSIC];
-static int music_count = 0;
-
-Mix_Music *res_load_music(const char *path)
+MIX_Audio *res_load_sound(const char *path)
 {
-    for (int i = 0; i < music_count; i++) {
-        if (strcmp(musics[i].path, path) == 0)
-            return musics[i].music;
-    }
+    return load_audio_cached(path, true);
+}
 
-    if (music_count >= MAX_MUSIC) {
-        SDL_Log("res_load_music: cache full (%d)", MAX_MUSIC);
-        return NULL;
-    }
-
-    Mix_Music *music = Mix_LoadMUS(path);
-    if (!music) {
-        SDL_Log("res_load_music: failed to load '%s': %s", path, SDL_GetError());
-        return NULL;
-    }
-
-    MusicEntry *e = &musics[music_count++];
-    strncpy(e->path, path, sizeof(e->path) - 1);
-    e->path[sizeof(e->path) - 1] = '\0';
-    e->music = music;
-    return music;
+MIX_Audio *res_load_music(const char *path)
+{
+    return load_audio_cached(path, false);
 }
 
 /* --- Cleanup --- */
@@ -158,11 +138,7 @@ void res_free_all(void)
         TTF_CloseFont(fonts[i].font);
     font_count = 0;
 
-    for (int i = 0; i < sound_count; i++)
-        Mix_FreeChunk(sounds[i].chunk);
-    sound_count = 0;
-
-    for (int i = 0; i < music_count; i++)
-        Mix_FreeMusic(musics[i].music);
-    music_count = 0;
+    for (int i = 0; i < audio_count; i++)
+        MIX_DestroyAudio(audio_entries[i].audio);
+    audio_count = 0;
 }

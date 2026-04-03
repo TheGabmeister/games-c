@@ -19,10 +19,17 @@
  *
  *     SDL_Texture *tex  = res_load_texture("assets/player.png");
  *     TTF_Font    *font = res_load_font("assets/ui.ttf", 24);
- *     Mix_Chunk   *sfx  = res_load_sound("assets/jump.wav");
- *     Mix_Music   *mus  = res_load_music("assets/bgm.mp3");
+ *     MIX_Audio   *sfx  = res_load_sound("assets/jump.wav");
+ *     MIX_Audio   *bgm  = res_load_music("assets/bgm.mp3");
  *
  * All functions return NULL on failure and log the error via SDL_Log.
+ *
+ * --- Sound vs Music ---
+ *
+ * Both return MIX_Audio*, but:
+ *   - res_load_sound() pre-decodes the entire file into memory (fast playback,
+ *     good for short sound effects)
+ *   - res_load_music() streams from disk (lower memory, good for long tracks)
  *
  * --- Fonts and sizes ---
  *
@@ -55,13 +62,16 @@
 
 #define MAX_TEXTURES 128
 #define MAX_FONTS    32
-#define MAX_SOUNDS   128
-#define MAX_MUSIC    32
+#define MAX_AUDIO    128
 
 SDL_Texture *res_load_texture(const char *path);
 TTF_Font    *res_load_font(const char *path, float pt_size);
-Mix_Chunk   *res_load_sound(const char *path);
-Mix_Music   *res_load_music(const char *path);
+
+/* Pre-decoded audio (sound effects) — requires audio_init() first */
+MIX_Audio   *res_load_sound(const char *path);
+
+/* Streamed audio (music) — requires audio_init() first */
+MIX_Audio   *res_load_music(const char *path);
 
 /* Destroy all cached assets. Call once at shutdown. */
 void res_free_all(void);

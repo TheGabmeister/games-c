@@ -3,15 +3,9 @@ project(hello_sdl C)
 
 set(CMAKE_C_STANDARD 17)
 
-include(FetchContent)
-
+# SDL3 core
 set(SDL_TEST_LIBRARY OFF CACHE BOOL "" FORCE)
-
-FetchContent_Declare(
-    SDL3
-    URL https://github.com/libsdl-org/SDL/releases/download/release-3.4.2/SDL3-3.4.2.tar.gz
-    FIND_PACKAGE_ARGS
-)
+add_subdirectory(vendor/sdl)
 
 # SDL_image: JPEG (stb), PNG, BMP only
 set(SDLIMAGE_VENDORED        ON  CACHE BOOL "" FORCE)
@@ -34,6 +28,7 @@ set(SDLIMAGE_WEBP            OFF CACHE BOOL "" FORCE)
 set(SDLIMAGE_XCF             OFF CACHE BOOL "" FORCE)
 set(SDLIMAGE_XPM             OFF CACHE BOOL "" FORCE)
 set(SDLIMAGE_XV              OFF CACHE BOOL "" FORCE)
+add_subdirectory(vendor/sdl_image)
 
 # SDL_mixer: WAV, MP3 (dr_mp3), OGG Vorbis (stb_vorbis) — all header-only, no external deps
 set(SDLMIXER_WAVE              ON  CACHE BOOL "" FORCE)
@@ -52,40 +47,13 @@ set(SDLMIXER_WAVPACK           OFF CACHE BOOL "" FORCE)
 set(SDLMIXER_AIFF              OFF CACHE BOOL "" FORCE)
 set(SDLMIXER_VOC               OFF CACHE BOOL "" FORCE)
 set(SDLMIXER_AU                OFF CACHE BOOL "" FORCE)
+add_subdirectory(vendor/sdl_mixer)
 
 # SDL_ttf: TrueType only
 set(SDLTTF_HARFBUZZ   OFF CACHE BOOL "" FORCE)
 set(SDLTTF_PLUTOSVG   OFF CACHE BOOL "" FORCE)
 set(SDLTTF_VENDORED   ON  CACHE BOOL "" FORCE)
-
-FetchContent_Declare(
-    SDL3_image
-    GIT_REPOSITORY https://github.com/libsdl-org/SDL_image.git
-    GIT_TAG release-3.4.0
-    GIT_SHALLOW TRUE
-    GIT_SUBMODULES_RECURSE TRUE
-    FIND_PACKAGE_ARGS
-)
-
-FetchContent_Declare(
-    SDL3_mixer
-    GIT_REPOSITORY https://github.com/libsdl-org/SDL_mixer.git
-    GIT_TAG release-3.2.0
-    GIT_SHALLOW TRUE
-    GIT_SUBMODULES_RECURSE TRUE
-    FIND_PACKAGE_ARGS
-)
-
-FetchContent_Declare(
-    SDL3_ttf
-    GIT_REPOSITORY https://github.com/libsdl-org/SDL_ttf.git
-    GIT_TAG release-3.2.2
-    GIT_SHALLOW TRUE
-    GIT_SUBMODULES_RECURSE TRUE
-    FIND_PACKAGE_ARGS
-)
-
-FetchContent_MakeAvailable(SDL3 SDL3_image SDL3_mixer SDL3_ttf)
+add_subdirectory(vendor/sdl_ttf)
 
 add_executable(hello_sdl
     src/main.c

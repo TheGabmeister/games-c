@@ -6,32 +6,36 @@
 /*
  * Audio Helpers
  * =============
- * Simple wrappers around SDL_mixer for common game audio tasks.
+ * Simple wrappers around SDL3_mixer 3.x for common game audio tasks.
  * Call audio_init() once at startup, audio_shutdown() at exit.
  *
- * --- Sound effects ---
+ * SDL3_mixer uses a mixer/track/audio model:
+ *   - MIX_Mixer  — the mixer device (one per game, managed here)
+ *   - MIX_Audio  — loaded audio data (load via res_load_sound/res_load_music)
+ *   - MIX_Track  — a playback slot (created automatically by play_sound/play_music)
  *
- * Short, fire-and-forget sounds (gunshots, UI clicks, pickups):
+ * --- Sound effects (fire-and-forget) ---
  *
- *     Mix_Chunk *jump_sfx = res_load_sound("assets/jump.wav");
- *     play_sound(jump_sfx);                  // default volume
- *     play_sound_ex(jump_sfx, 64, 0);        // half volume, no loop
+ *     MIX_Audio *jump = res_load_sound("assets/jump.wav");
+ *     play_sound(jump);    // plays once on an auto-created internal track
  *
- * --- Music ---
+ * --- Music (one track, supports looping/pause/resume) ---
  *
- * Streamed background music (only one track plays at a time):
- *
- *     Mix_Music *bgm = res_load_music("assets/bgm.mp3");
+ *     MIX_Audio *bgm = res_load_music("assets/bgm.mp3");
  *     play_music(bgm);             // loops forever
- *     play_music_ex(bgm, 0);       // play once
+ *     play_music_once(bgm);        // plays once
  *     pause_music();
  *     resume_music();
  *     stop_music();
  *
  * --- Volume ---
  *
- *     set_sound_volume(64);   // 0–128, affects all future sound effects
- *     set_music_volume(64);   // 0–128
+ *     set_master_volume(0.5f);     // 0.0 = silent, 1.0 = full
+ *     set_music_volume(0.8f);
+ *
+ * --- Advanced ---
+ *
+ *     get_mixer() returns the raw MIX_Mixer* for direct SDL3_mixer API calls.
  *
  * --- Supported formats ---
  *
@@ -45,24 +49,26 @@ void audio_init(void);
 /* Shut down audio. Call before close_window(). */
 void audio_shutdown(void);
 
-/* Play a sound effect on the first available channel. */
-void play_sound(Mix_Chunk *chunk);
+/* Get the raw mixer for direct SDL3_mixer API access. */
+MIX_Mixer *get_mixer(void);
 
-/* Play a sound effect with volume (0–128) and loop count (0 = once, -1 = forever). */
-void play_sound_ex(Mix_Chunk *chunk, int volume, int loops);
+/* Play a sound effect once (fire-and-forget). */
+void play_sound(MIX_Audio *audio);
 
-/* Play music, looping forever. Replaces any currently playing music. */
-void play_music(Mix_Music *music);
+/* Play music, looping forever. Stops any previously playing music. */
+void play_music(MIX_Audio *audio);
 
-/* Play music with a specific loop count (0 = once, -1 = forever). */
-void play_music_ex(Mix_Music *music, int loops);
+/* Play music once (no loop). Stops any previously playing music. */
+void play_music_once(MIX_Audio *audio);
 
 void pause_music(void);
 void resume_music(void);
 void stop_music(void);
 
-/* Set master volume for sound effects and music (0–128). */
-void set_sound_volume(int volume);
-void set_music_volume(int volume);
+/* Master volume: 0.0 = silent, 1.0 = full. Affects all output. */
+void set_master_volume(float gain);
+
+/* Music track volume: 0.0 = silent, 1.0 = full. */
+void set_music_volume(float gain);
 
 #endif /* AUDIO_H */
