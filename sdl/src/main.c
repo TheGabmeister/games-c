@@ -3,53 +3,32 @@
 #include <SDL3_image/SDL_image.h>
 #include <SDL3_mixer/SDL_mixer.h>
 #include <SDL3_ttf/SDL_ttf.h>
+#include "platform.h"
 
 int main(int argc, char *argv[])
 {
-    if (!SDL_Init(SDL_INIT_VIDEO | SDL_INIT_AUDIO)) {
-        SDL_Log("SDL_Init failed: %s", SDL_GetError());
-        return 1;
-    }
-
-    if (!TTF_Init()) {
-        SDL_Log("TTF_Init failed: %s", SDL_GetError());
-        SDL_Quit();
-        return 1;
-    }
-
-    SDL_Window *window = SDL_CreateWindow("Hello SDL3", 800, 600, 0);
-    if (!window) {
-        SDL_Log("SDL_CreateWindow failed: %s", SDL_GetError());
-        TTF_Quit();
-        SDL_Quit();
-        return 1;
-    }
-
-    SDL_Renderer *renderer = SDL_CreateRenderer(window, NULL);
-    if (!renderer) {
-        SDL_Log("SDL_CreateRenderer failed: %s", SDL_GetError());
-        SDL_DestroyWindow(window);
-        TTF_Quit();
-        SDL_Quit();
-        return 1;
-    }
+    init_window(600, 800, "template");
 
     SDL_Log("Hello, SDL3 World!");
     SDL_Log("SDL3_image version: %d.%d.%d", SDL_IMAGE_MAJOR_VERSION, SDL_IMAGE_MINOR_VERSION, SDL_IMAGE_MICRO_VERSION);
     SDL_Log("SDL3_mixer version: %d.%d.%d", SDL_MIXER_MAJOR_VERSION, SDL_MIXER_MINOR_VERSION, SDL_MIXER_MICRO_VERSION);
     SDL_Log("SDL3_ttf version: %d.%d.%d", SDL_TTF_MAJOR_VERSION, SDL_TTF_MINOR_VERSION, SDL_TTF_MICRO_VERSION);
 
+    SDL_Event event;
     bool running = true;
+
+     if (!is_window_ready())
+        return;
+
     while (running) {
-        SDL_Event event;
-        while (SDL_PollEvent(&event)) {
-            if (event.type == SDL_EVENT_QUIT) {
-                running = false;
-            }
-            if (event.type == SDL_EVENT_KEY_DOWN && event.key.key == SDLK_ESCAPE) {
-                running = false;
-            }
-        }
+        engine_begin_frame();
+        while (SDL_PollEvent(&event))
+        {
+            engine_process_event(&event);
+	    }
+
+        float delta = get_deltatime();
+
 
         SDL_SetRenderDrawColor(renderer, 25, 25, 50, 255);
         SDL_RenderClear(renderer);

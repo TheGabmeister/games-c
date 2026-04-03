@@ -58,6 +58,12 @@ void init_window(int width, int height, const char *title)
         return;
     }
 
+    if (!TTF_Init()) {
+        SDL_Log("TTF_Init failed: %s", SDL_GetError());
+        SDL_Quit();
+        return;
+    }
+
     GLOBALS.ready = true;
     GLOBALS.previous_ticks_ns = SDL_GetTicksNS();
 }
