@@ -6,13 +6,13 @@ This file provides guidance to coding agents working in this repository.
 
 ```powershell
 # Configure (Visual Studio 18 2026 generator, x64)
-cmake -S . -B build-codex -G "Visual Studio 18 2026" -A x64 -Wno-dev
+cmake -S . -B build -G "Visual Studio 18 2026" -A x64 -Wno-dev
 
 # Build
-cmake --build build-codex --config Debug
+cmake --build build --config Debug
 
 # Run
-.\build-codex\Debug\hello_sdl.exe
+.\build\Debug\hello_sdl.exe
 ```
 
 Dependencies (`SDL3`, `SDL3_image`, `SDL3_mixer`, `SDL3_ttf`) live in `vendor/`
@@ -36,7 +36,7 @@ Abstraction layer over SDL3 for windowing, timing, renderer access, and input.
 - Input polling with edge detection:
   `is_key_pressed()` vs `is_key_down()`,
   `is_mouse_button_pressed()` vs `is_mouse_button_down()`
-- Per-frame engine hooks: `engine_begin_frame()`, `engine_process_event()`
+- Per-frame hooks: `platform_begin_frame()`, `platform_process_event()`
 - Shared utility types and enums: `vector2`, `rectangle`, keyboard/mouse/gamepad
   constants
 
@@ -87,33 +87,48 @@ Small wrapper layer over SDL3_mixer.
 
 The current CMake setup enables WAV, MP3, and OGG Vorbis support.
 
+### `src/game.c` / `src/game.h`
+
+Game-level bootstrap and high-level gameplay wiring.
+
+- Register states in `game_init()`
+- Forward frame work through `game_update(dt)` and `game_draw()`
+- Handle game-level shutdown in `game_shutdown()`
+- Prefer moving concrete scenes into separate state files instead of growing
+  `game.c`
+
 ### `src/main.c`
 
-Entry point that wires the template systems together. It currently registers a
-single example gameplay state inline.
+Thin application entry point.
+
+- Owns startup order, the SDL event loop, frame clear/present, and shutdown
+- Calls into `game_init()`, `game_update(dt)`, `game_draw()`, and
+  `game_shutdown()`
+- Should stay small and avoid accumulating game-specific logic
 
 Main loop order:
 
-1. `engine_begin_frame()`
-2. `SDL_PollEvent()` + `engine_process_event()`
-3. `get_deltatime()` -> `game_state_update(dt)`
-4. Clear -> `game_state_draw()` -> `SDL_RenderPresent()`
+1. `platform_begin_frame()`
+2. `SDL_PollEvent()` + `platform_process_event()`
+3. `get_deltatime()` -> `game_update(dt)`
+4. Clear -> `game_draw()` -> `SDL_RenderPresent()`
 
 Startup/shutdown order:
 
 1. `init_window()`
 2. `audio_init()`
-3. register states
+3. `game_init()` (register states, choose starting state)
 4. main loop
-5. `game_state_shutdown()`
+5. `game_shutdown()`
 6. `res_free_all()`
 7. `audio_shutdown()`
 8. `close_window()`
 
 ## Agent Notes
 
-- Prefer keeping game-specific logic in separate state files instead of growing
-  `src/main.c`.
+- Keep `src/main.c` as a thin entry point.
+- Prefer keeping game-specific logic in `src/game.c` and separate state files
+  instead of growing `src/main.c`.
 - Keep asset loading routed through `resources.c`.
 - Preserve the existing wrapper style instead of calling SDL subsystems
   directly from unrelated modules unless there is a clear need.

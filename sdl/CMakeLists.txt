@@ -57,6 +57,7 @@ add_subdirectory(vendor/sdl_ttf)
 
 add_executable(hello_sdl
     src/main.c
+    src/game.c
     src/platform.c
     src/game_state.c
     src/resources.c

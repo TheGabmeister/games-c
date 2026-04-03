@@ -153,7 +153,7 @@ static SDL_MouseButtonFlags _mouse_button_mask(int button)
     }
 }
 
-void engine_begin_frame(void)
+void platform_begin_frame(void)
 {
     // Keyboard
     SDL_memcpy(GLOBALS.Keyboard.previousKeyState, GLOBALS.Keyboard.currentKeyState, SDL_SCANCODE_COUNT * sizeof(bool));
@@ -166,7 +166,7 @@ void engine_begin_frame(void)
     GLOBALS.Mouse.wheelY = 0.0f;
 }
 
-void engine_process_event(SDL_Event *event)
+void platform_process_event(SDL_Event *event)
 {
     if (event->type == SDL_EVENT_MOUSE_WHEEL)
         GLOBALS.Mouse.wheelY += event->wheel.y;
