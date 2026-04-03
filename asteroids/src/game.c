@@ -3,7 +3,6 @@
 #include "bullets.h"
 #include "game_flow.h"
 #include "game_types.h"
-#include "input.h"
 #include "particles.h"
 #include "ship.h"
 #include "ui.h"

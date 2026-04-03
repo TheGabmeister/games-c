@@ -4,7 +4,6 @@
 #include "background.h"
 #include "bullets.h"
 #include "collisions.h"
-#include "input.h"
 #include "ship.h"
 
 #include <string.h>
@@ -56,7 +55,6 @@ static void UpdateWaveProgression(GameContext *ctx, float dt)
 void GameFlowBoot(GameContext *ctx)
 {
     memset(ctx, 0, sizeof(*ctx));
-    InputSetDefault(ctx);
     BackgroundInitStars(ctx);
     ctx->game.state = STATE_TITLE;
     ctx->game.highScore = 0;
