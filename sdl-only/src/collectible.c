@@ -1,13 +1,8 @@
 #include "collectible.h"
+#include "collision.h"
 #include "draw.h"
 
 static Collectible collectibles[MAX_COLLECTIBLES];
-
-static bool rects_overlap(rectangle a, rectangle b)
-{
-    return a.x < b.x + b.w && a.x + a.w > b.x
-        && a.y < b.y + b.h && a.y + a.h > b.y;
-}
 
 void collectibles_init(void)
 {

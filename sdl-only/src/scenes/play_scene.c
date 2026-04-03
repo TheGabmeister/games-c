@@ -1,9 +1,11 @@
 #include "play_scene.h"
 #include "title_scene.h"
+#include "gameover_scene.h"
 #include "../platform.h"
 #include "../input.h"
 #include "../draw.h"
 #include "../collectible.h"
+#include "../enemy.h"
 #include "../gamestate.h"
 #include <stdio.h>
 
@@ -34,6 +36,13 @@ static void play_init(void)
     collectible_spawn(COLLECTIBLE_COIN,   600, 200);
     collectible_spawn(COLLECTIBLE_HEALTH, 500, 450);
     collectible_spawn(COLLECTIBLE_STAR,   400, 100);
+
+    enemies_init();
+    enemy_spawn(ENEMY_WANDERER, 200, 100);
+    enemy_spawn(ENEMY_WANDERER, 600, 400);
+    enemy_spawn(ENEMY_CHASER,   700, 300);
+    enemy_spawn(ENEMY_BOUNCER,  100, 500);
+    enemy_spawn(ENEMY_BOUNCER,  400, 200);
 }
 
 static void play_update(float dt)
@@ -62,6 +71,12 @@ static void play_update(float dt)
     if (player.rect.y + player.rect.h > h) player.rect.y = h - player.rect.h;
 
     collectibles_update(player.rect, gamestate_get());
+    enemies_update(dt, player.rect, gamestate_get());
+
+    if (gamestate_get()->health <= 0) {
+        scene_set(gameover_scene());
+        return;
+    }
 }
 
 static void play_draw(void)
@@ -69,8 +84,9 @@ static void play_draw(void)
     clear_background((color){ 20, 20, 30, 255 });
     begin_drawing();
 
-    // Collectibles
+    // Collectibles & enemies
     collectibles_draw();
+    enemies_draw();
 
     // Player
     draw_rect_filled(player.rect, player.col);
