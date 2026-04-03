@@ -17,17 +17,9 @@ int main(void)
     GameContext ctx = { 0 };
     GameFlowBoot(&ctx);
 
-    char actionSet = 0;
-
     while (!WindowShouldClose()) {
         float dt = GetFrameTime();
         ctx.gamepadIndex = 0;
-
-        if (IsKeyPressed(KEY_TAB)) {
-            actionSet = !actionSet;
-            if (actionSet == 0) InputSetDefault(&ctx);
-            else InputSetCursor(&ctx);
-        }
 
         WorldUpdateScreenShake(&ctx, dt);
         ParticlesUpdate(&ctx, dt);

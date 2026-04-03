@@ -59,8 +59,10 @@ typedef enum ActionType {
     MAX_ACTION
 } ActionType;
 
+#define MAX_KEYS_PER_ACTION 3
+
 typedef struct ActionInput {
-    int key;
+    int keys[MAX_KEYS_PER_ACTION];
     int button;
 } ActionInput;
 
