@@ -23,9 +23,11 @@ When adding new `.c` files, add them to the `add_executable()` call in CMakeList
 
 Modernized Galaxian clone in C17 on SDL3. 600x800 portrait window. All gameplay rendering uses primitives (no texture assets); font rendering goes through the resource layer, preferring a bundled asset path with system-font fallback.
 
-### Engine layer (template modules)
+The codebase has two layers: a reusable **engine** (copied unchanged between games) and a **game** layer (Galaxian-specific).
 
-**platform.c/h** — SDL3 abstraction: window lifecycle, frame timing (`get_deltatime()`), renderer access (`get_renderer()`), input with edge detection (`is_key_pressed()` vs `is_key_down()`), `request_close()`. All state in an internal `Globals` struct.
+### Engine layer (template modules — game-agnostic)
+
+**platform.c/h** — SDL3 abstraction and application entry point. Owns `main()`, the main loop, and all subsystem init/shutdown. Window lifecycle, frame timing (`get_deltatime()`), renderer access (`get_renderer()`), input with edge detection (`is_key_pressed()` vs `is_key_down()`), `request_close()`. All state in an internal `Globals` struct. Calls into the game layer through `game.h`.
 
 **game_state.c/h** — Scene machine: register states with callbacks (`init`, `update(dt)`, `draw`, `cleanup`), switch with `game_state_switch()`. States: `STATE_MENU`, `STATE_GAMEPLAY`, `STATE_PAUSE` (reserved), `STATE_GAME_OVER`.
 
@@ -35,9 +37,9 @@ Modernized Galaxian clone in C17 on SDL3. 600x800 portrait window. All gameplay 
 
 **audio.c/h** — SDL3_mixer wrappers. `audio_init/shutdown()`, `play_sound()`, `play_music()`. No audio assets in v1.
 
-**main.c** — Entry point. Registers all three game states, starts at `STATE_MENU`. Loop: `engine_begin_frame()` → poll events → `game_state_update(dt)` → clear → `game_state_draw()` → present. Background clear color is `#090B16`. Blend mode set to `SDL_BLENDMODE_BLEND`.
+### Game layer (Galaxian-specific)
 
-### Game layer
+**game.c/h** — Game lifecycle interface. Provides `game_config()` (screen size, title, clear color) and four callbacks (`game_init`, `game_update`, `game_draw`, `game_shutdown`) that platform.c calls. This is the only file platform.c depends on — swap it to make a different game.
 
 **galaxian.h** — Central header. All constants (playfield bounds, speeds, timing, palette colors as compound-literal macros like `COL_PLAYER`), enums (`EnemyType`, `EnemyState`, `DivePathType`), structs (`Player`, `Enemy`, `Bullet`, `Particle`, `Star`, `BezierPath`, `DiffParams`), and all shared function declarations.
 
@@ -60,10 +62,12 @@ Modernized Galaxian clone in C17 on SDL3. 600x800 portrait window. All gameplay 
 
 ### Key data flow
 
+- Platform layer calls `game_config()` for window setup, then `game_init/update/draw/shutdown()` at the appropriate lifecycle points
+- `game.c` registers states and delegates to the state machine — it is the bridge between engine and gameplay
 - `galaxian.c` session state bridges data between states (score, high score, new-high flag)
-- Each state manages its own starfield and loads fonts via `res_default_font_path()` + `res_load_font()` (cached)
+- Each state loads fonts via `res_default_font_path()` + `res_load_font()` (cached)
 - Gameplay entity drawing (player ship, enemy shapes, bullets) is done with static helpers in `state_gameplay.c` using `drawing.h` primitives
 
 ### Startup/shutdown order
 
-`init_window()` → `audio_init()` → register states → main loop → `game_state_shutdown()` → `res_free_all()` → `audio_shutdown()` → `close_window()`
+`main()` in platform.c: `game_config()` → `init_window()` → `res_init()` → `audio_init()` → `game_init()` → main loop → `game_shutdown()` → `res_free_all()` → `res_shutdown()` → `audio_shutdown()` → `close_window()`
