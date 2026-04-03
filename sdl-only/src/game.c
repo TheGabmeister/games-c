@@ -4,40 +4,10 @@
 #include "input.h"
 #include <SDL3/SDL.h>
 
-static SDL_Window *g_window;
-static SDL_Renderer *g_renderer;
 static bool g_running;
 
 static const Scene *g_current_scene;
 static const Scene *g_next_scene;
-
-bool game_init(void)
-{
-    if (!SDL_Init(SDL_INIT_VIDEO)) {
-        SDL_Log("SDL_Init failed: %s", SDL_GetError());
-        return false;
-    }
-
-    g_window = SDL_CreateWindow(WINDOW_TITLE, WINDOW_WIDTH, WINDOW_HEIGHT, 0);
-    if (!g_window) {
-        SDL_Log("SDL_CreateWindow failed: %s", SDL_GetError());
-        SDL_Quit();
-        return false;
-    }
-
-    g_renderer = SDL_CreateRenderer(g_window, NULL);
-    if (!g_renderer) {
-        SDL_Log("SDL_CreateRenderer failed: %s", SDL_GetError());
-        SDL_DestroyWindow(g_window);
-        SDL_Quit();
-        return false;
-    }
-
-    SDL_SetRenderVSync(g_renderer, 1);
-    draw_init(g_renderer);
-
-    return true;
-}
 
 static void transition_scene(void)
 {
@@ -112,15 +82,6 @@ void game_run(const Scene *initial_scene)
         g_current_scene->shutdown();
     }
     g_current_scene = NULL;
-}
-
-void game_shutdown(void)
-{
-    if (g_renderer) SDL_DestroyRenderer(g_renderer);
-    if (g_window) SDL_DestroyWindow(g_window);
-    SDL_Quit();
-    g_renderer = NULL;
-    g_window = NULL;
 }
 
 void game_set_scene(const Scene *scene)
