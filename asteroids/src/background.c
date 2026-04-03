@@ -1,5 +1,20 @@
 #include "background.h"
 
+#include <math.h>
+
+static Vector2 BackgroundParallaxVelocity(const GameContext *ctx)
+{
+    if (ctx->game.state == STATE_PLAYING || ctx->game.state == STATE_GAMEOVER) {
+        return ctx->ship.velocity;
+    }
+
+    float t = (float)GetTime();
+    return (Vector2){
+        sinf(t * 0.2f) * 40.0f,
+        cosf(t * 0.15f) * 25.0f
+    };
+}
+
 void BackgroundInitStars(GameContext *ctx)
 {
     for (int i = 0; i < MAX_STARS; i++) {
@@ -15,9 +30,11 @@ void BackgroundInitStars(GameContext *ctx)
 
 void BackgroundDrawStarfield(const GameContext *ctx)
 {
+    Vector2 parallaxVelocity = BackgroundParallaxVelocity(ctx);
+
     for (int i = 0; i < MAX_STARS; i++) {
-        float ox = -ctx->ship.velocity.x * 0.001f * (float)(ctx->stars[i].layer + 1);
-        float oy = -ctx->ship.velocity.y * 0.001f * (float)(ctx->stars[i].layer + 1);
+        float ox = -parallaxVelocity.x * 0.001f * (float)(ctx->stars[i].layer + 1);
+        float oy = -parallaxVelocity.y * 0.001f * (float)(ctx->stars[i].layer + 1);
         float sx = ctx->stars[i].position.x + ox;
         float sy = ctx->stars[i].position.y + oy;
 

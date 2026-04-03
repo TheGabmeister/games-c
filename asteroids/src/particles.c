@@ -2,6 +2,11 @@
 
 #include <math.h>
 
+static float DampingFactor(float perFrameDamping, float dt)
+{
+    return powf(perFrameDamping, dt * 60.0f);
+}
+
 void ParticlesSpawn(GameContext *ctx, Vector2 pos, int count, float speed,
                     float sizeMin, float sizeMax, Color color)
 {
@@ -32,8 +37,9 @@ void ParticlesUpdate(GameContext *ctx, float dt)
 
         ctx->particles[i].position.x += ctx->particles[i].velocity.x * dt;
         ctx->particles[i].position.y += ctx->particles[i].velocity.y * dt;
-        ctx->particles[i].velocity.x *= 0.99f;
-        ctx->particles[i].velocity.y *= 0.99f;
+        float damping = DampingFactor(0.99f, dt);
+        ctx->particles[i].velocity.x *= damping;
+        ctx->particles[i].velocity.y *= damping;
         ctx->particles[i].lifetime -= dt;
 
         if (ctx->particles[i].lifetime <= 0) ctx->particles[i].active = false;

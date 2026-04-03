@@ -10,6 +10,11 @@
 
 #include <math.h>
 
+static float DampingFactor(float perFrameDamping, float dt)
+{
+    return powf(perFrameDamping, dt * 60.0f);
+}
+
 static Vector2 RotateOffset(Vector2 offset, float angleDeg)
 {
     float rad = angleDeg * DEG2RAD;
@@ -108,7 +113,7 @@ void ShipUpdate(GameContext *ctx, float dt)
         }
     }
 
-    ctx->ship.velocity = Vector2Scale(ctx->ship.velocity, SHIP_DRAG);
+    ctx->ship.velocity = Vector2Scale(ctx->ship.velocity, DampingFactor(SHIP_DRAG, dt));
 
     ctx->ship.position.x += ctx->ship.velocity.x * dt;
     ctx->ship.position.y += ctx->ship.velocity.y * dt;

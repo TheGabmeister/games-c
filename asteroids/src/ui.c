@@ -37,7 +37,7 @@ void UIDrawTitleScreen(const GameContext *ctx)
         DrawText(start, SCREEN_WIDTH / 2 - startWidth / 2, SCREEN_HEIGHT / 2, 20, WHITE);
     }
 
-    const char *ctrl = "WASD / ARROWS to move   SPACE to fire   TAB to switch";
+    const char *ctrl = "WASD / ARROWS / DPAD to move   SPACE / A to fire";
     int ctrlWidth = MeasureText(ctrl, 14);
     DrawText(ctrl, SCREEN_WIDTH / 2 - ctrlWidth / 2, SCREEN_HEIGHT / 2 + 50, 14, GRAY);
 
