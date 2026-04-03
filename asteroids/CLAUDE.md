@@ -22,9 +22,13 @@ C game using **raylib 5.5** (with `raymath.h` for vector math), organized into m
 
 **Central state:** All game state lives in a single `GameContext` struct (defined in `game_types.h`) that is passed by pointer to every subsystem. This includes the ship, entity arrays, input bindings, and game-flow state. `game_types.h` also defines all constants, enums, and entity structs — it is the shared dependency for all modules.
 
-**Game state machine:** `GameState` enum drives three modes — `STATE_TITLE`, `STATE_PLAYING`, `STATE_GAMEOVER`. The main loop in `game.c` dispatches update/draw per state.
+**Initialization:** `game.c` creates a zero-initialized `GameContext`, then calls `InputSetDefault` and `BackgroundInitStars` before entering the main loop. There is no single boot function — init is done inline in `main`.
+
+**Game state machine:** `GameState` enum drives three modes — `STATE_TITLE`, `STATE_PLAYING`, `STATE_GAMEOVER`. The main loop in `game.c` dispatches update/draw per state. Session resets (new game) go through `InitGameSession` in `game_flow.c`, which preserves `highScore` and the starfield across sessions.
 
 **Entity model:** Fixed-size static arrays with `active`/`alive` flags (no dynamic allocation). Pool sizes: 30 bullets, 64 asteroids, 256 particles, 100 stars.
+
+**Input system:** `ActionInput` maps each logical action to multiple keyboard keys (WASD + arrow keys simultaneously) and a gamepad button. The `input` module loops over a `keys[]` array per action, so both layouts always work without toggling. Bindings are configured in `InputSetDefault`.
 
 **Module layout** — each subsystem is a `.c/.h` pair under `src/`:
 
@@ -32,8 +36,8 @@ C game using **raylib 5.5** (with `raymath.h` for vector math), organized into m
 |---|---|
 | `game.c` | Entry point, main loop, state dispatch |
 | `game_types.h` | All shared types, constants, `GameContext` |
-| `game_flow` | State transitions, session init, wave progression |
-| `input` | Action abstraction over keyboard/gamepad; WASD vs arrow toggle |
+| `game_flow` | State transitions, session init/reset, wave progression |
+| `input` | Action abstraction over keyboard/gamepad; multiple keys per action |
 | `ship` | Ship physics, drawing, thrust flame |
 | `asteroids` | Asteroid spawning, movement, wave management, drawing |
 | `bullets` | Bullet spawning, lifetime, drawing |
