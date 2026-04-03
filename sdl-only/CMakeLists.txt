@@ -9,6 +9,7 @@ add_subdirectory(vendor/sdl)
 
 
 add_executable(${PROJECT_NAME}
+    src/main.c
     src/platform.c
     src/game.c
 )
