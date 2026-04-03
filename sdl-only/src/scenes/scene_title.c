@@ -1,5 +1,5 @@
-#include "title_scene.h"
-#include "play_scene.h"
+#include "scene_title.h"
+#include "scene_gameplay.h"
 #include "../platform.h"
 #include "../input.h"
 #include "../draw.h"
@@ -11,7 +11,7 @@ static void title_update(float dt)
     (void)dt;
 
     if (action_pressed(ACTION_CONFIRM))
-        scene_set(play_scene());
+        scene_set(scene_gameplay());
 
     if (action_pressed(ACTION_CANCEL))
         request_close();
@@ -42,7 +42,7 @@ static void title_draw(void)
     end_drawing();
 }
 
-Scene title_scene(void)
+Scene scene_title(void)
 {
     return (Scene){ title_init, title_update, title_draw, NULL };
 }

@@ -18,9 +18,9 @@ add_executable(${PROJECT_NAME}
     src/enemy.c
     src/gamestate.c
     src/game.c
-    src/scenes/title_scene.c
-    src/scenes/play_scene.c
-    src/scenes/gameover_scene.c
+    src/scenes/scene_title.c
+    src/scenes/scene_gameplay.c
+    src/scenes/scene_gameover.c
 )
 target_link_libraries(${PROJECT_NAME} PRIVATE
     SDL3::SDL3

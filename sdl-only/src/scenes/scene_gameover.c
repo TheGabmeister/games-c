@@ -1,6 +1,6 @@
-#include "gameover_scene.h"
-#include "title_scene.h"
-#include "play_scene.h"
+#include "scene_gameover.h"
+#include "scene_title.h"
+#include "scene_gameplay.h"
 #include "../platform.h"
 #include "../input.h"
 #include "../draw.h"
@@ -14,10 +14,10 @@ static void gameover_update(float dt)
     (void)dt;
 
     if (action_pressed(ACTION_CONFIRM))
-        scene_set(play_scene());
+        scene_set(scene_gameplay());
 
     if (action_pressed(ACTION_CANCEL))
-        scene_set(title_scene());
+        scene_set(scene_title());
 }
 
 static void gameover_draw(void)
@@ -48,7 +48,7 @@ static void gameover_draw(void)
     end_drawing();
 }
 
-Scene gameover_scene(void)
+Scene scene_gameover(void)
 {
     return (Scene){ gameover_init, gameover_update, gameover_draw, NULL };
 }

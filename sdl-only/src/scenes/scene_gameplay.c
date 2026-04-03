@@ -1,6 +1,6 @@
-#include "play_scene.h"
-#include "title_scene.h"
-#include "gameover_scene.h"
+#include "scene_gameplay.h"
+#include "scene_title.h"
+#include "scene_gameover.h"
 #include "../platform.h"
 #include "../input.h"
 #include "../draw.h"
@@ -19,7 +19,7 @@ typedef struct {
 
 static Player player;
 
-static void play_init(void)
+static void gameplay_init(void)
 {
     float w = (float)get_window_width();
     float h = (float)get_window_height();
@@ -48,10 +48,10 @@ static void play_init(void)
     enemy_spawn(ENEMY_BOUNCER,  400, 200);
 }
 
-static void play_update(float dt)
+static void gameplay_update(float dt)
 {
     if (action_pressed(ACTION_CANCEL)) {
-        scene_set(title_scene());
+        scene_set(scene_title());
         return;
     }
 
@@ -77,12 +77,12 @@ static void play_update(float dt)
     enemies_update(dt, player.rect, player.filter, gamestate_get());
 
     if (gamestate_get()->health <= 0) {
-        scene_set(gameover_scene());
+        scene_set(scene_gameover());
         return;
     }
 }
 
-static void play_draw(void)
+static void gameplay_draw(void)
 {
     clear_background((color){ 20, 20, 30, 255 });
     begin_drawing();
@@ -105,9 +105,9 @@ static void play_draw(void)
     end_drawing();
 }
 
-static void play_cleanup(void) { }
+static void gameplay_cleanup(void) { }
 
-Scene play_scene(void)
+Scene scene_gameplay(void)
 {
-    return (Scene){ play_init, play_update, play_draw, play_cleanup };
+    return (Scene){ gameplay_init, gameplay_update, gameplay_draw, gameplay_cleanup };
 }
