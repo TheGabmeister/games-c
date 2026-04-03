@@ -4,6 +4,7 @@
 #include <stdbool.h>
 #include <SDL3/SDL.h>
 #include "platform.h"
+#include "game_state.h"
 
 /* ==== Window / Playfield ==== */
 #define SCREEN_W        600
@@ -69,7 +70,6 @@
 #define ENEMY_HB_SCALE  0.85f
 
 /* ==== Font ==== */
-#define FONT_PATH       "C:/Windows/Fonts/consola.ttf"
 #define FONT_HUD        20.0f
 #define FONT_TITLE      48.0f
 #define FONT_LARGE      36.0f
@@ -210,20 +210,9 @@ void starfield_init(Star stars[], int n);
 void starfield_update(Star stars[], int n, float dt);
 void starfield_draw(const Star stars[], int n);
 
-/* ==== State callbacks (registered in main.c) ==== */
-void menu_init(void);
-void menu_update(float dt);
-void menu_draw(void);
-void menu_cleanup(void);
-
-void gameplay_init(void);
-void gameplay_update(float dt);
-void gameplay_draw(void);
-void gameplay_cleanup(void);
-
-void gameover_init(void);
-void gameover_update(float dt);
-void gameover_draw(void);
-void gameover_cleanup(void);
+/* ==== State factories ==== */
+GameState gx_menu_state(void);
+GameState gx_gameplay_state(void);
+GameState gx_gameover_state(void);
 
 #endif /* GALAXIAN_H */

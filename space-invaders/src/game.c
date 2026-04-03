@@ -6,20 +6,27 @@
     #include <emscripten/emscripten.h>
 #endif
 
-// Shared variables
-GameScreen currentScreen = LOGO;
-AppState appState = { 0 };
+static const float TRANSITION_TO_BLACK_TIME = 0.35f;
+static const float TRANSITION_FROM_BLACK_TIME = 0.85f;
+
+static GameScreen currentScreen = TITLE;
+static AppState appState = { 0 };
 
 // Transition state
 static float transAlpha = 0.0f;
 static bool onTransition = false;
 static bool transFadeOut = false;
-static int transFromScreen = -1;
+static GameScreen transFromScreen = UNKNOWN;
 static GameScreen transToScreen = UNKNOWN;
 
 // Forward declarations
-static void TransitionToScreen(int screen);
-static void UpdateTransition(void);
+static void InitScreen(GameScreen screen, AppState *app);
+static void UpdateScreen(GameScreen screen, AppState *app, float dt);
+static void DrawScreen(GameScreen screen, const AppState *app);
+static void UnloadScreen(GameScreen screen);
+static bool FinishScreen(GameScreen screen);
+static void TransitionToScreen(GameScreen screen);
+static void UpdateTransition(float dt);
 static void DrawTransition(void);
 static void UpdateDrawFrame(void);
 
@@ -28,8 +35,9 @@ int main(void)
     InitWindow(SCREEN_W, SCREEN_H, "Space Invaders");
     SetTargetFPS(60);
 
-    currentScreen = LOGO;
-    InitLogoScreen();
+    appState = (AppState){ 0 };
+    currentScreen = TITLE;
+    InitScreen(currentScreen, &appState);
 
 #if defined(PLATFORM_WEB)
     emscripten_set_main_loop(UpdateDrawFrame, 60, 1);
@@ -40,21 +48,68 @@ int main(void)
     }
 #endif
 
-    // Unload current screen
-    switch (currentScreen)
-    {
-        case LOGO: UnloadLogoScreen(); break;
-        case TITLE: UnloadTitleScreen(); break;
-        case GAMEPLAY: UnloadGameplayScreen(); break;
-        case ENDING: UnloadEndingScreen(); break;
-        default: break;
-    }
+    UnloadScreen(currentScreen);
 
     CloseWindow();
     return 0;
 }
 
-static void TransitionToScreen(int screen)
+static void InitScreen(GameScreen screen, AppState *app)
+{
+    switch (screen)
+    {
+        case TITLE: InitTitleScreen(app); break;
+        case GAMEPLAY: InitGameplayScreen(app); break;
+        case ENDING: InitEndingScreen(app); break;
+        default: break;
+    }
+}
+
+static void UpdateScreen(GameScreen screen, AppState *app, float dt)
+{
+    switch (screen)
+    {
+        case TITLE: UpdateTitleScreen(app, dt); break;
+        case GAMEPLAY: UpdateGameplayScreen(app, dt); break;
+        case ENDING: UpdateEndingScreen(app, dt); break;
+        default: break;
+    }
+}
+
+static void DrawScreen(GameScreen screen, const AppState *app)
+{
+    switch (screen)
+    {
+        case TITLE: DrawTitleScreen(app); break;
+        case GAMEPLAY: DrawGameplayScreen(app); break;
+        case ENDING: DrawEndingScreen(app); break;
+        default: break;
+    }
+}
+
+static void UnloadScreen(GameScreen screen)
+{
+    switch (screen)
+    {
+        case TITLE: UnloadTitleScreen(); break;
+        case GAMEPLAY: UnloadGameplayScreen(); break;
+        case ENDING: UnloadEndingScreen(); break;
+        default: break;
+    }
+}
+
+static bool FinishScreen(GameScreen screen)
+{
+    switch (screen)
+    {
+        case TITLE: return FinishTitleScreen();
+        case GAMEPLAY: return FinishGameplayScreen();
+        case ENDING: return FinishEndingScreen();
+        default: return false;
+    }
+}
+
+static void TransitionToScreen(GameScreen screen)
 {
     onTransition = true;
     transFadeOut = false;
@@ -63,32 +118,16 @@ static void TransitionToScreen(int screen)
     transAlpha = 0.0f;
 }
 
-static void UpdateTransition(void)
+static void UpdateTransition(float dt)
 {
     if (!transFadeOut)
     {
-        transAlpha += 0.05f;
-        if (transAlpha > 1.01f)
+        transAlpha += dt / TRANSITION_TO_BLACK_TIME;
+        if (transAlpha >= 1.0f)
         {
             transAlpha = 1.0f;
-
-            switch (transFromScreen)
-            {
-                case LOGO: UnloadLogoScreen(); break;
-                case TITLE: UnloadTitleScreen(); break;
-                case GAMEPLAY: UnloadGameplayScreen(); break;
-                case ENDING: UnloadEndingScreen(); break;
-                default: break;
-            }
-
-            switch (transToScreen)
-            {
-                case LOGO: InitLogoScreen(); break;
-                case TITLE: InitTitleScreen(); break;
-                case GAMEPLAY: InitGameplayScreen(); break;
-                case ENDING: InitEndingScreen(); break;
-                default: break;
-            }
+            UnloadScreen(transFromScreen);
+            InitScreen(transToScreen, &appState);
 
             currentScreen = transToScreen;
             transFadeOut = true;
@@ -96,13 +135,13 @@ static void UpdateTransition(void)
     }
     else
     {
-        transAlpha -= 0.02f;
-        if (transAlpha < -0.01f)
+        transAlpha -= dt / TRANSITION_FROM_BLACK_TIME;
+        if (transAlpha <= 0.0f)
         {
             transAlpha = 0.0f;
             transFadeOut = false;
             onTransition = false;
-            transFromScreen = -1;
+            transFromScreen = UNKNOWN;
             transToScreen = UNKNOWN;
         }
     }
@@ -115,47 +154,32 @@ static void DrawTransition(void)
 
 static void UpdateDrawFrame(void)
 {
+    float dt = GetFrameTime();
+
     if (!onTransition)
     {
-        switch (currentScreen)
+        UpdateScreen(currentScreen, &appState, dt);
+
+        if (FinishScreen(currentScreen))
         {
-            case LOGO:
+            switch (currentScreen)
             {
-                UpdateLogoScreen();
-                if (FinishLogoScreen()) TransitionToScreen(TITLE);
-            } break;
-            case TITLE:
-            {
-                UpdateTitleScreen();
-                if (FinishTitleScreen()) TransitionToScreen(GAMEPLAY);
-            } break;
-            case GAMEPLAY:
-            {
-                UpdateGameplayScreen();
-                if (FinishGameplayScreen()) TransitionToScreen(ENDING);
-            } break;
-            case ENDING:
-            {
-                UpdateEndingScreen();
-                if (FinishEndingScreen()) TransitionToScreen(TITLE);
-            } break;
-            default: break;
+                case TITLE: TransitionToScreen(GAMEPLAY); break;
+                case GAMEPLAY: TransitionToScreen(ENDING); break;
+                case ENDING: TransitionToScreen(TITLE); break;
+                default: break;
+            }
         }
     }
-    else UpdateTransition();
+    else
+    {
+        UpdateTransition(dt);
+    }
 
     BeginDrawing();
 
         ClearBackground(COLOR_BG);
-
-        switch (currentScreen)
-        {
-            case LOGO: DrawLogoScreen(); break;
-            case TITLE: DrawTitleScreen(); break;
-            case GAMEPLAY: DrawGameplayScreen(); break;
-            case ENDING: DrawEndingScreen(); break;
-            default: break;
-        }
+        DrawScreen(currentScreen, &appState);
 
         if (onTransition) DrawTransition();
 

@@ -11,15 +11,12 @@ Agents working here should optimize for:
 - using primitive-only rendering
 - avoiding unnecessary dependencies, assets, and architectural sprawl
 
-Read [SPEC.md](C:/dev/games-c/space-invaders/SPEC.md) before making gameplay or presentation changes. It is the source of truth for design decisions.
-
 ---
 
 ## Project Layout
 
 - `src/game.c`: app entry point, window setup, screen transitions
 - `src/screens.h`: shared screen declarations and shared app/session state
-- `src/screen_logo.c`: logo screen
 - `src/screen_title.c`: title screen
 - `src/screen_gameplay.c`: gameplay screen wrapper
 - `src/screen_ending.c`: ending screen
@@ -38,10 +35,8 @@ Read [SPEC.md](C:/dev/games-c/space-invaders/SPEC.md) before making gameplay or 
 - Keep the gameplay loop faithful to classic Space Invaders.
 - Prefer fixed-size arrays/pools over heap allocation.
 - Keep desktop keyboard controls as the primary target.
-- Keep screen flow as `LOGO -> TITLE -> GAMEPLAY -> ENDING`.
+- Keep screen flow as `TITLE -> GAMEPLAY -> ENDING`.
 - Do not reintroduce an `OPTIONS` screen unless the user explicitly asks for it.
-
-If you change gameplay behavior, update `SPEC.md` when needed so the implementation and spec stay aligned.
 
 ---
 
@@ -115,14 +110,12 @@ It should not come from changing the fundamental rules unless requested.
 
 Before substantial edits:
 
-1. Read the relevant section of `SPEC.md`.
-2. Inspect the local module you are changing.
-3. Prefer focused patches over broad refactors.
-4. Build if the change affects code.
+1. Inspect the local module you are changing.
+2. Prefer focused patches over broad refactors.
+3. Build if the change affects code.
 
 When finishing:
 
 1. Summarize what changed.
-2. Mention any spec updates made.
-3. Report build/test status.
-4. Call out follow-up risks if something remains incomplete.
+2. Report build/test status.
+3. Call out follow-up risks if something remains incomplete.

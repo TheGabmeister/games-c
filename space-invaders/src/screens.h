@@ -1,10 +1,10 @@
 #ifndef SCREENS_H
 #define SCREENS_H
 
-#include "raylib.h"
+#include <stdbool.h>
 
-// Screen flow: LOGO -> TITLE -> GAMEPLAY -> ENDING
-typedef enum GameScreen { UNKNOWN = -1, LOGO = 0, TITLE, GAMEPLAY, ENDING } GameScreen;
+// Screen flow: TITLE -> GAMEPLAY -> ENDING
+typedef enum GameScreen { UNKNOWN = -1, TITLE = 0, GAMEPLAY, ENDING } GameScreen;
 
 // Shared app state (persists across screens within a session)
 typedef struct {
@@ -13,41 +13,30 @@ typedef struct {
     int lastWave;
 } AppState;
 
-// Global variables shared between modules
-extern GameScreen currentScreen;
-extern AppState appState;
-
 #ifdef __cplusplus
 extern "C" {
 #endif
 
-// Logo Screen
-void InitLogoScreen(void);
-void UpdateLogoScreen(void);
-void DrawLogoScreen(void);
-void UnloadLogoScreen(void);
-int FinishLogoScreen(void);
-
 // Title Screen
-void InitTitleScreen(void);
-void UpdateTitleScreen(void);
-void DrawTitleScreen(void);
+void InitTitleScreen(AppState *app);
+void UpdateTitleScreen(AppState *app, float dt);
+void DrawTitleScreen(const AppState *app);
 void UnloadTitleScreen(void);
-int FinishTitleScreen(void);
+bool FinishTitleScreen(void);
 
 // Gameplay Screen
-void InitGameplayScreen(void);
-void UpdateGameplayScreen(void);
-void DrawGameplayScreen(void);
+void InitGameplayScreen(AppState *app);
+void UpdateGameplayScreen(AppState *app, float dt);
+void DrawGameplayScreen(const AppState *app);
 void UnloadGameplayScreen(void);
-int FinishGameplayScreen(void);
+bool FinishGameplayScreen(void);
 
 // Ending Screen
-void InitEndingScreen(void);
-void UpdateEndingScreen(void);
-void DrawEndingScreen(void);
+void InitEndingScreen(AppState *app);
+void UpdateEndingScreen(AppState *app, float dt);
+void DrawEndingScreen(const AppState *app);
 void UnloadEndingScreen(void);
-int FinishEndingScreen(void);
+bool FinishEndingScreen(void);
 
 #ifdef __cplusplus
 }

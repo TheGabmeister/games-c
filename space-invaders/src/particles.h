@@ -7,6 +7,6 @@ void SpawnParticles(Particle *pool, Vector2 pos, Color color, int count,
                     float minSpeed, float maxSpeed, float minLife, float maxLife,
                     float minSize, float maxSize);
 void UpdateParticles(Particle *pool, float dt);
-void DrawParticles(Particle *pool);
+void DrawParticles(const Particle *pool);
 
 #endif // PARTICLES_H

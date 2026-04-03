@@ -3,9 +3,13 @@
 
 #include "game_types.h"
 
+typedef struct {
+    float moveX;
+    bool firePressed;
+} GameInput;
+
 void GameInit(GameState *g);
-void GameUpdate(GameState *g, float dt, int *highScore);
-void GameDraw(GameState *g);
-bool GameShouldEnd(GameState *g);
+void GameUpdate(GameState *g, GameInput input, float dt);
+bool GameShouldEnd(const GameState *g);
 
 #endif // GAMEPLAY_H

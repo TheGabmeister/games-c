@@ -1,6 +1,6 @@
 #include "gameplay.h"
+#include "effects.h"
 #include "particles.h"
-#include "drawing.h"
 #include <math.h>
 #include <string.h>
 #include <stdio.h>
@@ -19,16 +19,15 @@ static const int ufoScores[] = {50, 100, 150, 200, 300};
 // Forward declarations
 static void InitWave(GameState *g);
 static void InitShields(GameState *g);
-static void UpdatePlayer(GameState *g, float dt);
+static void UpdatePlayer(GameState *g, GameInput input, float dt);
 static void UpdateAliens(GameState *g, float dt);
 static void UpdateEnemyFire(GameState *g, float dt);
 static void UpdateBullets(GameState *g, float dt);
 static void UpdateUFO(GameState *g, float dt);
-static void ResolveCollisions(GameState *g, int *highScore);
+static void ResolveCollisions(GameState *g);
 static void CheckWaveState(GameState *g);
 static void SpawnFloatTextAt(GameState *g, Vector2 pos, Color color, int score);
 static void TriggerShake(GameState *g, float amplitude, float duration);
-static Vector2 GetShakeOffset(GameState *g);
 
 // --- Init ---
 
@@ -91,6 +90,9 @@ static void InitWave(GameState *g)
     g->invulnT = 0;
     g->dead = false;
     g->deathDelayT = 0;
+    g->shakeT = 0;
+    g->shakeAmp = 0;
+    g->shakeDuration = 0;
 }
 
 static void InitShields(GameState *g)
@@ -114,7 +116,7 @@ static void InitShields(GameState *g)
 
 // --- Update ---
 
-void GameUpdate(GameState *g, float dt, int *highScore)
+void GameUpdate(GameState *g, GameInput input, float dt)
 {
     // Always update visual effects
     UpdateParticles(g->particles, dt);
@@ -157,28 +159,25 @@ void GameUpdate(GameState *g, float dt, int *highScore)
     }
 
     // Gameplay
-    UpdatePlayer(g, dt);
+    UpdatePlayer(g, input, dt);
     UpdateAliens(g, dt);
     UpdateEnemyFire(g, dt);
     UpdateBullets(g, dt);
     UpdateUFO(g, dt);
-    ResolveCollisions(g, highScore);
+    ResolveCollisions(g);
     CheckWaveState(g);
 }
 
 // --- Player ---
 
-static void UpdatePlayer(GameState *g, float dt)
+static void UpdatePlayer(GameState *g, GameInput input, float dt)
 {
     if (!g->playerActive) return;
 
     if (g->invulnT > 0) g->invulnT -= dt;
 
     // Movement
-    if (IsKeyDown(KEY_LEFT) || IsKeyDown(KEY_A))
-        g->playerX -= PLAYER_SPEED * dt;
-    if (IsKeyDown(KEY_RIGHT) || IsKeyDown(KEY_D))
-        g->playerX += PLAYER_SPEED * dt;
+    g->playerX += input.moveX * PLAYER_SPEED * dt;
 
     // Clamp
     float halfW = PLAYER_W / 2.0f;
@@ -186,7 +185,7 @@ static void UpdatePlayer(GameState *g, float dt)
     if (g->playerX + halfW > PLAY_RIGHT) g->playerX = PLAY_RIGHT - halfW;
 
     // Fire
-    if (IsKeyPressed(KEY_SPACE) && !g->pBullet.active) {
+    if (input.firePressed && !g->pBullet.active) {
         g->pBullet.active = true;
         g->pBullet.pos = (Vector2){ g->playerX, PLAYER_BASE_Y - PLAYER_H / 2.0f };
         g->pBullet.vel = (Vector2){ 0, -PBULLET_SPEED };
@@ -376,14 +375,13 @@ static Rectangle UFORect(GameState *g)
     return (Rectangle){ g->ufo.x - UFO_W / 2.0f, g->ufo.y - UFO_H / 2.0f, UFO_W, UFO_H };
 }
 
-static void KillAlien(GameState *g, int r, int c, int *highScore)
+static void KillAlien(GameState *g, int r, int c)
 {
     g->aliens[r][c].alive = false;
     g->aliveCount--;
 
     int pts = AlienScore(g->aliens[r][c].type);
     g->score += pts;
-    if (g->score > *highScore) *highScore = g->score;
 
     Vector2 pos = { g->formX + c * ALIEN_SPACING_X, g->formY + r * ALIEN_SPACING_Y };
     Color col = AlienColor(g->aliens[r][c].type);
@@ -456,7 +454,7 @@ static bool HitShield(GameState *g, Bullet *b)
 
 // --- Collision Resolution ---
 
-static void ResolveCollisions(GameState *g, int *highScore)
+static void ResolveCollisions(GameState *g)
 {
     // Player bullet: priority UFO > alien > shield
     if (g->pBullet.active) {
@@ -465,7 +463,6 @@ static void ResolveCollisions(GameState *g, int *highScore)
         // 1. UFO
         if (g->ufo.active && CheckCollisionRecs(pb, UFORect(g))) {
             g->score += g->ufo.score;
-            if (g->score > *highScore) *highScore = g->score;
 
             Vector2 upos = { g->ufo.x, g->ufo.y };
             SpawnParticles(g->particles, upos, (Color){ 255, 50, 50, 255 },
@@ -486,7 +483,7 @@ static void ResolveCollisions(GameState *g, int *highScore)
                         // Bullet impact particles
                         SpawnParticles(g->particles, g->pBullet.pos, g->pBullet.color,
                                        GetRandomValue(8, 12), 60, 150, 0.15f, 0.3f, 1, 2);
-                        KillAlien(g, r, c, highScore);
+                        KillAlien(g, r, c);
                         g->pBullet.active = false;
                         hit = true;
                     }
@@ -568,109 +565,10 @@ static void TriggerShake(GameState *g, float amplitude, float duration)
 {
     g->shakeAmp = amplitude;
     g->shakeT = duration;
+    g->shakeDuration = duration;
 }
 
-static Vector2 GetShakeOffset(GameState *g)
-{
-    if (g->shakeT <= 0) return (Vector2){ 0, 0 };
-    float t = g->shakeT / (g->shakeAmp > 3 ? 0.30f : 0.10f); // normalized decay
-    if (t > 1.0f) t = 1.0f;
-    float ox = (float)GetRandomValue(-100, 100) / 100.0f * g->shakeAmp * t;
-    float oy = (float)GetRandomValue(-100, 100) / 100.0f * g->shakeAmp * t;
-    return (Vector2){ ox, oy };
-}
-
-// --- Draw ---
-
-void GameDraw(GameState *g)
-{
-    Vector2 shake = GetShakeOffset(g);
-
-    // 1-2. Starfield (no shake)
-    DrawStars(g->stars);
-
-    // 3. Shields
-    for (int s = 0; s < SHIELD_COUNT; s++)
-        DrawShieldBlock(&g->shields[s], shake);
-
-    // 4. Aliens
-    for (int r = 0; r < ALIEN_ROWS; r++) {
-        for (int c = 0; c < ALIEN_COLS; c++) {
-            if (!g->aliens[r][c].alive) continue;
-            float ax = g->formX + c * ALIEN_SPACING_X + shake.x;
-            float ay = g->formY + r * ALIEN_SPACING_Y + shake.y;
-            DrawAlienShape(g->aliens[r][c].type, ax, ay, g->animFrame);
-        }
-    }
-
-    // 5. Mystery ship
-    if (g->ufo.active) {
-        UFOShip tempUfo = g->ufo;
-        tempUfo.x += shake.x;
-        tempUfo.y += shake.y;
-        DrawUFOShape(&tempUfo);
-    }
-
-    // 6. Bullets + trails
-    if (g->pBullet.active) {
-        Bullet tb = g->pBullet;
-        tb.pos.x += shake.x;
-        tb.pos.y += shake.y;
-        for (int t = 0; t < tb.trailN; t++) {
-            tb.trail[t].x += shake.x;
-            tb.trail[t].y += shake.y;
-        }
-        DrawBulletObj(&tb, true);
-    }
-    for (int i = 0; i < MAX_ENEMY_BULLETS; i++) {
-        if (!g->eBullets[i].active) continue;
-        Bullet tb = g->eBullets[i];
-        tb.pos.x += shake.x;
-        tb.pos.y += shake.y;
-        for (int t = 0; t < tb.trailN; t++) {
-            tb.trail[t].x += shake.x;
-            tb.trail[t].y += shake.y;
-        }
-        DrawBulletObj(&tb, false);
-    }
-
-    // 7. Player
-    if (g->playerActive) {
-        bool blink = false;
-        if (g->invulnT > 0)
-            blink = ((int)(g->invulnT * 10) % 2) == 0;
-        DrawPlayerShip(g->playerX + shake.x, PLAYER_BASE_Y + shake.y, blink);
-    }
-
-    // 8. Particles
-    DrawParticles(g->particles);
-
-    // 9. Floating score text
-    DrawFloatTexts(g->floatTexts);
-
-    // 10. Ground line
-    DrawGroundLine(shake);
-
-    // 11. HUD (no shake)
-    DrawHUD(g->score, g->wave, g->lives);
-
-    // 12. Overlay text
-    if (g->waveComplete) {
-        const char *text = "WAVE COMPLETE";
-        int tw = MeasureText(text, 40);
-        DrawText(text, SCREEN_W / 2 - tw / 2 + 2, SCREEN_H / 2 - 20 + 2, 40, Fade(COL_UI_CYAN, 0.3f));
-        DrawText(text, SCREEN_W / 2 - tw / 2, SCREEN_H / 2 - 20, 40, WHITE);
-    }
-
-    if (g->dead) {
-        const char *text = "GAME OVER";
-        int tw = MeasureText(text, 40);
-        DrawText(text, SCREEN_W / 2 - tw / 2 + 2, SCREEN_H / 2 - 20 + 2, 40, Fade((Color){ 255, 50, 50, 255 }, 0.3f));
-        DrawText(text, SCREEN_W / 2 - tw / 2, SCREEN_H / 2 - 20, 40, (Color){ 255, 50, 50, 255 });
-    }
-}
-
-bool GameShouldEnd(GameState *g)
+bool GameShouldEnd(const GameState *g)
 {
     return g->dead && g->deathDelayT <= 0;
 }

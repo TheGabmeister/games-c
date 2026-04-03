@@ -1,32 +1,34 @@
 #include "raylib.h"
 #include "screens.h"
 #include "game_types.h"
-#include "drawing.h"
+#include "effects.h"
+#include <math.h>
 
-static int finishScreen = 0;
+static bool finishScreen = false;
 static float blinkTimer = 0;
 static Star stars[STAR_COUNT];
 
-void InitEndingScreen(void)
+void InitEndingScreen(AppState *app)
 {
-    finishScreen = 0;
+    (void)app;
+    finishScreen = false;
     blinkTimer = 0;
     InitStars(stars);
 }
 
-void UpdateEndingScreen(void)
+void UpdateEndingScreen(AppState *app, float dt)
 {
-    float dt = GetFrameTime();
+    (void)app;
     blinkTimer += dt;
     UpdateStars(stars, dt);
 
     if (IsKeyPressed(KEY_ENTER))
     {
-        finishScreen = 1;
+        finishScreen = true;
     }
 }
 
-void DrawEndingScreen(void)
+void DrawEndingScreen(const AppState *app)
 {
     DrawStars(stars);
 
@@ -40,17 +42,17 @@ void DrawEndingScreen(void)
     DrawText(title, tx, ty, titleSize, (Color){ 255, 50, 50, 255 });
 
     // Final score
-    const char *scoreText = TextFormat("SCORE: %d", appState.lastScore);
+    const char *scoreText = TextFormat("SCORE: %d", app->lastScore);
     int sw = MeasureText(scoreText, 30);
     DrawText(scoreText, SCREEN_W / 2 - sw / 2, 280, 30, WHITE);
 
     // Wave reached
-    const char *waveText = TextFormat("WAVE: %d", appState.lastWave);
+    const char *waveText = TextFormat("WAVE: %d", app->lastWave);
     int ww = MeasureText(waveText, 24);
     DrawText(waveText, SCREEN_W / 2 - ww / 2, 330, 24, COL_UI_CYAN);
 
     // High score
-    const char *hsText = TextFormat("HIGH SCORE: %d", appState.highScore);
+    const char *hsText = TextFormat("HIGH SCORE: %d", app->highScore);
     int hw = MeasureText(hsText, 24);
     DrawText(hsText, SCREEN_W / 2 - hw / 2, 400, 24, COL_UI_CYAN);
 
@@ -64,7 +66,7 @@ void DrawEndingScreen(void)
 
 void UnloadEndingScreen(void) { }
 
-int FinishEndingScreen(void)
+bool FinishEndingScreen(void)
 {
     return finishScreen;
 }

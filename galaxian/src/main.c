@@ -20,30 +20,20 @@ int main(int argc, char *argv[])
     if (!is_window_ready())
         return 1;
 
+    if (!res_init()) {
+        close_window();
+        return 1;
+    }
+
     audio_init();
 
     /* Enable alpha blending for glow / particle effects */
     SDL_SetRenderDrawBlendMode(get_renderer(), SDL_BLENDMODE_BLEND);
 
     /* Register game states */
-    game_state_register(STATE_MENU, (GameState){
-        .init    = menu_init,
-        .update  = menu_update,
-        .draw    = menu_draw,
-        .cleanup = menu_cleanup,
-    });
-    game_state_register(STATE_GAMEPLAY, (GameState){
-        .init    = gameplay_init,
-        .update  = gameplay_update,
-        .draw    = gameplay_draw,
-        .cleanup = gameplay_cleanup,
-    });
-    game_state_register(STATE_GAME_OVER, (GameState){
-        .init    = gameover_init,
-        .update  = gameover_update,
-        .draw    = gameover_draw,
-        .cleanup = gameover_cleanup,
-    });
+    game_state_register(STATE_MENU, gx_menu_state());
+    game_state_register(STATE_GAMEPLAY, gx_gameplay_state());
+    game_state_register(STATE_GAME_OVER, gx_gameover_state());
 
     /* Start at the menu */
     game_state_switch(STATE_MENU);
@@ -70,6 +60,7 @@ int main(int argc, char *argv[])
     /* --- Shutdown (order matters) --- */
     game_state_shutdown();
     res_free_all();
+    res_shutdown();
     audio_shutdown();
     close_window();
     return 0;

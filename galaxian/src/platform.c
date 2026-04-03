@@ -3,8 +3,6 @@
 
 // Core global state context data
 typedef struct Globals {
-
-    const char *title;                  // Window text title const pointer
     bool ready;                         // Check if window has been initialized successfully
     bool should_close;                  // Set when SDL_EVENT_QUIT is received
 
@@ -28,15 +26,23 @@ typedef struct Globals {
 
 } Globals;
 
-Globals GLOBALS = { 0 };
+static Globals GLOBALS = { 0 };
+
+static void destroy_window_resources(void)
+{
+    if (GLOBALS.renderer) {
+        SDL_DestroyRenderer(GLOBALS.renderer);
+        GLOBALS.renderer = NULL;
+    }
+    if (GLOBALS.window) {
+        SDL_DestroyWindow(GLOBALS.window);
+        GLOBALS.window = NULL;
+    }
+}
 
 void init_window(int width, int height, const char *title)
 {
-    GLOBALS.window   = NULL;
-    GLOBALS.renderer = NULL;
-    GLOBALS.previous_ticks_ns = 0;
-    GLOBALS.delta_time = 0.0f;
-    GLOBALS.fps = 0;
+    SDL_memset(&GLOBALS, 0, sizeof(GLOBALS));
 
     if (!SDL_Init(SDL_INIT_VIDEO | SDL_INIT_AUDIO)) {
         SDL_Log("SDL_Init failed: %s", SDL_GetError());
@@ -53,13 +59,7 @@ void init_window(int width, int height, const char *title)
     GLOBALS.renderer = SDL_CreateRenderer(GLOBALS.window, NULL);
     if (!GLOBALS.renderer) {
         SDL_Log("SDL_CreateRenderer failed: %s", SDL_GetError());
-        SDL_DestroyWindow(GLOBALS.window);
-        SDL_Quit();
-        return;
-    }
-
-    if (!TTF_Init()) {
-        SDL_Log("TTF_Init failed: %s", SDL_GetError());
+        destroy_window_resources();
         SDL_Quit();
         return;
     }
@@ -70,20 +70,8 @@ void init_window(int width, int height, const char *title)
 
 void close_window(void)
 {
-    if (GLOBALS.renderer) {
-        SDL_DestroyRenderer(GLOBALS.renderer);
-    }
-    if (GLOBALS.window) {
-        SDL_DestroyWindow(GLOBALS.window);
-    }
-
-    GLOBALS.renderer = NULL;
-    GLOBALS.window = NULL;
-    GLOBALS.ready = false;
-    GLOBALS.previous_ticks_ns = 0;
-    GLOBALS.delta_time = 0.0f;
-    GLOBALS.fps = 0;
-
+    destroy_window_resources();
+    SDL_memset(&GLOBALS, 0, sizeof(GLOBALS));
     SDL_Quit();
 }
 

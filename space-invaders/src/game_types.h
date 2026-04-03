@@ -175,6 +175,7 @@ typedef struct {
     // Shake
     float shakeT;
     float shakeAmp;
+    float shakeDuration;
 
     // Particles
     Particle particles[PARTICLE_MAX];

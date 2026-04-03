@@ -5,42 +5,50 @@
 #include "resources.h"
 #include <math.h>
 #include <stdio.h>
-
-static Star stars[NUM_STARS];
-static TTF_Font *font_title;
-static TTF_Font *font_hud;
-static TTF_Font *font_small;
-static float time_acc;
+#include <string.h>
 
 /* Small attract-mode enemies */
 #define ATTRACT_COUNT 12
-static float attract_x[ATTRACT_COUNT];
-static float attract_y[ATTRACT_COUNT];
-static float attract_sway;
+typedef struct {
+    Star stars[NUM_STARS];
+    TTF_Font *font_title;
+    TTF_Font *font_hud;
+    TTF_Font *font_small;
+    float time_acc;
+    float attract_x[ATTRACT_COUNT];
+    float attract_y[ATTRACT_COUNT];
+    float attract_sway;
+} MenuState;
 
-void menu_init(void)
+static void menu_init(void *ctx)
 {
-    font_title = res_load_font(FONT_PATH, FONT_TITLE);
-    font_hud   = res_load_font(FONT_PATH, FONT_HUD);
-    font_small = res_load_font(FONT_PATH, FONT_SMALL);
-    time_acc   = 0;
-    attract_sway = 0;
-    starfield_init(stars, NUM_STARS);
+    MenuState *menu = ctx;
+    const char *font_path = res_default_font_path();
+
+    SDL_memset(menu, 0, sizeof(*menu));
+    if (font_path) {
+        menu->font_title = res_load_font(font_path, FONT_TITLE);
+        menu->font_hud = res_load_font(font_path, FONT_HUD);
+        menu->font_small = res_load_font(font_path, FONT_SMALL);
+    }
+    starfield_init(menu->stars, NUM_STARS);
 
     /* Place attract enemies in a small grid */
     for (int i = 0; i < ATTRACT_COUNT; i++) {
         int c = i % 6;
         int r = i / 6;
-        attract_x[i] = 180.0f + c * 48.0f;
-        attract_y[i] = 340.0f + r * 40.0f;
+        menu->attract_x[i] = 180.0f + c * 48.0f;
+        menu->attract_y[i] = 340.0f + r * 40.0f;
     }
 }
 
-void menu_update(float dt)
+static void menu_update(void *ctx, float dt)
 {
-    time_acc += dt;
-    attract_sway += dt * 1.0f;
-    starfield_update(stars, NUM_STARS, dt);
+    MenuState *menu = ctx;
+
+    menu->time_acc += dt;
+    menu->attract_sway += dt * 1.0f;
+    starfield_update(menu->stars, NUM_STARS, dt);
 
     if (is_key_pressed(KEY_ENTER)) {
         game_state_switch(STATE_GAMEPLAY);
@@ -61,64 +69,80 @@ static void draw_attract_enemy(float cx, float cy, SDL_Color col)
     draw_line(cx - s, cy, cx, cy - s, col);
 }
 
-void menu_draw(void)
+static void menu_draw(void *ctx)
 {
-    starfield_draw(stars, NUM_STARS);
+    MenuState *menu = ctx;
+
+    starfield_draw(menu->stars, NUM_STARS);
 
     /* Attract enemies */
-    float sx = sinf(attract_sway) * 20.0f;
+    float sx = sinf(menu->attract_sway) * 20.0f;
     for (int i = 0; i < ATTRACT_COUNT; i++) {
         SDL_Color c = (i < 6) ? COL_DRONE : COL_RAIDER;
         c.a = 120;
-        draw_attract_enemy(attract_x[i] + sx, attract_y[i], c);
+        draw_attract_enemy(menu->attract_x[i] + sx, menu->attract_y[i], c);
     }
 
     /* Title */
-    if (font_title) {
-        float pulse = 0.85f + 0.15f * sinf(time_acc * 2.5f);
+    if (menu->font_title) {
+        float pulse = 0.85f + 0.15f * sinf(menu->time_acc * 2.5f);
+        float tw = 0.0f;
         SDL_Color tc = COL_PLAYER;
         tc.a = (Uint8)(pulse * 255);
-        float tw = draw_text(font_title, "GALAXIAN", 0, 0, tc);
-        /* Re-draw centered (draw_text returns width) */
-        /* Hack: draw off-screen to measure, then draw centered */
-        float tx = (SCREEN_W - tw) * 0.5f;
-        /* Clear the off-screen draw and redo */
-        draw_rect(0, 140, (float)SCREEN_W, 70, COL_BG);
-        draw_text(font_title, "GALAXIAN", tx, 150, tc);
+        if (measure_text(menu->font_title, "GALAXIAN", &tw, NULL)) {
+            draw_text(menu->font_title, "GALAXIAN", (SCREEN_W - tw) * 0.5f, 150, tc);
+        }
     }
 
     /* High score */
-    if (font_hud) {
+    if (menu->font_hud) {
         char buf[64];
+        float tw = 0.0f;
         snprintf(buf, sizeof(buf), "HI SCORE  %06d", gx_high_score());
-        float tw = draw_text(font_hud, buf, 0, 0, COL_HUD);
-        draw_rect(0, 250, (float)SCREEN_W, 30, COL_BG);
-        draw_text(font_hud, buf, (SCREEN_W - tw) * 0.5f, 260, COL_HUD_DIM);
+        if (measure_text(menu->font_hud, buf, &tw, NULL)) {
+            draw_text(menu->font_hud, buf, (SCREEN_W - tw) * 0.5f, 260, COL_HUD_DIM);
+        }
     }
 
     /* Start prompt */
-    if (font_hud) {
-        float pulse = 0.5f + 0.5f * sinf(time_acc * 3.0f);
+    if (menu->font_hud) {
+        float pulse = 0.5f + 0.5f * sinf(menu->time_acc * 3.0f);
+        float tw = 0.0f;
         SDL_Color pc = COL_HUD;
         pc.a = (Uint8)(pulse * 255);
         const char *msg = "PRESS ENTER TO START";
-        float tw = draw_text(font_hud, msg, 0, 0, pc);
-        draw_rect(0, 560, (float)SCREEN_W, 30, COL_BG);
-        draw_text(font_hud, msg, (SCREEN_W - tw) * 0.5f, 570, pc);
+        if (measure_text(menu->font_hud, msg, &tw, NULL)) {
+            draw_text(menu->font_hud, msg, (SCREEN_W - tw) * 0.5f, 570, pc);
+        }
     }
 
     /* Controls hint */
-    if (font_small) {
+    if (menu->font_small) {
         SDL_Color dc = COL_HUD_DIM;
+        float tw = 0.0f;
         dc.a = 160;
         const char *ctrl = "ARROWS/WASD: MOVE   SPACE: FIRE   ESC: QUIT";
-        float tw = draw_text(font_small, ctrl, 0, 0, dc);
-        draw_rect(0, 700, (float)SCREEN_W, 24, COL_BG);
-        draw_text(font_small, ctrl, (SCREEN_W - tw) * 0.5f, 710, dc);
+        if (measure_text(menu->font_small, ctrl, &tw, NULL)) {
+            draw_text(menu->font_small, ctrl, (SCREEN_W - tw) * 0.5f, 710, dc);
+        }
     }
 }
 
-void menu_cleanup(void)
+static void menu_cleanup(void *ctx)
 {
+    (void)ctx;
     /* fonts freed by res_free_all */
+}
+
+GameState gx_menu_state(void)
+{
+    static MenuState state;
+
+    return (GameState){
+        .ctx = &state,
+        .init = menu_init,
+        .update = menu_update,
+        .draw = menu_draw,
+        .cleanup = menu_cleanup,
+    };
 }

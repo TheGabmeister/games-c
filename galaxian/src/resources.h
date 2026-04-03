@@ -5,6 +5,7 @@
 #include <SDL3_image/SDL_image.h>
 #include <SDL3_ttf/SDL_ttf.h>
 #include <SDL3_mixer/SDL_mixer.h>
+#include <stdbool.h>
 
 /*
  * Resource Manager
@@ -64,8 +65,12 @@
 #define MAX_FONTS    32
 #define MAX_AUDIO    128
 
+bool res_init(void);
+void res_shutdown(void);
+
 SDL_Texture *res_load_texture(const char *path);
 TTF_Font    *res_load_font(const char *path, float pt_size);
+const char  *res_default_font_path(void);
 
 /* Pre-decoded audio (sound effects) — requires audio_init() first */
 MIX_Audio   *res_load_sound(const char *path);

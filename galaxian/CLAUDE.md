@@ -21,7 +21,7 @@ When adding new `.c` files, add them to the `add_executable()` call in CMakeList
 
 ## Architecture
 
-Modernized Galaxian clone in C17 on SDL3. 600x800 portrait window. All gameplay rendering uses primitives (no texture assets); only font rendering uses SDL_ttf with a system font (`C:/Windows/Fonts/consola.ttf`).
+Modernized Galaxian clone in C17 on SDL3. 600x800 portrait window. All gameplay rendering uses primitives (no texture assets); font rendering goes through the resource layer, preferring a bundled asset path with system-font fallback.
 
 ### Engine layer (template modules)
 
@@ -61,9 +61,8 @@ Modernized Galaxian clone in C17 on SDL3. 600x800 portrait window. All gameplay 
 ### Key data flow
 
 - `galaxian.c` session state bridges data between states (score, high score, new-high flag)
-- Each state manages its own starfield and loads fonts via `res_load_font()` (cached)
+- Each state manages its own starfield and loads fonts via `res_default_font_path()` + `res_load_font()` (cached)
 - Gameplay entity drawing (player ship, enemy shapes, bullets) is done with static helpers in `state_gameplay.c` using `drawing.h` primitives
-- The design spec is in `SPEC.md` at the repo root
 
 ### Startup/shutdown order
 

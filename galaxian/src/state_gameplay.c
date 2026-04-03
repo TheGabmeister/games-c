@@ -14,36 +14,61 @@
 
 /* ==== State data ==== */
 
-static Player   player;
-static Enemy    enemies[MAX_ENEMIES];
-static Bullet   pbullet;          /* single player bullet */
-static Bullet   ebullets[MAX_ENEMY_BULLETS];
-static Particle particles[MAX_PARTICLES];
-static Star     stars[NUM_STARS];
+typedef struct {
+    Player player;
+    Enemy enemies[MAX_ENEMIES];
+    Bullet pbullet;
+    Bullet ebullets[MAX_ENEMY_BULLETS];
+    Particle particles[MAX_PARTICLES];
+    Star stars[NUM_STARS];
+    int score;
+    int lives;
+    int stage;
+    bool extra_life_given;
+    bool swarm_mode;
+    bool new_high_this_run;
+    float stage_intro_timer;
+    float stage_clear_timer;
+    float attack_timer;
+    float formation_phase;
+    float shake_timer;
+    float shake_str;
+    bool convoy_active;
+    int convoy_flag;
+    int convoy_esc[2];
+    int convoy_esc_cnt;
+    int convoy_esc_dead;
+    TTF_Font *font_hud;
+    TTF_Font *font_large;
+} GameplayState;
 
-static int   score;
-static int   lives;
-static int   stage;
-static bool  extra_life_given;
-static bool  swarm_mode;
+static GameplayState *s_gameplay;
 
-static float stage_intro_timer;
-static float stage_clear_timer;
-static float attack_timer;
-static float formation_phase;     /* sway oscillation */
-
-static float shake_timer;
-static float shake_str;
-
-/* convoy tracking */
-static bool  convoy_active;
-static int   convoy_flag;
-static int   convoy_esc[2];
-static int   convoy_esc_cnt;
-static int   convoy_esc_dead;
-
-static TTF_Font *font_hud;
-static TTF_Font *font_large;
+#define player           (s_gameplay->player)
+#define enemies          (s_gameplay->enemies)
+#define pbullet          (s_gameplay->pbullet)
+#define ebullets         (s_gameplay->ebullets)
+#define particles        (s_gameplay->particles)
+#define stars            (s_gameplay->stars)
+#define score            (s_gameplay->score)
+#define lives            (s_gameplay->lives)
+#define stage            (s_gameplay->stage)
+#define extra_life_given (s_gameplay->extra_life_given)
+#define swarm_mode       (s_gameplay->swarm_mode)
+#define new_high_this_run (s_gameplay->new_high_this_run)
+#define stage_intro_timer (s_gameplay->stage_intro_timer)
+#define stage_clear_timer (s_gameplay->stage_clear_timer)
+#define attack_timer     (s_gameplay->attack_timer)
+#define formation_phase  (s_gameplay->formation_phase)
+#define shake_timer      (s_gameplay->shake_timer)
+#define shake_str        (s_gameplay->shake_str)
+#define convoy_active    (s_gameplay->convoy_active)
+#define convoy_flag      (s_gameplay->convoy_flag)
+#define convoy_esc       (s_gameplay->convoy_esc)
+#define convoy_esc_cnt   (s_gameplay->convoy_esc_cnt)
+#define convoy_esc_dead  (s_gameplay->convoy_esc_dead)
+#define font_hud         (s_gameplay->font_hud)
+#define font_large       (s_gameplay->font_large)
 
 /* ==== Helpers ==== */
 
@@ -101,6 +126,15 @@ static int score_for_enemy(EnemyType t, bool in_flight)
     return 30;
 }
 
+static void add_score(int pts)
+{
+    score += pts;
+    if (score > gx_high_score()) {
+        gx_set_high_score(score);
+        new_high_this_run = true;
+    }
+}
+
 static int count_alive(void)
 {
     int n = 0;
@@ -134,6 +168,11 @@ static void setup_stage(void)
     attack_timer = gx_first_attack_delay(stage);
     swarm_mode = false;
     convoy_active = false;
+    convoy_flag = -1;
+    convoy_esc[0] = -1;
+    convoy_esc[1] = -1;
+    convoy_esc_cnt = 0;
+    convoy_esc_dead = 0;
 
     pbullet.active = false;
     for (int i = 0; i < MAX_ENEMY_BULLETS; i++)
@@ -149,6 +188,7 @@ static void reset_run(void)
     lives = PLAYER_LIVES;
     stage = 1;
     extra_life_given = false;
+    new_high_this_run = false;
 
     player.pos = (vector2){ PLAYER_SPAWN_X, PLAYER_SPAWN_Y };
     player.alive = true;
@@ -262,7 +302,7 @@ static void update_player(float dt)
                 } else {
                     /* Transition to game over */
                     gx_set_last_score(score);
-                    gx_set_new_high(score >= gx_high_score() && score > 0);
+                    gx_set_new_high(new_high_this_run);
                     game_state_switch(STATE_GAME_OVER);
                 }
             }
@@ -498,9 +538,7 @@ static void check_collisions(void)
 
             e->alive = false;
             e->state = ENEMY_DEAD;
-            score += pts;
-            if (score > gx_high_score())
-                gx_set_high_score(score);
+            add_score(pts);
 
             /* Particles */
             int pc = enemy_particle_count(e->type);
@@ -559,10 +597,10 @@ static void check_collisions(void)
         SDL_FRect er = { ex - ew*0.5f, ey - eh*0.5f, ew, eh };
         if (SDL_HasRectIntersectionFloat(&pr, &er)) {
             /* Kill both */
+            bool in_flight = (e->state == ENEMY_DIVING || e->state == ENEMY_RETURNING);
             e->alive = false;
             e->state = ENEMY_DEAD;
-            bool in_flight = (e->state == ENEMY_DIVING || e->state == ENEMY_RETURNING);
-            score += score_for_enemy(e->type, in_flight);
+            add_score(score_for_enemy(e->type, in_flight));
             particles_spawn(particles, MAX_PARTICLES, (vector2){ex, ey},
                             enemy_particle_count(e->type), enemy_color(e->type), 150.0f, 3.0f);
             kill_player();
@@ -779,15 +817,15 @@ static void draw_hud(void)
 {
     if (!font_hud) return;
     char buf[64];
+    float tw = 0.0f;
 
     /* Top HUD */
     snprintf(buf, sizeof(buf), "SCORE %06d", score);
     draw_text(font_hud, buf, 12, 12, COL_HUD);
 
     snprintf(buf, sizeof(buf), "HI %06d", gx_high_score());
-    float tw = draw_text(font_hud, buf, -9999, -9999, COL_HUD);
-    draw_rect(SCREEN_W - tw - 16, 10, tw + 8, 28, COL_BG);
-    draw_text(font_hud, buf, SCREEN_W - tw - 12, 12, COL_HUD_DIM);
+    if (measure_text(font_hud, buf, &tw, NULL))
+        draw_text(font_hud, buf, SCREEN_W - tw - 12, 12, COL_HUD_DIM);
 
     /* Bottom HUD — lives (mini ships) */
     for (int i = 0; i < lives; i++) {
@@ -798,23 +836,31 @@ static void draw_hud(void)
 
     /* Bottom HUD — stage number */
     snprintf(buf, sizeof(buf), "STAGE %d", stage);
-    tw = draw_text(font_hud, buf, -9999, -9999, COL_HUD);
-    draw_rect(SCREEN_W - tw - 16, SCREEN_H - 38, tw + 8, 28, COL_BG);
-    draw_text(font_hud, buf, SCREEN_W - tw - 12, SCREEN_H - 36, COL_HUD_DIM);
+    if (measure_text(font_hud, buf, &tw, NULL))
+        draw_text(font_hud, buf, SCREEN_W - tw - 12, SCREEN_H - 36, COL_HUD_DIM);
 }
 
 /* ==== Public callbacks ==== */
 
-void gameplay_init(void)
+static void gameplay_init(void *ctx)
 {
-    font_hud   = res_load_font(FONT_PATH, FONT_HUD);
-    font_large = res_load_font(FONT_PATH, FONT_LARGE);
+    const char *font_path;
+
+    s_gameplay = ctx;
+    SDL_memset(s_gameplay, 0, sizeof(*s_gameplay));
+    font_path = res_default_font_path();
+    if (font_path) {
+        font_hud = res_load_font(font_path, FONT_HUD);
+        font_large = res_load_font(font_path, FONT_LARGE);
+    }
     srand((unsigned)SDL_GetTicks());
     reset_run();
 }
 
-void gameplay_update(float dt)
+static void gameplay_update(void *ctx, float dt)
 {
+    s_gameplay = ctx;
+
     /* Cap delta to avoid physics explosions on lag/breakpoints */
     if (dt > 0.1f) dt = 0.1f;
 
@@ -853,13 +899,12 @@ void gameplay_update(float dt)
         lives++;
     }
 
-    /* High score live update */
-    if (score > gx_high_score())
-        gx_set_high_score(score);
 }
 
-void gameplay_draw(void)
+static void gameplay_draw(void *ctx)
 {
+    s_gameplay = ctx;
+
     /* Shake offset */
     float ox = 0, oy = 0;
     if (shake_timer > 0) {
@@ -882,23 +927,38 @@ void gameplay_draw(void)
     if (stage_intro_timer > 0 && font_large) {
         char buf[32];
         snprintf(buf, sizeof(buf), "STAGE %d", stage);
-        float tw = draw_text(font_large, buf, -9999, -9999, COL_HUD);
-        draw_rect(0, SCREEN_H * 0.5f - 30, (float)SCREEN_W, 60, COL_BG);
-        draw_text(font_large, buf, (SCREEN_W - tw) * 0.5f,
-                  SCREEN_H * 0.5f - 20, COL_HUD);
+        float tw = 0.0f;
+        if (measure_text(font_large, buf, &tw, NULL))
+            draw_text(font_large, buf, (SCREEN_W - tw) * 0.5f,
+                      SCREEN_H * 0.5f - 20, COL_HUD);
     }
 
     /* Stage clear overlay */
     if (stage_clear_timer > 0 && font_large) {
         const char *msg = "STAGE CLEAR";
-        float tw = draw_text(font_large, msg, -9999, -9999, COL_FLAGSHIP);
-        draw_rect(0, SCREEN_H * 0.5f - 30, (float)SCREEN_W, 60, COL_BG);
-        draw_text(font_large, msg, (SCREEN_W - tw) * 0.5f,
-                  SCREEN_H * 0.5f - 20, COL_FLAGSHIP);
+        float tw = 0.0f;
+        if (measure_text(font_large, msg, &tw, NULL))
+            draw_text(font_large, msg, (SCREEN_W - tw) * 0.5f,
+                      SCREEN_H * 0.5f - 20, COL_FLAGSHIP);
     }
 }
 
-void gameplay_cleanup(void)
+static void gameplay_cleanup(void *ctx)
 {
+    s_gameplay = ctx;
+
     /* Fonts freed by res_free_all */
+}
+
+GameState gx_gameplay_state(void)
+{
+    static GameplayState state;
+
+    return (GameState){
+        .ctx = &state,
+        .init = gameplay_init,
+        .update = gameplay_update,
+        .draw = gameplay_draw,
+        .cleanup = gameplay_cleanup,
+    };
 }

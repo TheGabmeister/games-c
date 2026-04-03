@@ -1,6 +1,8 @@
 #ifndef GAME_STATE_H
 #define GAME_STATE_H
 
+#include <stddef.h>
+
 /*
  * Game State / Scene System
  * =========================
@@ -24,6 +26,7 @@
  * 3. Register the state in your initialization code:
  *
  *      game_state_register(STATE_SETTINGS, (GameState){
+ *          .ctx     = &settings_state,
  *          .init    = settings_init,
  *          .update  = settings_update,
  *          .draw    = settings_draw,
@@ -37,9 +40,6 @@
  *    This calls cleanup() on the current state, then init() on the new one.
  */
 
-#define MAX_GAME_STATES 16
-
-/* Add your state IDs here */
 typedef enum {
     STATE_NONE = -1,
     STATE_MENU,
@@ -49,12 +49,18 @@ typedef enum {
     STATE_COUNT
 } GameStateID;
 
-/* Each state provides up to four callbacks (any may be NULL) */
+typedef void (*GameStateInitFn)(void *ctx);
+typedef void (*GameStateUpdateFn)(void *ctx, float dt);
+typedef void (*GameStateDrawFn)(void *ctx);
+typedef void (*GameStateCleanupFn)(void *ctx);
+
+/* Each state provides up to four callbacks (any may be NULL) plus its context */
 typedef struct {
-    void (*init)(void);
-    void (*update)(float dt);
-    void (*draw)(void);
-    void (*cleanup)(void);
+    void *ctx;
+    GameStateInitFn init;
+    GameStateUpdateFn update;
+    GameStateDrawFn draw;
+    GameStateCleanupFn cleanup;
 } GameState;
 
 /* Register a state's callbacks under the given ID */

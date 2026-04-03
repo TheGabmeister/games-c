@@ -33,7 +33,7 @@ void UpdateParticles(Particle *pool, float dt)
     }
 }
 
-void DrawParticles(Particle *pool)
+void DrawParticles(const Particle *pool)
 {
     for (int i = 0; i < PARTICLE_MAX; i++) {
         if (!pool[i].active) continue;

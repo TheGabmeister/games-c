@@ -35,9 +35,6 @@ Current gameplay direction:
 - Audio is initialized by the app shell, but gameplay currently does not depend
   on authored audio assets
 
-The gameplay spec lives in `SPEC.md`. If code and spec diverge, update both or
-leave a note explaining the intentional difference.
-
 ## Architecture
 
 ### `src/main.c`
@@ -45,8 +42,10 @@ leave a note explaining the intentional difference.
 Application entry point.
 
 - Creates the window using `SCREEN_W` and `SCREEN_H` from `galaxian.h`
+- Initializes font resources with `res_init()`
 - Initializes audio and enables alpha blending on the renderer
-- Registers `STATE_MENU`, `STATE_GAMEPLAY`, and `STATE_GAME_OVER`
+- Registers `STATE_MENU`, `STATE_GAMEPLAY`, and `STATE_GAME_OVER` via the
+  `gx_*_state()` factories
 - Starts at `STATE_MENU`
 - Owns the main loop and shutdown order
 
@@ -61,8 +60,9 @@ Shutdown order:
 
 1. `game_state_shutdown()`
 2. `res_free_all()`
-3. `audio_shutdown()`
-4. `close_window()`
+3. `res_shutdown()`
+4. `audio_shutdown()`
+5. `close_window()`
 
 ### `src/platform.c` / `src/platform.h`
 
@@ -77,14 +77,16 @@ SDL-facing platform wrapper.
   `is_mouse_button_pressed()` vs `is_mouse_button_down()`
 - Shared utility types and key/button enums live here
 
-Keep SDL runtime state internal to this module.
+Keep SDL window, renderer, timing, and input runtime state internal to this
+module.
 
 ### `src/game_state.c` / `src/game_state.h`
 
 Simple state/scene system.
 
 - Register states with `game_state_register(STATE_ID, callbacks)`
-- Each state may provide `init`, `update(dt)`, `draw`, and `cleanup`
+- Each state may provide `init(ctx)`, `update(ctx, dt)`, `draw(ctx)`, and
+  `cleanup(ctx)` plus a per-state context pointer
 - Switch states with `game_state_switch()`
 - Current enum includes `STATE_MENU`, `STATE_GAMEPLAY`, `STATE_PAUSE`, and
   `STATE_GAME_OVER`
@@ -97,6 +99,8 @@ Shared gameplay definitions and reusable Galaxian-specific helpers.
 
 - Screen, HUD, player, bullet, formation, and timing constants
 - Shared structs: `Player`, `Enemy`, `Bullet`, `Particle`, `Star`, `DiffParams`
+- State factories: `gx_menu_state()`, `gx_gameplay_state()`,
+  `gx_gameover_state()`
 - Session-level score helpers:
   `gx_high_score()`, `gx_set_high_score()`, `gx_last_score()`,
   `gx_set_last_score()`, `gx_is_new_high()`, `gx_set_new_high()`
@@ -108,8 +112,6 @@ Shared gameplay definitions and reusable Galaxian-specific helpers.
 - Path helpers:
   `bezier_eval()`, `gx_dive_path()`, `gx_return_path()`
 - Starfield update/draw helpers
-- State callback declarations for menu, gameplay, and game over
-
 Treat `galaxian.h` as the gameplay contract. Reuse its constants instead of
 duplicating numbers in state files.
 
@@ -176,8 +178,10 @@ calling raw SDL rendering APIs from state files.
 
 Centralized asset cache keyed by path.
 
+- `res_init()` / `res_shutdown()`
 - `res_load_texture()`
 - `res_load_font()`
+- `res_default_font_path()`
 - `res_load_sound()`
 - `res_load_music()`
 - `res_free_all()`
@@ -217,5 +221,3 @@ The current CMake setup enables WAV, MP3, and OGG Vorbis support.
 - Keep asset loading routed through `resources.c`
 - Preserve the existing wrapper style instead of calling SDL subsystems
   directly from unrelated modules unless there is a clear need
-- When changing gameplay rules, also review `SPEC.md` so the implementation and
-  design doc stay aligned

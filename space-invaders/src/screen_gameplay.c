@@ -1,36 +1,46 @@
 #include "raylib.h"
 #include "screens.h"
 #include "gameplay.h"
+#include "game_renderer.h"
 
 static GameState game;
-static int finishScreen;
+static bool finishScreen;
 
-void InitGameplayScreen(void)
+void InitGameplayScreen(AppState *app)
 {
-    finishScreen = 0;
+    (void)app;
+    finishScreen = false;
     GameInit(&game);
 }
 
-void UpdateGameplayScreen(void)
+void UpdateGameplayScreen(AppState *app, float dt)
 {
-    float dt = GetFrameTime();
-    GameUpdate(&game, dt, &appState.highScore);
+    GameInput input = { 0 };
+
+    if (IsKeyDown(KEY_LEFT) || IsKeyDown(KEY_A)) input.moveX -= 1.0f;
+    if (IsKeyDown(KEY_RIGHT) || IsKeyDown(KEY_D)) input.moveX += 1.0f;
+    input.firePressed = IsKeyPressed(KEY_SPACE);
+
+    GameUpdate(&game, input, dt);
+
+    if (game.score > app->highScore) app->highScore = game.score;
 
     if (GameShouldEnd(&game)) {
-        appState.lastScore = game.score;
-        appState.lastWave = game.wave;
-        finishScreen = 1;
+        app->lastScore = game.score;
+        app->lastWave = game.wave;
+        finishScreen = true;
     }
 }
 
-void DrawGameplayScreen(void)
+void DrawGameplayScreen(const AppState *app)
 {
+    (void)app;
     GameDraw(&game);
 }
 
 void UnloadGameplayScreen(void) { }
 
-int FinishGameplayScreen(void)
+bool FinishGameplayScreen(void)
 {
     return finishScreen;
 }

@@ -2,25 +2,28 @@
 #include "screens.h"
 #include "game_types.h"
 #include "drawing.h"
+#include "effects.h"
+#include <math.h>
 
-static int finishScreen = 0;
+static bool finishScreen = false;
 static float blinkTimer = 0;
 static float animTimer = 0;
 static int animFrame = 0;
 static Star stars[STAR_COUNT];
 
-void InitTitleScreen(void)
+void InitTitleScreen(AppState *app)
 {
-    finishScreen = 0;
+    (void)app;
+    finishScreen = false;
     blinkTimer = 0;
     animTimer = 0;
     animFrame = 0;
     InitStars(stars);
 }
 
-void UpdateTitleScreen(void)
+void UpdateTitleScreen(AppState *app, float dt)
 {
-    float dt = GetFrameTime();
+    (void)app;
     blinkTimer += dt;
     animTimer += dt;
     if (animTimer > 0.5f) { animTimer -= 0.5f; animFrame = 1 - animFrame; }
@@ -28,11 +31,11 @@ void UpdateTitleScreen(void)
 
     if (IsKeyPressed(KEY_ENTER))
     {
-        finishScreen = 1;
+        finishScreen = true;
     }
 }
 
-void DrawTitleScreen(void)
+void DrawTitleScreen(const AppState *app)
 {
     DrawStars(stars);
 
@@ -66,8 +69,8 @@ void DrawTitleScreen(void)
     }
 
     // High score
-    if (appState.highScore > 0) {
-        const char *hs = TextFormat("HIGH SCORE: %d", appState.highScore);
+    if (app->highScore > 0) {
+        const char *hs = TextFormat("HIGH SCORE: %d", app->highScore);
         int hw = MeasureText(hs, 20);
         DrawText(hs, SCREEN_W / 2 - hw / 2, 520, 20, COL_UI_CYAN);
     }
@@ -75,7 +78,7 @@ void DrawTitleScreen(void)
 
 void UnloadTitleScreen(void) { }
 
-int FinishTitleScreen(void)
+bool FinishTitleScreen(void)
 {
     return finishScreen;
 }

@@ -1,6 +1,7 @@
 #ifndef DRAWING_H
 #define DRAWING_H
 
+#include <stdbool.h>
 #include <SDL3/SDL.h>
 #include <SDL3_ttf/SDL_ttf.h>
 #include "platform.h"
@@ -54,6 +55,9 @@ void draw_texture_region(SDL_Texture *texture, const SDL_FRect *src,
 /* Draw a texture at (x, y) with rotation (degrees) and uniform scale */
 void draw_texture_ex(SDL_Texture *texture, float x, float y,
                      float rotation_deg, float scale);
+
+/* Measure a text string without rendering it. */
+bool measure_text(TTF_Font *font, const char *text, float *w, float *h);
 
 /* Draw a text string at (x, y). Returns the width of the rendered text. */
 float draw_text(TTF_Font *font, const char *text, float x, float y, SDL_Color color);

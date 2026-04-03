@@ -5,6 +5,35 @@
 #define M_PI 3.14159265358979323846
 #endif
 
+bool measure_text(TTF_Font *font, const char *text, float *w, float *h)
+{
+    int iw = 0;
+    int ih = 0;
+
+    if (w) {
+        *w = 0.0f;
+    }
+    if (h) {
+        *h = 0.0f;
+    }
+
+    if (!font || !text) {
+        return false;
+    }
+
+    if (!TTF_GetStringSize(font, text, 0, &iw, &ih)) {
+        return false;
+    }
+
+    if (w) {
+        *w = (float)iw;
+    }
+    if (h) {
+        *h = (float)ih;
+    }
+    return true;
+}
+
 void draw_texture(SDL_Texture *texture, float x, float y)
 {
     if (!texture) return;

@@ -8,8 +8,28 @@ set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 add_subdirectory(vendor/raylib)
 
 # Our Project
-file(GLOB_RECURSE SOURCE_FILES CONFIGURE_DEPENDS src/*.c)
-file(GLOB_RECURSE HEADER_FILES CONFIGURE_DEPENDS src/*.h)
+set(SOURCE_FILES
+    src/drawing.c
+    src/effects.c
+    src/game.c
+    src/game_renderer.c
+    src/gameplay.c
+    src/particles.c
+    src/screen_ending.c
+    src/screen_gameplay.c
+    src/screen_title.c
+)
+
+set(HEADER_FILES
+    src/drawing.h
+    src/effects.h
+    src/game_renderer.h
+    src/gameplay.h
+    src/game_types.h
+    src/particles.h
+    src/screens.h
+)
+
 add_executable(${PROJECT_NAME} ${SOURCE_FILES} ${HEADER_FILES})
 
 set_target_properties(${PROJECT_NAME} PROPERTIES
@@ -21,6 +41,11 @@ set_property(TARGET ${PROJECT_NAME} PROPERTY VS_DEBUGGER_WORKING_DIRECTORY $<TAR
 
 #set(raylib_VERBOSE 1)
 target_link_libraries(${PROJECT_NAME} raylib)
+
+target_compile_options(${PROJECT_NAME} PRIVATE
+    $<$<C_COMPILER_ID:MSVC>:/W4>
+    $<$<NOT:$<C_COMPILER_ID:MSVC>>:-Wall -Wextra -Wpedantic>
+)
 
 # Web Configurations
 if ("${PLATFORM}" STREQUAL "Web")
