@@ -12,123 +12,44 @@ cmake -S . -B build -G "Visual Studio 18 2026" -A x64 -Wno-dev
 cmake --build build --config Debug
 
 # Run
-.\build\Debug\hello_sdl.exe
+.\build\Debug\sdl_only.exe
 ```
 
-Dependencies (`SDL3`, `SDL3_image`, `SDL3_mixer`, `SDL3_ttf`) live in `vendor/`
-and are built via `add_subdirectory()`.
+Notes:
 
-When adding new `.c` files, add them to the `add_executable()` call in
-`CMakeLists.txt`.
+- The CMake project name is `sdl_only`, so the executable is `sdl_only.exe`.
+- On Windows, `CMakeLists.txt` copies the SDL3 runtime DLL next to the built executable after build.
 
-## Project Architecture
+## Current Project Layout
 
-SDL3 game template in C17 with a small engine-style module layout.
+This repository is currently a minimal SDL3 C17 starter, not the larger engine-style template described in older docs.
 
-### `src/platform.c` / `src/platform.h`
+### `CMakeLists.txt`
 
-Abstraction layer over SDL3 for windowing, timing, renderer access, and input.
+- Sets `CMAKE_C_STANDARD` to `17`
+- Builds SDL3 from `vendor/sdl` via `add_subdirectory()`
+- Builds a single executable from `src/main.c`
+- Links only `SDL3::SDL3`
 
-- Window lifecycle: `init_window()`, `close_window()`, `is_window_ready()`,
-  `window_should_close()`
-- Frame timing: `get_deltatime()`, `get_fps()`
-- Renderer access: `get_renderer()`
-- Input polling with edge detection:
-  `is_key_pressed()` vs `is_key_down()`,
-  `is_mouse_button_pressed()` vs `is_mouse_button_down()`
-- Per-frame hooks: `platform_begin_frame()`, `platform_process_event()`
-- Shared utility types and enums: `vector2`, `rectangle`, keyboard/mouse/gamepad
-  constants
-
-All SDL-facing runtime state is kept internally in the platform layer.
-
-### `src/game_state.c` / `src/game_state.h`
-
-Simple state/scene system for gameplay flow.
-
-- Register states with `game_state_register(STATE_ID, callbacks)`
-- Each state can define `init`, `update(dt)`, `draw`, and `cleanup` callbacks
-- Switch states with `game_state_switch()`
-- Main loop forwards work through `game_state_update(dt)` and
-  `game_state_draw()`
-- Default enum entries include `STATE_MENU`, `STATE_GAMEPLAY`, and
-  `STATE_PAUSE`
-
-### `src/resources.c` / `src/resources.h`
-
-Centralized asset cache keyed by path.
-
-- `res_load_texture()`
-- `res_load_font()`
-- `res_load_sound()`
-- `res_load_music()`
-- `res_free_all()` releases every cached asset during shutdown
-
-Do not manually free assets returned by `res_load_*()`.
-
-### `src/drawing.c` / `src/drawing.h`
-
-Rendering helpers built on `get_renderer()`.
-
-- `draw_texture()`, `draw_texture_region()`, `draw_texture_ex()`
-- `draw_text()`
-- `draw_rect()`, `draw_rect_outline()`, `draw_line()`, `draw_circle()`
-
-### `src/audio.c` / `src/audio.h`
-
-Small wrapper layer over SDL3_mixer.
-
-- `audio_init()` / `audio_shutdown()`
-- `play_sound()`
-- `play_music()`, `play_music_once()`, `pause_music()`, `resume_music()`,
-  `stop_music()`
-- `set_master_volume()`, `set_music_volume()`
-- `get_mixer()` for direct low-level access when needed
-
-The current CMake setup enables WAV, MP3, and OGG Vorbis support.
-
-### `src/game.c` / `src/game.h`
-
-Game-level bootstrap and high-level gameplay wiring.
-
-- Register states in `game_init()`
-- Forward frame work through `game_update(dt)` and `game_draw()`
-- Handle game-level shutdown in `game_shutdown()`
-- Prefer moving concrete scenes into separate state files instead of growing
-  `game.c`
+When adding new `.c` files, add them to the `add_executable()` source list in `CMakeLists.txt`.
 
 ### `src/main.c`
 
-Thin application entry point.
+Current responsibilities:
 
-- Owns startup order, the SDL event loop, frame clear/present, and shutdown
-- Calls into `game_init()`, `game_update(dt)`, `game_draw()`, and
-  `game_shutdown()`
-- Should stay small and avoid accumulating game-specific logic
+- Includes `SDL3/SDL.h` and `SDL3/SDL_main.h`
+- Defines the application entry point
+- Is currently a minimal stub that returns immediately
 
-Main loop order:
+### `vendor/sdl`
 
-1. `platform_begin_frame()`
-2. `SDL_PollEvent()` + `platform_process_event()`
-3. `get_deltatime()` -> `game_update(dt)`
-4. Clear -> `game_draw()` -> `SDL_RenderPresent()`
+- Vendored SDL3 source used by the build
+- Treat this as third-party code unless the task explicitly requires patching SDL itself
 
-Startup/shutdown order:
+## Agent Guidance
 
-1. `init_window()`
-2. `audio_init()`
-3. `game_init()` (register states, choose starting state)
-4. main loop
-5. `game_shutdown()`
-6. `res_free_all()`
-7. `audio_shutdown()`
-8. `close_window()`
-
-## Agent Notes
-
-- Keep `src/main.c` as a thin entry point.
-- Prefer keeping game-specific logic in `src/game.c` and separate state files
-  instead of growing `src/main.c`.
-- Keep asset loading routed through `resources.c`.
-- Preserve the existing wrapper style instead of calling SDL subsystems
-  directly from unrelated modules unless there is a clear need.
+- Keep `src/main.c` small. If the project grows, prefer introducing new modules in `src/` instead of turning `main.c` into a catch-all file.
+- Do not assume helper files from older templates exist. Create them only when the task actually needs them.
+- Preserve the current plain SDL3 setup unless the user asks for a larger abstraction layer or engine structure.
+- Prefer updating documentation when architecture changes so `AGENTS.md` stays aligned with the real codebase.
+- Avoid editing `vendor/sdl` unless the user explicitly asks for dependency-level changes.

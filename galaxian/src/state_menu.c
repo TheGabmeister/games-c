@@ -2,18 +2,13 @@
 #include "platform.h"
 #include "game_state.h"
 #include "drawing.h"
-#include "resources.h"
 #include <math.h>
 #include <stdio.h>
-#include <string.h>
 
 /* Small attract-mode enemies */
 #define ATTRACT_COUNT 12
 typedef struct {
     Star stars[NUM_STARS];
-    TTF_Font *font_title;
-    TTF_Font *font_hud;
-    TTF_Font *font_small;
     float time_acc;
     float attract_x[ATTRACT_COUNT];
     float attract_y[ATTRACT_COUNT];
@@ -23,14 +18,8 @@ typedef struct {
 static void menu_init(void *ctx)
 {
     MenuState *menu = ctx;
-    const char *font_path = res_default_font_path();
 
     SDL_memset(menu, 0, sizeof(*menu));
-    if (font_path) {
-        menu->font_title = res_load_font(font_path, FONT_TITLE);
-        menu->font_hud = res_load_font(font_path, FONT_HUD);
-        menu->font_small = res_load_font(font_path, FONT_SMALL);
-    }
     starfield_init(menu->stars, NUM_STARS);
 
     /* Place attract enemies in a small grid */
@@ -84,46 +73,46 @@ static void menu_draw(void *ctx)
     }
 
     /* Title */
-    if (menu->font_title) {
+    {
         float pulse = 0.85f + 0.15f * sinf(menu->time_acc * 2.5f);
         float tw = 0.0f;
         SDL_Color tc = COL_PLAYER;
         tc.a = (Uint8)(pulse * 255);
-        if (measure_text(menu->font_title, "GALAXIAN", &tw, NULL)) {
-            draw_text(menu->font_title, "GALAXIAN", (SCREEN_W - tw) * 0.5f, 150, tc);
+        if (measure_text("GALAXIAN", &tw, NULL)) {
+            draw_text("GALAXIAN", (SCREEN_W - tw) * 0.5f, 150, tc);
         }
     }
 
     /* High score */
-    if (menu->font_hud) {
+    {
         char buf[64];
         float tw = 0.0f;
         snprintf(buf, sizeof(buf), "HI SCORE  %06d", gx_high_score());
-        if (measure_text(menu->font_hud, buf, &tw, NULL)) {
-            draw_text(menu->font_hud, buf, (SCREEN_W - tw) * 0.5f, 260, COL_HUD_DIM);
+        if (measure_text(buf, &tw, NULL)) {
+            draw_text(buf, (SCREEN_W - tw) * 0.5f, 260, COL_HUD_DIM);
         }
     }
 
     /* Start prompt */
-    if (menu->font_hud) {
+    {
         float pulse = 0.5f + 0.5f * sinf(menu->time_acc * 3.0f);
         float tw = 0.0f;
         SDL_Color pc = COL_HUD;
         pc.a = (Uint8)(pulse * 255);
         const char *msg = "PRESS ENTER TO START";
-        if (measure_text(menu->font_hud, msg, &tw, NULL)) {
-            draw_text(menu->font_hud, msg, (SCREEN_W - tw) * 0.5f, 570, pc);
+        if (measure_text(msg, &tw, NULL)) {
+            draw_text(msg, (SCREEN_W - tw) * 0.5f, 570, pc);
         }
     }
 
     /* Controls hint */
-    if (menu->font_small) {
+    {
         SDL_Color dc = COL_HUD_DIM;
         float tw = 0.0f;
         dc.a = 160;
         const char *ctrl = "ARROWS/WASD: MOVE   SPACE: FIRE   ESC: QUIT";
-        if (measure_text(menu->font_small, ctrl, &tw, NULL)) {
-            draw_text(menu->font_small, ctrl, (SCREEN_W - tw) * 0.5f, 710, dc);
+        if (measure_text(ctrl, &tw, NULL)) {
+            draw_text(ctrl, (SCREEN_W - tw) * 0.5f, 710, dc);
         }
     }
 }
@@ -131,7 +120,6 @@ static void menu_draw(void *ctx)
 static void menu_cleanup(void *ctx)
 {
     (void)ctx;
-    /* fonts freed by res_free_all */
 }
 
 GameState gx_menu_state(void)

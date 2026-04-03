@@ -2,27 +2,19 @@
 #include "platform.h"
 #include "game_state.h"
 #include "drawing.h"
-#include "resources.h"
 #include <math.h>
 #include <stdio.h>
 
 typedef struct {
     Star stars[NUM_STARS];
-    TTF_Font *font_large;
-    TTF_Font *font_hud;
     float time_acc;
 } GameOverState;
 
 static void gameover_init(void *ctx)
 {
     GameOverState *gameover = ctx;
-    const char *font_path = res_default_font_path();
 
     SDL_memset(gameover, 0, sizeof(*gameover));
-    if (font_path) {
-        gameover->font_large = res_load_font(font_path, FONT_LARGE);
-        gameover->font_hud = res_load_font(font_path, FONT_HUD);
-    }
     starfield_init(gameover->stars, NUM_STARS);
 }
 
@@ -42,16 +34,11 @@ static void gameover_update(void *ctx, float dt)
     }
 }
 
-static void draw_centered(TTF_Font *font, const char *text, float y, SDL_Color color)
+static void draw_centered(const char *text, float y, SDL_Color color)
 {
     float tw = 0.0f;
-
-    if (!font) {
-        return;
-    }
-
-    if (measure_text(font, text, &tw, NULL)) {
-        draw_text(font, text, (SCREEN_W - tw) * 0.5f, y, color);
+    if (measure_text(text, &tw, NULL)) {
+        draw_text(text, (SCREEN_W - tw) * 0.5f, y, color);
     }
 }
 
@@ -62,36 +49,35 @@ static void gameover_draw(void *ctx)
     starfield_draw(gameover->stars, NUM_STARS);
 
     /* GAME OVER */
-    draw_centered(gameover->font_large, "GAME OVER", 200, COL_ESCORT);
+    draw_centered("GAME OVER", 200, COL_ESCORT);
 
     /* Score */
-    if (gameover->font_hud) {
+    {
         char buf[64];
         snprintf(buf, sizeof(buf), "SCORE  %06d", gx_last_score());
-        draw_centered(gameover->font_hud, buf, 300, COL_HUD);
+        draw_centered(buf, 300, COL_HUD);
 
         if (gx_is_new_high()) {
             float pulse = 0.5f + 0.5f * sinf(gameover->time_acc * 4.0f);
             SDL_Color gc = COL_FLAGSHIP;
             gc.a = (Uint8)(pulse * 255);
-            draw_centered(gameover->font_hud, "NEW HIGH SCORE!", 350, gc);
+            draw_centered("NEW HIGH SCORE!", 350, gc);
         } else {
             snprintf(buf, sizeof(buf), "HI SCORE  %06d", gx_high_score());
-            draw_centered(gameover->font_hud, buf, 350, COL_HUD_DIM);
+            draw_centered(buf, 350, COL_HUD_DIM);
         }
 
         /* Restart prompt */
         float pulse = 0.5f + 0.5f * sinf(gameover->time_acc * 3.0f);
         SDL_Color pc = COL_HUD;
         pc.a = (Uint8)(pulse * 255);
-        draw_centered(gameover->font_hud, "PRESS ENTER TO PLAY AGAIN", 500, pc);
+        draw_centered("PRESS ENTER TO PLAY AGAIN", 500, pc);
     }
 }
 
 static void gameover_cleanup(void *ctx)
 {
     (void)ctx;
-    /* fonts freed by res_free_all */
 }
 
 GameState gx_gameover_state(void)

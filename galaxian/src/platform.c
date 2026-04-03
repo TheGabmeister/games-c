@@ -1,7 +1,5 @@
 #include "platform.h"
 #include "game.h"
-#include "resources.h"
-#include "audio.h"
 #include <SDL3/SDL.h>
 #include <SDL3/SDL_main.h>
 
@@ -48,7 +46,7 @@ void init_window(int width, int height, const char *title)
 {
     SDL_memset(&GLOBALS, 0, sizeof(GLOBALS));
 
-    if (!SDL_Init(SDL_INIT_VIDEO | SDL_INIT_AUDIO)) {
+    if (!SDL_Init(SDL_INIT_VIDEO)) {
         SDL_Log("SDL_Init failed: %s", SDL_GetError());
         return;
     }
@@ -162,7 +160,7 @@ void engine_process_event(SDL_Event *event)
 {
     if (event->type == SDL_EVENT_MOUSE_WHEEL)
         GLOBALS.Mouse.wheelY += event->wheel.y;
-    else if (event->type == SDL_EVENT_QUIT)
+    else if (event->type == SDL_EVENT_QUIT || event->type == SDL_EVENT_WINDOW_CLOSE_REQUESTED)
         GLOBALS.should_close = true;
 }
 
@@ -209,13 +207,6 @@ int main(int argc, char *argv[])
     if (!is_window_ready())
         return 1;
 
-    if (!res_init()) {
-        close_window();
-        return 1;
-    }
-
-    audio_init();
-
     SDL_SetRenderDrawBlendMode(get_renderer(), SDL_BLENDMODE_BLEND);
 
     game_init();
@@ -244,9 +235,6 @@ int main(int argc, char *argv[])
     /* --- Shutdown (order matters) --- */
     /* --- Shutdown (order matters) --- */
     game_shutdown();
-    res_free_all();
-    audio_shutdown();
-    res_shutdown();
     close_window();
     return 0;
 }

@@ -3,7 +3,6 @@
 #include "platform.h"
 #include "game_state.h"
 #include "drawing.h"
-#include "resources.h"
 #include <math.h>
 #include <stdlib.h>
 #include <stdio.h>
@@ -38,8 +37,6 @@ typedef struct {
     int convoy_esc[2];
     int convoy_esc_cnt;
     int convoy_esc_dead;
-    TTF_Font *font_hud;
-    TTF_Font *font_large;
 } GameplayState;
 
 static GameplayState *s_gameplay;
@@ -67,8 +64,6 @@ static GameplayState *s_gameplay;
 #define convoy_esc       (s_gameplay->convoy_esc)
 #define convoy_esc_cnt   (s_gameplay->convoy_esc_cnt)
 #define convoy_esc_dead  (s_gameplay->convoy_esc_dead)
-#define font_hud         (s_gameplay->font_hud)
-#define font_large       (s_gameplay->font_large)
 
 /* ==== Helpers ==== */
 
@@ -815,17 +810,16 @@ static void draw_bullets(float ox, float oy)
 
 static void draw_hud(void)
 {
-    if (!font_hud) return;
     char buf[64];
     float tw = 0.0f;
 
     /* Top HUD */
     snprintf(buf, sizeof(buf), "SCORE %06d", score);
-    draw_text(font_hud, buf, 12, 12, COL_HUD);
+    draw_text(buf, 12, 12, COL_HUD);
 
     snprintf(buf, sizeof(buf), "HI %06d", gx_high_score());
-    if (measure_text(font_hud, buf, &tw, NULL))
-        draw_text(font_hud, buf, SCREEN_W - tw - 12, 12, COL_HUD_DIM);
+    if (measure_text(buf, &tw, NULL))
+        draw_text(buf, SCREEN_W - tw - 12, 12, COL_HUD_DIM);
 
     /* Bottom HUD — lives (mini ships) */
     for (int i = 0; i < lives; i++) {
@@ -836,23 +830,16 @@ static void draw_hud(void)
 
     /* Bottom HUD — stage number */
     snprintf(buf, sizeof(buf), "STAGE %d", stage);
-    if (measure_text(font_hud, buf, &tw, NULL))
-        draw_text(font_hud, buf, SCREEN_W - tw - 12, SCREEN_H - 36, COL_HUD_DIM);
+    if (measure_text(buf, &tw, NULL))
+        draw_text(buf, SCREEN_W - tw - 12, SCREEN_H - 36, COL_HUD_DIM);
 }
 
 /* ==== Public callbacks ==== */
 
 static void gameplay_init(void *ctx)
 {
-    const char *font_path;
-
     s_gameplay = ctx;
     SDL_memset(s_gameplay, 0, sizeof(*s_gameplay));
-    font_path = res_default_font_path();
-    if (font_path) {
-        font_hud = res_load_font(font_path, FONT_HUD);
-        font_large = res_load_font(font_path, FONT_LARGE);
-    }
     srand((unsigned)SDL_GetTicks());
     reset_run();
 }
@@ -924,21 +911,21 @@ static void gameplay_draw(void *ctx)
     draw_hud();
 
     /* Stage intro overlay */
-    if (stage_intro_timer > 0 && font_large) {
+    if (stage_intro_timer > 0) {
         char buf[32];
         snprintf(buf, sizeof(buf), "STAGE %d", stage);
         float tw = 0.0f;
-        if (measure_text(font_large, buf, &tw, NULL))
-            draw_text(font_large, buf, (SCREEN_W - tw) * 0.5f,
+        if (measure_text(buf, &tw, NULL))
+            draw_text(buf, (SCREEN_W - tw) * 0.5f,
                       SCREEN_H * 0.5f - 20, COL_HUD);
     }
 
     /* Stage clear overlay */
-    if (stage_clear_timer > 0 && font_large) {
+    if (stage_clear_timer > 0) {
         const char *msg = "STAGE CLEAR";
         float tw = 0.0f;
-        if (measure_text(font_large, msg, &tw, NULL))
-            draw_text(font_large, msg, (SCREEN_W - tw) * 0.5f,
+        if (measure_text(msg, &tw, NULL))
+            draw_text(msg, (SCREEN_W - tw) * 0.5f,
                       SCREEN_H * 0.5f - 20, COL_FLAGSHIP);
     }
 }
@@ -946,8 +933,6 @@ static void gameplay_draw(void *ctx)
 static void gameplay_cleanup(void *ctx)
 {
     s_gameplay = ctx;
-
-    /* Fonts freed by res_free_all */
 }
 
 GameState gx_gameplay_state(void)
