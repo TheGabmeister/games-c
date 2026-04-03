@@ -10,6 +10,10 @@ add_subdirectory(vendor/sdl)
 
 add_executable(${PROJECT_NAME}
     src/main.c
+    src/game.c
+    src/input.c
+    src/draw.c
+    src/demo_scene.c
 )
 target_link_libraries(${PROJECT_NAME} PRIVATE
     SDL3::SDL3

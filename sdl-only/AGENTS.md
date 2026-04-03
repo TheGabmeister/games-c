@@ -20,26 +20,49 @@ Notes:
 - The CMake project name is `sdl_only`, so the executable is `sdl_only.exe`.
 - On Windows, `CMakeLists.txt` copies the SDL3 runtime DLL next to the built executable after build.
 
-## Current Project Layout
+## Project Layout
 
-This repository is currently a minimal SDL3 C17 starter, not the larger engine-style template described in older docs.
+SDL3 2D game template in C17 with modular architecture.
 
 ### `CMakeLists.txt`
 
 - Sets `CMAKE_C_STANDARD` to `17`
 - Builds SDL3 from `vendor/sdl` via `add_subdirectory()`
-- Builds a single executable from `src/main.c`
+- Builds a single executable from all `.c` files in `src/`
 - Links only `SDL3::SDL3`
 
 When adding new `.c` files, add them to the `add_executable()` source list in `CMakeLists.txt`.
 
-### `src/main.c`
+### Module Overview
 
-Current responsibilities:
+| File | Purpose |
+|---|---|
+| `src/main.c` | Entry point. Calls `game_init()`, `game_run()`, `game_shutdown()`. |
+| `src/config.h` | Game constants: window size, timestep, title. |
+| `src/types.h` | Core types: `Vec2`, `Color`, `Rect` with inline helpers. |
+| `src/game.h/c` | SDL lifecycle, main loop (fixed timestep), scene management. |
+| `src/scene.h` | Scene interface (function pointer vtable: init/shutdown/update/render). |
+| `src/input.h/c` | Keyboard and mouse state with down/pressed/released queries. |
+| `src/draw.h/c` | Camera, world/screen-space primitives, text rendering. |
+| `src/demo_scene.h/c` | Example scene: player movement, walls, coins, camera follow, HUD. |
 
-- Includes `SDL3/SDL.h` and `SDL3/SDL_main.h`
-- Defines the application entry point
-- Is currently a minimal stub that returns immediately
+### Architecture Patterns
+
+**Game Loop** (`game.c`): Fixed timestep via accumulator. `input_update()` runs once per frame, `scene->update(FIXED_DT)` runs zero or more times per frame to catch up, `scene->render()` runs once per frame.
+
+**Scene System** (`scene.h`): Each scene is a `const Scene` struct with function pointers. Scenes are switched via `game_set_scene()` which defers the transition to avoid mid-frame issues. The old scene's `shutdown` is called before the new scene's `init`.
+
+**Input** (`input.h`): Snapshots SDL keyboard/mouse state each frame. Tracks previous frame state for edge detection (`input_key_pressed`, `input_key_released`).
+
+**Drawing** (`draw.h`): All world-space drawing goes through a camera transform. Screen-space functions (`draw_*_screen`, `draw_text`) bypass the camera for HUD/UI. Text uses `SDL_RenderDebugText` (8x8 monospace) with optional scale.
+
+### How to Add a New Scene
+
+1. Create `src/my_scene.h` and `src/my_scene.c`
+2. Implement the four callbacks (`init`, `shutdown`, `update`, `render`)
+3. Export a `const Scene my_scene` struct
+4. Add `src/my_scene.c` to `add_executable()` in `CMakeLists.txt`
+5. Switch to it via `game_set_scene(&my_scene)` from any update callback
 
 ### `vendor/sdl`
 
@@ -48,8 +71,8 @@ Current responsibilities:
 
 ## Agent Guidance
 
-- Keep `src/main.c` small. If the project grows, prefer introducing new modules in `src/` instead of turning `main.c` into a catch-all file.
-- Do not assume helper files from older templates exist. Create them only when the task actually needs them.
-- Preserve the current plain SDL3 setup unless the user asks for a larger abstraction layer or engine structure.
-- Prefer updating documentation when architecture changes so `AGENTS.md` stays aligned with the real codebase.
+- Keep `src/main.c` minimal. It should only init, run, and shutdown.
+- Each new feature or game screen should be its own scene in a separate file.
+- Shared game state (player stats, inventory, etc.) can live in a dedicated module rather than in scene files.
+- Prefer updating this documentation when architecture changes so `AGENTS.md` stays aligned with the real codebase.
 - Avoid editing `vendor/sdl` unless the user explicitly asks for dependency-level changes.
