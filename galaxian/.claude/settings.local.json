@@ -9,7 +9,7 @@
       "Bash(cmake -S . -B build -G \"Visual Studio 18 2026\" -A x64 -Wno-dev)",
       "Bash(rm -f build/CMakeCache.txt)",
       "Bash(rm -rf build/CMakeFiles)",
-      "Bash(cmake --build build --config Debug)",
+      "Bash(cmake --build build --config Debug)"
     ]
   }
 }

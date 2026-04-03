@@ -76,8 +76,7 @@ void close_window(void)
 {
     destroy_window_resources();
     SDL_memset(&GLOBALS, 0, sizeof(GLOBALS));
-    /* SDL_Quit() is intentionally omitted — it deadlocks on Windows with
-       SDL3 + SDL3_mixer.  The OS reclaims all resources on process exit. */
+    SDL_Quit();
 }
 
 bool is_window_ready(void)
