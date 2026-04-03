@@ -133,7 +133,6 @@ typedef struct Game {
 } Game;
 
 typedef struct GameContext {
-    int gamepadIndex;
     Game game;
     Ship ship;
     Bullet bullets[MAX_BULLETS];

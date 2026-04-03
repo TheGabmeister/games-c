@@ -18,7 +18,6 @@ int main(void)
 
     while (!WindowShouldClose()) {
         float dt = GetFrameTime();
-        ctx.gamepadIndex = 0;
 
         WorldUpdateScreenShake(&ctx, dt);
         ParticlesUpdate(&ctx, dt);
