@@ -4,6 +4,7 @@
 #include "../platform.h"
 #include "../input.h"
 #include "../draw.h"
+#include "../collision.h"
 #include "../collectible.h"
 #include "../enemy.h"
 #include "../gamestate.h"
@@ -11,6 +12,7 @@
 
 typedef struct {
     rectangle rect;
+    CollisionFilter filter;
     color col;
     float speed;
 } Player;
@@ -23,9 +25,10 @@ static void play_init(void)
     float h = (float)get_window_height();
 
     player = (Player){
-        .rect  = { w / 2.0f - 20, h / 2.0f - 20, 40, 40 },
-        .col   = COLOR_GREEN,
-        .speed = 250.0f,
+        .rect   = { w / 2.0f - 20, h / 2.0f - 20, 40, 40 },
+        .filter = { COLLISION_LAYER_PLAYER, COLLISION_LAYER_ENEMY | COLLISION_LAYER_COLLECTIBLE },
+        .col    = COLOR_GREEN,
+        .speed  = 250.0f,
     };
 
     gamestate_reset();
@@ -70,8 +73,8 @@ static void play_update(float dt)
     if (player.rect.x + player.rect.w > w) player.rect.x = w - player.rect.w;
     if (player.rect.y + player.rect.h > h) player.rect.y = h - player.rect.h;
 
-    collectibles_update(player.rect, gamestate_get());
-    enemies_update(dt, player.rect, gamestate_get());
+    collectibles_update(player.rect, player.filter, gamestate_get());
+    enemies_update(dt, player.rect, player.filter, gamestate_get());
 
     if (gamestate_get()->health <= 0) {
         scene_set(gameover_scene());

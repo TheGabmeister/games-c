@@ -2,6 +2,7 @@
 #define ENEMY_H
 
 #include "platform.h"
+#include "collision.h"
 #include "gamestate.h"
 #include <stdbool.h>
 
@@ -16,6 +17,7 @@ typedef enum {
 
 typedef struct {
     rectangle rect;
+    CollisionFilter filter;
     vector2 velocity;
     EnemyType type;
     float speed;
@@ -25,7 +27,7 @@ typedef struct {
 
 void enemies_init(void);
 void enemy_spawn(EnemyType type, float x, float y);
-void enemies_update(float dt, rectangle player_rect, GameState *state);
+void enemies_update(float dt, rectangle player_rect, CollisionFilter player_filter, GameState *state);
 void enemies_draw(void);
 
 #endif // ENEMY_H

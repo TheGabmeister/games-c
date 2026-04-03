@@ -51,6 +51,7 @@ void enemy_spawn(EnemyType type, float x, float y)
 
         enemies[i] = (Enemy){
             .rect     = { x, y, 24, 24 },
+            .filter   = { COLLISION_LAYER_ENEMY, COLLISION_LAYER_PLAYER | COLLISION_LAYER_PROJECTILE },
             .velocity = { dir.x * speed, dir.y * speed },
             .type     = type,
             .speed    = speed,
@@ -100,7 +101,7 @@ static void update_bouncer(Enemy *e, float dt)
     clamp_to_window(e);
 }
 
-void enemies_update(float dt, rectangle player_rect, GameState *state)
+void enemies_update(float dt, rectangle player_rect, CollisionFilter player_filter, GameState *state)
 {
     if (damage_cooldown > 0.0f)
         damage_cooldown -= dt;
@@ -115,7 +116,9 @@ void enemies_update(float dt, rectangle player_rect, GameState *state)
             default: break;
         }
 
-        if (damage_cooldown <= 0.0f && rects_overlap(player_rect, enemies[i].rect)) {
+        if (damage_cooldown <= 0.0f &&
+            collision_check(player_rect, player_filter,
+                            enemies[i].rect, enemies[i].filter)) {
             state->health -= 1;
             damage_cooldown = DAMAGE_COOLDOWN;
         }

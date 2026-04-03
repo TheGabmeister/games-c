@@ -2,6 +2,7 @@
 #define COLLECTIBLE_H
 
 #include "platform.h"
+#include "collision.h"
 #include "gamestate.h"
 #include <stdbool.h>
 
@@ -16,13 +17,14 @@ typedef enum {
 
 typedef struct {
     rectangle rect;
+    CollisionFilter filter;
     CollectibleType type;
     bool active;
 } Collectible;
 
 void collectibles_init(void);
 void collectible_spawn(CollectibleType type, float x, float y);
-void collectibles_update(rectangle player_rect, GameState *state);
+void collectibles_update(rectangle player_rect, CollisionFilter player_filter, GameState *state);
 void collectibles_draw(void);
 int  collectibles_remaining(void);
 

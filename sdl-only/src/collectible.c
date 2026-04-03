@@ -16,6 +16,7 @@ void collectible_spawn(CollectibleType type, float x, float y)
         if (!collectibles[i].active) {
             collectibles[i] = (Collectible){
                 .rect   = { x, y, 20, 20 },
+                .filter = { COLLISION_LAYER_COLLECTIBLE, COLLISION_LAYER_PLAYER },
                 .type   = type,
                 .active = true
             };
@@ -24,11 +25,12 @@ void collectible_spawn(CollectibleType type, float x, float y)
     }
 }
 
-void collectibles_update(rectangle player_rect, GameState *state)
+void collectibles_update(rectangle player_rect, CollisionFilter player_filter, GameState *state)
 {
     for (int i = 0; i < MAX_COLLECTIBLES; i++) {
         if (!collectibles[i].active) continue;
-        if (!rects_overlap(player_rect, collectibles[i].rect)) continue;
+        if (!collision_check(player_rect, player_filter,
+                             collectibles[i].rect, collectibles[i].filter)) continue;
 
         collectibles[i].active = false;
 
