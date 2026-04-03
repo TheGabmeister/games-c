@@ -18,19 +18,31 @@ There are no automated tests. Validate changes by rebuilding and running the gam
 
 ## Architecture
 
-Single-file C game using **raylib 5.5** (with `raymath.h` for vector math). All code lives in `src/game.c`.
+C game using **raylib 5.5** (with `raymath.h` for vector math), organized into modules under `src/`.
 
-**Game state machine:** `GameState` enum drives three modes — `STATE_TITLE`, `STATE_PLAYING`, `STATE_GAMEOVER`. The main loop dispatches update/draw per state.
+**Central state:** All game state lives in a single `GameContext` struct (defined in `game_types.h`) that is passed by pointer to every subsystem. This includes the ship, entity arrays, input bindings, and game-flow state. `game_types.h` also defines all constants, enums, and entity structs — it is the shared dependency for all modules.
+
+**Game state machine:** `GameState` enum drives three modes — `STATE_TITLE`, `STATE_PLAYING`, `STATE_GAMEOVER`. The main loop in `game.c` dispatches update/draw per state.
 
 **Entity model:** Fixed-size static arrays with `active`/`alive` flags (no dynamic allocation). Pool sizes: 30 bullets, 64 asteroids, 256 particles, 100 stars.
 
-**Key subsystems in `src/game.c`:**
-- **Input abstraction** — `ActionType` enum maps logical actions (UP, DOWN, LEFT, RIGHT, FIRE) to keyboard keys and gamepad buttons via `ActionInput` structs. `IsActionPressed`/`IsActionDown` wrap raylib input to support both transparently. TAB toggles between WASD and arrow key layouts.
-- **Ship** — Rotation + thrust physics with drag (velocity *= 0.98/frame). Screen wrapping. Invulnerability with blink effect after respawn.
-- **Asteroids** — Irregular polygons (8-12 vertices with random radius perturbation). Three sizes that split on destruction (large → 2 medium → 2 small). Wave progression spawns from screen edges.
-- **Collisions** — Circle-based via `CheckCollisionCircles` for bullet-asteroid and ship-asteroid interactions.
-- **Particle system** — Explosions, thrust exhaust. Particles fade via alpha over lifetime.
-- **Visual effects** — Neon glow (double-draw: thick/dim + thin/bright), parallax starfield, screen shake via `Camera2D`, thrust flame flicker.
+**Module layout** — each subsystem is a `.c/.h` pair under `src/`:
+
+| Module | Responsibility |
+|---|---|
+| `game.c` | Entry point, main loop, state dispatch |
+| `game_types.h` | All shared types, constants, `GameContext` |
+| `game_flow` | State transitions, session init, wave progression |
+| `input` | Action abstraction over keyboard/gamepad; WASD vs arrow toggle |
+| `ship` | Ship physics, drawing, thrust flame |
+| `asteroids` | Asteroid spawning, movement, wave management, drawing |
+| `bullets` | Bullet spawning, lifetime, drawing |
+| `collisions` | Bullet-asteroid and ship-asteroid collision detection + response |
+| `particles` | Particle spawning, update, drawing (explosions, exhaust) |
+| `background` | Parallax starfield |
+| `world` | Screen wrapping, screen shake, camera |
+| `render_fx` | Neon glow draw helpers (lines, circles, triangles) |
+| `ui` | HUD, title screen, game-over screen |
 
 ## Adding Code and Assets
 
@@ -40,9 +52,10 @@ Single-file C game using **raylib 5.5** (with `raymath.h` for vector math). All 
 
 ## Code Style
 
-- Match the existing C style: simple functions, `static` helpers for internal logic, straightforward naming.
+- Match the existing C style: simple functions, `static` helpers for internal logic, straightforward naming (`ModuleVerb` convention, e.g. `ShipUpdate`, `BulletsDraw`).
+- Every module function takes `GameContext *ctx` (or `const GameContext *ctx` for read-only) as its first parameter.
 - Prefer small focused helpers over deeply nested logic.
 - Do not introduce new dependencies unless asked.
 - Do not edit generated files under `build/`.
-- No textures or sprites — all rendering uses primitive shapes (lines, circles, triangles) via raylib draw functions.
+- No textures or sprites — all rendering uses primitive shapes (lines, circles, triangles) via raylib draw functions and the `render_fx` neon helpers.
 - No sound or music.

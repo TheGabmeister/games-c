@@ -20,7 +20,11 @@ FetchContent_MakeAvailable(raylib)
 
 # Our Project
 add_executable(${PROJECT_NAME})
-add_subdirectory(src)
+
+file(GLOB_RECURSE SOURCE_FILES CONFIGURE_DEPENDS src/*.c)
+file(GLOB_RECURSE HEADER_FILES CONFIGURE_DEPENDS src/*.h)
+
+target_sources(${PROJECT_NAME} PRIVATE ${SOURCE_FILES} ${HEADER_FILES})
 
 set_target_properties(${PROJECT_NAME} PROPERTIES
     RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/${PROJECT_NAME})

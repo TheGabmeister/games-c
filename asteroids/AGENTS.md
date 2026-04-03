@@ -6,13 +6,15 @@ These instructions apply to the entire repository.
 ## Project Overview
 - This is a small C game project built with CMake.
 - The top-level build pulls in `raylib` 5.5 with `FetchContent`.
-- The game is currently implemented as a single-source desktop build centered in `src/game.c`.
+- The game now uses a small multi-file architecture under `src/` with a shared `GameContext`.
 - `CMAKE_EXPORT_COMPILE_COMMANDS` is enabled at the top level.
 
 ## Repository Layout
-- `CMakeLists.txt`: top-level build, dependency setup, output directories, `compile_commands.json`, and resource copy steps.
-- `src/CMakeLists.txt`: automatically includes all `*.c` and `*.h` files under `src/`.
-- `src/game.c`: current game loop, state management, input mapping, rendering, collisions, and wave progression.
+- `CMakeLists.txt`: the only CMake file in the repo; it handles dependency setup, source discovery under `src/`, output directories, `compile_commands.json`, and resource copy steps.
+- `src/game.c`: application entrypoint and main loop orchestration.
+- `src/game_types.h`: shared runtime state and gameplay constants, including `GameContext`.
+- `src/game_flow.c`: high-level title, playing, and game-over flow.
+- `src/input.c`, `src/ship.c`, `src/bullets.c`, `src/asteroids.c`, `src/collisions.c`, `src/particles.c`, `src/background.c`, `src/ui.c`, `src/world.c`, `src/render_fx.c`: focused gameplay and rendering systems.
 - `src/resources/`: runtime assets copied next to the built executable, currently including `coin.wav` and `mecha.png`.
 - `build/`: local build output; treat as generated content.
 
@@ -24,13 +26,13 @@ These instructions apply to the entire repository.
 
 ## Implementation Notes
 - Keep gameplay code in `src/` and assets in `src/resources/`.
-- When adding new source or header files under `src/`, `src/CMakeLists.txt` will pick them up automatically.
+- When adding new source or header files under `src/`, the root `CMakeLists.txt` will pick them up automatically through its `GLOB_RECURSE` source list.
 - If you add files that must be present at runtime, place them under `src/resources/` so the existing copy step keeps working.
 - If you change where assets live, update both resource copy branches in the root `CMakeLists.txt` for desktop and Web builds.
-- Prefer extending the existing small `static` helper pattern in `src/game.c` rather than introducing large subsystems unless the task calls for it.
+- Prefer extending the existing module split and passing `GameContext *` explicitly rather than reintroducing file-scope shared globals.
 
 ## Code Style
-- Match the existing C style in `src/game.c`: simple functions, `static` helpers for internal logic, and straightforward naming.
+- Match the existing C style across `src/`: simple functions, `static` helpers for internal logic, and straightforward naming.
 - Prefer small focused helpers over deeply nested logic.
 - Keep comments brief and only where intent is not obvious from the code.
 - Avoid introducing new dependencies unless the user asks for them.

@@ -7,7 +7,13 @@
       "Bash(./build/Release/hello_sdl.exe)",
       "Bash(taskkill //IM hello_sdl.exe //F)",
       "Bash(cp /c/dev/games-c/sdl/build/_deps/*/Release/*.dll /c/dev/games-c/sdl/build/_deps/*/external/*/Release/*.dll /c/dev/games-c/sdl/build/_deps/*/external/*/lib/Release/*.dll /c/dev/games-c/sdl/build/_deps/*/external/*/src/*/Release/*.dll /c/dev/games-c/sdl/build/_deps/*/external/*/ports/cmake/src/*/Release/*.dll /c/dev/games-c/sdl/build/Release/)",
-      "Bash(ls /c/dev/games-c/sdl/build/Release/*.dll)"
+      "Bash(ls /c/dev/games-c/sdl/build/Release/*.dll)",
+      "Bash(cmake --help)",
+      "Bash(cmake -B build -G \"Visual Studio 18 2026\" -A x64 -Wno-dev)",
+      "Bash(cmake -S . -B build -G \"Visual Studio 18 2026\" -A x64 -Wno-dev)",
+      "Bash([ ! -f build/hello_sdl.sln ])",
+      "Bash([ ! -f /c/Users/Admin/AppData/Local/Temp/claude/c--dev-games-c-sdl/c3f336c2-11b3-4ffa-8a65-ef3240b34a4b/tasks/b7ckozzz0.output.done ])",
+      "Read(//c/Users/Admin/AppData/Local/Temp/claude/c--dev-games-c-sdl/c3f336c2-11b3-4ffa-8a65-ef3240b34a4b/tasks/**)"
     ]
   }
 }
