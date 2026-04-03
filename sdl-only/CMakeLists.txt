@@ -14,6 +14,7 @@ add_executable(${PROJECT_NAME}
     src/input.c
     src/draw.c
     src/scene.c
+    src/collectible.c
     src/game.c
     src/scenes/title_scene.c
     src/scenes/play_scene.c

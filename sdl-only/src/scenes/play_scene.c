@@ -3,6 +3,7 @@
 #include "../platform.h"
 #include "../input.h"
 #include "../draw.h"
+#include "../collectible.h"
 #include <stdio.h>
 
 typedef struct {
@@ -12,6 +13,8 @@ typedef struct {
 } Player;
 
 static Player player;
+static int score;
+static int health;
 
 static void play_init(void)
 {
@@ -23,6 +26,16 @@ static void play_init(void)
         .col   = COLOR_GREEN,
         .speed = 250.0f,
     };
+
+    score  = 0;
+    health = 3;
+
+    collectibles_init();
+    collectible_spawn(COLLECTIBLE_COIN,   100, 150);
+    collectible_spawn(COLLECTIBLE_COIN,   300, 400);
+    collectible_spawn(COLLECTIBLE_COIN,   600, 200);
+    collectible_spawn(COLLECTIBLE_HEALTH, 500, 450);
+    collectible_spawn(COLLECTIBLE_STAR,   400, 100);
 }
 
 static void play_update(float dt)
@@ -49,6 +62,8 @@ static void play_update(float dt)
     if (player.rect.y < 0) player.rect.y = 0;
     if (player.rect.x + player.rect.w > w) player.rect.x = w - player.rect.w;
     if (player.rect.y + player.rect.h > h) player.rect.y = h - player.rect.h;
+
+    collectibles_update(player.rect, &score, &health);
 }
 
 static void play_draw(void)
@@ -56,13 +71,16 @@ static void play_draw(void)
     clear_background((color){ 20, 20, 30, 255 });
     begin_drawing();
 
+    // Collectibles
+    collectibles_draw();
+
     // Player
     draw_rect_filled(player.rect, player.col);
     draw_rect(player.rect, COLOR_WHITE);
 
     // HUD
     char buf[64];
-    snprintf(buf, sizeof(buf), "FPS: %d", get_fps());
+    snprintf(buf, sizeof(buf), "FPS: %d  |  Score: %d  |  HP: %d", get_fps(), score, health);
     draw_text(buf, 10, 10, 2.0f, COLOR_YELLOW);
     draw_text("WASD / Arrows: Move  |  ESC: Menu", 10, 40, 1.0f, COLOR_GRAY);
 

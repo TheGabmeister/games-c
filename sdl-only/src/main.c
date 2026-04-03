@@ -1,3 +1,4 @@
+#include "config.h"
 #include "platform.h"
 #include "input.h"
 #include "game.h"
@@ -10,7 +11,7 @@ int main(int argc, char *argv[])
     (void)argc;
     (void)argv;
 
-    init_window(800, 600, "2D Game Template");
+    init_window(WINDOW_WIDTH, WINDOW_HEIGHT, WINDOW_TITLE);
 
     if (!is_window_ready())
         return 1;
