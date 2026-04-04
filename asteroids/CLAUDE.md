@@ -41,12 +41,20 @@ C game using **raylib 5.5** (with `raymath.h` for vector math), organized into m
 | `ship` | Ship physics, drawing, thrust flame |
 | `asteroids` | Asteroid spawning, movement, wave management, drawing |
 | `bullets` | Bullet spawning, lifetime, drawing |
-| `collisions` | Bullet-asteroid and ship-asteroid collision detection + response |
+| `collisions` | Layer-based collision pipeline (gather → detect → resolve) |
 | `particles` | Particle spawning, update, drawing (explosions, exhaust) |
 | `background` | Parallax starfield |
 | `world` | Screen wrapping, screen shake, camera |
 | `render_fx` | Neon glow draw helpers (lines, circles, triangles) |
 | `ui` | HUD, title screen, game-over screen |
+
+**Collision system:** Three-phase pipeline in `collisions.c`, driven by bitmask layers defined in `collisions.h`:
+
+1. **Gather** — builds a flat `Collider` array from entity pools, assigning each a `layer` (what it is) and `mask` (what it collides with). Invulnerable/dead entities are excluded here.
+2. **Detect** — O(n²) pair check with `(a.layer & b.mask) && (b.layer & a.mask)` early-out, then `CheckCollisionCircles`. Produces canonicalized `CollisionEvent` list (tagA ≤ tagB).
+3. **Resolve** — dispatches events to handler functions (`OnBulletHitAsteroid`, `OnShipHitAsteroid`) based on tag pairs. Handlers include active/alive guards for multi-hit safety.
+
+To add a new collidable entity type: add a `COLLISION_LAYER_*` define and `COLLISION_TAG_*` enum value in `collisions.h`, add a gather loop and handler functions in `collisions.c`, and add dispatch branches in `CollisionsResolve`. No existing code needs modification.
 
 ## Adding Code and Assets
 
