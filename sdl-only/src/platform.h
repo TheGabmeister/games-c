@@ -7,16 +7,6 @@
 typedef SDL_FRect rectangle;
 typedef SDL_Color color;
 typedef struct { float x, y; } vector2;
-typedef struct { float x, y, z; } vector3;
-typedef struct { float x, y, z, w; } vector4;
-
-// 2D camera
-typedef struct camera {
-    vector2 offset;
-    vector2 target;
-    float rotation;
-    float zoom;
-} camera;
 
 // Window
 void init_window(int width, int height, const char *title);
@@ -28,6 +18,7 @@ int get_window_width(void);
 int get_window_height(void);
 
 // Timing
+void platform_update_timing(void);
 int get_fps(void);
 float get_deltatime(void);
 

@@ -2,6 +2,15 @@
 #include "collision.h"
 #include "draw.h"
 
+#define MAX_COLLECTIBLES 64
+
+typedef struct {
+    rectangle rect;
+    CollisionFilter filter;
+    CollectibleType type;
+    bool active;
+} Collectible;
+
 static Collectible collectibles[MAX_COLLECTIBLES];
 
 void collectibles_init(void)

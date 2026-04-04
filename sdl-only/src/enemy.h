@@ -4,9 +4,6 @@
 #include "platform.h"
 #include "collision.h"
 #include "gamestate.h"
-#include <stdbool.h>
-
-#define MAX_ENEMIES 32
 
 typedef enum {
     ENEMY_WANDERER,
@@ -14,16 +11,6 @@ typedef enum {
     ENEMY_BOUNCER,
     ENEMY_TYPE_COUNT
 } EnemyType;
-
-typedef struct {
-    rectangle rect;
-    CollisionFilter filter;
-    vector2 velocity;
-    EnemyType type;
-    float speed;
-    float timer;
-    bool active;
-} Enemy;
 
 void enemies_init(void);
 void enemy_spawn(EnemyType type, float x, float y);

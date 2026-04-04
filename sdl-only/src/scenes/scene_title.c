@@ -21,8 +21,7 @@ static void title_draw(void)
 {
     int w = get_window_width();
 
-    clear_background(COLOR_DARKGRAY);
-    begin_drawing();
+    begin_drawing(COLOR_DARKGRAY);
 
     // Title
     const char *title = "2D GAME TEMPLATE";

@@ -5,11 +5,15 @@
 #include "scene.h"
 
 #include <SDL3/SDL_main.h>
+#include <stdlib.h>
+#include <time.h>
 
 int main(int argc, char *argv[])
 {
     (void)argc;
     (void)argv;
+
+    srand((unsigned)time(NULL));
 
     init_window(WINDOW_WIDTH, WINDOW_HEIGHT, WINDOW_TITLE);
 
@@ -18,6 +22,7 @@ int main(int argc, char *argv[])
 
     input_init();
     game_init();
+    scene_apply_pending();
 
     SDL_Event event;
 
@@ -30,9 +35,12 @@ int main(int argc, char *argv[])
             input_process_event(&event);
         }
 
+        platform_update_timing();
         float dt = get_deltatime();
+
         scene_update(dt);
         scene_draw();
+        scene_apply_pending();
     }
 
     game_shutdown();

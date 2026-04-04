@@ -14,7 +14,7 @@ typedef struct Globals {
     SDL_Renderer *renderer;
     Uint64 previous_ticks_ns;
     float delta_time;
-    int fps;
+    float fps_smoothed;
 
 } Globals;
 
@@ -26,7 +26,7 @@ void init_window(int width, int height, const char *title)
     GLOBALS.renderer = NULL;
     GLOBALS.previous_ticks_ns = 0;
     GLOBALS.delta_time = 0.0f;
-    GLOBALS.fps = 0;
+    GLOBALS.fps_smoothed = 0.0f;
     GLOBALS.width = width;
     GLOBALS.height = height;
 
@@ -68,7 +68,7 @@ void close_window(void)
     GLOBALS.ready = false;
     GLOBALS.previous_ticks_ns = 0;
     GLOBALS.delta_time = 0.0f;
-    GLOBALS.fps = 0;
+    GLOBALS.fps_smoothed = 0.0f;
 
     SDL_Quit();
 }
@@ -93,38 +93,50 @@ int get_window_height(void)
     return GLOBALS.height;
 }
 
-int get_fps(void)
-{
-    return GLOBALS.fps;
-}
+#define MAX_DT (1.0f / 15.0f)
 
 SDL_Renderer *get_renderer(void)
 {
     return GLOBALS.renderer;
 }
 
-float get_deltatime(void)
+void platform_update_timing(void)
 {
     Uint64 current_ticks_ns;
     Uint64 elapsed_ticks_ns;
 
-    if (!GLOBALS.ready) {
-        return 0.0f;
-    }
+    if (!GLOBALS.ready)
+        return;
 
     current_ticks_ns = SDL_GetTicksNS();
     if (GLOBALS.previous_ticks_ns == 0) {
         GLOBALS.previous_ticks_ns = current_ticks_ns;
         GLOBALS.delta_time = 0.0f;
-        GLOBALS.fps = 0;
-        return GLOBALS.delta_time;
+        GLOBALS.fps_smoothed = 0.0f;
+        return;
     }
 
     elapsed_ticks_ns = current_ticks_ns - GLOBALS.previous_ticks_ns;
     GLOBALS.previous_ticks_ns = current_ticks_ns;
-    GLOBALS.delta_time = (float)elapsed_ticks_ns / 1e9f;
-    GLOBALS.fps = (GLOBALS.delta_time > 0.0f) ? (int)(1.0f / GLOBALS.delta_time) : 0;
 
+    float raw_dt = (float)elapsed_ticks_ns / 1e9f;
+    GLOBALS.delta_time = (raw_dt > MAX_DT) ? MAX_DT : raw_dt;
+
+    if (GLOBALS.delta_time > 0.0f) {
+        float instant_fps = 1.0f / GLOBALS.delta_time;
+        GLOBALS.fps_smoothed = (GLOBALS.fps_smoothed == 0.0f)
+            ? instant_fps
+            : 0.95f * GLOBALS.fps_smoothed + 0.05f * instant_fps;
+    }
+}
+
+int get_fps(void)
+{
+    return (int)(GLOBALS.fps_smoothed + 0.5f);
+}
+
+float get_deltatime(void)
+{
     return GLOBALS.delta_time;
 }
 

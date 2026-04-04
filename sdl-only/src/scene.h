@@ -9,6 +9,7 @@ typedef struct Scene {
 } Scene;
 
 void scene_set(Scene scene);
+void scene_apply_pending(void);
 Scene scene_get(void);
 void scene_update(float dt);
 void scene_draw(void);

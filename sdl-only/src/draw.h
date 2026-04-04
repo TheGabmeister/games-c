@@ -17,8 +17,7 @@
 #define COLOR_DARKGRAY (color){64,  64,  64,  255}
 
 // Screen
-void clear_background(color c);
-void begin_drawing(void);
+void begin_drawing(color clear_color);
 void end_drawing(void);
 
 // Shapes

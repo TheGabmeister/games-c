@@ -8,6 +8,7 @@
 #include "../collectible.h"
 #include "../enemy.h"
 #include "../gamestate.h"
+#include <math.h>
 #include <stdio.h>
 
 typedef struct {
@@ -55,15 +56,19 @@ static void gameplay_update(float dt)
         return;
     }
 
-    // Movement
-    if (action_down(ACTION_UP))
-        player.rect.y -= player.speed * dt;
-    if (action_down(ACTION_DOWN))
-        player.rect.y += player.speed * dt;
-    if (action_down(ACTION_LEFT))
-        player.rect.x -= player.speed * dt;
-    if (action_down(ACTION_RIGHT))
-        player.rect.x += player.speed * dt;
+    // Movement (normalized so diagonals aren't faster)
+    float mx = 0.0f, my = 0.0f;
+    if (action_down(ACTION_UP))    my -= 1.0f;
+    if (action_down(ACTION_DOWN))  my += 1.0f;
+    if (action_down(ACTION_LEFT))  mx -= 1.0f;
+    if (action_down(ACTION_RIGHT)) mx += 1.0f;
+
+    float move_len = sqrtf(mx * mx + my * my);
+    if (move_len > 0.0f) {
+        float inv_len = 1.0f / move_len;
+        player.rect.x += mx * inv_len * player.speed * dt;
+        player.rect.y += my * inv_len * player.speed * dt;
+    }
 
     // Clamp to window
     float w = (float)get_window_width();
@@ -84,8 +89,7 @@ static void gameplay_update(float dt)
 
 static void gameplay_draw(void)
 {
-    clear_background((color){ 20, 20, 30, 255 });
-    begin_drawing();
+    begin_drawing((color){ 20, 20, 30, 255 });
 
     // Collectibles & enemies
     collectibles_draw();

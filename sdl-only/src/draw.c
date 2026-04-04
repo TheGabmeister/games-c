@@ -5,15 +5,10 @@ static void set_color(color c)
     SDL_SetRenderDrawColor(get_renderer(), c.r, c.g, c.b, c.a);
 }
 
-void clear_background(color c)
+void begin_drawing(color clear_color)
 {
-    set_color(c);
+    set_color(clear_color);
     SDL_RenderClear(get_renderer());
-}
-
-void begin_drawing(void)
-{
-    // Intentional no-op: pairs with end_drawing for readability
 }
 
 void end_drawing(void)

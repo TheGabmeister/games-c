@@ -24,8 +24,7 @@ static void gameover_draw(void)
 {
     int w = get_window_width();
 
-    clear_background((color){ 40, 10, 10, 255 });
-    begin_drawing();
+    begin_drawing((color){ 40, 10, 10, 255 });
 
     const char *title = "GAME OVER";
     int title_px = 9 * 8 * 4;

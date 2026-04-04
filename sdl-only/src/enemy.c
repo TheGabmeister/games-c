@@ -4,8 +4,19 @@
 #include <math.h>
 #include <stdlib.h>
 
+#define MAX_ENEMIES 32
 #define DAMAGE_COOLDOWN 1.0f
 #define WANDERER_DIR_INTERVAL 2.0f
+
+typedef struct {
+    rectangle rect;
+    CollisionFilter filter;
+    vector2 velocity;
+    EnemyType type;
+    float speed;
+    float timer;
+    bool active;
+} Enemy;
 
 static Enemy enemies[MAX_ENEMIES];
 static float damage_cooldown;
