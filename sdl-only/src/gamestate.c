@@ -1,4 +1,5 @@
 #include "gamestate.h"
+#include "config.h"
 
 static GameState state;
 
@@ -11,6 +12,6 @@ void gamestate_reset(void)
 {
     state = (GameState){
         .score  = 0,
-        .health = 3
+        .health = START_HEALTH
     };
 }

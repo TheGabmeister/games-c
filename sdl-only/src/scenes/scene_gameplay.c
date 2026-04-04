@@ -1,6 +1,7 @@
 #include "scene_gameplay.h"
 #include "scene_title.h"
 #include "scene_gameover.h"
+#include "../config.h"
 #include "../platform.h"
 #include "../input.h"
 #include "../draw.h"
@@ -25,11 +26,12 @@ static void gameplay_init(void)
     float w = (float)get_window_width();
     float h = (float)get_window_height();
 
+    float half = PLAYER_SIZE / 2.0f;
     player = (Player){
-        .rect   = { w / 2.0f - 20, h / 2.0f - 20, 40, 40 },
+        .rect   = { w / 2.0f - half, h / 2.0f - half, PLAYER_SIZE, PLAYER_SIZE },
         .filter = { COLLISION_LAYER_PLAYER, COLLISION_LAYER_ENEMY | COLLISION_LAYER_COLLECTIBLE },
         .col    = COLOR_GREEN,
-        .speed  = 250.0f,
+        .speed  = PLAYER_SPEED,
     };
 
     gamestate_reset();
