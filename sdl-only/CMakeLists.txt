@@ -17,7 +17,6 @@ add_executable(${PROJECT_NAME}
     src/collectible.c
     src/enemy.c
     src/gamestate.c
-    src/game.c
     src/scenes/scene_title.c
     src/scenes/scene_gameplay.c
     src/scenes/scene_gameover.c

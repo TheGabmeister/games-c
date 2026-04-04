@@ -5,8 +5,8 @@
 #include <stdlib.h>
 
 #define MAX_ENEMIES 32
-#define DAMAGE_COOLDOWN 1.0f
-#define WANDERER_DIR_INTERVAL 2.0f
+static const float DAMAGE_COOLDOWN       = 1.0f;
+static const float WANDERER_DIR_INTERVAL = 2.0f;
 
 typedef struct {
     rectangle rect;

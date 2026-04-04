@@ -1,8 +1,8 @@
 #include "config.h"
 #include "platform.h"
 #include "input.h"
-#include "game.h"
 #include "scene.h"
+#include "scenes/scene_title.h"
 
 #include <SDL3/SDL_main.h>
 #include <stdlib.h>
@@ -21,7 +21,7 @@ int main(int argc, char *argv[])
         return 1;
 
     input_init();
-    game_init();
+    scene_set(scene_title());
     scene_apply_pending();
 
     SDL_Event event;
@@ -43,7 +43,7 @@ int main(int argc, char *argv[])
         scene_apply_pending();
     }
 
-    game_shutdown();
+    scene_cleanup();
     close_window();
 
     return 0;
