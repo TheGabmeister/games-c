@@ -26,18 +26,20 @@ No tests or linter — the build is the only verification step. The build copies
 - **Language:** C (no C++), linked against raylib
 - **Build system:** CMake, with raylib vendored under `vendor/raylib/`
 - **Source layout:** All `.c` and `.h` files live under `src/` (recursively globbed by CMake). Game assets go in `src/resources/`.
-- **Window:** 800x600, 16px tile grid, 60 FPS
+- **Window:** 1200x900, 16px tile grid, 60 FPS
 - **Input:** keyboard (arrow keys, WASD, Space, Shift) and gamepad (left stick, D-pad, face buttons) simultaneously
 - **Visual style:** modernized — clean sprites, particle effects, smooth animations. Not pixel-art retro.
 
 ### Key design patterns
 
-- One `Game` struct holds all state, passed by pointer. No heap allocation.
-- Each module owns its struct and logic; `game.c` orchestrates them. Modules take only the fields they need.
+- One `Game` struct holds all state, passed by pointer.
+- **Tagged entity array:** all dynamic objects (Mario, enemies, items, projectiles, debris) live in a flat `Entity entities[MAX_ENTITIES]` array. Each entity has a `type` tag (enum). Update and draw switch on type. Spawning = find a free slot, set fields. No separate arrays per entity type.
+- `entity.h/c` defines the Entity struct and dispatch (`entity_update`, `entity_draw`). `mario.h/c` contains Mario-specific input/physics (operates on `Entity*`). `level.h/c` owns the tile grid and collision. `game.c` orchestrates them all.
 - `game_update()` dispatches to one handler function per game state (`update_title`, `update_playing`, etc.). `game_draw()` has a similar per-state switch.
-- Side-scrolling camera follows Mario horizontally.
+- Side-scrolling camera follows Mario horizontally, never scrolls backward.
 - Tile-based levels with 16x16 pixel tiles for collision and rendering.
 - Named constants for all tunable values live in `common.h` (`#define`). New magic numbers should be added there, not hardcoded inline.
+- See `SPEC.md` for full architecture details, update/draw flow, and entity system design.
 
 ### Important caveats
 
@@ -67,7 +69,7 @@ Store WAV files in `src/resources/`.
 
 ## Coding principles
 
-- **C game programming best practices** — prefer stack allocation over heap, use fixed-size arrays where possible, keep hot data contiguous, avoid unnecessary indirection.
+- **C game programming best practices** — prefer stack/static allocation for fixed-size data, use heap when the size varies at runtime (e.g. level tile grids). Keep hot data contiguous, avoid unnecessary indirection.
 - **KISS** — simplest thing that works. No clever patterns where a plain `if` does the job.
 - **YAGNI** — don't build for hypothetical needs. No abstraction layers "for later."
 - **DRY** — remove real duplication, not shape-similar code. Wrong abstraction costs more than repetition.

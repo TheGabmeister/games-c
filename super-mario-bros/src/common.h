@@ -6,8 +6,8 @@
 #include <math.h>
 
 // Window
-#define WINDOW_WIDTH 800
-#define WINDOW_HEIGHT 600
+#define WINDOW_WIDTH 1200
+#define WINDOW_HEIGHT 900
 #define TARGET_FPS 60
 
 // Tile grid (16x16 tiles, standard SMB tile size)
