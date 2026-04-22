@@ -43,7 +43,7 @@
 // Fruit
 #define FRUIT_COUNT 8
 #define FRUIT_TILE_X 14
-#define FRUIT_TILE_Y 20
+#define FRUIT_TILE_Y 19
 #define FRUIT_DURATION 9.5f
 #define FRUIT_SCORE_DISPLAY_TIME 2.0f
 
