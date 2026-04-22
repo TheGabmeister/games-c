@@ -7,7 +7,7 @@
 #include <math.h>
 
 // Window
-#define WINDOW_WIDTH 750
+#define WINDOW_WIDTH 800
 #define WINDOW_HEIGHT 1000
 #define TARGET_FPS 60
 
