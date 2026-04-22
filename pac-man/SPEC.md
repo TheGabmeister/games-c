@@ -2,7 +2,7 @@
 
 ## 1. Window & Rendering
 
-- Logical grid: 28 columns x 36 rows. Tile size is flexible (e.g. 16px, 24px, or 32px) — pick a tile size that looks good at the target window resolution.
+- Logical grid: 28 columns x 36 rows. Tile size: 24px. Maze area: 672x864 pixels, centered in the window.
 - Window: 750x1000. The maze is centered with empty space around it for HUD elements.
 - Target framerate: 60 FPS
 - Coordinate system: tile (0,0) at top-left. Pixel position = tile × tile_size. Entity positions tracked as floating-point pixel coords.

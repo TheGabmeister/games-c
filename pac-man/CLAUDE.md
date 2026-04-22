@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project
 
-Pac-Man clone written in C using raylib for rendering/input/audio.
+Modernized Pac-Man clone written in C using raylib for rendering/input/audio. See `SPEC.md` for full game mechanics and implementation details.
 
 ## Build Commands
 
@@ -26,6 +26,9 @@ The build copies `src/resources/` into the output directory automatically.
 - **Language:** C (no C++), linked against raylib
 - **Build system:** CMake, with raylib vendored under `vendor/raylib/`
 - **Source layout:** All `.c` and `.h` files live under `src/` (recursively globbed). Game assets go in `src/resources/`.
+- **Window:** 750x1000, 24px tile grid (28x36), 60 FPS
+- **Input:** keyboard (arrow keys, WASD) and gamepad (left stick, D-pad) simultaneously
+- **Visual style:** modernized — neon glow, rounded walls, particle effects, dark background. Not pixel-art retro.
 
 ## Coding principles
 
