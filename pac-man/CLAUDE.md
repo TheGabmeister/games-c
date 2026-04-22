@@ -29,6 +29,7 @@ The build copies `src/resources/` into the output directory automatically.
 
 ## Coding principles
 
+- **C game programming best practices** — prefer stack allocation over heap, use fixed-size arrays where possible, keep hot data contiguous, avoid unnecessary indirection. Global or file-scoped state is fine for game systems.
 - **KISS** — simplest thing that works. No clever patterns where a plain `if` does the job. If a class is under 50 lines and clear, don't split it.
 - **YAGNI** — don't build for hypothetical needs. No interfaces with one implementation, no config knobs with one value, no abstraction layers "for later." Write what this phase needs; refactor when a second use case actually shows up.
 - **DRY** — remove real duplication, not shape-similar code. Three copies of the same logic → extract. Two functions that happen to both take a `Vector3` → leave alone. Wrong abstraction costs more than repetition.
