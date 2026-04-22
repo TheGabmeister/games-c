@@ -10,7 +10,18 @@
       "Bash(cmake -S . -B build -G \"Visual Studio 18 2026\" -A x64 -Wno-dev)",
       "WebFetch(domain:github.com)",
       "Read(//d/rfxgen_v5.0_win_x64/**)",
-      "Bash(\"D:/rfxgen_v5.0_win_x64/rfxgen.exe\" --help)"
+      "Bash(\"D:/rfxgen_v5.0_win_x64/rfxgen.exe\" --help)",
+      "Bash(cmake -B build)",
+      "Bash(./build/pac_man/Debug/pac_man.exe)",
+      "Bash(python3 -c ' *)",
+      "Bash(taskkill //IM pac_man.exe //F)",
+      "Bash(powershell -Command 'Add-Type -AssemblyName System.Windows.Forms; Start-Sleep -Milliseconds 2000; [System.Windows.Forms.Screen]::PrimaryScreen.Bounds | ForEach-Object { $bmp = New-Object System.Drawing.Bitmap\\($_.Width, $_.Height\\); $g = [System.Drawing.Graphics]::FromImage\\($bmp\\); $g.CopyFromScreen\\($_.Location, [System.Drawing.Point]::Empty, $_.Size\\); $bmp.Save\\('\\\\''C:/dev/games-c/pac-man/screenshot.png'\\\\''\\); $g.Dispose\\(\\); $bmp.Dispose\\(\\) }')",
+      "Bash(powershell -Command 'Add-Type @'\\\\'' *)",
+      "Bash(powershell -Command 'Start-Sleep -Milliseconds 1000; Add-Type -AssemblyName System.Windows.Forms; [System.Windows.Forms.Screen]::PrimaryScreen.Bounds | ForEach-Object { $bmp = New-Object System.Drawing.Bitmap\\($_.Width, $_.Height\\); $g = [System.Drawing.Graphics]::FromImage\\($bmp\\); $g.CopyFromScreen\\($_.Location, [System.Drawing.Point]::Empty, $_.Size\\); $bmp.Save\\('\\\\''C:/dev/games-c/pac-man/screenshot2.png'\\\\''\\); $g.Dispose\\(\\); $bmp.Dispose\\(\\) }')",
+      "Bash(powershell -Command ' *)"
+    ],
+    "additionalDirectories": [
+      "c:\\dev\\games-c\\pac-man"
     ]
   }
 }
