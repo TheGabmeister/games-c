@@ -10,11 +10,12 @@ This is not a 1:1 recreation — we're capturing the feel and mechanics, not mat
 
 ## Window & Rendering
 
-- **Resolution:** 1200x900
-- **Tile size:** 16x16 pixels
+- **Window:** 1280x960 (4:3)
+- **Tile size:** 64x64 pixels
+- **Visible area:** 20x15 tiles (matches original NES proportions)
 - **FPS:** 60
-- **Camera:** follows Mario horizontally, does not scroll backward (classic SMB behavior). No vertical scrolling — the level fits vertically within the screen.
-- **Sprites:** PNG textures loaded via raylib. Source SVGs stored separately for editing.
+- **Camera:** follows Mario horizontally, does not scroll backward (classic SMB behavior). No vertical scrolling — the level fits vertically within the window.
+- **Sprites:** 64x64 PNG textures loaded via raylib. Source SVGs stored separately for editing. No framebuffer scaling — rendering is done directly at window resolution.
 
 ---
 
@@ -101,14 +102,10 @@ These are starting points — we'll tune by feel.
 | Bridge | Solid. Collapses when the axe is reached in Bowser fights. |
 | Axe | End-of-castle trigger. Touching it collapses the bridge and defeats Bowser. |
 
-### Tile Scaling
-
-The original NES rendered 16x15 visible tiles (256x240). At 1200x900, we render tiles at 3.75x scale (16px * 3.75 = 60px per tile on screen), giving us approximately 20 tiles wide x 15 tiles tall visible area. The internal tile grid remains 16px; rendering scales up to fill the window.
-
 ### Level Format
 
 Levels are stored as 2D tile arrays in C source code (static const). Each level has:
-- A tile grid (width varies per level, height is 15 tiles — matching the original NES visible area)
+- A tile grid (width varies per level, height is 15 tiles)
 - Entity spawn list: `{type, tile_x, tile_y}` entries loaded into the entity array as they scroll into view
 - Background color / theme
 - Level type flag (overworld, underground, underwater, castle, athletic) to determine physics and palette
@@ -526,19 +523,50 @@ src/
 
 ## Implementation Order
 
-1. **Mario movement & physics** — running, jumping, gravity, friction on flat ground
-2. **Tile rendering & camera** — render a static level, scrolling camera
+Build the game world-by-world, introducing mechanics and enemies as they first appear in the original game. Each phase should be playable before moving to the next.
+
+### Phase 1 — Core Engine
+
+1. **Mario movement & physics** — running, jumping, gravity, friction, skid on flat ground
+2. **Tile rendering & camera** — render a static level, scrolling camera, tile grid
 3. **Tile collision** — solid ground, walls, pits (falling = death)
 4. **Sprites** — create SVGs, convert to PNGs, render Mario and tiles as textures
-5. **Blocks** — question blocks (coins), brick breaking
-6. **Items** — coins, mushroom (Small -> Big), fire flower, starman, 1-Up
-7. **Basic enemies** — Goomba, Koopa Troopa (green/red), shell mechanics, stomping
-8. **HUD & scoring** — score, coins, timer, lives display
-9. **Game states** — death, respawn, game over, level complete (flagpole)
-10. **Advanced enemies** — Paratroopas, Buzzy Beetle, Piranha Plant, Hammer Bro, Lakitu + Spiny, Bullet Bill
-11. **Castle levels** — Firebars, Podoboos, lava, Bowser boss fights
-12. **Underwater levels** — swimming physics, Blooper, Cheep-Cheep
-13. **Level features** — pipe warping, warp zones, underground bonus rooms, looping mazes (8-4)
-14. **All 32 levels** — build out worlds 1-1 through 8-4
-15. **Audio** — generate and integrate all sound effects
-16. **Polish** — particles, animations, screen transitions, title screen
+5. **HUD & scoring** — score, coins, timer, lives display
+6. **Game states** — title screen, death, respawn, game over, pause
+
+### Phase 2 — World 1
+
+7. **1-1:** Goomba, Green Koopa Troopa, shell kicking, ? blocks, brick blocks, coins, mushroom (Small -> Big), fire flower, starman, 1-Up, pipes (decorative), pits, flagpole + level complete sequence
+8. **1-2:** Underground theme, Piranha Plant, enterable pipes, warp zone, coin rooms
+9. **1-3:** Red Koopa Troopa, balance lifts, athletic/treetop level
+10. **1-4:** Castle theme, Firebar, Podoboo, lava, Bowser boss fight, bridge + axe, Toad rescue message
+
+### Phase 3 — World 2
+
+11. **2-1:** Green Koopa Paratroopa (bouncing), springboard
+12. **2-2:** Underwater level, swimming physics, Blooper, Cheep-Cheep (swimming)
+13. **2-3:** Bridge level, Cheep-Cheep (leaping)
+14. **2-4:** Castle (new Firebar configurations)
+
+### Phase 4 — World 3
+
+15. **3-1:** Hammer Bro
+16. **3-2 through 3-4:** Build remaining levels with existing enemies (increased difficulty)
+
+### Phase 5 — World 4
+
+17. **4-1:** Lakitu, Spiny, Spiny Egg
+18. **4-2:** Buzzy Beetle, vine/beanstalk (sky bonus area), second warp zone
+19. **4-3 through 4-4:** Looping maze castle mechanic
+
+### Phase 6 — Worlds 5–8
+
+20. **5-1 through 5-4:** Bullet Bill, Bill Blaster
+21. **6-1 through 6-4:** Higher density of existing enemies, Bowser throws hammers (6-4+)
+22. **7-1 through 7-4:** Complex looping maze castle (7-4)
+23. **8-1 through 8-4:** Gauntlet levels, underwater section inside castle, real Bowser (hammers + fire), game ending/win state
+
+### Phase 7 — Audio & Polish
+
+24. **Audio** — generate and integrate all sound effects
+25. **Polish** — particles, death/transition animations, screen transitions, title screen art

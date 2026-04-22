@@ -6,12 +6,14 @@
 #include <math.h>
 
 // Window
-#define WINDOW_WIDTH 1200
-#define WINDOW_HEIGHT 900
+#define WINDOW_WIDTH 1280
+#define WINDOW_HEIGHT 960
 #define TARGET_FPS 60
 
-// Tile grid (16x16 tiles, standard SMB tile size)
-#define TILE_SIZE 16
+// Tile grid (64x64 tiles, 20x15 visible)
+#define TILE_SIZE 64
+#define TILES_X (WINDOW_WIDTH / TILE_SIZE)
+#define TILES_Y (WINDOW_HEIGHT / TILE_SIZE)
 
 // Physics
 #define GRAVITY 980.0f

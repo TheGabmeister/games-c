@@ -30,7 +30,7 @@ The build copies `src/resources/` into the output directory automatically.
 - Rendering/input/audio: raylib, vendored under `vendor/raylib/`.
 - Source layout: all `.c` and `.h` files live under `src/` and are recursively globbed.
 - Assets: sprites (PNG) and sounds (WAV) live in `src/resources/`. SVG sources live in `src/resources/svg/`.
-- Window: 1200x900, 16px tile grid, 60 FPS.
+- Window: 1280x960, 64px tile grid (20x15 visible), 60 FPS. No framebuffer scaling — renders directly at window resolution.
 - Input: keyboard (arrow keys, WASD, Space, Shift) and gamepad (left stick, D-pad, face buttons) simultaneously.
 - Visual style: modernized clean sprites with particle effects. Not pixel-art retro.
 

@@ -26,7 +26,7 @@ No tests or linter — the build is the only verification step. The build copies
 - **Language:** C (no C++), linked against raylib
 - **Build system:** CMake, with raylib vendored under `vendor/raylib/`
 - **Source layout:** All `.c` and `.h` files live under `src/` (recursively globbed by CMake). Game assets go in `src/resources/`.
-- **Window:** 1200x900, 16px tile grid, 60 FPS
+- **Window:** 1280x960, 64px tile grid (20x15 visible), 60 FPS. No framebuffer scaling — renders directly at window resolution.
 - **Input:** keyboard (arrow keys, WASD, Space, Shift) and gamepad (left stick, D-pad, face buttons) simultaneously
 - **Visual style:** modernized — clean sprites, particle effects, smooth animations. Not pixel-art retro.
 
