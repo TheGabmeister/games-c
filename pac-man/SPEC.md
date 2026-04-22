@@ -285,26 +285,19 @@ Generate with rfxgen. Store WAV files in `src/resources/`.
 - Two dot-eaten variants alternate for the classic "waka-waka" effect
 - Load all sounds at startup with raylib's `LoadSound()`
 
-## 17. Sprites
+## 17. Graphics
 
-Sprites authored as SVG, exported to PNG via Inkscape. Stored in `src/resources/`. Use a higher resolution than the classic 16x16 (e.g. 32x32 or 64x64) for a cleaner modern look.
+All graphics are rendered procedurally using raylib draw functions — no sprite sheets or image files.
 
-**Pac-Man:**
-- 3 animation frames × 4 directions = 12 directional frames
-- Death animation: ~11 frames
-- Smooth, clean circle with a subtle gradient or shading — not flat pixel art
+**Pac-Man:** `DrawCircleSector` with variable mouth angle (3 frames) and directional rotation. Death animation opens mouth wide and shrinks.
 
-**Ghosts:**
-- 2 body frames × 4 directions = 8 frames per ghost
-- Frightened (shared): 2 blue frames + 2 white frames (for flashing)
-- Eaten (shared): 4 eye frames (one per direction)
-- Smooth rounded body shapes with expressive eyes
+**Ghosts:** Circles + rectangles + wavy bottom for body. Eyes with directional pupils. Frightened: blue body with dot eyes and wavy mouth. Eaten: eyes only.
 
-**Maze:** Render walls procedurally from tile data using raylib draw functions. Use rounded corners and a subtle glow/neon effect on wall edges.
+**Maze:** Neon-outlined walls — edges drawn only where wall faces non-wall, with glow layer and rounded corners.
 
-**Dots/Pellets:** Draw procedurally — small filled circle for dots, larger glowing circle for power pellets with a pulsing animation.
+**Dots/Pellets:** Small filled circle for dots, larger multi-layered glowing circle for power pellets with flash animation.
 
-**Fruit:** 8 sprites: cherry, strawberry, orange, apple, melon, galaxian, bell, key
+**Fruit:** 8 types drawn with basic shapes (circles, triangles, lines) in distinct colors.
 
 **Visual effects:**
 - Dot consumption: small particle burst or fade-out

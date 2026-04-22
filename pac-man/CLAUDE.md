@@ -53,16 +53,6 @@ The build copies `src/resources/` into the output directory automatically.
 
 When in doubt, lean KISS over DRY. A bit of repetition is cheaper to read and change than the wrong shared helper.
 
-## Sprite Generation
-
-Workflow: write SVG markup, then convert to PNG with Inkscape.
-
-```bash
-inkscape input.svg -o output.png -w 32 -h 32
-```
-
-Store both SVGs and PNGs in `src/resources/`.
-
 ## Sound Generation
 
 Generate game sounds with rfxgen (by the raylib author).
