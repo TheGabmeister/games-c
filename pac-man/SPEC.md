@@ -25,19 +25,30 @@
 - **Input:** arrow keys, WASD, and gamepad left stick / D-pad. All input methods work simultaneously — no mode switching needed.
 - **Gamepad:** use raylib's gamepad API. Left stick with a deadzone (~0.3) maps to 4 directions. D-pad also supported. Any face button starts the game from title/game-over. Start button pauses.
 - **Direction queuing:** when a direction is pressed, store it as pending. At each tile boundary, if the pending direction is valid (no wall), turn. Otherwise continue in current direction. This allows pre-turning before reaching an intersection.
-- **Cornering:** Pac-Man can cut corners slightly (~4 pixels of tolerance when turning at intersections)
+- **Cornering:** Pac-Man can cut corners slightly (~half a tile of tolerance when turning at intersections)
 - **Animation:** 3 frames cycling (closed, half-open, fully-open mouth). Speed tied to movement. Static frame when stopped.
 - **Death animation:** Pac-Man opens wide then deflates in a circular wipe (~11 frames over ~1.5 seconds)
 
-## 4. Dots & Power Pellets
+## 4. Collision
 
-- Regular dot: 10 points. Eating pauses Pac-Man for 1 frame (1/60s).
-- Power pellet: 50 points. Eating pauses Pac-Man for 3 frames (3/60s). Pellets flash on/off at ~0.2s intervals.
-- Consumed when Pac-Man's center enters the tile.
+All collision is tile-based: two entities collide when they occupy the same tile (i.e. their tile coordinates match).
+
+- **Dots & Power Pellets:** consumed when Pac-Man enters the tile
+- **Fruit:** collected when Pac-Man enters the fruit's tile
+- **Ghosts:** collision checked each frame. If Pac-Man and a ghost share the same tile:
+  - Ghost in CHASE/SCATTER → Pac-Man dies
+  - Ghost in FRIGHTENED → ghost is eaten
+  - Ghost in EATEN/IN_HOUSE/EXITING → no collision
+- **Pass-through prevention:** if Pac-Man and a ghost swap tiles in a single frame (moving toward each other), that also counts as a collision. Check both current-tile overlap and whether they crossed paths since last frame.
+
+## 5. Dots & Power Pellets
+
+- Regular dot: 10 points. Eating pauses Pac-Man for ~16ms (1 frame at 60 FPS).
+- Power pellet: 50 points. Eating pauses Pac-Man for ~50ms (3 frames at 60 FPS). Pellets flash on/off at ~0.2s intervals.
 - Track remaining dot count. Level complete when count reaches 0.
 - Dot state stored as a parallel 28x36 boolean array (eaten or not). Reset each new level.
 
-## 5. Ghosts
+## 6. Ghosts
 
 Four ghosts, each with a name, color, scatter corner, and starting position:
 
@@ -52,10 +63,12 @@ Four ghosts, each with a name, color, scatter corner, and starting position:
 
 | State | Behavior |
 |-------|----------|
+| IN_HOUSE | Waiting inside ghost house, bobbing up and down. Exits when dot counter or timer threshold is met (see Section 10). |
+| EXITING | Moving upward through the ghost door to the starting position above the house. Transitions to current global mode (CHASE or SCATTER). |
 | CHASE | Use unique targeting algorithm |
 | SCATTER | Target assigned corner tile |
 | FRIGHTENED | Move randomly at reduced speed, can be eaten |
-| EATEN | Eyes only, return to ghost house at high speed, then regenerate |
+| EATEN | Eyes only, return to ghost house at high speed, then regenerate and re-enter EXITING |
 
 **Reversal rules:** Ghosts cannot voluntarily reverse. Forced reversal when:
 - Global mode switches between scatter ↔ chase
@@ -63,13 +76,13 @@ Four ghosts, each with a name, color, scatter corner, and starting position:
 
 Ghosts move at reduced speed through tunnel tiles.
 
-## 6. Ghost AI
+## 7. Ghost AI
 
 **Pathfinding at intersections:** At each intersection, evaluate all valid directions (excluding reverse). For each candidate, compute Euclidean distance from the resulting next tile to the target tile. Choose the smallest distance. Tie-breaking priority: Up > Left > Down > Right.
 
 **Blinky (Red) — direct chase:**
 - Target = Pac-Man's current tile
-- **Cruise Elroy:** when remaining dots fall below a threshold, Blinky speeds up and ignores scatter mode (see Section 13)
+- **Cruise Elroy:** when remaining dots fall below a threshold, Blinky speeds up and ignores scatter mode (see Section 14)
 
 **Pinky (Pink) — ambush:**
 - Target = 4 tiles ahead of Pac-Man's facing direction
@@ -84,7 +97,7 @@ Ghosts move at reduced speed through tunnel tiles.
 - If more than 8 tiles from Pac-Man (Euclidean): target = Pac-Man's tile (same as Blinky)
 - If 8 or fewer tiles away: target = Clyde's scatter corner (retreats)
 
-## 7. Scatter/Chase Timing
+## 8. Scatter/Chase Timing
 
 Ghosts alternate between scatter and chase on a global timer:
 
@@ -103,7 +116,7 @@ Ghosts alternate between scatter and chase on a global timer:
 - Each mode transition forces all non-eaten ghosts to immediately reverse direction
 - Blinky in Cruise Elroy mode stays in chase even during scatter phases
 
-## 8. Frightened Mode
+## 9. Frightened Mode
 
 Triggered when Pac-Man eats a power pellet:
 - All ghosts in chase/scatter switch to frightened (reverse direction, turn blue, move randomly)
@@ -135,11 +148,11 @@ Triggered when Pac-Man eats a power pellet:
 | 19+ | 0s | 0 |
 
 - 0s duration: ghosts reverse direction but do not turn blue or become vulnerable
-- Flashing begins ~2 seconds before frightened ends. Each flash is ~0.14s per frame (alternating blue/white sprites).
+- Flashing: ghosts alternate between blue and white sprites before reverting. Flashing occupies the final 2 seconds of frightened duration (or the entire duration if under 2s). Each flash cycle is ~0.28s (0.14s blue, 0.14s white).
 - **Ghost eating combo** (per power pellet): 200 → 400 → 800 → 1600 for 1st through 4th ghost. Resets with each new power pellet.
 - When a ghost is eaten: game freezes ~1 second showing the point value, then ghost enters eaten state.
 
-## 9. Ghost House
+## 10. Ghost House
 
 **Initial exit order (start of level):**
 - Blinky starts outside, always active immediately
@@ -162,7 +175,7 @@ The global counter deactivates (reverts to personal counters) once Clyde exits u
 
 **Exit animation:** Ghost floats upward to the door, passes through, then moves to the starting position above the house.
 
-## 10. Fruit
+## 11. Fruit
 
 - Appears at the center-bottom of the maze, just below the ghost house
 - Appears twice per level: when 70 dots eaten and when 170 dots eaten
@@ -182,7 +195,7 @@ The global counter deactivates (reverts to personal counters) once Clyde exits u
 
 When eaten, the point value is shown briefly at the fruit location (~2 seconds). The bottom HUD displays fruit icons for the current and recent levels.
 
-## 11. Scoring & Lives
+## 12. Scoring & Lives
 
 - Starting lives: 3 (displayed as Pac-Man icons in the bottom-left)
 - Extra life awarded once at 10,000 points (play a sound)
@@ -191,9 +204,9 @@ When eaten, the point value is shown briefly at the fruit location (~2 seconds).
 - **On death:** lives decrement. If lives > 0, reset positions (Pac-Man and all ghosts to starting positions), dots remain as-is, continue level. If lives = 0, game over.
 - **Game Over:** display "GAME OVER" in the center of the maze for ~3 seconds, then return to title screen.
 
-## 12. Movement Speeds
+## 13. Movement Speeds
 
-Base speed (100%) = 75.75 pixels/second. Movement = `speed_percentage × BASE_SPEED × delta_time`.
+Base speed (100%) = 9.47 tiles/second (75.75 pixels/second in the original 8px-tile game). Movement = `speed_percentage × BASE_SPEED × tile_size × delta_time`.
 
 | Entity/Context | Level 1 | Levels 2–4 | Levels 5–20 | Levels 21+ |
 |----------------|---------|-----------|------------|-----------|
@@ -209,7 +222,7 @@ Base speed (100%) = 75.75 pixels/second. Movement = `speed_percentage × BASE_SP
 - Ghosts in the tunnel zone use tunnel speed regardless of mode
 - Eaten ghosts (eyes) move at ~150%
 
-## 13. Level Progression
+## 14. Level Progression
 
 Each new level:
 - Refill all 244 dots/pellets
@@ -232,7 +245,7 @@ Each new level:
 | 15–18 | 100 | 50 |
 | 19+ | 120 | 60 |
 
-## 14. Game States
+## 15. Game States
 
 ```
 TITLE → READY → PLAYING → DYING → (READY or GAME_OVER)
@@ -251,9 +264,9 @@ TITLE → READY → PLAYING → DYING → (READY or GAME_OVER)
 | DYING | Death animation ~1.5s, ghosts hidden. If lives > 0 → READY (same level). If 0 → GAME_OVER |
 | LEVEL_COMPLETE | Maze flashes (walls blue/white, ~4 flashes over ~2s). Then READY for next level |
 | GAME_OVER | "GAME OVER" for ~3s. Check/update high score. Return to TITLE |
-| PAUSED | Freeze all timers/movement. "PAUSED" overlay. Resume with same key |
+| PAUSED | Freeze all timers/movement. "PAUSED" overlay. Resume with ESC, P, or gamepad Start |
 
-## 15. Sound
+## 16. Sound
 
 Generate with rfxgen. Store WAV files in `src/resources/`.
 
@@ -272,7 +285,7 @@ Generate with rfxgen. Store WAV files in `src/resources/`.
 - Two dot-eaten variants alternate for the classic "waka-waka" effect
 - Load all sounds at startup with raylib's `LoadSound()`
 
-## 16. Sprites
+## 17. Sprites
 
 Sprites authored as SVG, exported to PNG via Inkscape. Stored in `src/resources/`. Use a higher resolution than the classic 16x16 (e.g. 32x32 or 64x64) for a cleaner modern look.
 
@@ -319,7 +332,7 @@ Sprites authored as SVG, exported to PNG via Inkscape. Stored in `src/resources/
 | Ghost door | #FFB8FF |
 | Text / "READY!" | #FFFFFF / #FFFF00 |
 
-## 17. Implementation Phases
+## 18. Implementation Phases
 
 Each phase produces something testable:
 
