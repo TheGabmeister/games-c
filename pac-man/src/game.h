@@ -40,6 +40,19 @@
 // Scatter/chase phase count
 #define SCATTER_CHASE_PHASES 8
 
+// Fruit
+#define FRUIT_COUNT 8
+#define FRUIT_TILE_X 14
+#define FRUIT_TILE_Y 20
+#define FRUIT_DURATION 9.5f
+#define FRUIT_SCORE_DISPLAY_TIME 2.0f
+
+// Particles
+#define MAX_PARTICLES 32
+
+// Sound count
+#define SOUND_COUNT 9
+
 // Colors
 #define COLOR_BG         (Color){10, 10, 26, 255}
 #define COLOR_WALL       (Color){33, 33, 222, 255}
@@ -86,6 +99,18 @@ typedef enum {
     GLOBAL_CHASE,
 } GlobalMode;
 
+typedef enum {
+    SND_DOT_A,
+    SND_DOT_B,
+    SND_POWER_PELLET,
+    SND_GHOST_EATEN,
+    SND_FRUIT,
+    SND_DEATH,
+    SND_EXTRA_LIFE,
+    SND_READY,
+    SND_MENU_SELECT,
+} SoundID;
+
 typedef struct {
     float px, py;
     int tile_x, tile_y;
@@ -114,6 +139,25 @@ typedef struct {
     int personal_dot_limit;
     bool use_personal_counter;
 } Ghost;
+
+typedef struct {
+    float x, y;
+    float vx, vy;
+    float life;
+    float max_life;
+    Color color;
+    bool active;
+} Particle;
+
+typedef struct {
+    bool active;
+    int fruit_type;
+    int points;
+    float timer;
+    bool score_display;
+    float score_display_timer;
+    int score_display_value;
+} Fruit;
 
 typedef struct {
     GameState state;
@@ -162,12 +206,29 @@ typedef struct {
 
     // Level complete flash
     bool level_complete_flash_white;
+
+    // Fruit
+    Fruit fruit;
+    bool fruit_spawned_70;
+    bool fruit_spawned_170;
+
+    // Particles
+    Particle particles[MAX_PARTICLES];
+
+    // Sounds
+    Sound sounds[SOUND_COUNT];
+    bool dot_sound_toggle;
+
+    // Waka timer for dot sounds
+    float waka_timer;
 } Game;
 
 // game.c
 void game_init(Game *game);
 void game_update(Game *game);
 void game_draw(Game *game);
+void game_load_sounds(Game *game);
+void game_unload_sounds(Game *game);
 
 // maze helpers
 bool maze_is_walkable(int tile_x, int tile_y);

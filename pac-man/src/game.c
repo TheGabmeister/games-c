@@ -80,6 +80,33 @@ static const int ghost_home_tiles[GHOST_COUNT][2] = {
     {16, 16},  // Clyde - right of house
 };
 
+// Fruit points by type index: cherry, strawberry, orange, apple, melon, galaxian, bell, key
+static const int fruit_points[FRUIT_COUNT] = { 100, 300, 500, 700, 1000, 2000, 3000, 5000 };
+
+// Fruit colors for procedural drawing
+static const Color fruit_colors[FRUIT_COUNT] = {
+    {255, 0, 0, 255},      // Cherry - red
+    {255, 50, 50, 255},     // Strawberry - red-pink
+    {255, 165, 0, 255},     // Orange
+    {0, 200, 0, 255},       // Apple - green
+    {100, 200, 50, 255},    // Melon - green-yellow
+    {255, 255, 0, 255},     // Galaxian - yellow
+    {255, 215, 0, 255},     // Bell - gold
+    {150, 200, 255, 255},   // Key - light blue
+};
+
+static const char *sound_files[SOUND_COUNT] = {
+    "resources/dot_a.wav",
+    "resources/dot_b.wav",
+    "resources/power_pellet.wav",
+    "resources/ghost_eaten.wav",
+    "resources/fruit.wav",
+    "resources/death.wav",
+    "resources/extra_life.wav",
+    "resources/ready.wav",
+    "resources/menu_select.wav",
+};
+
 // --- Utility ---
 
 static int speed_tier(int level) {
@@ -126,6 +153,79 @@ static Direction direction_opposite(Direction d) {
 
 static float tile_center_px(int tile) {
     return tile * TILE_SIZE + TILE_SIZE / 2.0f;
+}
+
+static int fruit_type_for_level(int level) {
+    if (level <= 1) return 0;  // Cherry
+    if (level <= 2) return 1;  // Strawberry
+    if (level <= 4) return 2;  // Orange
+    if (level <= 6) return 3;  // Apple
+    if (level <= 8) return 4;  // Melon
+    if (level <= 10) return 5; // Galaxian
+    if (level <= 12) return 6; // Bell
+    return 7;                  // Key
+}
+
+// --- Sound ---
+
+void game_load_sounds(Game *game) {
+    for (int i = 0; i < SOUND_COUNT; i++)
+        game->sounds[i] = LoadSound(sound_files[i]);
+}
+
+void game_unload_sounds(Game *game) {
+    for (int i = 0; i < SOUND_COUNT; i++)
+        UnloadSound(game->sounds[i]);
+}
+
+static void play_sound(Game *game, SoundID id) {
+    PlaySound(game->sounds[id]);
+}
+
+// --- Particles ---
+
+static void spawn_particles(Game *game, float x, float y, Color color, int count) {
+    for (int i = 0; i < count; i++) {
+        for (int j = 0; j < MAX_PARTICLES; j++) {
+            if (!game->particles[j].active) {
+                Particle *p = &game->particles[j];
+                p->active = true;
+                p->x = x;
+                p->y = y;
+                float angle = (float)GetRandomValue(0, 360) * DEG2RAD;
+                float speed = (float)GetRandomValue(20, 80);
+                p->vx = cosf(angle) * speed;
+                p->vy = sinf(angle) * speed;
+                p->life = 0.3f + (float)GetRandomValue(0, 20) / 100.0f;
+                p->max_life = p->life;
+                p->color = color;
+                break;
+            }
+        }
+    }
+}
+
+static void update_particles(Game *game, float dt) {
+    for (int i = 0; i < MAX_PARTICLES; i++) {
+        Particle *p = &game->particles[i];
+        if (!p->active) continue;
+        p->x += p->vx * dt;
+        p->y += p->vy * dt;
+        p->life -= dt;
+        if (p->life <= 0) p->active = false;
+    }
+}
+
+static void draw_particles(Game *game) {
+    for (int i = 0; i < MAX_PARTICLES; i++) {
+        Particle *p = &game->particles[i];
+        if (!p->active) continue;
+        float alpha = p->life / p->max_life;
+        Color c = p->color;
+        c.a = (unsigned char)(alpha * 255);
+        float size = 2.0f * alpha;
+        DrawCircle((int)p->x, (int)p->y, size, c);
+    }
 }
 
 // --- Maze helpers ---
@@ -291,6 +391,13 @@ static void game_reset_level(Game *game) {
     game->no_dot_timer = 0.0f;
     game->no_dot_timeout = (game->level <= 4) ? 4.0f : 3.0f;
     game->level_complete_flash_white = false;
+    game->fruit.active = false;
+    game->fruit.score_display = false;
+    game->fruit_spawned_70 = false;
+    game->fruit_spawned_170 = false;
+    game->dot_sound_toggle = false;
+    game->waka_timer = 0.0f;
+    memset(game->particles, 0, sizeof(game->particles));
     reset_scatter_chase(game);
 }
 
@@ -876,6 +983,9 @@ static void check_dot_consumption(Game *game) {
         pm->eat_pause_frames = DOT_PAUSE_FRAMES;
         pm->speed_pct = pacman_speed_eating[tier];
         on_dot_eaten(game);
+        play_sound(game, game->dot_sound_toggle ? SND_DOT_B : SND_DOT_A);
+        game->dot_sound_toggle = !game->dot_sound_toggle;
+        spawn_particles(game, MAZE_OFFSET_X + pm->px, MAZE_OFFSET_Y + pm->py, COLOR_DOT, 4);
     } else if (tile == TILE_POWER_PELLET) {
         game->dot_eaten[ty][tx] = true;
         game->score += 50;
@@ -883,6 +993,8 @@ static void check_dot_consumption(Game *game) {
         pm->eat_pause_frames = PELLET_PAUSE_FRAMES;
         on_dot_eaten(game);
         activate_frightened(game);
+        play_sound(game, SND_POWER_PELLET);
+        spawn_particles(game, MAZE_OFFSET_X + pm->px, MAZE_OFFSET_Y + pm->py, COLOR_PELLET, 12);
     }
 
     if (game->score > game->high_score)
@@ -892,6 +1004,7 @@ static void check_dot_consumption(Game *game) {
     if (!game->extra_life_given && game->score >= 10000) {
         game->extra_life_given = true;
         game->lives++;
+        play_sound(game, SND_EXTRA_LIFE);
     }
 }
 
@@ -924,6 +1037,7 @@ static void check_ghost_collision(Game *game) {
                     game->high_score = game->score;
 
                 g->mode = GHOST_EATEN;
+                play_sound(game, SND_GHOST_EATEN);
 
                 game->ghost_eaten_pause = true;
                 game->ghost_eaten_pause_timer = 1.0f;
@@ -937,6 +1051,7 @@ static void check_ghost_collision(Game *game) {
                 game->state_timer = 1.5f;
                 game->pacman.death_timer = 0.0f;
                 game->pacman.death_frame = 0;
+                play_sound(game, SND_DEATH);
                 return;
             }
         }
@@ -961,13 +1076,16 @@ void game_update(Game *game) {
             game_reset_level(game);
             game->state = STATE_READY;
             game->state_timer = 2.0f;
+            play_sound(game, SND_MENU_SELECT);
         }
         break;
 
     case STATE_READY:
         game->state_timer -= dt;
-        if (game->state_timer <= 0.0f)
+        if (game->state_timer <= 0.0f) {
             game->state = STATE_PLAYING;
+            play_sound(game, SND_READY);
+        }
         break;
 
     case STATE_PLAYING: {
@@ -1006,6 +1124,56 @@ void game_update(Game *game) {
             ghost_house_timer_fallback(game);
             game->no_dot_timer = 0.0f;
         }
+
+        // Fruit spawning
+        if (!game->fruit_spawned_70 && game->dots_eaten_this_level >= 70) {
+            game->fruit_spawned_70 = true;
+            game->fruit.active = true;
+            game->fruit.fruit_type = fruit_type_for_level(game->level);
+            game->fruit.points = fruit_points[game->fruit.fruit_type];
+            game->fruit.timer = FRUIT_DURATION;
+            game->fruit.score_display = false;
+        }
+        if (!game->fruit_spawned_170 && game->dots_eaten_this_level >= 170) {
+            game->fruit_spawned_170 = true;
+            game->fruit.active = true;
+            game->fruit.fruit_type = fruit_type_for_level(game->level);
+            game->fruit.points = fruit_points[game->fruit.fruit_type];
+            game->fruit.timer = FRUIT_DURATION;
+            game->fruit.score_display = false;
+        }
+
+        // Fruit timer
+        if (game->fruit.active) {
+            game->fruit.timer -= dt;
+            if (game->fruit.timer <= 0.0f)
+                game->fruit.active = false;
+        }
+        if (game->fruit.score_display) {
+            game->fruit.score_display_timer -= dt;
+            if (game->fruit.score_display_timer <= 0.0f)
+                game->fruit.score_display = false;
+        }
+
+        // Fruit collection
+        if (game->fruit.active &&
+            game->pacman.tile_x == FRUIT_TILE_X && game->pacman.tile_y == FRUIT_TILE_Y) {
+            game->score += game->fruit.points;
+            if (game->score > game->high_score)
+                game->high_score = game->score;
+            game->fruit.score_display = true;
+            game->fruit.score_display_timer = FRUIT_SCORE_DISPLAY_TIME;
+            game->fruit.score_display_value = game->fruit.points;
+            game->fruit.active = false;
+            play_sound(game, SND_FRUIT);
+            spawn_particles(game,
+                MAZE_OFFSET_X + tile_center_px(FRUIT_TILE_X),
+                MAZE_OFFSET_Y + tile_center_px(FRUIT_TILE_Y),
+                fruit_colors[game->fruit.fruit_type], 8);
+        }
+
+        // Particles
+        update_particles(game, dt);
 
         // Ghost movement
         for (int i = 0; i < GHOST_COUNT; i++)
@@ -1272,6 +1440,69 @@ static void draw_ghosts(Game *game) {
         draw_ghost(game, &game->ghosts[i]);
 }
 
+static void draw_fruit(Game *game) {
+    float cx = MAZE_OFFSET_X + tile_center_px(FRUIT_TILE_X);
+    float cy = MAZE_OFFSET_Y + tile_center_px(FRUIT_TILE_Y);
+
+    if (game->fruit.active) {
+        Color c = fruit_colors[game->fruit.fruit_type];
+        int ft = game->fruit.fruit_type;
+
+        switch (ft) {
+        case 0: // Cherry: two circles with stem
+            DrawCircle((int)(cx - 3), (int)(cy + 2), 5, c);
+            DrawCircle((int)(cx + 3), (int)(cy + 2), 5, c);
+            DrawLineEx((Vector2){cx - 2, cy - 3}, (Vector2){cx + 1, cy - 7}, 2, (Color){0, 150, 0, 255});
+            DrawLineEx((Vector2){cx + 2, cy - 3}, (Vector2){cx + 1, cy - 7}, 2, (Color){0, 150, 0, 255});
+            break;
+        case 1: // Strawberry: triangle-ish
+            DrawCircle((int)cx, (int)(cy + 1), 7, c);
+            DrawTriangle((Vector2){cx - 6, cy - 2}, (Vector2){cx + 6, cy - 2}, (Vector2){cx, cy + 8}, c);
+            DrawCircle((int)cx, (int)(cy - 5), 4, (Color){0, 180, 0, 255});
+            break;
+        case 2: // Orange: circle
+            DrawCircle((int)cx, (int)cy, 8, c);
+            DrawCircle((int)(cx + 1), (int)(cy - 6), 3, (Color){0, 180, 0, 255});
+            break;
+        case 3: // Apple: circle with leaf
+            DrawCircle((int)cx, (int)cy, 8, c);
+            DrawCircle((int)(cx + 2), (int)(cy - 7), 3, (Color){0, 120, 0, 255});
+            DrawLineEx((Vector2){cx, cy - 9}, (Vector2){cx, cy - 4}, 2, (Color){100, 60, 20, 255});
+            break;
+        case 4: // Melon: oval
+            DrawEllipse((int)cx, (int)cy, 9, 7, c);
+            for (int s = -6; s <= 6; s += 4)
+                DrawLineEx((Vector2){cx + s, cy - 6}, (Vector2){cx + s, cy + 6}, 1, (Color){50, 120, 20, 255});
+            break;
+        case 5: // Galaxian: flag shape
+            DrawTriangle((Vector2){cx, cy - 8}, (Vector2){cx - 6, cy + 4}, (Vector2){cx + 6, cy + 4}, c);
+            DrawRectangle((int)(cx - 1), (int)(cy + 4), 3, 5, (Color){200, 200, 0, 255});
+            break;
+        case 6: // Bell
+            DrawCircle((int)cx, (int)(cy + 3), 7, c);
+            DrawRectangle((int)(cx - 5), (int)(cy - 5), 10, 8, c);
+            DrawCircle((int)cx, (int)(cy - 5), 5, c);
+            DrawCircle((int)cx, (int)(cy + 9), 2, (Color){150, 120, 0, 255});
+            break;
+        case 7: // Key
+            DrawCircle((int)cx, (int)(cy - 4), 5, c);
+            DrawCircle((int)cx, (int)(cy - 4), 3, COLOR_BG);
+            DrawRectangle((int)(cx - 1), (int)(cy), 3, 10, c);
+            DrawRectangle((int)(cx + 1), (int)(cy + 4), 4, 2, c);
+            DrawRectangle((int)(cx + 1), (int)(cy + 7), 3, 2, c);
+            break;
+        }
+    }
+
+    // Score popup
+    if (game->fruit.score_display) {
+        char pts[16];
+        snprintf(pts, sizeof(pts), "%d", game->fruit.score_display_value);
+        int pw = MeasureText(pts, 16);
+        DrawText(pts, (int)(cx - pw / 2), (int)(cy - 8), 16, COLOR_PELLET);
+    }
+}
+
 static void draw_hud(Game *game) {
     char score_text[32];
     snprintf(score_text, sizeof(score_text), "SCORE: %d", game->score);
@@ -1318,6 +1549,7 @@ void game_draw(Game *game) {
     case STATE_READY:
         draw_maze(game);
         draw_dots(game);
+        draw_fruit(game);
         draw_ghosts(game);
         draw_pacman(game);
         draw_hud(game);
@@ -1332,9 +1564,17 @@ void game_draw(Game *game) {
     case STATE_PLAYING:
         draw_maze(game);
         draw_dots(game);
+        draw_fruit(game);
         draw_ghosts(game);
         draw_pacman(game);
+        draw_particles(game);
         draw_hud(game);
+
+        // Frightened vignette
+        if (game->frightened_active) {
+            DrawRectangle(0, 0, WINDOW_WIDTH, WINDOW_HEIGHT,
+                         (Color){0, 0, 80, (unsigned char)(30 + 20 * sinf(game->frightened_timer * 4.0f))});
+        }
 
         // Ghost eaten score popup
         if (game->ghost_eaten_pause) {
@@ -1351,7 +1591,9 @@ void game_draw(Game *game) {
     case STATE_DYING:
         draw_maze(game);
         draw_dots(game);
+        draw_fruit(game);
         draw_pacman(game);
+        draw_particles(game);
         draw_hud(game);
         break;
 
