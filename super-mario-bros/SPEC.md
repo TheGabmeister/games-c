@@ -224,21 +224,58 @@ Levels are stored as 2D tile arrays in C source code (static const). Each level 
 All dynamic objects (Mario, enemies, items, projectiles, debris) are stored in a single flat array of `Entity` structs with a `type` tag.
 
 ```c
-Entity entities[MAX_ENTITIES];  // MAX_ENTITIES = 128
-int mario;                      // index of Mario in the array
+Entity entities[MAX_ENTITIES];
+int mario;  // index of Mario in the array
 ```
 
-Each entity has: type, position, velocity, size, facing direction, ground flag, active flag, collision property flags (see Collision Detection), and a small set of flat fields for type-specific state (animation frame, state timer, health/power level).
+### Entity struct
 
-**Spawning:** find a free slot (`type == ENT_NONE`), set fields, set collision flags. One spawn helper per entity type.
+Each entity has:
+- **Common fields:** type, position, velocity, size, facing direction, on_ground flag, active flag
+- **Type-specific state:** animation frame/timer, state timer, health/power level (flat fields, no union)
+- **Collision flags:** `stompable`, `damages_mario`, `fire_immune`, `shell_killable`, `star_killable`, `destructible` — set at spawn time, used by the engine's collision phase (see Collision Detection)
+- **Vtable pointer:** points to a `static const EntityVtab` that defines the entity's behavior callbacks
 
-**Activation:** enemies and items from the level spawn list are activated when they scroll into view (camera reaches their x position). They are not active before that. Once activated, they remain active until killed or scrolled far enough offscreen to be despawned.
+### Vtable (function pointers per entity type)
 
-**Update:** `entity_update()` switches on type to call the right behavior (mario input/physics, goomba walk/reverse, shell slide, mushroom move, fireball bounce, hammer arc, Bowser AI, etc.).
+Each entity type defines a `static const EntityVtab` with callback functions. The engine calls these — the entity decides what to do. This is how interaction logic stays with the entity type instead of accumulating in `game.c`.
 
-**Draw:** `entity_draw()` switches on type to draw the right sprite/animation.
+```c
+typedef struct {
+    void (*update)(Entity *self, Game *game);
+    void (*draw)(Entity *self, float camera_x);
+    void (*touch)(Entity *self, Entity *other, Game *game);
+    void (*stomped)(Entity *self, Entity *mario, Game *game);
+    void (*hit_by_fire)(Entity *self, Game *game);
+    void (*hit_by_shell)(Entity *self, Game *game);
+    void (*hit_by_star)(Entity *self, Game *game);
+    void (*bumped)(Entity *self, Game *game);
+    void (*kill)(Entity *self, Game *game);
+} EntityVtab;
+```
 
-**Why a tagged array:** variable entity counts per level, simple spawning/despawning, one collision loop covers all interactions, adding new types is just a new enum value + case. The entity array is fixed-size on the stack; level tile grids and other variable-size data use heap allocation.
+Unimplemented callbacks are NULL — the engine skips them. Each entity type sets its vtable at spawn time. Examples:
+
+- **Goomba's `stomped`:** play squish sound, spawn score popup, set type to ENT_NONE.
+- **Koopa's `stomped`:** transform into ENT_SHELL, set vx = 0 (stationary until kicked).
+- **Coin's `touch`:** increment coins/score, play coin sound, despawn self.
+- **Mushroom's `touch`:** power up Mario, play power-up sound, despawn self.
+- **Paratroopa's `stomped`:** remove wings (transform to Koopa Troopa), reassign vtable.
+
+### Spawning
+
+Each entity type has a spawn function (e.g. `spawn_goomba`, `spawn_coin`) that finds a free slot (`type == ENT_NONE`), sets all fields, collision flags, and the vtable pointer.
+
+### Activation
+
+Enemies and items from the level spawn list are activated when they scroll into view (camera reaches their x position). They are not active before that. Once activated, they remain active until killed or scrolled far enough offscreen to be despawned.
+
+### Why this pattern
+
+- **Engine stays generic:** `game.c` detects overlaps and calls callbacks. It does not contain Goomba logic, Koopa logic, coin logic, etc.
+- **Entity owns its behavior:** each entity type defines what happens when it's stomped, hit by fire, touched, etc. Adding a new enemy means writing a new vtable + spawn function, not editing `game.c`.
+- **Flat array for data:** the tagged array gives us simple iteration, cache-friendly layout, and easy spawning/despawning. Level tile grids and other variable-size data use heap allocation.
+- **This is the standard pattern** in shipped C platformers (high_impact, Cave Story, waterCloset). It's the C equivalent of virtual methods — proven at this scale.
 
 ---
 
@@ -246,11 +283,39 @@ Each entity has: type, position, velocity, size, facing direction, ground flag, 
 
 ### Tile Collision
 
-AABB check against solid tiles in the grid. Resolve by pushing the entity out of the solid tile along the smallest overlap axis. Head bump detection: when Mario hits a solid tile from below, trigger block behavior (break brick, release item from question block, kill enemy standing on top).
+AABB check against solid tiles in the grid. Resolve by pushing the entity out of the solid tile along the smallest overlap axis.
 
-### Entity Collision — Property-Based
+When Mario hits a tile from below, the engine calls a **tile handler function** looked up from a handler table indexed by tile type. Each tile type defines its own response:
 
-Entities carry collision property flags set at spawn time:
+```c
+// Example tile handlers
+static void brick_hit(Game *game, int tx, int ty, Entity *mario) {
+    if (mario->state >= MARIO_BIG) {
+        destroy_brick(game, tx, ty);      // remove tile, spawn debris entities
+        kill_enemy_on_tile(game, tx, ty);  // scan entities standing on this tile
+        play_sound(game, SND_BRICK_BREAK);
+    } else {
+        bump_tile(game, tx, ty);           // bump animation
+        kill_enemy_on_tile(game, tx, ty);
+        play_sound(game, SND_BUMP);
+    }
+}
+
+static void question_block_hit(Game *game, int tx, int ty, Entity *mario) {
+    set_tile(game, tx, ty, TILE_USED);
+    spawn_item_from_block(game, tx, ty);  // coin, mushroom, star, etc.
+    kill_enemy_on_tile(game, tx, ty);
+    play_sound(game, SND_BUMP);
+}
+```
+
+This keeps tile interaction logic organized by tile type, not spread across a monolithic function.
+
+### Entity Collision — Property-Based with Vtable Callbacks
+
+The collision phase in `game.c` uses a two-step approach:
+
+**Step 1 — Collision flags for the generic decision:**
 
 ```c
 bool stompable;       // can Mario stomp it? (false for Spiny, Piranha Plant, Firebar, etc.)
@@ -261,20 +326,36 @@ bool star_killable;   // dies to Starman Mario?
 bool destructible;    // can be destroyed at all? (false for Firebar, Podoboo, Bill Blaster)
 ```
 
-The collision phase in `game.c` checks properties instead of switching on every entity type:
+The engine checks these flags to decide *what kind* of interaction occurs (stomp? damage? ignore?).
 
-- **Stomp check:** if Mario is falling and overlaps enemy's top half — if `stompable`, kill/transform the enemy; otherwise damage Mario.
-- **Side contact:** if `damages_mario`, hurt Mario.
-- **Fireball hit:** if `!fire_immune && destructible`, kill enemy.
-- **Shell hit:** if `shell_killable`, kill enemy.
-- **Star contact:** if `star_killable`, kill enemy.
-- **Item collection:** items (coins, mushrooms, etc.) don't use these flags — they have their own collect logic by type.
+**Step 2 — Vtable callback for the type-specific response:**
 
-Type-specific behavior (Koopa becoming a shell, Paratroopa losing wings, Lakitu respawning) still switches on type in the interaction handlers, but the core collision logic is generic.
+Once the engine decides "this is a stomp," it calls `entity->vtab->stomped(entity, mario, game)`. The entity handles its own response (Goomba dies, Koopa becomes shell, Paratroopa loses wings, etc.).
+
+```c
+// game.c collision phase — generic, no per-type knowledge
+for (int i = 0; i < MAX_ENTITIES; i++) {
+    Entity *e = &game->entities[i];
+    if (e->type == ENT_NONE || i == game->mario) continue;
+    Entity *mario = &game->entities[game->mario];
+    if (!aabb_overlap(mario, e)) continue;
+
+    if (mario_is_falling(mario) && overlaps_top_half(mario, e)) {
+        if (e->stompable && e->vtab->stomped)
+            e->vtab->stomped(e, mario, game);
+        else if (e->damages_mario)
+            mario_take_damage(mario, game);
+    } else if (e->vtab->touch) {
+        e->vtab->touch(e, mario, game);
+    }
+}
+```
+
+Items handle collection in their `touch` callback. Enemies handle side-contact damage in theirs. The engine just iterates and calls.
 
 ### Stomp Detection
 
-Mario is falling (vy > 0) and his bottom overlaps the enemy's top half -> stomp. Otherwise -> side contact (damage).
+Mario is falling (vy > 0) and his bottom overlaps the enemy's top half -> stomp. Otherwise -> side contact (routed to `touch` callback).
 
 ---
 
@@ -393,35 +474,51 @@ The classic first level — used as the testbed during development:
 
 ```
 src/
-  common.h        Constants, enums, shared types (EntityType, GameState, Direction)
-  entity.h/c      Entity struct, update/draw dispatch, spawn helpers
-  mario.h/c       Mario-specific input, physics, state transitions (operates on Entity*)
-  level.h/c       Tile grid, tile types, level data, tile collision helpers
-  camera.h/c      Camera follow logic, dead zone, clamping
-  particles.h/c   Particle effects
-  game.h/c        Game struct (entity array, level, camera), state machine, orchestration, HUD
-  main.c          Entry point
-  resources/      PNGs (runtime), WAVs (runtime)
-  resources/svg/  Source SVGs (not loaded at runtime)
+  common.h          Constants, enums, shared types (EntityType, GameState, Direction)
+  entity.h/c        Entity/EntityVtab structs, collision flag helpers, generic spawn/kill
+  mario.h/c         Mario vtable, input, physics, state transitions, spawn
+  enemies/
+    goomba.h/c      Goomba vtable + spawn
+    koopa.h/c       Koopa Troopa, Paratroopa, Shell vtables + spawn
+    buzzy_beetle.h/c
+    lakitu.h/c      Lakitu + Spiny + Spiny Egg
+    hammer_bro.h/c  Hammer Bro + Hammer projectile
+    bullet_bill.h/c Bullet Bill + Bill Blaster
+    piranha.h/c     Piranha Plant
+    blooper.h/c     Blooper (underwater)
+    cheep_cheep.h/c Cheep-Cheep (swimming + leaping)
+    bowser.h/c      Bowser + Bowser fireballs
+    firebar.h/c     Firebar (rotating obstacle)
+    podoboo.h/c     Podoboo (lava jump)
+  items.h/c         Coin, Mushroom, Fire Flower, Starman, 1-Up vtables + spawn
+  blocks.h/c        Tile handler table (brick, question block, invisible block, etc.)
+  level.h/c         Tile grid, tile types, level data, tile collision, entity activation
+  camera.h/c        Camera follow logic, threshold, clamping
+  particles.h/c     Particle effects
+  game.h/c          Game struct, state machine, collision loops, HUD, orchestration
+  main.c            Entry point
+  resources/        PNGs (runtime), WAVs (runtime)
+  resources/svg/    Source SVGs (not loaded at runtime)
 ```
 
 ### Update Flow (STATE_PLAYING)
 
-1. Mario input & physics (`mario_update`)
-2. Tile collision for Mario (`level_collide_entity`)
-3. Block hit logic (break bricks, spawn items from question blocks)
-4. Entity update loop — move enemies, items, projectiles, debris (`entity_update` per active entity)
+1. Activate entities that have scrolled into view (`level_activate_entities`)
+2. Mario input & physics (`mario->vtab->update`)
+3. Tile collision for Mario — calls tile handler on head bump (`level_collide_entity`)
+4. Entity update loop — call `entity->vtab->update` per active non-Mario entity
 5. Tile collision for non-Mario entities
-6. Entity-vs-Mario collision — stomp, damage, collect, etc. (`game.c` handles interactions)
-7. Entity-vs-entity collision — shell kills enemies, fireball kills enemies
-8. Particles update
-9. Camera update
+6. Entity-vs-Mario collision — engine checks flags, calls `stomped`/`touch` callbacks
+7. Entity-vs-entity collision — shell/fireball vs enemies, calls `hit_by_shell`/`hit_by_fire` callbacks
+8. Despawn entities that have scrolled far offscreen
+9. Particles update
+10. Camera update
 
 ### Draw Flow
 
 1. Background
 2. Level tiles (`level_draw`)
-3. Entity draw loop — all active entities including Mario (`entity_draw`)
+3. Entity draw loop — call `entity->vtab->draw` per active entity (including Mario)
 4. Particles
 5. HUD
 

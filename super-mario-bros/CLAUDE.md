@@ -33,13 +33,16 @@ No tests or linter — the build is the only verification step. The build copies
 ### Key design patterns
 
 - One `Game` struct holds all state, passed by pointer.
-- **Tagged entity array:** all dynamic objects (Mario, enemies, items, projectiles, debris) live in a flat `Entity entities[MAX_ENTITIES]` array. Each entity has a `type` tag (enum). Update and draw switch on type. Spawning = find a free slot, set fields. No separate arrays per entity type.
-- `entity.h/c` defines the Entity struct and dispatch (`entity_update`, `entity_draw`). `mario.h/c` contains Mario-specific input/physics (operates on `Entity*`). `level.h/c` owns the tile grid and collision. `game.c` orchestrates them all.
+- **Tagged entity array with vtables:** all dynamic objects (Mario, enemies, items, projectiles, debris) live in a flat `Entity entities[MAX_ENTITIES]` array. Each entity has a `type` tag and a pointer to a `static const EntityVtab` (function pointers: `update`, `draw`, `touch`, `stomped`, `hit_by_fire`, `hit_by_shell`, `hit_by_star`, `bumped`, `kill`). The engine calls these callbacks — the entity type defines its own behavior.
+- **Collision flags on entities:** `stompable`, `damages_mario`, `fire_immune`, `shell_killable`, `star_killable`, `destructible`. Set at spawn time. The engine checks flags to decide *what kind* of interaction, then calls the vtable callback for the *type-specific response*.
+- **Tile handler table:** tile-entity interactions (hitting blocks from below) are dispatched via a function pointer table indexed by tile type. Each tile type defines its own handler (brick breaks, question block spawns item, etc.).
+- `game.c` is the orchestrator: runs update/collision loops and calls callbacks. It does not contain entity-specific or tile-specific logic.
+- Each entity type has its own file(s) defining its vtable, spawn function, and behavior. Enemy files live under `src/enemies/`.
 - `game_update()` dispatches to one handler function per game state (`update_title`, `update_playing`, etc.). `game_draw()` has a similar per-state switch.
 - Side-scrolling camera follows Mario horizontally, never scrolls backward.
 - Tile-based levels with 16x16 pixel tiles for collision and rendering.
 - Named constants for all tunable values live in `common.h` (`#define`). New magic numbers should be added there, not hardcoded inline.
-- See `SPEC.md` for full architecture details, update/draw flow, and entity system design.
+- See `SPEC.md` for full architecture details, vtable definitions, update/draw flow, and collision system.
 
 ### Important caveats
 

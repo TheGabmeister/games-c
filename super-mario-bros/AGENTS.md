@@ -37,21 +37,27 @@ The build copies `src/resources/` into the output directory automatically.
 ## Code Structure
 
 - `common.h`: shared constants, colors, types (EntityType, GameState, Direction).
-- `entity.c` / `entity.h`: Entity struct, update/draw dispatch, spawn helpers.
-- `mario.c` / `mario.h`: Mario-specific input, physics, state transitions (operates on `Entity*`).
-- `level.c` / `level.h`: tile grid, tile types, level data, tile collision helpers.
-- `camera.c` / `camera.h`: camera follow logic, dead zone, clamping.
+- `entity.c` / `entity.h`: Entity struct, EntityVtab struct, collision flag helpers, generic spawn/kill.
+- `mario.c` / `mario.h`: Mario vtable, input, physics, state transitions, spawn.
+- `enemies/*.c/h`: one file per enemy type (goomba, koopa, lakitu, bowser, etc.), each defining a vtable + spawn function.
+- `items.c` / `items.h`: coin, mushroom, fire flower, starman, 1-Up vtables + spawn.
+- `blocks.c` / `blocks.h`: tile handler table for block interactions (brick, question block, etc.).
+- `level.c` / `level.h`: tile grid, tile types, level data, tile collision, entity activation.
+- `camera.c` / `camera.h`: camera follow logic, threshold, clamping.
 - `particles.c` / `particles.h`: fixed-size particle effects.
-- `game.c` / `game.h`: Game struct (entity array, level, camera), state machine, scoring, HUD, orchestration.
+- `game.c` / `game.h`: Game struct, state machine, collision loops, HUD, orchestration.
 - `main.c`: window/audio initialization, main loop, cleanup.
 
 ## Design Patterns
 
 - One `Game` struct owns top-level state and is passed by pointer. Prefer stack/static allocation for fixed-size data; use heap when the size varies at runtime (e.g. level tile grids).
-- **Tagged entity array:** all dynamic objects live in `Entity entities[MAX_ENTITIES]`. Each has a `type` tag. Update/draw switch on type. Spawning = find free slot. No separate arrays per type.
-- `game.c` orchestrates: calls entity updates, runs collision between entities, handles interactions (stomp, damage, collect). Individual modules (`mario.c`, `entity.c`) don't know about each other.
+- **Tagged entity array with vtables:** all dynamic objects live in `Entity entities[MAX_ENTITIES]`. Each entity has a `type` tag and a pointer to a `static const EntityVtab` with function-pointer callbacks (`update`, `draw`, `touch`, `stomped`, `hit_by_fire`, `hit_by_shell`, `hit_by_star`, `bumped`, `kill`). The engine calls these — the entity defines its own response.
+- **Collision flags:** `stompable`, `damages_mario`, `fire_immune`, `shell_killable`, `star_killable`, `destructible` — set at spawn time. The engine checks flags for the generic decision, then calls the vtable callback for the type-specific response.
+- **Tile handler table:** block/tile interactions dispatch via function pointer table indexed by tile type. Each tile type defines its own handler.
+- `game.c` is the orchestrator only: runs loops, detects overlaps, calls callbacks. It does not contain entity-specific or tile-specific interaction logic.
+- Each entity type owns its behavior in its own file. Adding a new enemy = new vtable + spawn function, no edits to `game.c`.
 - Side-scrolling camera follows Mario, never scrolls backward. Levels are tile-based (16x16 pixels).
-- See `SPEC.md` for full update/draw flow and entity system details.
+- See `SPEC.md` for full vtable definitions, update/draw flow, and collision system.
 
 ## Coding Principles
 
