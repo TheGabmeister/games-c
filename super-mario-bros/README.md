@@ -1,8 +1,8 @@
-# Pac-Man
+# Super Mario Bros
 
-A modernized Pac-Man clone written in C using [raylib](https://www.raylib.com/) for rendering, input, and audio.
+A modernized Super Mario Bros clone written in C using [raylib](https://www.raylib.com/) for rendering, input, and audio.
 
-Features the classic Pac-Man gameplay — four ghosts with unique AI personalities, scatter/chase timing, frightened mode, ghost house logic, fruit bonuses, and progressive difficulty — rendered with a modern neon aesthetic: glowing walls, particle effects, and procedural graphics (no sprite sheets).
+Features classic SMB gameplay — running, jumping, stomping enemies, breaking blocks, collecting coins and power-ups, progressing through levels — rendered with a modern visual style using PNG sprites created from SVGs via Inkscape.
 
 ## Screenshot
 
@@ -23,16 +23,18 @@ The build copies `src/resources/` into the output directory automatically. rayli
 
 ```bash
 # MSVC puts the executable under Debug/
-./build/pac_man/Debug/pac_man
+./build/super_mario_bros/Debug/super_mario_bros
 ```
 
 ## Controls
 
 | Action | Keyboard | Gamepad |
 |--------|----------|---------|
-| Move | Arrow keys / WASD | Left stick / D-pad |
-| Start game | Enter | Any face button |
+| Move | Arrow keys / A,D | Left stick / D-pad |
+| Jump | Space / W / Up | A button |
+| Run / Fire | Left Shift | X button |
 | Pause | Esc / P | Start |
+| Start game | Enter | Any face button |
 
 All input methods work simultaneously.
 
@@ -40,15 +42,11 @@ All input methods work simultaneously.
 
 ```
 src/
-  common.h        Shared types, constants, colors, inline helpers
-  maze.h/c        28x36 tile grid, walkability functions
-  pacman.h/c      Pac-Man movement, input, animation, drawing
-  ghost.h/c       Ghost AI, pathfinding, state machine, drawing
-  fruit.h/c       Fruit spawning, types, scoring
+  common.h        Shared types, constants, colors
   particles.h/c   Particle effects system
   game.h/c        Top-level game state, orchestration, HUD
   main.c          Entry point: window/audio init, game loop
-  resources/      Sound effects (WAV, generated with rfxgen)
+  resources/      Sprites (PNG) and sound effects (WAV)
 vendor/
   raylib/         Vendored raylib library
 ```
@@ -56,20 +54,21 @@ vendor/
 ## Architecture
 
 - **One `Game` struct** holds all state and is passed by pointer. No heap allocation.
-- **Modular design:** each module (`pacman`, `ghost`, `fruit`, `particles`) owns its struct and logic. `game.c` orchestrates them, passing only the fields each module needs.
-- **Tile-based movement and collision:** 28x36 grid, 24px tiles. Entities track floating-point pixel positions but collide and make decisions on tile boundaries.
-- **Ghost AI:** at each intersection, evaluate non-reverse directions, pick the one with smallest Euclidean distance to the target tile. Tie-break priority: Up > Left > Down > Right. Each ghost has a unique targeting strategy (Blinky chases directly, Pinky ambushes, Inky uses Blinky's position as a reference, Clyde retreats when close).
-- **Data-driven difficulty:** speed tables, scatter/chase timing, frightened durations, and ghost house thresholds are `static const` arrays indexed by level tier.
-- **Procedural graphics:** all visuals are drawn with raylib primitives — no image assets. Sound effects are WAV files generated with [rfxgen](https://raylibtech.itch.io/rfxgen).
+- **Modular design:** each module owns its struct and logic. `game.c` orchestrates them, passing only the fields each module needs.
+- **Side-scrolling camera:** the camera follows Mario horizontally; levels scroll left-to-right.
+- **Tile-based levels:** 16x16 pixel tiles. Collision detection uses tile grid lookups.
+- **Sprite-based graphics:** PNGs created from SVGs using Inkscape. Sound effects are WAV files generated with rfxgen.
 
-## Game States
+## Asset Pipeline
 
+Sprites are authored as SVGs and converted to PNGs using Inkscape:
+
+```bash
+# Convert SVG to PNG (example: 16x16 tile)
+"C:/Program Files/Inkscape/bin/inkscape.exe" input.svg -o output.png -w 16 -h 16
 ```
-TITLE -> READY -> PLAYING -> DYING -> READY (or GAME_OVER -> TITLE)
-                    |
-                    +-> LEVEL_COMPLETE -> READY (next level)
-                    +-> PAUSED
-```
+
+Store SVGs in `src/resources/svg/` and PNGs in `src/resources/`.
 
 ## License
 

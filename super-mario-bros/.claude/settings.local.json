@@ -13,6 +13,9 @@
       "Bash(\"D:/rfxgen_v5.0_win_x64/rfxgen.exe\" --help)",
       "Bash(cmake -B build)",
       "Bash(./build/pac_man/Debug/pac_man.exe)"
+    ],
+    "additionalDirectories": [
+      "C:\\dev\\games-c\\super-mario-bros\\src\\resources"
     ]
   }
 }
