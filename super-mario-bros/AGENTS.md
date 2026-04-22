@@ -75,7 +75,7 @@ Sprites are authored as SVGs and converted to PNGs using Inkscape:
 
 ```bash
 # Convert SVG to PNG
-"C:/Program Files/Inkscape/bin/inkscape.exe" input.svg -o output.png -w 16 -h 16
+"C:/Program Files/Inkscape/bin/inkscape.exe" input.svg -o output.png -w 64 -h 64
 ```
 
 Commit both SVG sources and generated PNG files.

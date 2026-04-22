@@ -12,7 +12,20 @@
       "Read(//d/rfxgen_v5.0_win_x64/**)",
       "Bash(\"D:/rfxgen_v5.0_win_x64/rfxgen.exe\" --help)",
       "Bash(cmake -B build)",
-      "Bash(cd /tmp)"
+      "Bash(cd /tmp)",
+      "Bash(timeout 3 ./build/super_mario_bros/Debug/super_mario_bros.exe)",
+      "Bash('C:/Program Files/Inkscape/bin/inkscape.exe' c:/dev/games-c/super-mario-bros/src/resources/svg/mario_small_stand.svg -o c:/dev/games-c/super-mario-bros/src/resources/mario_small_stand.png -w 48 -h 48)",
+      "Bash('C:/Program Files/Inkscape/bin/inkscape.exe' c:/dev/games-c/super-mario-bros/src/resources/svg/mario_small_walk1.svg -o c:/dev/games-c/super-mario-bros/src/resources/mario_small_walk1.png -w 48 -h 48)",
+      "Bash('C:/Program Files/Inkscape/bin/inkscape.exe' c:/dev/games-c/super-mario-bros/src/resources/svg/mario_small_jump.svg -o c:/dev/games-c/super-mario-bros/src/resources/mario_small_jump.png -w 48 -h 48)",
+      "Bash('C:/Program Files/Inkscape/bin/inkscape.exe' c:/dev/games-c/super-mario-bros/src/resources/svg/__TRACKED_VAR__.svg -o c:/dev/games-c/super-mario-bros/src/resources/__TRACKED_VAR__.png -w 64 -h 64)",
+      "Bash(timeout 3 ./super_mario_bros.exe)",
+      "Bash(cmake --build c:/dev/games-c/super-mario-bros/build)",
+      "Bash(timeout 3 c:/dev/games-c/super-mario-bros/build/super_mario_bros/Debug/super_mario_bros.exe)",
+      "Bash(D:/rfxgen_v5.0_win_x64/rfxgen.exe -g jump -o c:/dev/games-c/super-mario-bros/src/resources/jump.wav)",
+      "Bash(D:/rfxgen_v5.0_win_x64/rfxgen.exe -g coin -o c:/dev/games-c/super-mario-bros/src/resources/coin.wav)",
+      "Bash(D:/rfxgen_v5.0_win_x64/rfxgen.exe -g hit -o c:/dev/games-c/super-mario-bros/src/resources/stomp.wav)",
+      "Bash(D:/rfxgen_v5.0_win_x64/rfxgen.exe -g powerup -o c:/dev/games-c/super-mario-bros/src/resources/powerup.wav)",
+      "Bash(D:/rfxgen_v5.0_win_x64/rfxgen.exe -g explosion -o c:/dev/games-c/super-mario-bros/src/resources/brick_break.wav)"
     ],
     "additionalDirectories": [
       "C:\\dev\\games-c\\super-mario-bros\\src\\resources"

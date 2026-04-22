@@ -64,8 +64,8 @@ vendor/
 Sprites are authored as SVGs and converted to PNGs using Inkscape:
 
 ```bash
-# Convert SVG to PNG (example: 16x16 tile)
-"C:/Program Files/Inkscape/bin/inkscape.exe" input.svg -o output.png -w 16 -h 16
+# Convert SVG to PNG (example: 64x64 tile)
+"C:/Program Files/Inkscape/bin/inkscape.exe" input.svg -o output.png -w 64 -h 64
 ```
 
 Store SVGs in `src/resources/svg/` and PNGs in `src/resources/`.

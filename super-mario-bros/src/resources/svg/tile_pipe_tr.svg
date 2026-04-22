@@ -1,0 +1,12 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
+  <!-- Pipe top-right -->
+  <rect x="0" y="0" width="64" height="64" fill="#00A800"/>
+  <!-- Lip -->
+  <rect x="0" y="0" width="64" height="20" rx="4" fill="#00C800"/>
+  <!-- Highlight -->
+  <rect x="4" y="4" width="12" height="56" fill="#40E040" opacity="0.3"/>
+  <!-- Dark edge right -->
+  <rect x="52" y="4" width="8" height="56" fill="#007000" opacity="0.5"/>
+  <!-- Lip border -->
+  <rect x="0" y="0" width="64" height="20" rx="4" fill="none" stroke="#005000" stroke-width="2"/>
+</svg>

@@ -40,7 +40,7 @@ No tests or linter — the build is the only verification step. The build copies
 - Each entity type has its own file(s) defining its vtable, spawn function, and behavior. Enemy files live under `src/enemies/`.
 - `game_update()` dispatches to one handler function per game state (`update_title`, `update_playing`, etc.). `game_draw()` has a similar per-state switch.
 - Side-scrolling camera follows Mario horizontally, never scrolls backward.
-- Tile-based levels with 16x16 pixel tiles for collision and rendering.
+- Tile-based levels with 64x64 pixel tiles for collision and rendering.
 - Named constants for all tunable values live in `common.h` (`#define`). New magic numbers should be added there, not hardcoded inline.
 - See `SPEC.md` for full architecture details, vtable definitions, update/draw flow, and collision system.
 
@@ -53,8 +53,8 @@ No tests or linter — the build is the only verification step. The build copies
 Sprites are authored as SVGs and converted to PNGs using Inkscape:
 
 ```bash
-# Convert SVG to PNG (example: 16x16 tile)
-"C:/Program Files/Inkscape/bin/inkscape.exe" input.svg -o output.png -w 16 -h 16
+# Convert SVG to PNG (example: 64x64 tile)
+"C:/Program Files/Inkscape/bin/inkscape.exe" input.svg -o output.png -w 64 -h 64
 ```
 
 Store SVGs in `src/resources/svg/` and PNGs in `src/resources/`. Only PNGs are loaded at runtime.

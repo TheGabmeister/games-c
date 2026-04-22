@@ -1,0 +1,12 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
+  <!-- Block body -->
+  <rect width="64" height="64" rx="4" fill="#FFC800"/>
+  <!-- Border -->
+  <rect x="2" y="2" width="60" height="60" rx="3" fill="none" stroke="#C89600" stroke-width="3"/>
+  <!-- Inner highlight -->
+  <rect x="4" y="4" width="56" height="56" rx="2" fill="none" stroke="#FFE060" stroke-width="2"/>
+  <!-- Question mark -->
+  <text x="32" y="46" font-family="Arial,sans-serif" font-size="36" font-weight="bold" fill="#FFF" text-anchor="middle">?</text>
+  <!-- Shadow on ? -->
+  <text x="33" y="47" font-family="Arial,sans-serif" font-size="36" font-weight="bold" fill="#C89600" text-anchor="middle" opacity="0.4">?</text>
+</svg>

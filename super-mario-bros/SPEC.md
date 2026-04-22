@@ -65,19 +65,21 @@ After taking damage as Big or Fire, Mario has a brief invincibility window (flas
 
 ### Physics Constants (tunable)
 
-| Parameter | Approximate Value |
-|-----------|-------------------|
-| Walk max speed | 90 px/s |
-| Run max speed | 150 px/s |
-| Acceleration | 450 px/s² |
-| Deceleration (friction) | 400 px/s² |
-| Skid deceleration | 700 px/s² |
-| Jump initial velocity | -280 px/s |
-| Jump sustained (hold) | -50 px/s² (reduces gravity while held) |
-| Gravity | 980 px/s² |
-| Max fall speed | 600 px/s |
+Values are in pixels at our 64px tile size. For reference, one tile = 64px.
 
-These are starting points — we'll tune by feel.
+| Parameter | Approximate Value | In tiles/s |
+|-----------|-------------------|------------|
+| Walk max speed | 360 px/s | ~5.6 |
+| Run max speed | 600 px/s | ~9.4 |
+| Acceleration | 1800 px/s² | |
+| Deceleration (friction) | 1600 px/s² | |
+| Skid deceleration | 2800 px/s² | |
+| Jump initial velocity | -1120 px/s | |
+| Jump sustained (hold) | -200 px/s² (reduces gravity while held) | |
+| Gravity | 3920 px/s² | |
+| Max fall speed | 2400 px/s | |
+
+These are starting points (scaled 4x from 16px-tile equivalents) — we'll tune by feel.
 
 ---
 
@@ -90,7 +92,7 @@ These are starting points — we'll tune by feel.
 | Empty/Air | Passable |
 | Ground | Solid. Standard terrain block. |
 | Hard block | Solid. Indestructible (used in castles and underground). |
-| Brick | Solid. Small Mario bumps from below (enemies on top are killed); Big/Fire Mario breaks. May contain coins or multi-coin blocks (hit repeatedly). |
+| Brick | Solid. Small Mario bumps from below (enemies on top are killed); Big/Fire Mario breaks. May contain coins, items, or be a multi-coin brick (gives a coin per hit for ~4 seconds, then becomes used block). |
 | Question block | Solid. Hit from below to release item (coin, mushroom, fire flower, star). Becomes inactive (empty) after hit. |
 | Used block | Solid. A question block or brick that has been emptied. Cannot be interacted with. |
 | Pipe (top/body) | Solid. Some are entry points to underground/bonus areas (down input to enter). Pipe tops have a distinct visual from pipe bodies. |
@@ -99,14 +101,17 @@ These are starting points — we'll tune by feel.
 | Castle door | End-of-castle trigger after defeating Bowser (reaching the axe). |
 | Invisible block | Hidden until hit from below. Appears as a used block after hit. |
 | Coral | Solid. Underwater terrain. |
-| Bridge | Solid. Collapses when the axe is reached in Bowser fights. |
+| Bridge | Solid. Collapses tile-by-tile when the axe is reached in Bowser fights. |
 | Axe | End-of-castle trigger. Touching it collapses the bridge and defeats Bowser. |
+| Vine block | A ? block that spawns a climbable vine. Vine grows upward, Mario can grab and climb it to reach sky bonus areas. |
+| Bill Blaster | Solid. Cannon that spawns Bullet Bill entities at intervals. Does not fire if Mario is on or adjacent to it. |
 
 ### Level Format
 
 Levels are stored as 2D tile arrays in C source code (static const). Each level has:
 - A tile grid (width varies per level, height is 15 tiles)
 - Entity spawn list: `{type, tile_x, tile_y}` entries loaded into the entity array as they scroll into view
+- Pipe warp table: which pipes are enterable and where they lead `{pipe_tile_x, dest_level, dest_x, dest_y}`
 - Background color / theme
 - Level type flag (overworld, underground, underwater, castle, athletic) to determine physics and palette
 
@@ -165,7 +170,7 @@ Levels are stored as 2D tile arrays in C source code (static const). Each level 
 
 **Bullet Bill** — Fired horizontally from Bill Blasters at constant speed. Fireproof. Stompable (Mario bounces off). Bill Blasters don't fire if Mario is standing on them or immediately adjacent.
 
-**Bill Blaster** — Stationary solid terrain object (cannon). Cannot be destroyed. Mario can stand on it. Spawns Bullet Bills at intervals.
+**Bill Blaster** — A solid tile (not an entity). Cannot be destroyed. Mario can stand on it. The level update logic spawns Bullet Bill entities at intervals from Bill Blaster tile positions. Does not fire if Mario is standing on or adjacent to it.
 
 **Piranha Plant** — Emerges from pipes vertically on a timer, pauses, retreats. Cannot be stomped (any contact damages Mario). Does NOT emerge if Mario is standing on or adjacent to its pipe. Killed by fireball, shell, or star.
 
@@ -212,7 +217,19 @@ Levels are stored as 2D tile arrays in C source code (static const). Each level 
 - Fire Mario can throw fireballs (up to 2 active at once) using the run/fire button.
 - Fireballs travel forward in an arc, bouncing off the ground.
 - They disappear on hitting a wall, an enemy, or after traveling offscreen.
-- Fireballs do NOT work underwater in the original SMB (but Fire Mario can still throw them underwater — they just behave the same as on land with swimming physics).
+- Fireballs work underwater in SMB1 — Fire Mario can throw them and they behave normally.
+
+### Other Dynamic Objects
+
+These are entities (live in the entity array) but are not enemies or collectible items:
+
+| Object | Description |
+|--------|-------------|
+| Springboard | Green trampoline. Mario bounces high when landing on it (higher if holding jump). Stationary. |
+| Vine | Grows upward from a vine block. Mario can grab it and climb vertically to reach sky bonus areas. |
+| Score popup | Floating text (+100, +200, etc.) that drifts upward and fades. Spawned on enemy kill, coin collect, etc. |
+| Brick debris | 4 fragments spawned when Big Mario breaks a brick. Fly outward in arcs, despawn after a short time. |
+| Coin from block | A coin that pops up briefly from a ? block or brick when hit. Visual only — despawns after the pop animation. The actual coin count is incremented by the tile handler. |
 
 ---
 
@@ -316,7 +333,7 @@ The collision phase in `game.c` uses a two-step approach:
 
 ```c
 bool stompable;       // can Mario stomp it? (false for Spiny, Piranha Plant, Firebar, etc.)
-bool damages_mario;   // does contact hurt Mario? (true for all enemies/hazards)
+bool damages_mario;   // does contact hurt Mario? (true for enemies/hazards, false for items)
 bool fire_immune;     // survives fireballs? (Buzzy Beetle, Bullet Bill, Firebar, Podoboo)
 bool shell_killable;  // dies to kicked shell?
 bool star_killable;   // dies to Starman Mario?
@@ -337,10 +354,16 @@ for (int i = 0; i < MAX_ENTITIES; i++) {
     Entity *mario = &game->entities[game->mario];
     if (!aabb_overlap(mario, e)) continue;
 
+    // Starman: kill enemies on contact
+    if (mario->star_active && e->star_killable && e->vtab->hit_by_star) {
+        e->vtab->hit_by_star(e, game);
+        continue;
+    }
+
     if (mario_is_falling(mario) && overlaps_top_half(mario, e)) {
         if (e->stompable && e->vtab->stomped)
             e->vtab->stomped(e, mario, game);
-        else if (e->damages_mario)
+        else if (e->damages_mario && !mario->star_active)
             mario_take_damage(mario, game);
     } else if (e->vtab->touch) {
         e->vtab->touch(e, mario, game);
@@ -348,7 +371,9 @@ for (int i = 0; i < MAX_ENTITIES; i++) {
 }
 ```
 
-Items handle collection in their `touch` callback. Enemies handle side-contact damage in theirs. The engine just iterates and calls.
+- Items (coins, mushrooms, etc.) have `damages_mario = false` and handle collection in their `touch` callback.
+- Enemies have `damages_mario = true` and handle side-contact damage in their `touch` callback.
+- The engine just iterates and calls — it doesn't know what any entity type does.
 
 ### Stomp Detection
 
@@ -452,7 +477,7 @@ All 32 levels from the original game: worlds 1-1 through 8-4.
 
 - **Pipe warping:** enter certain pipes to access underground bonus areas or skip sections (warp zones)
 - **Warp zones:** hidden areas that let the player skip to later worlds
-- **Looping mazes:** World 8-4 requires taking the correct path or the level loops
+- **Looping mazes:** castles 4-4, 7-4, and 8-4 have path puzzles — taking the wrong route loops the level back. 8-4 is the most complex (multiple sections with pipe transitions).
 - **Coin rooms:** underground bonus rooms filled with coins, accessed via pipe
 
 ### World 1-1 (first implementation)
@@ -480,7 +505,7 @@ src/
     buzzy_beetle.h/c
     lakitu.h/c      Lakitu + Spiny + Spiny Egg
     hammer_bro.h/c  Hammer Bro + Hammer projectile
-    bullet_bill.h/c Bullet Bill + Bill Blaster
+    bullet_bill.h/c Bullet Bill (Bill Blaster is a tile, not an entity)
     piranha.h/c     Piranha Plant
     blooper.h/c     Blooper (underwater)
     cheep_cheep.h/c Cheep-Cheep (swimming + leaping)

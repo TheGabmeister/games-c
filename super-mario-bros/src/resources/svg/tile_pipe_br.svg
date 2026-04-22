@@ -1,0 +1,10 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
+  <!-- Pipe body right -->
+  <rect x="0" y="0" width="60" height="64" fill="#00A800"/>
+  <!-- Highlight -->
+  <rect x="4" y="0" width="12" height="64" fill="#40E040" opacity="0.3"/>
+  <!-- Dark edge -->
+  <rect x="52" y="0" width="8" height="64" fill="#007000" opacity="0.5"/>
+  <!-- Border -->
+  <rect x="0" y="0" width="60" height="64" fill="none" stroke="#005000" stroke-width="2"/>
+</svg>

@@ -1,0 +1,24 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 48 48">
+  <!-- Hat -->
+  <rect x="12" y="0" width="28" height="8" rx="2" fill="#E40000"/>
+  <!-- Face -->
+  <rect x="8" y="8" width="32" height="12" rx="4" fill="#FFB080"/>
+  <!-- Eyes -->
+  <circle cx="22" cy="14" r="2.5" fill="#000"/>
+  <circle cx="34" cy="14" r="2.5" fill="#000"/>
+  <!-- Mustache -->
+  <path d="M18 18 Q24 22 30 18 Q36 22 38 18" fill="none" stroke="#5A2800" stroke-width="2"/>
+  <!-- Body/Overalls -->
+  <rect x="10" y="20" width="28" height="14" rx="3" fill="#0050D0"/>
+  <!-- Overall straps -->
+  <rect x="14" y="20" width="4" height="8" rx="1" fill="#E40000"/>
+  <rect x="30" y="20" width="4" height="8" rx="1" fill="#E40000"/>
+  <!-- Buttons -->
+  <circle cx="18" cy="26" r="1.5" fill="#FFD700"/>
+  <circle cx="30" cy="26" r="1.5" fill="#FFD700"/>
+  <!-- Jump pose: one arm up -->
+  <rect x="38" y="14" width="6" height="10" rx="2" fill="#FFB080" transform="rotate(-20 41 19)"/>
+  <!-- Feet tucked -->
+  <ellipse cx="16" cy="38" rx="7" ry="5" fill="#5A2800"/>
+  <ellipse cx="32" cy="40" rx="7" ry="5" fill="#5A2800"/>
+</svg>

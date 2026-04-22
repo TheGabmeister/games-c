@@ -1,0 +1,6 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
+  <!-- Pole -->
+  <rect x="28" y="0" width="8" height="64" fill="#A0A0A0"/>
+  <!-- Highlight -->
+  <rect x="30" y="0" width="3" height="64" fill="#D0D0D0"/>
+</svg>
