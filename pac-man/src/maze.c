@@ -1,4 +1,45 @@
-#include "maze.h"
+#include "common.h"
+
+// Direction vectors: UP, LEFT, DOWN, RIGHT
+const int dir_dx[] = { 0, -1, 0, 1 };
+const int dir_dy[] = { -1, 0, 1, 0 };
+
+// Maze tile helpers
+
+int maze_tile_at(int tile_x, int tile_y) {
+    if (tile_x < 0 || tile_x >= MAZE_COLS || tile_y < 0 || tile_y >= MAZE_ROWS)
+        return TILE_WALL;
+    return maze_layout[tile_y][tile_x];
+}
+
+static int maze_tile_at_wrapped(int tile_x, int tile_y) {
+    if (tile_y >= 0 && tile_y < MAZE_ROWS) {
+        if (tile_x < 0) tile_x += MAZE_COLS;
+        if (tile_x >= MAZE_COLS) tile_x -= MAZE_COLS;
+    }
+    return maze_tile_at(tile_x, tile_y);
+}
+
+bool maze_is_walkable(int tile_x, int tile_y) {
+    return maze_tile_at_wrapped(tile_x, tile_y) != TILE_WALL;
+}
+
+bool maze_is_walkable_pacman(int tile_x, int tile_y) {
+    int t = maze_tile_at_wrapped(tile_x, tile_y);
+    return t != TILE_WALL && t != TILE_GHOST_DOOR;
+}
+
+bool maze_is_walkable_ghost(int tile_x, int tile_y, GhostMode mode) {
+    int t = maze_tile_at_wrapped(tile_x, tile_y);
+    if (t == TILE_WALL) return false;
+    if (t == TILE_GHOST_DOOR && mode != GHOST_EXITING && mode != GHOST_EATEN)
+        return false;
+    return true;
+}
+
+bool maze_is_tunnel(int tile_x, int tile_y) {
+    return maze_tile_at(tile_x, tile_y) == TILE_TUNNEL;
+}
 
 // Legend:
 // 0 = EMPTY, 1 = WALL, 2 = DOT, 3 = POWER_PELLET,
