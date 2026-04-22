@@ -25,7 +25,10 @@
       "Bash(D:/rfxgen_v5.0_win_x64/rfxgen.exe -g coin -o c:/dev/games-c/super-mario-bros/src/resources/coin.wav)",
       "Bash(D:/rfxgen_v5.0_win_x64/rfxgen.exe -g hit -o c:/dev/games-c/super-mario-bros/src/resources/stomp.wav)",
       "Bash(D:/rfxgen_v5.0_win_x64/rfxgen.exe -g powerup -o c:/dev/games-c/super-mario-bros/src/resources/powerup.wav)",
-      "Bash(D:/rfxgen_v5.0_win_x64/rfxgen.exe -g explosion -o c:/dev/games-c/super-mario-bros/src/resources/brick_break.wav)"
+      "Bash(D:/rfxgen_v5.0_win_x64/rfxgen.exe -g explosion -o c:/dev/games-c/super-mario-bros/src/resources/brick_break.wav)",
+      "Bash(cmake -B c:/dev/games-c/super-mario-bros/build)",
+      "Bash(D:/rfxgen_v5.0_win_x64/rfxgen.exe -g hit -o c:/dev/games-c/super-mario-bros/src/resources/kick.wav)",
+      "Bash(D:/rfxgen_v5.0_win_x64/rfxgen.exe -g laser -o c:/dev/games-c/super-mario-bros/src/resources/fireball.wav)"
     ],
     "additionalDirectories": [
       "C:\\dev\\games-c\\super-mario-bros\\src\\resources"

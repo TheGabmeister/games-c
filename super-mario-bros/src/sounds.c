@@ -11,6 +11,8 @@ static const char *sound_paths[SND_COUNT] = {
     [SND_BRICK_BREAK] = "resources/brick_break.wav",
     [SND_BUMP]        = "resources/bump.wav",
     [SND_DEATH]       = "resources/death.wav",
+    [SND_KICK]        = "resources/kick.wav",
+    [SND_FIREBALL]    = "resources/fireball.wav",
 };
 
 void sounds_load(void) {

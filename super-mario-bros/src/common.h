@@ -17,7 +17,7 @@
 #define TILES_Y (WINDOW_HEIGHT / TILE_SIZE)
 
 // Entity limits
-#define MAX_ENTITIES 64
+#define MAX_ENTITIES 128
 
 // Mario physics (scaled for 64px tiles)
 #define MARIO_WALK_SPEED    360.0f
@@ -27,16 +27,39 @@
 #define MARIO_SKID_DECEL    2800.0f
 #define MARIO_JUMP_VEL      -1680.0f
 #define MARIO_JUMP_SUSTAIN  -300.0f
+#define MARIO_STOMP_BOUNCE  -600.0f
 
 // General physics
 #define GRAVITY         3920.0f
 #define MAX_FALL_SPEED  2400.0f
+
+// Enemy physics
+#define GOOMBA_SPEED        120.0f
+#define KOOPA_SPEED         120.0f
+#define SHELL_SPEED         600.0f
+#define MUSHROOM_SPEED      180.0f
+#define STARMAN_SPEED       240.0f
+#define STARMAN_BOUNCE_VEL  -800.0f
+#define FIREBALL_SPEED_X    500.0f
+#define FIREBALL_BOUNCE_VEL -600.0f
 
 // Mario sizes (in pixels)
 #define MARIO_SMALL_W   48
 #define MARIO_SMALL_H   48
 #define MARIO_BIG_W     48
 #define MARIO_BIG_H     96
+
+// Entity sizes
+#define ENEMY_W         48
+#define ENEMY_H         48
+#define KOOPA_HEIGHT    64
+#define SHELL_W         48
+#define SHELL_H         44
+#define ITEM_W          48
+#define ITEM_H          48
+#define FIREBALL_SIZE   16
+#define COIN_W          32
+#define COIN_H          48
 
 // Camera
 #define CAMERA_THRESHOLD  (WINDOW_WIDTH * 0.4f)
@@ -56,6 +79,9 @@
 // Invincibility after damage
 #define DAMAGE_INVINCIBLE_TIME 2.0f
 
+// Star invincibility
+#define STAR_DURATION 10.0f
+
 // Dying state duration
 #define DEATH_ANIM_TIME 2.0f
 
@@ -65,17 +91,52 @@
 // Level complete walk time
 #define LEVEL_COMPLETE_TIME 3.0f
 
+// Max fireballs active at once
+#define MAX_FIREBALLS 2
+
+// Score values
+#define SCORE_GOOMBA_STOMP  100
+#define SCORE_KOOPA_STOMP   100
+#define SCORE_FIREBALL_KILL 200
+#define SCORE_SHELL_KILL    100
+#define SCORE_COIN          200
+#define SCORE_POWERUP       1000
+#define SCORE_STAR          1000
+#define SCORE_FLAGPOLE_LOW  100
+#define SCORE_FLAGPOLE_MID  400
+#define SCORE_FLAGPOLE_HIGH 800
+#define SCORE_FLAGPOLE_TOP  5000
+
+// Block content types
+#define BLOCK_COIN          1
+#define BLOCK_MUSHROOM      2
+#define BLOCK_FIRE_FLOWER   3
+#define BLOCK_STARMAN       4
+#define BLOCK_ONEUP         5
+#define BLOCK_MULTI_COIN    6
+
 // Colors
-#define COLOR_BG        (Color){92, 148, 252, 255}
-#define COLOR_TEXT       (Color){255, 255, 255, 255}
-#define COLOR_GROUND    (Color){192, 96, 0, 255}
-#define COLOR_BRICK     (Color){180, 80, 0, 255}
-#define COLOR_QBLOCK    (Color){255, 200, 0, 255}
-#define COLOR_USED      (Color){128, 128, 128, 255}
-#define COLOR_PIPE      (Color){0, 168, 0, 255}
-#define COLOR_HARD      (Color){100, 100, 120, 255}
-#define COLOR_MARIO     (Color){228, 0, 0, 255}
-#define COLOR_MARIO_BIG (Color){228, 0, 0, 255}
+#define COLOR_BG          (Color){92, 148, 252, 255}
+#define COLOR_BG_UNDER    (Color){0, 0, 0, 255}
+#define COLOR_BG_CASTLE   (Color){0, 0, 0, 255}
+#define COLOR_TEXT         (Color){255, 255, 255, 255}
+#define COLOR_GROUND      (Color){192, 96, 0, 255}
+#define COLOR_BRICK       (Color){180, 80, 0, 255}
+#define COLOR_QBLOCK      (Color){255, 200, 0, 255}
+#define COLOR_USED        (Color){128, 128, 128, 255}
+#define COLOR_PIPE        (Color){0, 168, 0, 255}
+#define COLOR_HARD        (Color){100, 100, 120, 255}
+#define COLOR_MARIO       (Color){228, 0, 0, 255}
+#define COLOR_MARIO_BIG   (Color){228, 0, 0, 255}
+#define COLOR_GOOMBA      (Color){168, 80, 0, 255}
+#define COLOR_KOOPA       (Color){0, 168, 0, 255}
+#define COLOR_SHELL       (Color){0, 168, 0, 255}
+#define COLOR_MUSHROOM    (Color){228, 0, 0, 255}
+#define COLOR_FLOWER      (Color){255, 100, 0, 255}
+#define COLOR_STARMAN     (Color){255, 255, 0, 255}
+#define COLOR_ONEUP       (Color){0, 200, 0, 255}
+#define COLOR_FIREBALL    (Color){255, 128, 0, 255}
+#define COLOR_COIN_ENT    (Color){255, 200, 0, 255}
 
 // Direction
 typedef enum {
