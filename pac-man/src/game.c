@@ -683,44 +683,29 @@ static void ghost_update_movement(Game *game, Ghost *g, float dt, int ghost_idx)
     }
 
     case GHOST_EATEN: {
-        // Return to ghost house entrance at high speed
-        float target_px = tile_center_px(GHOST_HOUSE_CENTER_X);
-        float target_py = tile_center_px(GHOST_HOUSE_CENTER_Y);
-        spd = ghost_speed_eaten * BASE_SPEED * TILE_SIZE * dt;
-
-        float dx_f = target_px - g->px;
-        float dy_f = target_py - g->py;
-        float dist = sqrtf(dx_f * dx_f + dy_f * dy_f);
-
-        if (dist < spd) {
-            g->px = target_px;
-            g->py = target_py;
-            g->tile_x = GHOST_HOUSE_CENTER_X;
-            g->tile_y = GHOST_HOUSE_CENTER_Y;
-            g->mode = GHOST_EXITING;
-            return;
-        }
-
-        // Use tile-based pathfinding toward the house entrance first
-        float entrance_px = tile_center_px(GHOST_HOUSE_EXIT_X);
-        float entrance_py = tile_center_px(GHOST_HOUSE_EXIT_Y);
-        float de = sqrtf((entrance_px - g->px) * (entrance_px - g->px) +
-                         (entrance_py - g->py) * (entrance_py - g->py));
-
-        if (de < TILE_SIZE) {
-            // Close to entrance, move directly into house
-            g->px += (dx_f / dist) * spd;
-            g->py += (dy_f / dist) * spd;
-            g->tile_x = (int)(g->px / TILE_SIZE);
+        // Once at or below the house exit tile, drop straight down into the house
+        bool at_exit_column = (g->tile_x == GHOST_HOUSE_EXIT_X &&
+                               g->tile_y >= GHOST_HOUSE_EXIT_Y &&
+                               g->tile_y <= GHOST_HOUSE_CENTER_Y);
+        if (at_exit_column) {
+            float center_y_target = tile_center_px(GHOST_HOUSE_CENTER_Y);
+            float move = ghost_speed_eaten * BASE_SPEED * TILE_SIZE * dt;
+            g->px = tile_center_px(GHOST_HOUSE_EXIT_X);
+            g->py += move;
+            if (g->py >= center_y_target) {
+                g->py = center_y_target;
+                g->tile_x = GHOST_HOUSE_CENTER_X;
+                g->tile_y = GHOST_HOUSE_CENTER_Y;
+                g->mode = GHOST_EXITING;
+            }
             g->tile_y = (int)(g->py / TILE_SIZE);
             return;
         }
-
-        // Otherwise use normal pathfinding toward the entrance tile
-        ghost_compute_target(game, ghost_idx);
+        // Otherwise pathfind toward the house exit using normal tile movement
         g->target_x = GHOST_HOUSE_EXIT_X;
         g->target_y = GHOST_HOUSE_EXIT_Y;
-        break; // Fall through to normal tile movement below
+        spd = ghost_speed_eaten;
+        break;
     }
 
     case GHOST_FRIGHTENED:
