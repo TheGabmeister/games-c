@@ -12,7 +12,7 @@ void particles_spawn(Particle particles[MAX_PARTICLES], float x, float y, Color 
                 float speed = (float)GetRandomValue(20, 80);
                 p->vx = cosf(angle) * speed;
                 p->vy = sinf(angle) * speed;
-                p->life = 0.3f + (float)GetRandomValue(0, 20) / 100.0f;
+                p->life = PARTICLE_BASE_LIFE + (float)GetRandomValue(0, PARTICLE_LIFE_VARIANCE) / 100.0f;
                 p->max_life = p->life;
                 p->color = color;
                 break;

@@ -76,6 +76,9 @@ typedef struct {
     // Sounds
     Sound sounds[SOUND_COUNT];
     bool dot_sound_toggle;
+
+    // Cached maze wall edge/corner flags (precomputed once per level)
+    unsigned char wall_flags[MAZE_ROWS][MAZE_COLS];
 } Game;
 
 void game_init(Game *game);

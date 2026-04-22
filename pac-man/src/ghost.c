@@ -5,10 +5,6 @@ static const float ghost_speed_frightened[]  = { 0.50f, 0.55f, 0.60f, 0.60f };
 static const float ghost_speed_tunnel[]      = { 0.40f, 0.45f, 0.50f, 0.50f };
 static const float ghost_speed_eaten         = 1.50f;
 
-static const int elroy_thresholds[][2] = {
-    {20,10}, {30,15}, {40,20}, {50,25}, {60,30}, {80,40}, {100,50}, {120,60}
-};
-
 static const int ghost_house_dot_limits[3][GHOST_COUNT] = {
     { -1, 0, 30, 60 },
     { -1, 0,  0, 50 },
@@ -29,17 +25,6 @@ static const int scatter_corners[GHOST_COUNT][2] = {
 static const int ghost_home_tiles[GHOST_COUNT][2] = {
     {14, 14}, {14, 16}, {12, 16}, {16, 16},
 };
-
-static int elroy_tier(int level) {
-    if (level <= 1) return 0;
-    if (level <= 2) return 1;
-    if (level <= 5) return 2;
-    if (level <= 8) return 3;
-    if (level <= 11) return 4;
-    if (level <= 14) return 5;
-    if (level <= 18) return 6;
-    return 7;
-}
 
 static int ghost_house_tier(int level) {
     if (level <= 1) return 0;
@@ -165,8 +150,8 @@ void ghost_update_movement(Ghost *g, int ghost_idx, int level, int dots_remainin
 
     switch (g->mode) {
     case GHOST_IN_HOUSE:
-        g->house_bob_timer += dt * 3.0f;
-        g->py = tile_center_px(g->home_tile_y) + sinf(g->house_bob_timer) * 4.0f;
+        g->house_bob_timer += dt * GHOST_BOB_SPEED;
+        g->py = tile_center_px(g->home_tile_y) + sinf(g->house_bob_timer) * GHOST_BOB_AMPLITUDE;
         g->tile_y = g->home_tile_y;
         return;
 
@@ -245,7 +230,7 @@ void ghost_update_movement(Ghost *g, int ghost_idx, int level, int dots_remainin
     float center_x = tile_center_px(g->tile_x);
     float center_y = tile_center_px(g->tile_y);
 
-    bool at_center = fabsf(g->px - center_x) < 1.5f && fabsf(g->py - center_y) < 1.5f;
+    bool at_center = fabsf(g->px - center_x) < TILE_CENTER_TOLERANCE && fabsf(g->py - center_y) < TILE_CENTER_TOLERANCE;
 
     if (at_center) {
         g->px = center_x;
@@ -313,25 +298,25 @@ void ghost_draw(Ghost *g, float frightened_timer) {
     float r = TILE_SIZE / 2.0f - 1.0f;
 
     if (g->mode == GHOST_EATEN) {
-        float eye_offset = 3.0f, eye_r = 3.0f, pupil_r = 1.5f;
+        float eye_r = 3.0f, pupil_r = 1.5f;
         float edx = 0, edy = 0;
         switch (g->dir) {
             case DIR_UP: edy = -2; break; case DIR_DOWN: edy = 2; break;
             case DIR_LEFT: edx = -2; break; case DIR_RIGHT: edx = 2; break;
             default: break;
         }
-        DrawCircle((int)(cx - eye_offset), (int)(cy - 2), eye_r, WHITE);
-        DrawCircle((int)(cx + eye_offset), (int)(cy - 2), eye_r, WHITE);
-        DrawCircle((int)(cx - eye_offset + edx), (int)(cy - 2 + edy), pupil_r, (Color){33, 33, 222, 255});
-        DrawCircle((int)(cx + eye_offset + edx), (int)(cy - 2 + edy), pupil_r, (Color){33, 33, 222, 255});
+        DrawCircle((int)(cx - GHOST_EYE_OFFSET), (int)(cy - 2), eye_r, WHITE);
+        DrawCircle((int)(cx + GHOST_EYE_OFFSET), (int)(cy - 2), eye_r, WHITE);
+        DrawCircle((int)(cx - GHOST_EYE_OFFSET + edx), (int)(cy - 2 + edy), pupil_r, GHOST_PUPIL_COLOR);
+        DrawCircle((int)(cx + GHOST_EYE_OFFSET + edx), (int)(cy - 2 + edy), pupil_r, GHOST_PUPIL_COLOR);
         return;
     }
 
     Color body_color;
     if (g->mode == GHOST_FRIGHTENED) {
         bool flash_white = false;
-        if (frightened_timer < 2.0f && frightened_timer > 0.0f)
-            flash_white = fmodf(frightened_timer, 0.28f) < 0.14f;
+        if (frightened_timer < FRIGHT_FLASH_WARN_TIME && frightened_timer > 0.0f)
+            flash_white = fmodf(frightened_timer, FRIGHT_FLASH_PERIOD) < FRIGHT_FLASH_PERIOD / 2.0f;
         body_color = flash_white ? COLOR_FRIGHT_FLASH : COLOR_FRIGHTENED;
     } else {
         body_color = g->color;
@@ -351,17 +336,17 @@ void ghost_draw(Ghost *g, float frightened_timer) {
         for (int m = -4; m <= 4; m += 2)
             DrawCircle((int)(cx + m), (int)((m % 4 == 0) ? cy + 3 : cy + 1), 1.0f, face);
     } else {
-        float eye_offset = 3.0f, eye_r = 3.5f, pupil_r = 2.0f;
+        float eye_r = 3.5f, pupil_r = 2.0f;
         float edx = 0, edy = 0;
         switch (g->dir) {
             case DIR_UP: edy = -1.5f; break; case DIR_DOWN: edy = 1.5f; break;
             case DIR_LEFT: edx = -1.5f; break; case DIR_RIGHT: edx = 1.5f; break;
             default: break;
         }
-        DrawCircle((int)(cx - eye_offset), (int)(cy - 3), eye_r, WHITE);
-        DrawCircle((int)(cx + eye_offset), (int)(cy - 3), eye_r, WHITE);
-        DrawCircle((int)(cx - eye_offset + edx), (int)(cy - 3 + edy), pupil_r, (Color){33, 33, 222, 255});
-        DrawCircle((int)(cx + eye_offset + edx), (int)(cy - 3 + edy), pupil_r, (Color){33, 33, 222, 255});
+        DrawCircle((int)(cx - GHOST_EYE_OFFSET), (int)(cy - 3), eye_r, WHITE);
+        DrawCircle((int)(cx + GHOST_EYE_OFFSET), (int)(cy - 3), eye_r, WHITE);
+        DrawCircle((int)(cx - GHOST_EYE_OFFSET + edx), (int)(cy - 3 + edy), pupil_r, GHOST_PUPIL_COLOR);
+        DrawCircle((int)(cx + GHOST_EYE_OFFSET + edx), (int)(cy - 3 + edy), pupil_r, GHOST_PUPIL_COLOR);
     }
 }
 

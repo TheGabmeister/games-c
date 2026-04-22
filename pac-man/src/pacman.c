@@ -1,7 +1,7 @@
 #include "pacman.h"
 
 static const float speed_normal[]     = { 0.80f, 0.90f, 1.00f, 0.90f };
-static const float speed_eating[]     = { 0.71f, 0.79f, 0.87f, 0.79f };
+const float pacman_speed_eating[]     = { 0.71f, 0.79f, 0.87f, 0.79f };
 static const float speed_frightened[] = { 0.90f, 0.95f, 1.00f, 0.90f };
 
 static Direction get_input_direction(void) {
@@ -13,7 +13,7 @@ static Direction get_input_direction(void) {
     if (IsGamepadAvailable(0)) {
         float gx = GetGamepadAxisMovement(0, GAMEPAD_AXIS_LEFT_X);
         float gy = GetGamepadAxisMovement(0, GAMEPAD_AXIS_LEFT_Y);
-        float deadzone = 0.3f;
+        float deadzone = GAMEPAD_DEADZONE;
         if (fabsf(gx) > fabsf(gy)) {
             if (gx < -deadzone) return DIR_LEFT;
             if (gx > deadzone) return DIR_RIGHT;
@@ -30,8 +30,8 @@ static Direction get_input_direction(void) {
 }
 
 void pacman_init(PacMan *pm) {
-    pm->tile_x = 14;
-    pm->tile_y = 26;
+    pm->tile_x = PACMAN_START_X;
+    pm->tile_y = PACMAN_START_Y;
     pm->px = tile_center_px(pm->tile_x);
     pm->py = tile_center_px(pm->tile_y);
     pm->dir = DIR_LEFT;
@@ -126,9 +126,9 @@ void pacman_update(PacMan *pm, int level, bool frightened_active, float dt) {
 
     if (!blocked || !((pm->px == center_x) && (pm->py == center_y))) {
         pm->anim_timer += dt;
-        if (pm->anim_timer >= 0.07f) {
-            pm->anim_timer -= 0.07f;
-            pm->anim_frame = (pm->anim_frame + 1) % 3;
+        if (pm->anim_timer >= PACMAN_ANIM_PERIOD) {
+            pm->anim_timer -= PACMAN_ANIM_PERIOD;
+            pm->anim_frame = (pm->anim_frame + 1) % PACMAN_ANIM_FRAMES;
         }
     }
 }
@@ -139,7 +139,7 @@ void pacman_draw(PacMan *pm, bool dying) {
     float radius = TILE_SIZE / 2.0f - 1.0f;
 
     if (dying) {
-        float progress = pm->death_frame / 10.0f;
+        float progress = pm->death_frame / (float)(PACMAN_DEATH_FRAMES - 1);
         float mouth = 45.0f + progress * 135.0f;
         float shrink = 1.0f - progress * 0.8f;
         if (shrink < 0.1f) shrink = 0.1f;

@@ -17,10 +17,64 @@
 // Movement
 #define BASE_SPEED 9.47f
 #define CORNER_TOLERANCE 10.0f
+#define TILE_CENTER_TOLERANCE 1.5f
 
 // Dot pause durations (frames)
 #define DOT_PAUSE_FRAMES 1
 #define PELLET_PAUSE_FRAMES 3
+
+// Pac-Man
+#define PACMAN_START_X 14
+#define PACMAN_START_Y 26
+#define PACMAN_ANIM_PERIOD 0.07f
+#define PACMAN_ANIM_FRAMES 3
+#define PACMAN_DEATH_FRAMES 11
+
+// Gamepad
+#define GAMEPAD_DEADZONE 0.3f
+
+// Ghost drawing
+#define GHOST_EYE_OFFSET 3.0f
+#define GHOST_PUPIL_COLOR (Color){33, 33, 222, 255}
+
+// Ghost house bobbing
+#define GHOST_BOB_SPEED 3.0f
+#define GHOST_BOB_AMPLITUDE 4.0f
+
+// Frightened mode
+#define FRIGHT_FLASH_PERIOD 0.28f
+#define FRIGHT_FLASH_WARN_TIME 2.0f
+
+// Pellet flash
+#define PELLET_FLASH_PERIOD 0.2f
+
+// Drawing
+#define WALL_LINE_THICKNESS 2.5f
+#define WALL_GLOW_EXTEND 2.0f
+#define WALL_CORNER_RADIUS (WALL_LINE_THICKNESS + 1.0f)
+#define WALL_BG_COLOR (Color){15, 15, 40, 255}
+
+// Dot / pellet sizes
+#define DOT_RADIUS 3.0f
+#define PELLET_RADIUS_OUTER 10.0f
+#define PELLET_RADIUS_MID 7.0f
+#define PELLET_RADIUS_INNER 5.0f
+#define PELLET_GLOW_OUTER (Color){255, 255, 255, 40}
+#define PELLET_GLOW_MID (Color){255, 255, 255, 80}
+
+// Particle
+#define PARTICLE_BASE_LIFE 0.3f
+#define PARTICLE_LIFE_VARIANCE 20
+
+// Score / lives
+#define EXTRA_LIFE_SCORE 10000
+
+// Timers
+#define READY_DURATION 2.0f
+#define DEATH_DURATION 1.5f
+#define LEVEL_COMPLETE_DURATION 2.0f
+#define GAME_OVER_DURATION 3.0f
+#define GHOST_EATEN_PAUSE_DURATION 1.0f
 
 // Ghost count
 #define GHOST_COUNT 4
@@ -102,6 +156,31 @@ typedef enum {
 // Direction vectors
 extern const int dir_dx[4];
 extern const int dir_dy[4];
+
+// Elroy thresholds (shared between game.c and ghost.c)
+#define ELROY_TIER_COUNT 8
+extern const int elroy_thresholds[ELROY_TIER_COUNT][2];
+
+static inline int elroy_tier(int level) {
+    if (level <= 1) return 0;
+    if (level <= 2) return 1;
+    if (level <= 5) return 2;
+    if (level <= 8) return 3;
+    if (level <= 11) return 4;
+    if (level <= 14) return 5;
+    if (level <= 18) return 6;
+    return 7;
+}
+
+// Maze wall cache — precomputed edge/corner flags per wall tile
+#define WALL_EDGE_TOP    (1 << 0)
+#define WALL_EDGE_BOTTOM (1 << 1)
+#define WALL_EDGE_LEFT   (1 << 2)
+#define WALL_EDGE_RIGHT  (1 << 3)
+#define WALL_CORNER_TL   (1 << 4)
+#define WALL_CORNER_TR   (1 << 5)
+#define WALL_CORNER_BL   (1 << 6)
+#define WALL_CORNER_BR   (1 << 7)
 
 static inline Direction direction_opposite(Direction d) {
     if (d == DIR_NONE) return DIR_NONE;

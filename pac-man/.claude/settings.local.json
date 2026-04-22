@@ -24,7 +24,8 @@
       "Bash(\"D:/rfxgen_v5.0_win_x64/rfxgen.exe\" -g coin -o dot_b.wav)",
       "Bash(\"D:/rfxgen_v5.0_win_x64/rfxgen.exe\" -g powerup -o power_pellet.wav)",
       "Bash(\"D:/rfxgen_v5.0_win_x64/rfxgen.exe\" -g laser -o ghost_eaten.wav)",
-      "Bash(\"D:/rfxgen_v5.0_win_x64/rfxgen.exe\" -g coin -o fruit.wav)"
+      "Bash(\"D:/rfxgen_v5.0_win_x64/rfxgen.exe\" -g coin -o fruit.wav)",
+      "Bash(timeout 5 ./build/pac_man/Debug/pac_man)"
     ],
     "additionalDirectories": [
       "c:\\dev\\games-c\\pac-man"

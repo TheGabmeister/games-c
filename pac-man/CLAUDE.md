@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project
 
-Modernized Pac-Man clone written in C using raylib for rendering/input/audio. See `SPEC.md` for full game mechanics and implementation details.
+Modernized Pac-Man clone written in C using raylib for rendering/input/audio. See `README.md` for project overview and architecture.
 
 ## Build Commands
 
@@ -32,13 +32,13 @@ The build copies `src/resources/` into the output directory automatically.
 
 ### Code structure
 
-- `common.h` — Shared types (Direction, GhostMode, GlobalMode, SoundID), constants, colors, and inline helpers (`direction_opposite`, `tile_center_px`, `speed_tier`). Included by all modules.
-- `maze.h/c` — 28x36 `const int` tile grid, direction vectors (`dir_dx`/`dir_dy`), and walkability functions. Tile types: `WALL`, `DOT`, `POWER_PELLET`, `EMPTY`, `GHOST_DOOR`, `TUNNEL`. The grid is read-only; mutable dot state lives in `Game.dot_eaten[][]`.
+- `common.h` — Shared types (Direction, GhostMode, GlobalMode, SoundID), named constants, colors, inline helpers (`direction_opposite`, `tile_center_px`, `speed_tier`, `elroy_tier`), and shared data declarations (elroy thresholds, wall cache flags). Included by all modules.
+- `maze.h/c` — 28x36 `const int` tile grid, direction vectors (`dir_dx`/`dir_dy`), elroy threshold table, and walkability functions. Tile types: `WALL`, `DOT`, `POWER_PELLET`, `EMPTY`, `GHOST_DOOR`, `TUNNEL`. The grid is read-only; mutable dot state lives in `Game.dot_eaten[][]`.
 - `pacman.h/c` — PacMan struct, input polling, tile-based movement with cornering, animation, and procedural drawing.
 - `ghost.h/c` — Ghost struct, AI targeting (Blinky/Pinky/Inky/Clyde), intersection pathfinding, house bob/exit/eaten movement, Cruise Elroy, and procedural drawing.
 - `fruit.h/c` — Fruit struct, per-level type/points, spawn/update/draw.
 - `particles.h/c` — Simple particle system (spawn, update, draw) for dot/pellet/fruit effects.
-- `game.h/c` — Game struct (top-level state), state machine, scatter/chase timing, frightened mode, ghost house counters, dot consumption, collision, sound playback, HUD, and maze/dot rendering.
+- `game.h/c` — Game struct (top-level state), state machine (one handler function per state), scatter/chase timing, frightened mode, ghost house counters, dot consumption, collision, sound playback, HUD, and maze/dot rendering. Maze wall edges are precomputed into a flag cache at level start.
 - `main.c` — Entry point: init window + audio, loop `game_update()`/`game_draw()`, cleanup.
 
 ### Key design patterns

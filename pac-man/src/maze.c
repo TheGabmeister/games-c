@@ -4,6 +4,11 @@
 const int dir_dx[] = { 0, -1, 0, 1 };
 const int dir_dy[] = { -1, 0, 1, 0 };
 
+// Cruise Elroy dot thresholds: [tier][0] = Elroy1, [tier][1] = Elroy2
+const int elroy_thresholds[ELROY_TIER_COUNT][2] = {
+    {20,10}, {30,15}, {40,20}, {50,25}, {60,30}, {80,40}, {100,50}, {120,60}
+};
+
 // Maze tile helpers
 
 int maze_tile_at(int tile_x, int tile_y) {

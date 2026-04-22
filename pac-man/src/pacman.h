@@ -16,6 +16,8 @@ typedef struct {
     int death_frame;
 } PacMan;
 
+extern const float pacman_speed_eating[4];
+
 void pacman_init(PacMan *pm);
 void pacman_update(PacMan *pm, int level, bool frightened_active, float dt);
 void pacman_draw(PacMan *pm, bool dying);

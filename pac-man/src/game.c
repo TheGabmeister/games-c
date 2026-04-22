@@ -20,17 +20,13 @@ static const float fright_duration[] = { 6,5,4,3,2,5,2,2,1,5,2,1,1,3,1,1,0,1,0 }
 static const int fright_flashes[] = { 5,5,5,5,5,5,5,5,3,5,5,3,3,5,3,3,0,3,0 };
 static const int global_dot_limits[GHOST_COUNT] = { -1, 7, 17, 32 };
 
-static const float pacman_speed_eating[] = { 0.71f, 0.79f, 0.87f, 0.79f };
-
 static const char *sound_files[SOUND_COUNT] = {
     "resources/dot_a.wav", "resources/dot_b.wav", "resources/power_pellet.wav",
     "resources/ghost_eaten.wav", "resources/fruit.wav", "resources/death.wav",
     "resources/extra_life.wav", "resources/ready.wav", "resources/menu_select.wav",
 };
 
-static const int elroy_thresholds[][2] = {
-    {20,10}, {30,15}, {40,20}, {50,25}, {60,30}, {80,40}, {100,50}, {120,60}
-};
+static void cache_wall_flags(Game *game);
 
 // --- Utility ---
 
@@ -45,17 +41,6 @@ static int fright_level_index(int level) {
     if (idx < 0) idx = 0;
     if (idx >= 19) idx = 18;
     return idx;
-}
-
-static int elroy_tier(int level) {
-    if (level <= 1) return 0;
-    if (level <= 2) return 1;
-    if (level <= 5) return 2;
-    if (level <= 8) return 3;
-    if (level <= 11) return 4;
-    if (level <= 14) return 5;
-    if (level <= 18) return 6;
-    return 7;
 }
 
 static void play_sound(Game *game, SoundID id) {
@@ -116,6 +101,7 @@ static void reset_scatter_chase(Game *game) {
 
 static void game_reset_level(Game *game) {
     init_dots(game);
+    cache_wall_flags(game);
     pacman_init(&game->pacman);
     game->use_global_dot_counter = false;
     game->global_dot_counter = 0;
@@ -315,7 +301,7 @@ static void check_dot_consumption(Game *game) {
     if (game->score > game->high_score)
         game->high_score = game->score;
 
-    if (!game->extra_life_given && game->score >= 10000) {
+    if (!game->extra_life_given && game->score >= EXTRA_LIFE_SCORE) {
         game->extra_life_given = true;
         game->lives++;
         play_sound(game, SND_EXTRA_LIFE);
@@ -340,14 +326,14 @@ static void check_ghost_collision(Game *game) {
                 g->mode = GHOST_EATEN;
                 play_sound(game, SND_GHOST_EATEN);
                 game->ghost_eaten_pause = true;
-                game->ghost_eaten_pause_timer = 1.0f;
+                game->ghost_eaten_pause_timer = GHOST_EATEN_PAUSE_DURATION;
                 game->ghost_eaten_score_display = points;
                 game->ghost_eaten_display_x = g->px;
                 game->ghost_eaten_display_y = g->py;
                 return;
             } else {
                 game->state = STATE_DYING;
-                game->state_timer = 1.5f;
+                game->state_timer = DEATH_DURATION;
                 game->pacman.death_timer = 0.0f;
                 game->pacman.death_frame = 0;
                 play_sound(game, SND_DEATH);
@@ -357,146 +343,159 @@ static void check_ghost_collision(Game *game) {
     }
 }
 
-// --- Game Update ---
+// --- State handlers ---
+
+static bool pause_input_pressed(void) {
+    return IsKeyPressed(KEY_ESCAPE) || IsKeyPressed(KEY_P) ||
+           (IsGamepadAvailable(0) && IsGamepadButtonPressed(0, GAMEPAD_BUTTON_MIDDLE_RIGHT));
+}
+
+static void update_title(Game *game) {
+    if (IsKeyPressed(KEY_ENTER) || IsKeyPressed(KEY_SPACE) ||
+        (IsGamepadAvailable(0) && (IsGamepadButtonPressed(0, GAMEPAD_BUTTON_RIGHT_FACE_DOWN) ||
+                                   IsGamepadButtonPressed(0, GAMEPAD_BUTTON_MIDDLE_RIGHT)))) {
+        game->level = 1;
+        game->score = 0;
+        game->lives = 3;
+        game->extra_life_given = false;
+        game_reset_level(game);
+        game->state = STATE_READY;
+        game->state_timer = READY_DURATION;
+        play_sound(game, SND_MENU_SELECT);
+    }
+}
+
+static void update_ready(Game *game, float dt) {
+    game->state_timer -= dt;
+    if (game->state_timer <= 0.0f) {
+        game->state = STATE_PLAYING;
+        play_sound(game, SND_READY);
+    }
+}
+
+static void update_playing(Game *game, float dt) {
+    if (pause_input_pressed()) {
+        game->state = STATE_PAUSED;
+        return;
+    }
+    if (game->ghost_eaten_pause) {
+        game->ghost_eaten_pause_timer -= dt;
+        if (game->ghost_eaten_pause_timer <= 0.0f) game->ghost_eaten_pause = false;
+        return;
+    }
+
+    pacman_update(&game->pacman, game->level, game->frightened_active, dt);
+    check_dot_consumption(game);
+
+    game->pellet_flash_timer += dt;
+    if (game->pellet_flash_timer >= PELLET_FLASH_PERIOD) {
+        game->pellet_flash_timer -= PELLET_FLASH_PERIOD;
+        game->pellet_visible = !game->pellet_visible;
+    }
+
+    update_scatter_chase(game, dt);
+    update_frightened(game, dt);
+
+    update_ghost_house(game);
+    game->no_dot_timer += dt;
+    if (game->no_dot_timer >= game->no_dot_timeout) {
+        ghost_house_timer_fallback(game);
+        game->no_dot_timer = 0.0f;
+    }
+
+    if (!game->fruit_spawned_70 && game->dots_eaten_this_level >= 70) {
+        game->fruit_spawned_70 = true;
+        fruit_spawn(&game->fruit, game->level);
+    }
+    if (!game->fruit_spawned_170 && game->dots_eaten_this_level >= 170) {
+        game->fruit_spawned_170 = true;
+        fruit_spawn(&game->fruit, game->level);
+    }
+    fruit_update(&game->fruit, dt);
+
+    if (game->fruit.active &&
+        game->pacman.tile_x == FRUIT_TILE_X && game->pacman.tile_y == FRUIT_TILE_Y) {
+        game->score += game->fruit.points;
+        if (game->score > game->high_score) game->high_score = game->score;
+        game->fruit.score_display = true;
+        game->fruit.score_display_timer = FRUIT_SCORE_DISPLAY_TIME;
+        game->fruit.score_display_value = game->fruit.points;
+        game->fruit.active = false;
+        play_sound(game, SND_FRUIT);
+        particles_spawn(game->particles,
+            MAZE_OFFSET_X + tile_center_px(FRUIT_TILE_X),
+            MAZE_OFFSET_Y + tile_center_px(FRUIT_TILE_Y),
+            (Color){255, 100, 100, 255}, 8);
+    }
+
+    particles_update(game->particles, dt);
+
+    for (int i = 0; i < GHOST_COUNT; i++)
+        ghost_update_movement(&game->ghosts[i], i, game->level, game->dots_remaining,
+                              game->global_mode, &game->pacman, game->ghosts, dt);
+
+    check_ghost_collision(game);
+
+    if (game->dots_remaining <= 0) {
+        game->state = STATE_LEVEL_COMPLETE;
+        game->state_timer = LEVEL_COMPLETE_DURATION;
+    }
+}
+
+static void update_dying(Game *game, float dt) {
+    game->state_timer -= dt;
+    game->pacman.death_timer += dt;
+    game->pacman.death_frame = (int)(game->pacman.death_timer / (DEATH_DURATION / PACMAN_DEATH_FRAMES));
+    if (game->pacman.death_frame > PACMAN_DEATH_FRAMES - 1)
+        game->pacman.death_frame = PACMAN_DEATH_FRAMES - 1;
+    if (game->state_timer <= 0.0f) {
+        game->lives--;
+        if (game->lives > 0) {
+            game_reset_positions(game);
+            game->state = STATE_READY;
+            game->state_timer = READY_DURATION;
+        } else {
+            highscore_save(game);
+            game->state = STATE_GAME_OVER;
+            game->state_timer = GAME_OVER_DURATION;
+        }
+    }
+}
+
+static void update_level_complete(Game *game, float dt) {
+    game->state_timer -= dt;
+    game->level_complete_flash_white = ((int)(game->state_timer * 4.0f)) % 2 == 0;
+    if (game->state_timer <= 0.0f) {
+        game->level++;
+        game_reset_level(game);
+        game->state = STATE_READY;
+        game->state_timer = READY_DURATION;
+    }
+}
+
+static void update_game_over(Game *game, float dt) {
+    game->state_timer -= dt;
+    if (game->state_timer <= 0.0f) {
+        highscore_save(game);
+        game->state = STATE_TITLE;
+    }
+}
+
+static void update_paused(Game *game) {
+    if (pause_input_pressed())
+        game->state = STATE_PLAYING;
+}
 
 void game_update(Game *game) {
     float dt = GetFrameTime();
-
     switch (game->state) {
-    case STATE_TITLE:
-        if (IsKeyPressed(KEY_ENTER) || IsKeyPressed(KEY_SPACE) ||
-            (IsGamepadAvailable(0) && (IsGamepadButtonPressed(0, GAMEPAD_BUTTON_RIGHT_FACE_DOWN) ||
-                                       IsGamepadButtonPressed(0, GAMEPAD_BUTTON_MIDDLE_RIGHT)))) {
-            game->level = 1;
-            game->score = 0;
-            game->lives = 3;
-            game->extra_life_given = false;
-            game_reset_level(game);
-            game->state = STATE_READY;
-            game->state_timer = 2.0f;
-            play_sound(game, SND_MENU_SELECT);
-        }
-        break;
-
-    case STATE_READY:
-        game->state_timer -= dt;
-        if (game->state_timer <= 0.0f) {
-            game->state = STATE_PLAYING;
-            play_sound(game, SND_READY);
-        }
-        break;
-
-    case STATE_PLAYING:
-        if (IsKeyPressed(KEY_ESCAPE) || IsKeyPressed(KEY_P) ||
-            (IsGamepadAvailable(0) && IsGamepadButtonPressed(0, GAMEPAD_BUTTON_MIDDLE_RIGHT))) {
-            game->state = STATE_PAUSED;
-            break;
-        }
-        if (game->ghost_eaten_pause) {
-            game->ghost_eaten_pause_timer -= dt;
-            if (game->ghost_eaten_pause_timer <= 0.0f) game->ghost_eaten_pause = false;
-            break;
-        }
-
-        pacman_update(&game->pacman, game->level, game->frightened_active, dt);
-        check_dot_consumption(game);
-
-        game->pellet_flash_timer += dt;
-        if (game->pellet_flash_timer >= 0.2f) {
-            game->pellet_flash_timer -= 0.2f;
-            game->pellet_visible = !game->pellet_visible;
-        }
-
-        update_scatter_chase(game, dt);
-        update_frightened(game, dt);
-
-        update_ghost_house(game);
-        game->no_dot_timer += dt;
-        if (game->no_dot_timer >= game->no_dot_timeout) {
-            ghost_house_timer_fallback(game);
-            game->no_dot_timer = 0.0f;
-        }
-
-        // Fruit
-        if (!game->fruit_spawned_70 && game->dots_eaten_this_level >= 70) {
-            game->fruit_spawned_70 = true;
-            fruit_spawn(&game->fruit, game->level);
-        }
-        if (!game->fruit_spawned_170 && game->dots_eaten_this_level >= 170) {
-            game->fruit_spawned_170 = true;
-            fruit_spawn(&game->fruit, game->level);
-        }
-        fruit_update(&game->fruit, dt);
-
-        if (game->fruit.active &&
-            game->pacman.tile_x == FRUIT_TILE_X && game->pacman.tile_y == FRUIT_TILE_Y) {
-            game->score += game->fruit.points;
-            if (game->score > game->high_score) game->high_score = game->score;
-            game->fruit.score_display = true;
-            game->fruit.score_display_timer = FRUIT_SCORE_DISPLAY_TIME;
-            game->fruit.score_display_value = game->fruit.points;
-            game->fruit.active = false;
-            play_sound(game, SND_FRUIT);
-            particles_spawn(game->particles,
-                MAZE_OFFSET_X + tile_center_px(FRUIT_TILE_X),
-                MAZE_OFFSET_Y + tile_center_px(FRUIT_TILE_Y),
-                (Color){255, 100, 100, 255}, 8);
-        }
-
-        particles_update(game->particles, dt);
-
-        for (int i = 0; i < GHOST_COUNT; i++)
-            ghost_update_movement(&game->ghosts[i], i, game->level, game->dots_remaining,
-                                  game->global_mode, &game->pacman, game->ghosts, dt);
-
-        check_ghost_collision(game);
-
-        if (game->dots_remaining <= 0) {
-            game->state = STATE_LEVEL_COMPLETE;
-            game->state_timer = 2.0f;
-        }
-        break;
-
-    case STATE_DYING:
-        game->state_timer -= dt;
-        game->pacman.death_timer += dt;
-        game->pacman.death_frame = (int)(game->pacman.death_timer / (1.5f / 11.0f));
-        if (game->pacman.death_frame > 10) game->pacman.death_frame = 10;
-        if (game->state_timer <= 0.0f) {
-            game->lives--;
-            if (game->lives > 0) {
-                game_reset_positions(game);
-                game->state = STATE_READY;
-                game->state_timer = 2.0f;
-            } else {
-                highscore_save(game);
-                game->state = STATE_GAME_OVER;
-                game->state_timer = 3.0f;
-            }
-        }
-        break;
-
-    case STATE_LEVEL_COMPLETE:
-        game->state_timer -= dt;
-        game->level_complete_flash_white = ((int)(game->state_timer * 4.0f)) % 2 == 0;
-        if (game->state_timer <= 0.0f) {
-            game->level++;
-            game_reset_level(game);
-            game->state = STATE_READY;
-            game->state_timer = 2.0f;
-        }
-        break;
-
-    case STATE_GAME_OVER:
-        game->state_timer -= dt;
-        if (game->state_timer <= 0.0f) { highscore_save(game); game->state = STATE_TITLE; }
-        break;
-
-    case STATE_PAUSED:
-        if (IsKeyPressed(KEY_ESCAPE) || IsKeyPressed(KEY_P) ||
-            (IsGamepadAvailable(0) && IsGamepadButtonPressed(0, GAMEPAD_BUTTON_MIDDLE_RIGHT)))
-            game->state = STATE_PLAYING;
-        break;
+    case STATE_TITLE:          update_title(game); break;
+    case STATE_READY:          update_ready(game, dt); break;
+    case STATE_PLAYING:        update_playing(game, dt); break;
+    case STATE_DYING:          update_dying(game, dt); break;
+    case STATE_LEVEL_COMPLETE: update_level_complete(game, dt); break;
+    case STATE_GAME_OVER:      update_game_over(game, dt); break;
+    case STATE_PAUSED:         update_paused(game); break;
     }
 }
 
@@ -507,29 +506,62 @@ static bool is_wall(int c, int r) {
     return maze_layout[r][c] == TILE_WALL;
 }
 
+static void cache_wall_flags(Game *game) {
+    for (int r = 0; r < MAZE_ROWS; r++) {
+        for (int c = 0; c < MAZE_COLS; c++) {
+            unsigned char flags = 0;
+            if (maze_layout[r][c] != TILE_WALL) {
+                game->wall_flags[r][c] = 0;
+                continue;
+            }
+            if (!is_wall(c, r-1)) flags |= WALL_EDGE_TOP;
+            if (!is_wall(c, r+1)) flags |= WALL_EDGE_BOTTOM;
+            if (!is_wall(c-1, r)) flags |= WALL_EDGE_LEFT;
+            if (!is_wall(c+1, r)) flags |= WALL_EDGE_RIGHT;
+            if ((flags & WALL_EDGE_TOP) && (flags & WALL_EDGE_LEFT))  flags |= WALL_CORNER_TL;
+            if ((flags & WALL_EDGE_TOP) && (flags & WALL_EDGE_RIGHT)) flags |= WALL_CORNER_TR;
+            if ((flags & WALL_EDGE_BOTTOM) && (flags & WALL_EDGE_LEFT))  flags |= WALL_CORNER_BL;
+            if ((flags & WALL_EDGE_BOTTOM) && (flags & WALL_EDGE_RIGHT)) flags |= WALL_CORNER_BR;
+            game->wall_flags[r][c] = flags;
+        }
+    }
+}
+
 static void draw_maze(Game *game) {
-    float line_thick = 2.5f;
     Color wall_color = game->level_complete_flash_white ? COLOR_WALL_WHITE : COLOR_WALL;
     Color glow_color = game->level_complete_flash_white ? (Color){255,255,255,80} : COLOR_WALL_GLOW;
+    float half = WALL_LINE_THICKNESS / 2.0f;
+    int glow_thick = (int)(WALL_LINE_THICKNESS + WALL_GLOW_EXTEND * 2);
 
     for (int r = 0; r < MAZE_ROWS; r++) {
         for (int c = 0; c < MAZE_COLS; c++) {
-            int t = maze_layout[r][c];
             float x = MAZE_OFFSET_X + c * TILE_SIZE;
             float y = MAZE_OFFSET_Y + r * TILE_SIZE;
 
-            if (t == TILE_WALL) {
-                DrawRectangle((int)x, (int)y, TILE_SIZE, TILE_SIZE, (Color){15, 15, 40, 255});
-                float half = line_thick / 2.0f;
-                if (!is_wall(c, r-1)) { DrawRectangle((int)x,(int)(y-half),TILE_SIZE,(int)line_thick,wall_color); DrawRectangle((int)x,(int)(y-half-2),TILE_SIZE,(int)(line_thick+4),glow_color); }
-                if (!is_wall(c, r+1)) { DrawRectangle((int)x,(int)(y+TILE_SIZE-half),TILE_SIZE,(int)line_thick,wall_color); DrawRectangle((int)x,(int)(y+TILE_SIZE-half-2),TILE_SIZE,(int)(line_thick+4),glow_color); }
-                if (!is_wall(c-1, r)) { DrawRectangle((int)(x-half),(int)y,(int)line_thick,TILE_SIZE,wall_color); DrawRectangle((int)(x-half-2),(int)y,(int)(line_thick+4),TILE_SIZE,glow_color); }
-                if (!is_wall(c+1, r)) { DrawRectangle((int)(x+TILE_SIZE-half),(int)y,(int)line_thick,TILE_SIZE,wall_color); DrawRectangle((int)(x+TILE_SIZE-half-2),(int)y,(int)(line_thick+4),TILE_SIZE,glow_color); }
-                if (!is_wall(c, r-1) && !is_wall(c-1, r)) DrawCircle((int)x,(int)y,line_thick+1,wall_color);
-                if (!is_wall(c, r-1) && !is_wall(c+1, r)) DrawCircle((int)(x+TILE_SIZE),(int)y,line_thick+1,wall_color);
-                if (!is_wall(c, r+1) && !is_wall(c-1, r)) DrawCircle((int)x,(int)(y+TILE_SIZE),line_thick+1,wall_color);
-                if (!is_wall(c, r+1) && !is_wall(c+1, r)) DrawCircle((int)(x+TILE_SIZE),(int)(y+TILE_SIZE),line_thick+1,wall_color);
-            } else if (t == TILE_GHOST_DOOR) {
+            unsigned char flags = game->wall_flags[r][c];
+            if (flags || maze_layout[r][c] == TILE_WALL) {
+                DrawRectangle((int)x, (int)y, TILE_SIZE, TILE_SIZE, WALL_BG_COLOR);
+                if (flags & WALL_EDGE_TOP) {
+                    DrawRectangle((int)x,(int)(y-half),TILE_SIZE,(int)WALL_LINE_THICKNESS,wall_color);
+                    DrawRectangle((int)x,(int)(y-half-WALL_GLOW_EXTEND),TILE_SIZE,glow_thick,glow_color);
+                }
+                if (flags & WALL_EDGE_BOTTOM) {
+                    DrawRectangle((int)x,(int)(y+TILE_SIZE-half),TILE_SIZE,(int)WALL_LINE_THICKNESS,wall_color);
+                    DrawRectangle((int)x,(int)(y+TILE_SIZE-half-WALL_GLOW_EXTEND),TILE_SIZE,glow_thick,glow_color);
+                }
+                if (flags & WALL_EDGE_LEFT) {
+                    DrawRectangle((int)(x-half),(int)y,(int)WALL_LINE_THICKNESS,TILE_SIZE,wall_color);
+                    DrawRectangle((int)(x-half-WALL_GLOW_EXTEND),(int)y,glow_thick,TILE_SIZE,glow_color);
+                }
+                if (flags & WALL_EDGE_RIGHT) {
+                    DrawRectangle((int)(x+TILE_SIZE-half),(int)y,(int)WALL_LINE_THICKNESS,TILE_SIZE,wall_color);
+                    DrawRectangle((int)(x+TILE_SIZE-half-WALL_GLOW_EXTEND),(int)y,glow_thick,TILE_SIZE,glow_color);
+                }
+                if (flags & WALL_CORNER_TL) DrawCircle((int)x,(int)y,WALL_CORNER_RADIUS,wall_color);
+                if (flags & WALL_CORNER_TR) DrawCircle((int)(x+TILE_SIZE),(int)y,WALL_CORNER_RADIUS,wall_color);
+                if (flags & WALL_CORNER_BL) DrawCircle((int)x,(int)(y+TILE_SIZE),WALL_CORNER_RADIUS,wall_color);
+                if (flags & WALL_CORNER_BR) DrawCircle((int)(x+TILE_SIZE),(int)(y+TILE_SIZE),WALL_CORNER_RADIUS,wall_color);
+            } else if (maze_layout[r][c] == TILE_GHOST_DOOR) {
                 DrawRectangle((int)x, (int)(y + TILE_SIZE/2 - 2), TILE_SIZE, 4, COLOR_GHOST_DOOR);
             }
         }
@@ -544,11 +576,11 @@ static void draw_dots(Game *game) {
             float cx = MAZE_OFFSET_X + c * TILE_SIZE + TILE_SIZE / 2.0f;
             float cy = MAZE_OFFSET_Y + r * TILE_SIZE + TILE_SIZE / 2.0f;
             if (t == TILE_DOT)
-                DrawCircle((int)cx, (int)cy, 3.0f, COLOR_DOT);
+                DrawCircle((int)cx, (int)cy, DOT_RADIUS, COLOR_DOT);
             else if (t == TILE_POWER_PELLET && game->pellet_visible) {
-                DrawCircle((int)cx, (int)cy, 10.0f, (Color){255,255,255,40});
-                DrawCircle((int)cx, (int)cy, 7.0f, (Color){255,255,255,80});
-                DrawCircle((int)cx, (int)cy, 5.0f, COLOR_PELLET);
+                DrawCircle((int)cx, (int)cy, PELLET_RADIUS_OUTER, PELLET_GLOW_OUTER);
+                DrawCircle((int)cx, (int)cy, PELLET_RADIUS_MID, PELLET_GLOW_MID);
+                DrawCircle((int)cx, (int)cy, PELLET_RADIUS_INNER, COLOR_PELLET);
             }
         }
     }
