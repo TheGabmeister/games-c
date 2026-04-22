@@ -15,8 +15,8 @@ cmake -B build
 # Build
 cmake --build build
 
-# Run (executable outputs to build/pac_man/)
-./build/pac_man/pac_man
+# Run (MSVC puts exe under Debug/)
+./build/pac_man/Debug/pac_man
 ```
 
 The build copies `src/resources/` into the output directory automatically.
@@ -29,6 +29,20 @@ The build copies `src/resources/` into the output directory automatically.
 - **Window:** 750x1000, 24px tile grid (28x36), 60 FPS
 - **Input:** keyboard (arrow keys, WASD) and gamepad (left stick, D-pad) simultaneously
 - **Visual style:** modernized — neon glow, rounded walls, particle effects, dark background. Not pixel-art retro.
+
+### Code structure
+
+- `maze.h/c` — 28x36 `const int` tile grid. Tile types: `WALL`, `DOT`, `POWER_PELLET`, `EMPTY`, `GHOST_DOOR`, `TUNNEL`. This is read-only; mutable dot state lives in `Game.dot_eaten[][]`.
+- `game.h` — All types (`PacMan`, `Ghost`, `Game`, enums), constants, color palette, and speed/timing tables.
+- `game.c` — All game logic and rendering in one file, organized in sections: maze helpers → initialization → input → Pac-Man movement → ghost AI/movement → scatter/chase timing → frightened mode → ghost house exit → dot consumption → collision → game state machine → drawing.
+- `main.c` — Entry point only: init window, loop `game_update()`/`game_draw()`, save high score on exit.
+
+### Key design patterns
+
+- One `Game` struct holds all state, passed by pointer. No heap allocation.
+- Ghost AI uses tile-based pathfinding: at each intersection, evaluate non-reverse directions, pick smallest Euclidean distance to target. Tie-break: Up > Left > Down > Right.
+- Speed tables, scatter/chase timing, and frightened durations are `static const` arrays indexed by level tier.
+- Maze walkability has three variants: `maze_is_walkable` (general), `maze_is_walkable_pacman` (blocks ghost door), `maze_is_walkable_ghost` (allows ghost door for EXITING/EATEN modes).
 
 ## Coding principles
 
