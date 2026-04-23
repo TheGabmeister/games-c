@@ -15,8 +15,8 @@ cmake -B build
 # Build
 cmake --build build
 
-# Run (executable outputs to build/pac_man/)
-./build/pac_man/pac_man
+# Run (executable outputs to build/centipede/)
+./build/centipede/centipede
 ```
 
 The build copies `src/resources/` into the output directory automatically.
@@ -29,11 +29,12 @@ The build copies `src/resources/` into the output directory automatically.
 
 ## Coding principles
 
-- **KISS** — simplest thing that works. No clever patterns where a plain `if` does the job. If a class is under 50 lines and clear, don't split it.
-- **YAGNI** — don't build for hypothetical needs. No interfaces with one implementation, no config knobs with one value, no abstraction layers "for later." Write what this phase needs; refactor when a second use case actually shows up.
-- **DRY** — remove real duplication, not shape-similar code. Three copies of the same logic → extract. Two functions that happen to both take a `Vector3` → leave alone. Wrong abstraction costs more than repetition.
+- **C game programming best practices** — prefer stack/static allocation for fixed-size data, use heap when the size varies at runtime. Keep hot data contiguous, avoid unnecessary indirection.
+- **KISS** — simplest thing that works. No clever patterns where a plain `if` does the job. 
+- **YAGNI** — don't build for hypothetical needs. No abstraction layers "for later."
+- **DRY** — remove real duplication, not shape-similar code. Wrong abstraction costs more than repetition.
 
-When in doubt, lean KISS over DRY. A bit of repetition is cheaper to read and change than the wrong shared helper.
+When in doubt, lean KISS over DRY.
 
 ## Sprite Generation
 
