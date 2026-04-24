@@ -4,10 +4,36 @@ This file provides guidance to coding agents working in this repository.
 
 ## Purpose
 
-This repository is a small raylib game template built with CMake. 
+This repository is a small raylib C game template built with CMake.
 
-Resources under `src/assets/` are copied into the executable output
-directory by `CMakeLists.txt`.
+Assets under `src/assets/` are copied into the executable output directory by
+`CMakeLists.txt`. Runtime asset paths should be relative to that output
+directory, for example `assets/coin.wav`.
+
+## Build
+
+Use the existing build directory when present:
+
+```bash
+cmake --build build
+```
+
+If the build directory is missing or stale, configure first:
+
+```bash
+cmake -S . -B build
+cmake --build build
+```
+
+The executable is emitted under `build/template/Debug/` for the default Visual
+Studio generator configuration.
+
+## Template structure
+
+- `src/main.c` owns raylib initialization, the main loop, and shutdown.
+- `src/game.h` contains the small shared game state and core constants.
+- `src/game.c` owns game initialization, per-frame update, and drawing.
+- `src/sounds.c` / `src/sounds.h` load optional sounds and skip missing files.
 
 ## Coding principles
 

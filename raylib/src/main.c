@@ -8,6 +8,7 @@ int main(void) {
 
     Game game;
     game_init(&game);
+    sounds_load(&game);
 
     while (!WindowShouldClose()) {
         game_update(&game);

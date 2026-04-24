@@ -7,6 +7,8 @@ set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 # Dependencies
 add_subdirectory(vendor/raylib)
 
+set(ASSET_SOURCE_DIR ${CMAKE_SOURCE_DIR}/src/assets)
+
 # Our Project
 file(GLOB_RECURSE SOURCE_FILES CONFIGURE_DEPENDS src/*.c)
 file(GLOB_RECURSE HEADER_FILES CONFIGURE_DEPENDS src/*.h)
@@ -20,13 +22,13 @@ set_property(TARGET ${PROJECT_NAME} PROPERTY VS_DEBUGGER_WORKING_DIRECTORY $<TAR
 if ("${PLATFORM}" STREQUAL "Web")
     add_custom_command(
         TARGET ${PROJECT_NAME} PRE_BUILD
-        COMMAND ${CMAKE_COMMAND} -E copy_directory ${CMAKE_SOURCE_DIR}/src/resources $<TARGET_FILE_DIR:${PROJECT_NAME}>/../resources
+        COMMAND ${CMAKE_COMMAND} -E copy_directory ${ASSET_SOURCE_DIR} $<TARGET_FILE_DIR:${PROJECT_NAME}>/../assets
     )
     #DEPENDS ${PROJECT_NAME}
 else()
     add_custom_command(
         TARGET ${PROJECT_NAME} POST_BUILD
-        COMMAND ${CMAKE_COMMAND} -E copy_directory ${CMAKE_SOURCE_DIR}/src/resources $<TARGET_FILE_DIR:${PROJECT_NAME}>/resources
+        COMMAND ${CMAKE_COMMAND} -E copy_directory ${ASSET_SOURCE_DIR} $<TARGET_FILE_DIR:${PROJECT_NAME}>/assets
     )
     #DEPENDS ${PROJECT_NAME}
 endif()
@@ -38,7 +40,7 @@ target_link_libraries(${PROJECT_NAME} raylib)
 if ("${PLATFORM}" STREQUAL "Web")
     # Tell Emscripten to build an example.html file.
     set_target_properties(${PROJECT_NAME} PROPERTIES SUFFIX ".html")
-    target_link_options(${PROJECT_NAME} PUBLIC -sUSE_GLFW=3 PUBLIC --preload-file resources)
+    target_link_options(${PROJECT_NAME} PUBLIC -sUSE_GLFW=3 PUBLIC --preload-file assets)
 endif()
 
 # Checks if OSX and links appropriate frameworks (Only required on MacOS)
