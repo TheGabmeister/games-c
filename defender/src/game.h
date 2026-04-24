@@ -3,223 +3,269 @@
 
 #include "raylib.h"
 #include <stdbool.h>
-#include <string.h>
 #include <stdlib.h>
+#include <string.h>
 
 // --- Window ---
-#define WINDOW_WIDTH    600
-#define WINDOW_HEIGHT   660
-#define TARGET_FPS      60
+#define WINDOW_WIDTH        1280
+#define WINDOW_HEIGHT       720
+#define TARGET_FPS          60
 
-// --- Grid ---
-#define GRID_COLS       30
-#define GRID_ROWS       31
-#define CELL_SIZE       20
-#define GRID_OFFSET_X   0
-#define GRID_OFFSET_Y   40
+// --- World ---
+#define WORLD_WIDTH         4096.0f
+#define WORLD_HEIGHT        720.0f
+#define TERRAIN_SAMPLES     257
+#define TERRAIN_BASE_Y      610.0f
+#define TERRAIN_VARIANCE    54.0f
+#define SKY_TOP             82.0f
+#define RADAR_X             320
+#define RADAR_Y             20
+#define RADAR_WIDTH         640
+#define RADAR_HEIGHT        46
 
 // --- Player ---
-#define PLAYER_AREA_TOP_ROW  26
-#define PLAYER_START_COL     15
-#define PLAYER_START_ROW     29
-#define PLAYER_SPEED         200.0f
-#define PLAYER_LIVES         3
-#define EXTRA_LIFE_INTERVAL  12000
+#define PLAYER_START_X      (WORLD_WIDTH * 0.5f)
+#define PLAYER_START_Y      330.0f
+#define PLAYER_LIVES        3
+#define PLAYER_SMART_BOMBS  3
+#define PLAYER_ACCEL        900.0f
+#define PLAYER_DRAG         0.88f
+#define PLAYER_MAX_SPEED_X  560.0f
+#define PLAYER_MAX_SPEED_Y  380.0f
+#define PLAYER_RADIUS       18.0f
+#define PLAYER_FIRE_COOLDOWN 0.12f
+#define PLAYER_RESPAWN_TIME 1.8f
+#define EXTRA_LIFE_SCORE    10000
 
-// --- Dart ---
-#define DART_SPEED           500.0f
-#define DART_WIDTH           2
-#define DART_HEIGHT          8
+// --- Combat ---
+#define MAX_LASERS          14
+#define LASER_SPEED         980.0f
+#define LASER_LIFETIME      0.65f
+#define LASER_LENGTH        84.0f
+#define LASER_HIT_RADIUS    24.0f
+#define SMART_BOMB_RADIUS   (WINDOW_WIDTH * 0.58f)
+#define HYPERSPACE_DEATH_CHANCE 15
 
-// --- Centipede ---
-#define MAX_SEGMENTS         64
-#define INITIAL_SEGMENTS     12
-#define CENTIPEDE_BASE_SPEED 80.0f
-#define HEAD_POINTS          100
-#define BODY_POINTS          10
+// --- Humanoids ---
+#define MAX_HUMANOIDS       10
+#define HUMANOID_RADIUS     9.0f
+#define HUMANOID_FALL_SPEED 145.0f
+#define HUMANOID_RESCUE_RADIUS 34.0f
+#define HUMANOID_PICKUP_Y   18.0f
 
-// --- Mushrooms ---
-#define INITIAL_MUSHROOM_COUNT 45
-#define MUSHROOM_MAX_HP      4
-#define MUSHROOM_DESTROY_PTS 1
-#define MUSHROOM_RESTORE_PTS 5
+// --- Enemies ---
+#define MAX_ENEMIES         36
+#define LANDER_BASE_SPEED   82.0f
+#define MUTANT_BASE_SPEED   190.0f
+#define ENEMY_FIRE_COOLDOWN 1.45f
+#define ENEMY_RADIUS        18.0f
+#define MAX_BULLETS         48
+#define BULLET_SPEED        250.0f
+#define BULLET_LIFETIME     3.0f
 
-// --- Spider ---
-#define SPIDER_SPEED         120.0f
-#define SPIDER_POINTS_CLOSE  900
-#define SPIDER_POINTS_MID    600
-#define SPIDER_POINTS_FAR    300
-#define SPIDER_CLOSE_DIST    2
-#define SPIDER_MID_DIST      4
+// --- Particles ---
+#define MAX_PARTICLES       420
 
-// --- Flea ---
-#define FLEA_SPEED           150.0f
-#define FLEA_FAST_SPEED      300.0f
-#define FLEA_POINTS          200
-#define FLEA_SPAWN_THRESHOLD 5
+// --- Scoring ---
+#define SCORE_LANDER        150
+#define SCORE_MUTANT        300
+#define SCORE_RESCUE        500
+#define SCORE_WAVE_CLEAR    1000
+#define SCORE_HUMANOID_SAFE 100
 
-// --- Scorpion ---
-#define SCORPION_SPEED       100.0f
-#define SCORPION_POINTS      1000
+#define PI_F 3.1415926535f
 
-// --- Timing ---
-#define READY_DURATION       2.0f
-#define DYING_DURATION       1.5f
-#define GAME_OVER_DURATION   3.0f
-#define RESTORE_INTERVAL     0.03f
-#define LEVEL_COMPLETE_DURATION 2.0f
+#define COLOR_BG        (Color){ 4, 6, 18, 255 }
+#define COLOR_GRID      (Color){ 26, 44, 78, 130 }
+#define COLOR_TERRAIN   (Color){ 36, 240, 157, 255 }
+#define COLOR_PLAYER    (Color){ 90, 225, 255, 255 }
+#define COLOR_LASER     (Color){ 255, 84, 122, 255 }
+#define COLOR_LANDER    (Color){ 255, 209, 92, 255 }
+#define COLOR_MUTANT    (Color){ 255, 68, 218, 255 }
+#define COLOR_BAITER    (Color){ 255, 92, 80, 255 }
+#define COLOR_HUMANOID  (Color){ 118, 255, 131, 255 }
+#define COLOR_HUD       (Color){ 205, 236, 255, 255 }
 
-// --- Colors ---
-#define COLOR_BG             BLACK
-#define COLOR_PLAYER         (Color){0, 255, 100, 255}
-#define COLOR_DART           WHITE
-#define COLOR_MUSHROOM_4     (Color){0, 200, 0, 255}
-#define COLOR_MUSHROOM_3     (Color){100, 200, 0, 255}
-#define COLOR_MUSHROOM_2     (Color){200, 200, 0, 255}
-#define COLOR_MUSHROOM_1     (Color){200, 100, 0, 255}
-#define COLOR_MUSHROOM_POISON (Color){180, 0, 200, 255}
-#define COLOR_HEAD           (Color){255, 50, 50, 255}
-#define COLOR_BODY           (Color){0, 180, 0, 255}
-#define COLOR_SPIDER         (Color){200, 50, 50, 255}
-#define COLOR_FLEA           (Color){200, 200, 50, 255}
-#define COLOR_SCORPION       (Color){200, 100, 50, 255}
-#define COLOR_HUD            WHITE
-
-// --- Enums ---
 typedef enum {
     STATE_TITLE,
     STATE_READY,
     STATE_PLAYING,
     STATE_DYING,
-    STATE_RESTORING,
-    STATE_LEVEL_COMPLETE,
+    STATE_WAVE_COMPLETE,
     STATE_GAME_OVER,
 } GameState;
 
 typedef enum {
-    DIR_LEFT = 0,
-    DIR_RIGHT,
-    DIR_UP,
-    DIR_DOWN,
-} Direction;
+    FACE_LEFT = -1,
+    FACE_RIGHT = 1,
+} Facing;
 
-// --- Coordinate helpers ---
-static inline float col_to_px(int col) { return GRID_OFFSET_X + col * CELL_SIZE; }
-static inline float row_to_px(int row) { return GRID_OFFSET_Y + row * CELL_SIZE; }
-static inline int px_to_col(float x) { return (int)((x - GRID_OFFSET_X) / CELL_SIZE); }
-static inline int px_to_row(float y) { return (int)((y - GRID_OFFSET_Y) / CELL_SIZE); }
+typedef enum {
+    ENEMY_LANDER,
+    ENEMY_MUTANT,
+    ENEMY_BAITER,
+} EnemyKind;
 
-// --- Mushroom ---
-typedef struct {
-    unsigned char cells[GRID_ROWS][GRID_COLS];
-} MushroomGrid;
+typedef enum {
+    HUMANOID_SAFE,
+    HUMANOID_ABDUCTED,
+    HUMANOID_FALLING,
+    HUMANOID_RESCUED,
+    HUMANOID_LOST,
+} HumanoidState;
 
-#define MUSH_EMPTY 0
-#define MUSH_IS_PRESENT(v)  ((v) >= 1)
-#define MUSH_HP(v)          ((v) <= 4 ? (v) : (v) - 4)
-#define MUSH_IS_POISONED(v) ((v) >= 5 && (v) <= 8)
-#define MUSH_MAKE(hp)       (hp)
-#define MUSH_POISON(v)      ((v) <= 4 ? (v) + 4 : (v))
-
-// --- Player ---
-typedef struct {
-    float x, y;
-    int col, row;
-    bool alive;
-} Player;
-
-typedef struct {
-    float x, y;
-    bool active;
-} Dart;
-
-// --- Centipede ---
-typedef struct {
-    float x, y;
-    int col, row;
-    Direction h_dir;
-    bool is_head;
-    bool active;
-    bool diving;
-    int next;
-    int prev;
-    float move_timer;
-} Segment;
-
-// --- Enemies ---
-typedef struct {
-    float x, y;
-    float vy;
-    Direction h_dir;
-    bool active;
-    float change_timer;
-} Spider;
-
-typedef struct {
-    float x, y;
-    int hp;
-    bool active;
-    bool fast;
-    int col;
-    int last_row;
-} Flea;
-
-typedef struct {
-    float x, y;
-    int row;
-    Direction h_dir;
-    bool active;
-} Scorpion;
-
-// --- Sounds ---
 typedef enum {
     SND_SHOOT,
-    SND_MUSHROOM_HIT,
-    SND_SEGMENT_HIT,
+    SND_EXPLOSION,
+    SND_RESCUE,
+    SND_HUMANOID_LOST,
+    SND_SMART_BOMB,
+    SND_HYPERSPACE,
     SND_PLAYER_DEATH,
-    SND_SPIDER,
-    SND_FLEA,
-    SND_SCORPION,
+    SND_WAVE_CLEAR,
     SND_EXTRA_LIFE,
-    SND_LEVEL_COMPLETE,
     SOUND_COUNT,
 } SoundID;
 
-// --- Game ---
+typedef struct {
+    float x;
+    float y;
+    float vx;
+    float vy;
+    Facing facing;
+    bool alive;
+    float fire_timer;
+    float invuln_timer;
+} PlayerShip;
+
+typedef struct {
+    float x;
+    float y;
+    float vx;
+    float life;
+    Facing facing;
+    bool active;
+} Laser;
+
+typedef struct {
+    float x;
+    float y;
+    float vx;
+    float vy;
+    float life;
+    bool active;
+} EnemyBullet;
+
+typedef struct {
+    float x;
+    float y;
+    float vx;
+    float vy;
+    float radius;
+    float life;
+    float max_life;
+    Color color;
+    bool active;
+} Particle;
+
+typedef struct {
+    float height[TERRAIN_SAMPLES];
+} Terrain;
+
+typedef struct {
+    float x;
+    float y;
+    float ground_y;
+    float vy;
+    int carrier;
+    HumanoidState state;
+} Humanoid;
+
+typedef struct {
+    float x;
+    float y;
+    float vx;
+    float vy;
+    float phase;
+    float fire_timer;
+    int target_humanoid;
+    bool carrying;
+    EnemyKind kind;
+    bool active;
+} Enemy;
+
 typedef struct {
     GameState state;
     float state_timer;
-    int level;
+    int wave;
     int score;
     int high_score;
     int lives;
+    int smart_bombs;
     int next_extra_life;
 
-    MushroomGrid mushrooms;
+    PlayerShip player;
+    Laser lasers[MAX_LASERS];
+    EnemyBullet bullets[MAX_BULLETS];
+    Enemy enemies[MAX_ENEMIES];
+    Humanoid humanoids[MAX_HUMANOIDS];
+    Particle particles[MAX_PARTICLES];
+    Terrain terrain;
 
-    Player player;
-    Dart dart;
-
-    Segment segments[MAX_SEGMENTS];
-
-    Spider spider;
-    Flea flea;
-    Scorpion scorpion;
-    float spider_spawn_timer;
-    float scorpion_spawn_timer;
-
-    int restore_row, restore_col;
-    float restore_timer;
-
-    float centipede_speed;
+    float camera_x;
+    float screen_shake;
+    float star_scroll;
+    float baiter_timer;
+    int humanoid_count;
+    int enemy_count;
 
     Sound sounds[SOUND_COUNT];
     bool sounds_loaded;
 } Game;
 
-// --- Game functions ---
+static inline float wrap_x(float x) {
+    while (x < 0.0f) x += WORLD_WIDTH;
+    while (x >= WORLD_WIDTH) x -= WORLD_WIDTH;
+    return x;
+}
+
+static inline float wrapped_delta(float from, float to) {
+    float delta = to - from;
+    if (delta > WORLD_WIDTH * 0.5f) delta -= WORLD_WIDTH;
+    if (delta < -WORLD_WIDTH * 0.5f) delta += WORLD_WIDTH;
+    return delta;
+}
+
 void game_init(Game *game);
 void game_update(Game *game);
 void game_draw(Game *game);
+
+float randf(float min, float max);
+float clampf(float value, float min, float max);
+float approach(float value, float target, float delta);
+float world_to_screen_x(const Game *game, float world_x);
+bool near_camera(const Game *game, float world_x, float margin);
+float terrain_height_at(const Terrain *terrain, float x);
+
+void add_score(Game *game, int points);
+void spawn_particle(Game *game, float x, float y, float vx, float vy, float radius, float life, Color color);
+void burst(Game *game, float x, float y, Color color, int count, float speed);
+void reset_projectiles(Game *game);
+void generate_terrain(Game *game);
+void reset_player(Game *game);
+void spawn_humanoids(Game *game);
+int living_humanoids(const Game *game);
+int living_enemies(const Game *game);
+void start_wave(Game *game);
+void new_game(Game *game);
+
+void update_player(Game *game, float dt);
+void update_lasers(Game *game, float dt);
+void update_bullets(Game *game, float dt);
+void update_enemy_ai(Game *game, float dt);
+void update_humanoids(Game *game, float dt);
+void update_particles(Game *game, float dt);
+void check_wave_complete(Game *game);
+void render_game(Game *game);
 
 #endif

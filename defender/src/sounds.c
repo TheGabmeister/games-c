@@ -2,14 +2,14 @@
 
 static const char *sound_files[SOUND_COUNT] = {
     "resources/shoot.wav",
-    "resources/mushroom_hit.wav",
     "resources/segment_hit.wav",
-    "resources/death.wav",
-    "resources/spider.wav",
-    "resources/flea.wav",
-    "resources/scorpion.wav",
     "resources/extra_life.wav",
+    "resources/death.wav",
     "resources/level_complete.wav",
+    "resources/scorpion.wav",
+    "resources/death.wav",
+    "resources/level_complete.wav",
+    "resources/extra_life.wav",
 };
 
 void sounds_load(Game *game) {

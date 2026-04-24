@@ -2,7 +2,7 @@
 #include "sounds.h"
 
 int main(void) {
-    InitWindow(WINDOW_WIDTH, WINDOW_HEIGHT, "Centipede");
+    InitWindow(WINDOW_WIDTH, WINDOW_HEIGHT, "Defender");
     SetTargetFPS(TARGET_FPS);
     InitAudioDevice();
 
