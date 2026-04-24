@@ -1,0 +1,23 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(cmake --help)",
+      "Bash(cmake --build build)",
+      "Bash(cmake -B build -Wno-dev)",
+      "Bash(cmake --build build --config Release)",
+      "Bash(cmake -S . -B build)",
+      "Bash(cmake -B build -G \"Visual Studio 18 2026\" -A x64 -Wno-dev)",
+      "Bash(cmake -S . -B build -G \"Visual Studio 18 2026\" -A x64 -Wno-dev)",
+      "WebFetch(domain:github.com)",
+      "Read(//d/rfxgen_v5.0_win_x64/**)",
+      "Bash(\"D:/rfxgen_v5.0_win_x64/rfxgen.exe\" --help)",
+      "Bash(cmake -B build)",
+      "Bash(timeout 5 ./centipede.exe)",
+      "Bash(cmake --version)",
+      "Bash(rm -rf build)",
+      "Bash(mkdir -p build)",
+      "Bash(./build/centipede/Debug/centipede.exe)",
+      "Bash(kill %1)"
+    ]
+  }
+}
