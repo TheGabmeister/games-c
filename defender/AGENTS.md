@@ -27,11 +27,26 @@ The build copies `src/resources/` into the output directory automatically. CMake
 
 ### Central header: `game.h`
 
-Every module includes `game.h`. It contains all `#define` constants, enums (`GameState`, `Direction`, `SoundID`), struct definitions (`Game`, `Player`, `Dart`, `Segment`, `Spider`, `Flea`, `Scorpion`, `MushroomGrid`), and inline coordinate conversion helpers (`col_to_px`, `row_to_px`, `px_to_col`, `px_to_row`). The `Game` struct is the single top-level state container -- passed by pointer to all subsystems.
+Every gameplay module includes `game.h`. It contains shared constants, enums (`GameState`, `Facing`, `EnemyKind`, `HumanoidState`, `SoundID`), struct definitions (`Game`, `PlayerShip`, `Laser`, `EnemyBullet`, `Particle`, `Terrain`, `Humanoid`, `Enemy`), inline world wrapping helpers (`wrap_x`, `wrapped_delta`), and subsystem function declarations.
 
-### Module dependency graph
+The `Game` struct is the single top-level state container -- passed by pointer to all subsystems. It owns player state, fixed-size entity arrays, terrain samples, camera/radar state, score/lives/wave state, and loaded sounds.
 
-`game.c` is the orchestrator: it owns the state machine, calls all subsystem update/draw functions, and implements all collision detection as static helpers.
+### Module boundaries
+
+- `main.c` owns the raylib window/audio lifecycle and calls `game_init`, `game_update`, and `game_draw`.
+- `game.c` orchestrates the state machine and decides which subsystem updates run for each `GameState`.
+- `world.c` owns common math helpers, score bookkeeping, particles, terrain generation, player/wave resets, and wave spawning.
+- `entities.c` owns gameplay simulation: player input, lasers, enemy bullets, humanoid state, enemy AI, collisions, deaths, smart bombs, hyperspace, and wave completion checks.
+- `render.c` owns all drawing for the world, radar, HUD, title/game-over overlays, particles, and entities.
+- `sounds.c` / `sounds.h` own resilient sound loading, unloading, and playback.
+
+Keep new gameplay functions close to the state they update. Prefer `static` helpers inside the owning `.c` file unless another module genuinely needs to call them.
+
+### World model
+
+The game world is wider than the window (`WORLD_WIDTH`) and wraps horizontally. Store x positions in world space, normalize them with `wrap_x`, compare wrapped distances with `wrapped_delta`, and convert to screen x with `world_to_screen_x` when drawing.
+
+Terrain is sampled in `Terrain.height[TERRAIN_SAMPLES]`; use `terrain_height_at` instead of indexing samples directly for gameplay decisions.
 
 ## Coding principles
 
