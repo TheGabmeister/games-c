@@ -11,154 +11,175 @@ static void kill_enemy_from_bullet(Game *game, Bullet *bullet, bool *active, Vec
     sound_play(game, SOUND_ENEMY_EXPLODE);
 }
 
+static bool resolve_bullet_vs_projectiles(Game *game, Bullet *bullet) {
+    for (int projectile_index = 0; projectile_index < MAX_PROJECTILES; projectile_index++) {
+        EnemyProjectile *projectile = &game->projectiles[projectile_index];
+        if (!projectile->active) continue;
+
+        if (world_circles_overlap(bullet->position, BULLET_RADIUS, projectile->position, projectile->radius)) {
+            int score = SPARK_SCORE;
+            Color color = SKYBLUE;
+            if (projectile->type == PROJECTILE_SHELL) {
+                score = SHELL_SCORE;
+                color = ORANGE;
+            } else if (projectile->type == PROJECTILE_CRUISE) {
+                score = CRUISE_SCORE;
+                color = VIOLET;
+            }
+            world_add_particles(game, projectile->position, color, 7, 150.0f, 2.5f);
+            world_add_score(game, score);
+            bullet->active = false;
+            projectile->active = false;
+            sound_play(game, SOUND_ENEMY_EXPLODE);
+            return true;
+        }
+    }
+
+    return false;
+}
+
+static bool resolve_bullet_vs_electrodes(Game *game, Bullet *bullet) {
+    for (int electrode_index = 0; electrode_index < MAX_ELECTRODES; electrode_index++) {
+        Electrode *electrode = &game->electrodes[electrode_index];
+        if (!electrode->active) continue;
+
+        if (world_circles_overlap(bullet->position, BULLET_RADIUS, electrode->position, electrode->radius)) {
+            world_add_particles(game, electrode->position, YELLOW, 8, 160.0f, 3.0f);
+            bullet->active = false;
+            electrode->active = false;
+            sound_play(game, SOUND_ENEMY_EXPLODE);
+            return true;
+        }
+    }
+
+    return false;
+}
+
+static bool resolve_bullet_vs_hulks(Game *game, Bullet *bullet) {
+    for (int hulk_index = 0; hulk_index < MAX_HULKS; hulk_index++) {
+        Hulk *hulk = &game->hulks[hulk_index];
+        if (!hulk->active) continue;
+
+        if (world_circles_overlap(bullet->position, BULLET_RADIUS, hulk->position, hulk->radius)) {
+            Vector2 shove = Vector2Subtract(hulk->position, bullet->position);
+            if (shove.x != 0.0f || shove.y != 0.0f) {
+                shove = Vector2Scale(Vector2Normalize(shove), HULK_KNOCKBACK);
+                hulk->position = Vector2Add(hulk->position, shove);
+            }
+            hulk->position.x = Clamp(hulk->position.x, hulk->radius, WINDOW_WIDTH - hulk->radius);
+            hulk->position.y = Clamp(hulk->position.y, hulk->radius, WINDOW_HEIGHT - hulk->radius);
+            hulk->stun_timer = HULK_BULLET_STUN_TIME;
+            bullet->active = false;
+            world_add_particles(game, hulk->position, LIME, 5, 105.0f, 2.5f);
+            sound_play(game, SOUND_HULK_HIT);
+            return true;
+        }
+    }
+
+    return false;
+}
+
+static bool resolve_bullet_vs_spawners_and_shooters(Game *game, Bullet *bullet) {
+    for (int spheroid_index = 0; spheroid_index < MAX_SPHEROIDS; spheroid_index++) {
+        Spheroid *spheroid = &game->spheroids[spheroid_index];
+        if (!spheroid->active) continue;
+
+        if (world_circles_overlap(bullet->position, BULLET_RADIUS, spheroid->position, spheroid->radius)) {
+            kill_enemy_from_bullet(game, bullet, &spheroid->active, spheroid->position,
+                SPHEROID_SCORE, BLUE, 12, 175.0f, 3.0f);
+            return true;
+        }
+    }
+
+    for (int enforcer_index = 0; enforcer_index < MAX_ENFORCERS; enforcer_index++) {
+        Enforcer *enforcer = &game->enforcers[enforcer_index];
+        if (!enforcer->active) continue;
+
+        if (world_circles_overlap(bullet->position, BULLET_RADIUS, enforcer->position, enforcer->radius)) {
+            kill_enemy_from_bullet(game, bullet, &enforcer->active, enforcer->position,
+                ENFORCER_SCORE, SKYBLUE, 10, 165.0f, 3.0f);
+            return true;
+        }
+    }
+
+    for (int quark_index = 0; quark_index < MAX_QUARKS; quark_index++) {
+        Quark *quark = &game->quarks[quark_index];
+        if (!quark->active) continue;
+
+        if (world_circles_overlap(bullet->position, BULLET_RADIUS, quark->position, quark->radius)) {
+            kill_enemy_from_bullet(game, bullet, &quark->active, quark->position,
+                QUARK_SCORE, RAYWHITE, 12, 175.0f, 3.0f);
+            return true;
+        }
+    }
+
+    for (int tank_index = 0; tank_index < MAX_TANKS; tank_index++) {
+        Tank *tank = &game->tanks[tank_index];
+        if (!tank->active) continue;
+
+        if (world_circles_overlap(bullet->position, BULLET_RADIUS, tank->position, tank->radius)) {
+            kill_enemy_from_bullet(game, bullet, &tank->active, tank->position,
+                TANK_SCORE, RED, 10, 165.0f, 3.0f);
+            return true;
+        }
+    }
+
+    return false;
+}
+
+static bool resolve_bullet_vs_brains_and_progs(Game *game, Bullet *bullet) {
+    for (int brain_index = 0; brain_index < MAX_BRAINS; brain_index++) {
+        Brain *brain = &game->brains[brain_index];
+        if (!brain->active) continue;
+
+        if (world_circles_overlap(bullet->position, BULLET_RADIUS, brain->position, brain->radius)) {
+            kill_enemy_from_bullet(game, bullet, &brain->active, brain->position,
+                BRAIN_SCORE, VIOLET, 12, 175.0f, 3.0f);
+            return true;
+        }
+    }
+
+    for (int prog_index = 0; prog_index < MAX_PROGS; prog_index++) {
+        Prog *prog = &game->progs[prog_index];
+        if (!prog->active) continue;
+
+        if (world_circles_overlap(bullet->position, BULLET_RADIUS, prog->position, prog->radius)) {
+            kill_enemy_from_bullet(game, bullet, &prog->active, prog->position,
+                PROG_SCORE, PURPLE, 9, 165.0f, 2.6f);
+            return true;
+        }
+    }
+
+    return false;
+}
+
+static bool resolve_bullet_vs_grunts(Game *game, Bullet *bullet) {
+    for (int grunt_index = 0; grunt_index < MAX_GRUNTS; grunt_index++) {
+        Grunt *grunt = &game->grunts[grunt_index];
+        if (!grunt->active) continue;
+
+        if (world_circles_overlap(bullet->position, BULLET_RADIUS, grunt->position, grunt->radius)) {
+            kill_enemy_from_bullet(game, bullet, &grunt->active, grunt->position,
+                GRUNT_SCORE, RED, 10, 180.0f, 3.0f);
+            return true;
+        }
+    }
+
+    return false;
+}
+
 void world_resolve_bullet_collisions(Game *game) {
     for (int bullet_index = 0; bullet_index < MAX_BULLETS; bullet_index++) {
         Bullet *bullet = &game->bullets[bullet_index];
         if (!bullet->active) continue;
 
-        for (int projectile_index = 0; projectile_index < MAX_PROJECTILES; projectile_index++) {
-            EnemyProjectile *projectile = &game->projectiles[projectile_index];
-            if (!projectile->active) continue;
-
-            if (world_circles_overlap(bullet->position, BULLET_RADIUS, projectile->position, projectile->radius)) {
-                int score = SPARK_SCORE;
-                Color color = SKYBLUE;
-                if (projectile->type == PROJECTILE_SHELL) {
-                    score = SHELL_SCORE;
-                    color = ORANGE;
-                } else if (projectile->type == PROJECTILE_CRUISE) {
-                    score = CRUISE_SCORE;
-                    color = VIOLET;
-                }
-                world_add_particles(game, projectile->position, color, 7, 150.0f, 2.5f);
-                world_add_score(game, score);
-                bullet->active = false;
-                projectile->active = false;
-                sound_play(game, SOUND_ENEMY_EXPLODE);
-                break;
-            }
-        }
-        if (!bullet->active) continue;
-
-        for (int electrode_index = 0; electrode_index < MAX_ELECTRODES; electrode_index++) {
-            Electrode *electrode = &game->electrodes[electrode_index];
-            if (!electrode->active) continue;
-
-            if (world_circles_overlap(bullet->position, BULLET_RADIUS, electrode->position, electrode->radius)) {
-                world_add_particles(game, electrode->position, YELLOW, 8, 160.0f, 3.0f);
-                bullet->active = false;
-                electrode->active = false;
-                sound_play(game, SOUND_ENEMY_EXPLODE);
-                break;
-            }
-        }
-        if (!bullet->active) continue;
-
-        for (int hulk_index = 0; hulk_index < MAX_HULKS; hulk_index++) {
-            Hulk *hulk = &game->hulks[hulk_index];
-            if (!hulk->active) continue;
-
-            if (world_circles_overlap(bullet->position, BULLET_RADIUS, hulk->position, hulk->radius)) {
-                Vector2 shove = Vector2Subtract(hulk->position, bullet->position);
-                if (shove.x != 0.0f || shove.y != 0.0f) {
-                    shove = Vector2Scale(Vector2Normalize(shove), HULK_KNOCKBACK);
-                    hulk->position = Vector2Add(hulk->position, shove);
-                }
-                hulk->position.x = Clamp(hulk->position.x, hulk->radius, WINDOW_WIDTH - hulk->radius);
-                hulk->position.y = Clamp(hulk->position.y, hulk->radius, WINDOW_HEIGHT - hulk->radius);
-                hulk->stun_timer = HULK_BULLET_STUN_TIME;
-                bullet->active = false;
-                world_add_particles(game, hulk->position, LIME, 5, 105.0f, 2.5f);
-                sound_play(game, SOUND_HULK_HIT);
-                break;
-            }
-        }
-        if (!bullet->active) continue;
-
-        for (int spheroid_index = 0; spheroid_index < MAX_SPHEROIDS; spheroid_index++) {
-            Spheroid *spheroid = &game->spheroids[spheroid_index];
-            if (!spheroid->active) continue;
-
-            if (world_circles_overlap(bullet->position, BULLET_RADIUS, spheroid->position, spheroid->radius)) {
-                kill_enemy_from_bullet(game, bullet, &spheroid->active, spheroid->position,
-                    SPHEROID_SCORE, BLUE, 12, 175.0f, 3.0f);
-                break;
-            }
-        }
-        if (!bullet->active) continue;
-
-        for (int enforcer_index = 0; enforcer_index < MAX_ENFORCERS; enforcer_index++) {
-            Enforcer *enforcer = &game->enforcers[enforcer_index];
-            if (!enforcer->active) continue;
-
-            if (world_circles_overlap(bullet->position, BULLET_RADIUS, enforcer->position, enforcer->radius)) {
-                kill_enemy_from_bullet(game, bullet, &enforcer->active, enforcer->position,
-                    ENFORCER_SCORE, SKYBLUE, 10, 165.0f, 3.0f);
-                break;
-            }
-        }
-        if (!bullet->active) continue;
-
-        for (int quark_index = 0; quark_index < MAX_QUARKS; quark_index++) {
-            Quark *quark = &game->quarks[quark_index];
-            if (!quark->active) continue;
-
-            if (world_circles_overlap(bullet->position, BULLET_RADIUS, quark->position, quark->radius)) {
-                kill_enemy_from_bullet(game, bullet, &quark->active, quark->position,
-                    QUARK_SCORE, RAYWHITE, 12, 175.0f, 3.0f);
-                break;
-            }
-        }
-        if (!bullet->active) continue;
-
-        for (int tank_index = 0; tank_index < MAX_TANKS; tank_index++) {
-            Tank *tank = &game->tanks[tank_index];
-            if (!tank->active) continue;
-
-            if (world_circles_overlap(bullet->position, BULLET_RADIUS, tank->position, tank->radius)) {
-                kill_enemy_from_bullet(game, bullet, &tank->active, tank->position,
-                    TANK_SCORE, RED, 10, 165.0f, 3.0f);
-                break;
-            }
-        }
-        if (!bullet->active) continue;
-
-        for (int brain_index = 0; brain_index < MAX_BRAINS; brain_index++) {
-            Brain *brain = &game->brains[brain_index];
-            if (!brain->active) continue;
-
-            if (world_circles_overlap(bullet->position, BULLET_RADIUS, brain->position, brain->radius)) {
-                kill_enemy_from_bullet(game, bullet, &brain->active, brain->position,
-                    BRAIN_SCORE, VIOLET, 12, 175.0f, 3.0f);
-                break;
-            }
-        }
-        if (!bullet->active) continue;
-
-        for (int prog_index = 0; prog_index < MAX_PROGS; prog_index++) {
-            Prog *prog = &game->progs[prog_index];
-            if (!prog->active) continue;
-
-            if (world_circles_overlap(bullet->position, BULLET_RADIUS, prog->position, prog->radius)) {
-                kill_enemy_from_bullet(game, bullet, &prog->active, prog->position,
-                    PROG_SCORE, PURPLE, 9, 165.0f, 2.6f);
-                break;
-            }
-        }
-        if (!bullet->active) continue;
-
-        for (int grunt_index = 0; grunt_index < MAX_GRUNTS; grunt_index++) {
-            Grunt *grunt = &game->grunts[grunt_index];
-            if (!grunt->active) continue;
-
-            if (world_circles_overlap(bullet->position, BULLET_RADIUS, grunt->position, grunt->radius)) {
-                kill_enemy_from_bullet(game, bullet, &grunt->active, grunt->position,
-                    GRUNT_SCORE, RED, 10, 180.0f, 3.0f);
-                break;
-            }
-        }
+        if (resolve_bullet_vs_projectiles(game, bullet)) continue;
+        if (resolve_bullet_vs_electrodes(game, bullet)) continue;
+        if (resolve_bullet_vs_hulks(game, bullet)) continue;
+        if (resolve_bullet_vs_spawners_and_shooters(game, bullet)) continue;
+        if (resolve_bullet_vs_brains_and_progs(game, bullet)) continue;
+        if (resolve_bullet_vs_grunts(game, bullet)) continue;
     }
-
 }
 
 void world_resolve_brain_human_collisions(Game *game) {
@@ -250,26 +271,78 @@ static void handle_player_death(Game *game) {
     }
 }
 
-static bool player_overlaps_enemy_family(Game *game) {
-#define CHECK_PLAYER_OVERLAP(array_name, max_count) \
-    for (int i = 0; i < max_count; i++) { \
-        if (game->array_name[i].active && \
-            world_circles_overlap(game->player_position, game->player_radius, \
-                game->array_name[i].position, game->array_name[i].radius)) { \
-            return true; \
-        } \
+static bool player_overlaps_circle(Game *game, Vector2 position, float radius) {
+    return world_circles_overlap(game->player_position, game->player_radius, position, radius);
+}
+
+static bool player_overlaps_hulks(Game *game) {
+    for (int i = 0; i < MAX_HULKS; i++) {
+        Hulk *hulk = &game->hulks[i];
+        if (hulk->active && player_overlaps_circle(game, hulk->position, hulk->radius)) {
+            return true;
+        }
     }
 
-    CHECK_PLAYER_OVERLAP(hulks, MAX_HULKS)
-    CHECK_PLAYER_OVERLAP(spheroids, MAX_SPHEROIDS)
-    CHECK_PLAYER_OVERLAP(enforcers, MAX_ENFORCERS)
-    CHECK_PLAYER_OVERLAP(quarks, MAX_QUARKS)
-    CHECK_PLAYER_OVERLAP(tanks, MAX_TANKS)
-    CHECK_PLAYER_OVERLAP(brains, MAX_BRAINS)
-    CHECK_PLAYER_OVERLAP(progs, MAX_PROGS)
-    CHECK_PLAYER_OVERLAP(grunts, MAX_GRUNTS)
+    return false;
+}
 
-#undef CHECK_PLAYER_OVERLAP
+static bool player_overlaps_spawners_and_shooters(Game *game) {
+    for (int i = 0; i < MAX_SPHEROIDS; i++) {
+        Spheroid *spheroid = &game->spheroids[i];
+        if (spheroid->active && player_overlaps_circle(game, spheroid->position, spheroid->radius)) {
+            return true;
+        }
+    }
+
+    for (int i = 0; i < MAX_ENFORCERS; i++) {
+        Enforcer *enforcer = &game->enforcers[i];
+        if (enforcer->active && player_overlaps_circle(game, enforcer->position, enforcer->radius)) {
+            return true;
+        }
+    }
+
+    for (int i = 0; i < MAX_QUARKS; i++) {
+        Quark *quark = &game->quarks[i];
+        if (quark->active && player_overlaps_circle(game, quark->position, quark->radius)) {
+            return true;
+        }
+    }
+
+    for (int i = 0; i < MAX_TANKS; i++) {
+        Tank *tank = &game->tanks[i];
+        if (tank->active && player_overlaps_circle(game, tank->position, tank->radius)) {
+            return true;
+        }
+    }
+
+    return false;
+}
+
+static bool player_overlaps_brains_and_progs(Game *game) {
+    for (int i = 0; i < MAX_BRAINS; i++) {
+        Brain *brain = &game->brains[i];
+        if (brain->active && player_overlaps_circle(game, brain->position, brain->radius)) {
+            return true;
+        }
+    }
+
+    for (int i = 0; i < MAX_PROGS; i++) {
+        Prog *prog = &game->progs[i];
+        if (prog->active && player_overlaps_circle(game, prog->position, prog->radius)) {
+            return true;
+        }
+    }
+
+    return false;
+}
+
+static bool player_overlaps_grunts(Game *game) {
+    for (int i = 0; i < MAX_GRUNTS; i++) {
+        Grunt *grunt = &game->grunts[i];
+        if (grunt->active && player_overlaps_circle(game, grunt->position, grunt->radius)) {
+            return true;
+        }
+    }
 
     return false;
 }
@@ -295,7 +368,10 @@ void world_resolve_player_death_collisions(Game *game) {
         }
     }
 
-    if (player_overlaps_enemy_family(game)) {
+    if (player_overlaps_hulks(game) ||
+        player_overlaps_spawners_and_shooters(game) ||
+        player_overlaps_brains_and_progs(game) ||
+        player_overlaps_grunts(game)) {
         handle_player_death(game);
     }
 }
