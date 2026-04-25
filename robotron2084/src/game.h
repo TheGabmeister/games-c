@@ -31,10 +31,22 @@
 #define GRUNT_SPEED         115.0f
 #define GRUNT_SCORE         100
 
+// --- Humans ---
+#define MAX_HUMANS          40
+#define HUMAN_RADIUS        10.0f
+#define HUMAN_SPEED         55.0f
+#define WAVE_START_HUMANS   5
+#define WAVE_HUMAN_MAX      12
+
+// --- Floating Text ---
+#define MAX_FLOAT_TEXT      48
+#define FLOAT_TEXT_LIFETIME 0.85f
+
 // --- Waves ---
 #define WAVE_START_GRUNTS   18
 #define WAVE_GRUNT_STEP     6
 #define RESPAWN_INVULN_TIME 1.25f
+#define EXTRA_LIFE_SCORE    25000
 
 typedef enum SoundID {
     SOUND_COIN = 0,
@@ -62,6 +74,24 @@ typedef struct Grunt {
     float radius;
 } Grunt;
 
+typedef struct Human {
+    bool active;
+    int type;
+    Vector2 position;
+    Vector2 velocity;
+    float radius;
+    float retarget_timer;
+} Human;
+
+typedef struct FloatText {
+    bool active;
+    Vector2 position;
+    Vector2 velocity;
+    float lifetime;
+    int value;
+    Color color;
+} FloatText;
+
 typedef struct Game {
     GameMode mode;
 
@@ -69,6 +99,8 @@ typedef struct Game {
     int high_score;
     int lives;
     int wave;
+    int next_extra_life_score;
+    int humans_rescued_this_wave;
 
     Vector2 player_position;
     float player_speed;
@@ -79,6 +111,8 @@ typedef struct Game {
 
     Bullet bullets[MAX_BULLETS];
     Grunt grunts[MAX_GRUNTS];
+    Human humans[MAX_HUMANS];
+    FloatText float_text[MAX_FLOAT_TEXT];
 
     Sound sounds[SOUND_COUNT];
     bool sounds_loaded;

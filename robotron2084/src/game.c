@@ -18,16 +18,57 @@ static int count_active_grunts(Game *game) {
     return count;
 }
 
+static int count_active_humans(Game *game) {
+    int count = 0;
+    for (int i = 0; i < MAX_HUMANS; i++) {
+        if (game->humans[i].active) {
+            count++;
+        }
+    }
+    return count;
+}
+
+static void add_float_text(Game *game, Vector2 position, int value, Color color) {
+    for (int i = 0; i < MAX_FLOAT_TEXT; i++) {
+        FloatText *text = &game->float_text[i];
+        if (!text->active) {
+            text->active = true;
+            text->position = position;
+            text->velocity = (Vector2){ 0.0f, -42.0f };
+            text->lifetime = FLOAT_TEXT_LIFETIME;
+            text->value = value;
+            text->color = color;
+            return;
+        }
+    }
+}
+
+static void add_score(Game *game, int value) {
+    game->score += value;
+    if (game->score > game->high_score) {
+        game->high_score = game->score;
+    }
+
+    while (game->score >= game->next_extra_life_score) {
+        game->lives++;
+        game->next_extra_life_score += EXTRA_LIFE_SCORE;
+        add_float_text(game, (Vector2){ game->player_position.x, game->player_position.y - 28.0f }, 0, GREEN);
+    }
+}
+
 static void reset_player(Game *game) {
     game->player_position = (Vector2){ PLAYER_START_X, PLAYER_START_Y };
     game->player_fire_timer = 0.0f;
     game->player_invulnerable_timer = RESPAWN_INVULN_TIME;
+    game->humans_rescued_this_wave = 0;
     memset(game->bullets, 0, sizeof(game->bullets));
 }
 
 static void clear_wave_entities(Game *game) {
     memset(game->bullets, 0, sizeof(game->bullets));
     memset(game->grunts, 0, sizeof(game->grunts));
+    memset(game->humans, 0, sizeof(game->humans));
+    memset(game->float_text, 0, sizeof(game->float_text));
 }
 
 static Vector2 random_grunt_spawn_position(void) {
@@ -52,6 +93,28 @@ static Vector2 random_grunt_spawn_position(void) {
     return position;
 }
 
+static Vector2 random_human_spawn_position(void) {
+    float margin = 80.0f;
+    return (Vector2){
+        (float)GetRandomValue((int)margin, WINDOW_WIDTH - (int)margin),
+        (float)GetRandomValue((int)margin, WINDOW_HEIGHT - (int)margin)
+    };
+}
+
+static Vector2 random_human_velocity(void) {
+    Vector2 direction = {
+        (float)GetRandomValue(-100, 100) / 100.0f,
+        (float)GetRandomValue(-100, 100) / 100.0f
+    };
+
+    if (direction.x == 0.0f && direction.y == 0.0f) {
+        direction.x = 1.0f;
+    }
+
+    direction = Vector2Normalize(direction);
+    return Vector2Scale(direction, HUMAN_SPEED);
+}
+
 static void spawn_grunt(Game *game, Vector2 position) {
     for (int i = 0; i < MAX_GRUNTS; i++) {
         Grunt *grunt = &game->grunts[i];
@@ -60,6 +123,21 @@ static void spawn_grunt(Game *game, Vector2 position) {
             grunt->position = position;
             grunt->speed = GRUNT_SPEED + (float)(game->wave - 1) * 8.0f;
             grunt->radius = GRUNT_RADIUS;
+            return;
+        }
+    }
+}
+
+static void spawn_human(Game *game, Vector2 position, int type) {
+    for (int i = 0; i < MAX_HUMANS; i++) {
+        Human *human = &game->humans[i];
+        if (!human->active) {
+            human->active = true;
+            human->type = type;
+            human->position = position;
+            human->velocity = random_human_velocity();
+            human->radius = HUMAN_RADIUS;
+            human->retarget_timer = (float)GetRandomValue(80, 180) / 100.0f;
             return;
         }
     }
@@ -77,12 +155,23 @@ static void spawn_wave(Game *game) {
     for (int i = 0; i < grunt_count; i++) {
         spawn_grunt(game, random_grunt_spawn_position());
     }
+
+    int human_count = WAVE_START_HUMANS + game->wave / 2;
+    if (human_count > WAVE_HUMAN_MAX) {
+        human_count = WAVE_HUMAN_MAX;
+    }
+
+    for (int i = 0; i < human_count; i++) {
+        spawn_human(game, random_human_spawn_position(), i % 3);
+    }
 }
 
 static void start_new_game(Game *game) {
     game->score = 0;
     game->lives = PLAYER_LIVES;
     game->wave = 1;
+    game->next_extra_life_score = EXTRA_LIFE_SCORE;
+    game->humans_rescued_this_wave = 0;
     game->mode = GAME_MODE_PLAYING;
     spawn_wave(game);
 }
@@ -130,6 +219,14 @@ static void spawn_bullet(Game *game, Vector2 direction) {
     }
 }
 
+static int next_human_rescue_score(Game *game) {
+    int rescue_index = game->humans_rescued_this_wave + 1;
+    if (rescue_index >= 5) {
+        return 5000;
+    }
+    return rescue_index * 1000;
+}
+
 static void update_playing(Game *game, float dt) {
     if (game->player_invulnerable_timer > 0.0f) {
         game->player_invulnerable_timer -= dt;
@@ -171,6 +268,32 @@ static void update_playing(Game *game, float dt) {
         }
     }
 
+    for (int i = 0; i < MAX_HUMANS; i++) {
+        Human *human = &game->humans[i];
+        if (!human->active) {
+            continue;
+        }
+
+        human->retarget_timer -= dt;
+        if (human->retarget_timer <= 0.0f) {
+            human->velocity = random_human_velocity();
+            human->retarget_timer = (float)GetRandomValue(80, 180) / 100.0f;
+        }
+
+        human->position.x += human->velocity.x * dt;
+        human->position.y += human->velocity.y * dt;
+
+        if (human->position.x < human->radius || human->position.x > WINDOW_WIDTH - human->radius) {
+            human->velocity.x *= -1.0f;
+            human->position.x = Clamp(human->position.x, human->radius, WINDOW_WIDTH - human->radius);
+        }
+
+        if (human->position.y < human->radius || human->position.y > WINDOW_HEIGHT - human->radius) {
+            human->velocity.y *= -1.0f;
+            human->position.y = Clamp(human->position.y, human->radius, WINDOW_HEIGHT - human->radius);
+        }
+    }
+
     for (int i = 0; i < MAX_GRUNTS; i++) {
         Grunt *grunt = &game->grunts[i];
         if (!grunt->active) {
@@ -200,12 +323,38 @@ static void update_playing(Game *game, float dt) {
             if (circles_overlap(bullet->position, BULLET_RADIUS, grunt->position, grunt->radius)) {
                 bullet->active = false;
                 grunt->active = false;
-                game->score += GRUNT_SCORE;
-                if (game->score > game->high_score) {
-                    game->high_score = game->score;
-                }
+                add_score(game, GRUNT_SCORE);
                 break;
             }
+        }
+    }
+
+    for (int i = 0; i < MAX_HUMANS; i++) {
+        Human *human = &game->humans[i];
+        if (!human->active) {
+            continue;
+        }
+
+        if (circles_overlap(game->player_position, game->player_radius, human->position, human->radius)) {
+            int rescue_score = next_human_rescue_score(game);
+            human->active = false;
+            game->humans_rescued_this_wave++;
+            add_score(game, rescue_score);
+            add_float_text(game, human->position, rescue_score, GOLD);
+        }
+    }
+
+    for (int i = 0; i < MAX_FLOAT_TEXT; i++) {
+        FloatText *text = &game->float_text[i];
+        if (!text->active) {
+            continue;
+        }
+
+        text->position.x += text->velocity.x * dt;
+        text->position.y += text->velocity.y * dt;
+        text->lifetime -= dt;
+        if (text->lifetime <= 0.0f) {
+            text->active = false;
         }
     }
 
@@ -239,6 +388,9 @@ static void update_playing(Game *game, float dt) {
 void game_init(Game *game) {
     memset(game, 0, sizeof(*game));
     game->mode = GAME_MODE_TITLE;
+    game->lives = PLAYER_LIVES;
+    game->wave = 1;
+    game->next_extra_life_score = EXTRA_LIFE_SCORE;
     game->player_speed = PLAYER_SPEED;
     game->player_radius = PLAYER_RADIUS;
     game->player_color = SKYBLUE;
@@ -279,6 +431,24 @@ static void draw_arena_grid(void) {
 static void draw_playfield(Game *game) {
     draw_arena_grid();
 
+    for (int i = 0; i < MAX_HUMANS; i++) {
+        Human human = game->humans[i];
+        if (!human.active) {
+            continue;
+        }
+
+        Color color = GOLD;
+        if (human.type == 1) {
+            color = ORANGE;
+        } else if (human.type == 2) {
+            color = LIME;
+        }
+
+        DrawCircleV(human.position, human.radius + 5.0f, Fade(color, 0.35f));
+        DrawCircleV(human.position, human.radius, color);
+        DrawCircleV((Vector2){ human.position.x, human.position.y - 3.0f }, 3.0f, RAYWHITE);
+    }
+
     for (int i = 0; i < MAX_GRUNTS; i++) {
         Grunt grunt = game->grunts[i];
         if (!grunt.active) {
@@ -307,6 +477,17 @@ static void draw_playfield(Game *game) {
         DrawCircleV(game->player_position, game->player_radius, game->player_color);
         DrawCircleV(game->player_position, 4.0f, RAYWHITE);
     }
+
+    for (int i = 0; i < MAX_FLOAT_TEXT; i++) {
+        FloatText text = game->float_text[i];
+        if (!text.active) {
+            continue;
+        }
+
+        float alpha = Clamp(text.lifetime / FLOAT_TEXT_LIFETIME, 0.0f, 1.0f);
+        const char *label = text.value > 0 ? TextFormat("+%d", text.value) : "EXTRA LIFE";
+        DrawText(label, (int)text.position.x - MeasureText(label, 18) / 2, (int)text.position.y, 18, Fade(text.color, alpha));
+    }
 }
 
 void game_draw(Game *game) {
@@ -316,13 +497,15 @@ void game_draw(Game *game) {
     draw_playfield(game);
 
     DrawText("ROBOTRON 2084 - CORE COMBAT LOOP", 24, 24, 24, RAYWHITE);
-    DrawText(TextFormat("SCORE %06d   HIGH %06d   WAVE %d   LIVES %d   GRUNTS %d",
+    DrawText(TextFormat("SCORE %06d   HIGH %06d   WAVE %d   LIVES %d   GRUNTS %d   HUMANS %d",
         game->score,
         game->high_score,
         game->wave,
         game->lives,
-        count_active_grunts(game)), 24, 56, 18, LIGHTGRAY);
-    DrawText("WASD move  |  Arrow keys fire  |  P pause  |  Enter start", 24, 82, 18, GRAY);
+        count_active_grunts(game),
+        count_active_humans(game)), 24, 56, 18, LIGHTGRAY);
+    DrawText(TextFormat("WASD move  |  Arrow keys fire  |  P pause  |  Enter start  |  Next rescue +%d",
+        next_human_rescue_score(game)), 24, 82, 18, GRAY);
 
     if (game->mode == GAME_MODE_TITLE) {
         DrawRectangle(0, 0, WINDOW_WIDTH, WINDOW_HEIGHT, (Color){ 0, 0, 0, 150 });
