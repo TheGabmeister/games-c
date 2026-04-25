@@ -1,5 +1,6 @@
 #include "mario.h"
 #include "game.h"
+#include "level.h"
 #include "sprites.h"
 #include "sounds.h"
 #include "items.h"
@@ -47,8 +48,10 @@ static void mario_update(Entity *self, Game *game) {
     if (dt <= 0) return;
 
     MarioInput in = read_input();
+    bool underwater = (game->level.type == LEVEL_UNDERWATER);
 
-    float max_speed = in.run ? MARIO_RUN_SPEED : MARIO_WALK_SPEED;
+    float max_speed = underwater ? UNDERWATER_WALK_SPEED :
+                      (in.run ? MARIO_RUN_SPEED : MARIO_WALK_SPEED);
 
     // Horizontal movement
     if (in.right && !in.left) {
@@ -79,23 +82,35 @@ static void mario_update(Entity *self, Game *game) {
         }
     }
 
-    // Jump
-    if (in.jump && self->on_ground) {
-        self->vy = MARIO_JUMP_VEL;
-        self->jumping = true;
-        self->on_ground = false;
-        sound_play(SND_JUMP);
-    }
-
-    // Variable-height jump
-    if (self->jumping && in.jump_held && self->vy < 0) {
-        self->vy += (GRAVITY + MARIO_JUMP_SUSTAIN) * dt;
+    if (underwater) {
+        // Swimming: press jump to get upward impulse
+        if (in.jump) {
+            self->vy = UNDERWATER_SWIM_VEL;
+            sound_play(SND_JUMP);
+        }
+        self->vy += UNDERWATER_GRAVITY * dt;
+        if (self->vy > UNDERWATER_MAX_FALL) self->vy = UNDERWATER_MAX_FALL;
+        // Ceiling clamp
+        if (self->y < 0) { self->y = 0; self->vy = 0; }
     } else {
-        self->vy += GRAVITY * dt;
-        if (!in.jump_held) self->jumping = false;
-    }
+        // Jump
+        if (in.jump && self->on_ground) {
+            self->vy = MARIO_JUMP_VEL;
+            self->jumping = true;
+            self->on_ground = false;
+            sound_play(SND_JUMP);
+        }
 
-    if (self->vy > MAX_FALL_SPEED) self->vy = MAX_FALL_SPEED;
+        // Variable-height jump
+        if (self->jumping && in.jump_held && self->vy < 0) {
+            self->vy += (GRAVITY + MARIO_JUMP_SUSTAIN) * dt;
+        } else {
+            self->vy += GRAVITY * dt;
+            if (!in.jump_held) self->jumping = false;
+        }
+
+        if (self->vy > MAX_FALL_SPEED) self->vy = MAX_FALL_SPEED;
+    }
 
     // Camera left-edge constraint
     if (self->x < game->camera_x) {

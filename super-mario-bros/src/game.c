@@ -122,7 +122,7 @@ static void update_playing(Game *game) {
         }
         // Dead-falling entities (state_val == 2 for goomba/koopa types only)
         if (e->state_val == 2 && (e->type == ENT_GOOMBA || e->type == ENT_KOOPA ||
-            e->type == ENT_SHELL)) {
+            e->type == ENT_SHELL || e->type == ENT_PARATROOPA)) {
             e->vy += GRAVITY * dt;
             e->y += e->vy * dt;
             if (e->y > game->level.height * TILE_SIZE + 200)
@@ -145,7 +145,12 @@ static void update_playing(Game *game) {
         // These entities handle their own movement or don't need tile collision
         if (e->type == ENT_FIREBAR || e->type == ENT_PODOBOO ||
             e->type == ENT_BALANCE_LIFT || e->type == ENT_BOWSER ||
-            e->type == ENT_BOWSER_FIRE || e->type == ENT_PIRANHA)
+            e->type == ENT_BOWSER_FIRE || e->type == ENT_PIRANHA ||
+            e->type == ENT_BLOOPER)
+            continue;
+
+        // Swimming cheep-cheep manages its own movement (leaping variant uses gravity)
+        if (e->type == ENT_CHEEP_CHEEP && e->state_val != 2)
             continue;
 
         e->x += e->vx * dt;

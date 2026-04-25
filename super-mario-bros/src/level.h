@@ -13,6 +13,7 @@ typedef enum {
     LEVEL_UNDERGROUND,
     LEVEL_CASTLE,
     LEVEL_ATHLETIC,
+    LEVEL_UNDERWATER,
 } LevelType;
 
 typedef struct {

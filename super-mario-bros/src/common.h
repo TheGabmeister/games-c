@@ -75,6 +75,38 @@
 #define BOWSER_FIRE_W       32
 #define BOWSER_FIRE_H       16
 
+// Paratroopa
+#define PARATROOPA_BOUNCE_VEL -700.0f
+#define PARATROOPA_SPEED      120.0f
+
+// Springboard
+#define SPRINGBOARD_W              48
+#define SPRINGBOARD_HEIGHT              48
+#define SPRINGBOARD_BOUNCE_VEL     -1400.0f
+#define SPRINGBOARD_BOUNCE_STRONG  -1800.0f
+
+// Blooper
+#define BLOOPER_CHASE_SPEED   150.0f
+#define BLOOPER_RISE_SPEED    250.0f
+#define BLOOPER_SINK_SPEED    80.0f
+#define BLOOPER_RISE_TIME     0.6f
+#define BLOOPER_PAUSE_TIME    0.4f
+
+// Cheep-Cheep
+#define CHEEP_SLOW_SPEED      150.0f
+#define CHEEP_FAST_SPEED      250.0f
+#define CHEEP_WAVE_AMP        50.0f
+#define CHEEP_WAVE_FREQ       1.5f
+#define CHEEP_LEAP_VEL        -1600.0f
+#define CHEEP_LEAP_SPEED_X    180.0f
+#define CHEEP_LEAP_INTERVAL   1.5f
+
+// Underwater physics
+#define UNDERWATER_GRAVITY      1200.0f
+#define UNDERWATER_MAX_FALL     400.0f
+#define UNDERWATER_SWIM_VEL     -350.0f
+#define UNDERWATER_WALK_SPEED   200.0f
+
 // Balance lift
 #define LIFT_W              (TILE_SIZE * 3)
 #define LIFT_H              16
@@ -190,6 +222,12 @@
 #define COLOR_BOWSER      (Color){0, 128, 0, 255}
 #define COLOR_PODOBOO     (Color){255, 80, 0, 255}
 #define COLOR_LIFT        (Color){0, 200, 0, 255}
+#define COLOR_PARATROOPA  (Color){0, 200, 0, 255}
+#define COLOR_SPRINGBOARD (Color){0, 200, 80, 255}
+#define COLOR_BLOOPER     (Color){220, 220, 240, 255}
+#define COLOR_CHEEP_RED   (Color){228, 60, 60, 255}
+#define COLOR_CHEEP_GRAY  (Color){160, 160, 180, 255}
+#define COLOR_BG_WATER    (Color){16, 48, 120, 255}
 
 // Direction
 typedef enum {
@@ -247,6 +285,7 @@ typedef enum {
     ENT_PODOBOO,
     ENT_BOWSER_FIRE,
     ENT_BALANCE_LIFT,
+    ENT_SPRINGBOARD,
     ENT_TYPE_COUNT,
 } EntityType;
 

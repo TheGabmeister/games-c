@@ -36,7 +36,11 @@
       "Bash(./build/super_mario_bros/Debug/super_mario_bros)",
       "Bash(taskkill //f //im super_mario_bros.exe)",
       "Bash(mkdir -p c:/dev/games-c/super-mario-bros/build/super_mario_bros/Debug/resources/levels)",
-      "Bash(./super_mario_bros)"
+      "Bash(./super_mario_bros)",
+      "Bash(taskkill /f /im super_mario_bros.exe)",
+      "Bash(powershell -Command \"Stop-Process -Name super_mario_bros -Force -ErrorAction SilentlyContinue\")",
+      "Bash(python3 -c ' *)",
+      "Bash(python3)"
     ],
     "additionalDirectories": [
       "C:\\dev\\games-c\\super-mario-bros\\src\\resources",

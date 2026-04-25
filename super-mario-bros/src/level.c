@@ -9,6 +9,10 @@
 #include "enemies/firebar.h"
 #include "enemies/podoboo.h"
 #include "enemies/bowser.h"
+#include "enemies/paratroopa.h"
+#include "enemies/springboard.h"
+#include "enemies/blooper.h"
+#include "enemies/cheep_cheep.h"
 #include <stdlib.h>
 #include <stdio.h>
 
@@ -65,6 +69,17 @@ void level_activate_spawns(Level *level, Entity entities[MAX_ENTITIES], float ca
     float activate_x = camera_x + WINDOW_WIDTH + TILE_SIZE;
     for (int i = 0; i < level->spawn_count; i++) {
         EntitySpawn *s = &level->spawns[i];
+        // Leaping cheep-cheeps respawn: reset if no matching entity exists
+        if (s->activated && s->type == ENT_CHEEP_CHEEP && s->extra == 2) {
+            bool still_alive = false;
+            for (int j = 0; j < MAX_ENTITIES; j++) {
+                if (entities[j].type == ENT_CHEEP_CHEEP && entities[j].state_val == 2) {
+                    float dist = fabsf(entities[j].x - (float)(s->tile_x * TILE_SIZE));
+                    if (dist < WINDOW_WIDTH) { still_alive = true; break; }
+                }
+            }
+            if (!still_alive) s->activated = false;
+        }
         if (s->activated) continue;
         float sx = s->tile_x * TILE_SIZE;
         bool in_range = (sx <= activate_x && sx >= camera_x - TILE_SIZE * 2);
@@ -92,6 +107,18 @@ void level_activate_spawns(Level *level, Entity entities[MAX_ENTITIES], float ca
                     break;
                 case ENT_BOWSER:
                     spawn_bowser(entities, spawn_x, spawn_y);
+                    break;
+                case ENT_PARATROOPA:
+                    spawn_paratroopa(entities, spawn_x, spawn_y);
+                    break;
+                case ENT_SPRINGBOARD:
+                    spawn_springboard(entities, spawn_x, spawn_y);
+                    break;
+                case ENT_BLOOPER:
+                    spawn_blooper(entities, spawn_x, spawn_y);
+                    break;
+                case ENT_CHEEP_CHEEP:
+                    spawn_cheep_cheep(entities, spawn_x, spawn_y, s->extra);
                     break;
                 case ENT_BALANCE_LIFT: {
                     Entity *e = entity_alloc(entities);
@@ -430,6 +457,7 @@ static LevelType parse_level_type(const char *name) {
     if (strcmp(name, "underground") == 0) return LEVEL_UNDERGROUND;
     if (strcmp(name, "castle") == 0) return LEVEL_CASTLE;
     if (strcmp(name, "athletic") == 0) return LEVEL_ATHLETIC;
+    if (strcmp(name, "underwater") == 0) return LEVEL_UNDERWATER;
     return LEVEL_OVERWORLD;
 }
 
@@ -450,6 +478,10 @@ static int parse_spawn_type(const char *name) {
     if (strcmp(name, "podoboo") == 0) return ENT_PODOBOO;
     if (strcmp(name, "bowser") == 0) return ENT_BOWSER;
     if (strcmp(name, "lift") == 0) return ENT_BALANCE_LIFT;
+    if (strcmp(name, "paratroopa") == 0) return ENT_PARATROOPA;
+    if (strcmp(name, "springboard") == 0) return ENT_SPRINGBOARD;
+    if (strcmp(name, "blooper") == 0) return ENT_BLOOPER;
+    if (strcmp(name, "cheep") == 0) return ENT_CHEEP_CHEEP;
     return ENT_NONE;
 }
 
