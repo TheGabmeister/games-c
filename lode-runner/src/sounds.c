@@ -68,28 +68,26 @@ static const SoundDef defs[SOUND_COUNT] = {
     [SOUND_LEVEL_CLEAR]   = { 0.70f, 400.0f,  1600.0f, 0.40f, false },
 };
 
-void sounds_load(Game *game) {
+void sounds_load(Sound sounds[SOUND_COUNT]) {
     for (int i = 0; i < SOUND_COUNT; i++) {
         if (FileExists(sound_files[i])) {
-            game->sounds[i] = LoadSound(sound_files[i]);
+            sounds[i] = LoadSound(sound_files[i]);
         } else {
-            game->sounds[i] = generate_tone(
+            sounds[i] = generate_tone(
                 defs[i].dur, defs[i].f0, defs[i].f1, defs[i].vol, defs[i].noise);
         }
     }
-    game->sounds_loaded = true;
 }
 
-void sounds_unload(Game *game) {
+void sounds_unload(Sound sounds[SOUND_COUNT]) {
     for (int i = 0; i < SOUND_COUNT; i++) {
-        if (game->sounds[i].frameCount > 0) {
-            UnloadSound(game->sounds[i]);
+        if (sounds[i].frameCount > 0) {
+            UnloadSound(sounds[i]);
         }
     }
-    game->sounds_loaded = false;
 }
 
-void sound_play(Game *game, SoundID id) {
-    if (!game->sounds_loaded || id < 0 || id >= SOUND_COUNT) return;
-    if (game->sounds[id].frameCount > 0) PlaySound(game->sounds[id]);
+void sound_play(const Sound sounds[SOUND_COUNT], SoundID id) {
+    if (id < 0 || id >= SOUND_COUNT) return;
+    if (sounds[id].frameCount > 0) PlaySound(sounds[id]);
 }

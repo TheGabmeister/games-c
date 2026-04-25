@@ -1,10 +1,23 @@
 #ifndef SOUNDS_H
 #define SOUNDS_H
 
-#include "game.h"
+#include "raylib.h"
+#include <stdbool.h>
 
-void sounds_load(Game *game);
-void sounds_unload(Game *game);
-void sound_play(Game *game, SoundID id);
+typedef enum SoundID {
+    SOUND_COIN = 0,
+    SOUND_DIG,
+    SOUND_REFILL,
+    SOUND_PLAYER_DIE,
+    SOUND_GUARD_FALL,
+    SOUND_GUARD_DIE,
+    SOUND_GOLD_COMPLETE,
+    SOUND_LEVEL_CLEAR,
+    SOUND_COUNT
+} SoundID;
+
+void sounds_load(Sound sounds[SOUND_COUNT]);
+void sounds_unload(Sound sounds[SOUND_COUNT]);
+void sound_play(const Sound sounds[SOUND_COUNT], SoundID id);
 
 #endif

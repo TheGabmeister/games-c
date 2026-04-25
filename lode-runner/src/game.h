@@ -5,23 +5,10 @@
 #include "guard.h"
 #include "particles.h"
 #include "player.h"
+#include "sounds.h"
 #include "world.h"
 #include "raylib.h"
 #include <stdbool.h>
-#include <stdlib.h>
-#include <string.h>
-
-typedef enum SoundID {
-    SOUND_COIN = 0,
-    SOUND_DIG,
-    SOUND_REFILL,
-    SOUND_PLAYER_DIE,
-    SOUND_GUARD_FALL,
-    SOUND_GUARD_DIE,
-    SOUND_GOLD_COMPLETE,
-    SOUND_LEVEL_CLEAR,
-    SOUND_COUNT
-} SoundID;
 
 typedef enum ScreenID {
     SCREEN_TITLE,
@@ -52,12 +39,10 @@ typedef struct Game {
 
     Texture2D bg_texture;
     Sound sounds[SOUND_COUNT];
-    bool sounds_loaded;
 } Game;
 
 void game_init(Game *game);
 void game_shutdown(Game *game);
 void game_update(Game *game);
-void game_draw(Game *game);
 
 #endif

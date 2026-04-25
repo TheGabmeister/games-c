@@ -1,4 +1,5 @@
 #include "game.h"
+#include "render.h"
 #include "sounds.h"
 
 int main(void) {
@@ -9,14 +10,14 @@ int main(void) {
 
     Game game;
     game_init(&game);
-    sounds_load(&game);
+    sounds_load(game.sounds);
 
     while (!WindowShouldClose() && !game.quit) {
         game_update(&game);
         game_draw(&game);
     }
 
-    sounds_unload(&game);
+    sounds_unload(game.sounds);
     game_shutdown(&game);
     CloseAudioDevice();
     CloseWindow();

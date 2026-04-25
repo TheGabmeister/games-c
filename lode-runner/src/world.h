@@ -42,8 +42,6 @@ typedef struct WorldTickResult {
     bool refilled_hole;
     bool refilled_tiles[GRID_ROWS][GRID_COLS];
     bool trapped_target;
-    int refill_r;
-    int refill_c;
 } WorldTickResult;
 
 void world_clear(World *world);
@@ -56,6 +54,10 @@ bool world_in_bounds(int r, int c);
 TileID world_tile_at(const World *world, int r, int c);
 bool world_tile_is_support(TileID tile, bool exit_revealed);
 bool world_tile_is_passable(TileID tile, bool exit_revealed);
+bool world_tile_is_climbable(TileID tile, bool exit_revealed);
+bool world_has_support(const World *world, int r, int c);
+bool world_can_enter(const World *world, int r, int c);
+bool world_can_step_side(const World *world, int r, int c);
 const char *world_tile_name(TileID tile);
 const char *world_pursuit_dir_name(PursuitDir dir);
 

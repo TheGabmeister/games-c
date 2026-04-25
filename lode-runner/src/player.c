@@ -6,32 +6,35 @@
 
 #define PLAYER_DEATH_SEC 0.6f
 
-static bool is_resting(const Actor *actor) {
+bool actor_is_resting(const Actor *actor) {
     return actor->t <= 0.0f && actor->tile_r == actor->dst_r && actor->tile_c == actor->dst_c;
 }
 
-static bool tile_is_climbable(TileID tile, bool exit_revealed) {
-    return tile == TILE_LADDER || (tile == TILE_EXIT_LADDER && exit_revealed);
+Vector2 actor_pixel_position(const Actor *actor) {
+    float t = actor->t;
+    float r = (float)actor->tile_r + ((float)actor->dst_r - (float)actor->tile_r) * t;
+    float c = (float)actor->tile_c + ((float)actor->dst_c - (float)actor->tile_c) * t;
+
+    return (Vector2){
+        (float)PLAY_OFFSET_X + c * (float)TILE_SIZE + (float)TILE_SIZE * 0.5f,
+        (float)PLAY_OFFSET_Y + r * (float)TILE_SIZE + (float)TILE_SIZE * 0.5f
+    };
 }
 
 static bool tile_is_empty_for_dig(TileID tile) {
     return tile == TILE_EMPTY || tile == TILE_HOLE;
 }
 
-static bool player_has_support(const World *world, int r, int c) {
-    return world_tile_is_support(world_tile_at(world, r + 1, c), world->all_gold_collected);
-}
-
 static PlayerState player_state_for_tile(const Player *player, const World *world) {
     TileID tile = world_tile_at(world, player->actor.tile_r, player->actor.tile_c);
 
-    if (tile_is_climbable(tile, world->all_gold_collected)) {
+    if (world_tile_is_climbable(tile, world->all_gold_collected)) {
         return PSTATE_CLIMB;
     }
     if (tile == TILE_ROPE) {
         return PSTATE_HANG;
     }
-    if (!player_has_support(world, player->actor.tile_r, player->actor.tile_c)) {
+    if (!world_has_support(world, player->actor.tile_r, player->actor.tile_c)) {
         return PSTATE_FALL;
     }
     return PSTATE_WALK;
@@ -61,23 +64,11 @@ static void start_step(Player *player, int dr, int dc, PlayerState state) {
     }
 }
 
-static bool can_enter(const World *world, int r, int c) {
-    return world_in_bounds(r, c) && world_tile_is_passable(world_tile_at(world, r, c), world->all_gold_collected);
-}
-
-static bool can_step_side_from_ladder(const World *world, int r, int c) {
-    TileID tile = world_tile_at(world, r, c);
-    return can_enter(world, r, c) &&
-           (tile_is_climbable(tile, world->all_gold_collected) ||
-            tile == TILE_ROPE ||
-            player_has_support(world, r, c));
-}
-
 static bool try_start_fall(Player *player, const World *world) {
     int r = player->actor.tile_r;
     int c = player->actor.tile_c;
 
-    if (can_enter(world, r + 1, c)) {
+    if (world_can_enter(world, r + 1, c)) {
         start_step(player, 1, 0, PSTATE_FALL);
         return true;
     }
@@ -110,7 +101,7 @@ static bool try_dig(Player *player, World *world, int dc, PlayerTickResult *resu
     if (!world_in_bounds(target_r, target_c) || !world_in_bounds(above_r, target_c)) {
         return false;
     }
-    if (player_state_for_tile(player, world) != PSTATE_WALK || !player_has_support(world, r, c)) {
+    if (player_state_for_tile(player, world) != PSTATE_WALK || !world_has_support(world, r, c)) {
         return false;
     }
     if (world_tile_at(world, target_r, target_c) != TILE_BRICK) {
@@ -160,11 +151,11 @@ static void decide_next_step(Player *player, World *world, PlayerTickResult *res
     int c = player->actor.tile_c;
 
     if (context == PSTATE_CLIMB) {
-        if (up && can_enter(world, r - 1, c)) {
+        if (up && world_can_enter(world, r - 1, c)) {
             start_step(player, -1, 0, PSTATE_CLIMB);
             return;
         }
-        if (down && can_enter(world, r + 1, c)) {
+        if (down && world_can_enter(world, r + 1, c)) {
             start_step(player, 1, 0, PSTATE_CLIMB);
             return;
         }
@@ -177,12 +168,12 @@ static void decide_next_step(Player *player, World *world, PlayerTickResult *res
     }
 
     if (left && !right &&
-        (context != PSTATE_CLIMB ? can_enter(world, r, c - 1) : can_step_side_from_ladder(world, r, c - 1))) {
+        (context != PSTATE_CLIMB ? world_can_enter(world, r, c - 1) : world_can_step_side(world, r, c - 1))) {
         start_step(player, 0, -1, context == PSTATE_HANG ? PSTATE_HANG : PSTATE_WALK);
         return;
     }
     if (right && !left &&
-        (context != PSTATE_CLIMB ? can_enter(world, r, c + 1) : can_step_side_from_ladder(world, r, c + 1))) {
+        (context != PSTATE_CLIMB ? world_can_enter(world, r, c + 1) : world_can_step_side(world, r, c + 1))) {
         start_step(player, 0, 1, context == PSTATE_HANG ? PSTATE_HANG : PSTATE_WALK);
         return;
     }
@@ -230,7 +221,7 @@ PlayerTickResult player_update(Player *player, World *world, float dt) {
         player->dig_lock_timer = 0.0f;
     }
 
-    if (!is_resting(&player->actor)) {
+    if (!actor_is_resting(&player->actor)) {
         player->actor.t += dt * speed_for_state(player->state);
 
         if (player->actor.t >= 1.0f) {
@@ -241,7 +232,9 @@ PlayerTickResult player_update(Player *player, World *world, float dt) {
 
             collect_gold_if_present(player, world, &result);
 
-            if (player->actor.tile_r == 0 && world->all_gold_collected) {
+            TileID exit_tile = world_tile_at(world, player->actor.tile_r, player->actor.tile_c);
+            if (player->actor.tile_r == 0 && world->all_gold_collected &&
+                exit_tile == TILE_EXIT_LADDER) {
                 result.reached_exit = true;
             }
         } else {
@@ -253,17 +246,6 @@ PlayerTickResult player_update(Player *player, World *world, float dt) {
 
     decide_next_step(player, world, &result);
     return result;
-}
-
-Vector2 player_pixel_position(const Player *player) {
-    float t = player->actor.t;
-    float r = (float)player->actor.tile_r + ((float)player->actor.dst_r - (float)player->actor.tile_r) * t;
-    float c = (float)player->actor.tile_c + ((float)player->actor.dst_c - (float)player->actor.tile_c) * t;
-
-    return (Vector2){
-        (float)PLAY_OFFSET_X + c * (float)TILE_SIZE + (float)TILE_SIZE * 0.5f,
-        (float)PLAY_OFFSET_Y + r * (float)TILE_SIZE + (float)TILE_SIZE * 0.5f
-    };
 }
 
 const char *player_state_name(PlayerState state) {

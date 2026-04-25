@@ -3,40 +3,16 @@
 #include <stdlib.h>
 #include <string.h>
 
-static bool is_resting(const Actor *actor) {
-    return actor->t <= 0.0f && actor->tile_r == actor->dst_r && actor->tile_c == actor->dst_c;
-}
-
-static bool tile_is_climbable(TileID tile, bool exit_revealed) {
-    return tile == TILE_LADDER || (tile == TILE_EXIT_LADDER && exit_revealed);
-}
-
-static bool has_support(const World *world, int r, int c) {
-    return world_tile_is_support(world_tile_at(world, r + 1, c), world->all_gold_collected);
-}
-
-static bool can_enter(const World *world, int r, int c) {
-    return world_in_bounds(r, c) && world_tile_is_passable(world_tile_at(world, r, c), world->all_gold_collected);
-}
-
-static bool can_step_side_from_ladder(const World *world, int r, int c) {
-    TileID tile = world_tile_at(world, r, c);
-    return can_enter(world, r, c) &&
-           (tile_is_climbable(tile, world->all_gold_collected) ||
-            tile == TILE_ROPE ||
-            has_support(world, r, c));
-}
-
 static GuardState state_for_tile(const Guard *guard, const World *world) {
     TileID tile = world_tile_at(world, guard->actor.tile_r, guard->actor.tile_c);
 
-    if (tile_is_climbable(tile, world->all_gold_collected)) {
+    if (world_tile_is_climbable(tile, world->all_gold_collected)) {
         return GSTATE_CLIMB;
     }
     if (tile == TILE_ROPE) {
         return GSTATE_HANG;
     }
-    if (!has_support(world, guard->actor.tile_r, guard->actor.tile_c)) {
+    if (!world_has_support(world, guard->actor.tile_r, guard->actor.tile_c)) {
         return GSTATE_FALL;
     }
     return GSTATE_WALK;
@@ -105,48 +81,34 @@ static bool tile_occupied_by_guard(const Guard guards[MAX_GUARDS], int guard_cou
     return false;
 }
 
-static bool legal_move(const World *world, GuardState context, PursuitDir dir, int *dr, int *dc) {
-    int dummy_dr = 0;
-    int dummy_dc = 0;
+static bool can_move_dir(const Guard *guard, const World *world, GuardState context, PursuitDir dir, int *dr, int *dc) {
+    int r = guard->actor.tile_r;
+    int c = guard->actor.tile_c;
 
     switch (dir) {
-        case PURSUE_LEFT: dummy_dc = -1; break;
-        case PURSUE_RIGHT: dummy_dc = 1; break;
-        case PURSUE_UP: dummy_dr = -1; break;
-        case PURSUE_DOWN: dummy_dr = 1; break;
+        case PURSUE_LEFT: *dr = 0; *dc = -1; break;
+        case PURSUE_RIGHT: *dr = 0; *dc = 1; break;
+        case PURSUE_UP: *dr = -1; *dc = 0; break;
+        case PURSUE_DOWN: *dr = 1; *dc = 0; break;
         case PURSUE_NONE:
         default:
             return false;
     }
 
-    (void)world;
-    (void)context;
-    *dr = dummy_dr;
-    *dc = dummy_dc;
-    return true;
-}
-
-static bool can_move_dir(const Guard *guard, const World *world, GuardState context, PursuitDir dir, int *dr, int *dc) {
-    int r = guard->actor.tile_r;
-    int c = guard->actor.tile_c;
-    if (!legal_move(world, context, dir, dr, dc)) {
-        return false;
-    }
-
     if (context == GSTATE_FALL) {
-        return dir == PURSUE_DOWN && can_enter(world, r + 1, c);
+        return dir == PURSUE_DOWN && world_can_enter(world, r + 1, c);
     }
     if (context == GSTATE_CLIMB && (*dc == 0) && (*dr == -1 || *dr == 1)) {
-        return can_enter(world, r + *dr, c);
+        return world_can_enter(world, r + *dr, c);
     }
     if (context == GSTATE_HANG && dir == PURSUE_DOWN) {
-        return can_enter(world, r + 1, c);
+        return world_can_enter(world, r + 1, c);
     }
     if (*dr == 0 && (*dc == -1 || *dc == 1)) {
         if (context == GSTATE_CLIMB) {
-            return can_step_side_from_ladder(world, r, c + *dc);
+            return world_can_step_side(world, r, c + *dc);
         }
-        return can_enter(world, r, c + *dc);
+        return world_can_enter(world, r, c + *dc);
     }
 
     return false;
@@ -244,7 +206,7 @@ static void decide_next_step(Guard *guard, int guard_index, const Guard guards[M
     guard->state = context;
 
     if (context == GSTATE_FALL) {
-        if (can_enter(world, guard->actor.tile_r + 1, guard->actor.tile_c)) {
+        if (world_can_enter(world, guard->actor.tile_r + 1, guard->actor.tile_c)) {
             start_step(guard, 1, 0, GSTATE_FALL);
         }
         return;
@@ -275,7 +237,7 @@ static void decide_next_step(Guard *guard, int guard_index, const Guard guards[M
             step_state = GSTATE_FALL;
         } else if (context == GSTATE_HANG) {
             step_state = GSTATE_HANG;
-        } else if (best_dir == PURSUE_DOWN && !has_support(world, guard->actor.tile_r, guard->actor.tile_c)) {
+        } else if (best_dir == PURSUE_DOWN && !world_has_support(world, guard->actor.tile_r, guard->actor.tile_c)) {
             step_state = GSTATE_FALL;
         }
         start_step(guard, best_dr, best_dc, step_state);
@@ -328,13 +290,13 @@ GuardTickResult guard_update(Guard *guard, int guard_index, const Guard guards[M
     if (guard->state == GSTATE_TRAPPED) {
         guard->hole_timer -= dt;
         handle_gold_on_tile(guard, world, &result, dt);
-        if (guard->hole_timer <= 0.0f && can_enter(world, guard->actor.tile_r - 1, guard->actor.tile_c)) {
+        if (guard->hole_timer <= 0.0f && world_can_enter(world, guard->actor.tile_r - 1, guard->actor.tile_c)) {
             start_step(guard, -1, 0, GSTATE_CLIMB);
         }
         return result;
     }
 
-    if (!is_resting(&guard->actor)) {
+    if (!actor_is_resting(&guard->actor)) {
         guard->actor.t += dt * speed_for_state(guard->state);
         if (guard->actor.t >= 1.0f) {
             guard->prev_r = guard->actor.tile_r;
@@ -377,17 +339,6 @@ bool guard_can_catch_player(const Guard *guard, const Player *player) {
     }
 
     return guard->actor.tile_r == player->actor.tile_r && guard->actor.tile_c == player->actor.tile_c;
-}
-
-Vector2 guard_pixel_position(const Guard *guard) {
-    float t = guard->actor.t;
-    float r = (float)guard->actor.tile_r + ((float)guard->actor.dst_r - (float)guard->actor.tile_r) * t;
-    float c = (float)guard->actor.tile_c + ((float)guard->actor.dst_c - (float)guard->actor.tile_c) * t;
-
-    return (Vector2){
-        (float)PLAY_OFFSET_X + c * (float)TILE_SIZE + (float)TILE_SIZE * 0.5f,
-        (float)PLAY_OFFSET_Y + r * (float)TILE_SIZE + (float)TILE_SIZE * 0.5f
-    };
 }
 
 const char *guard_state_name(GuardState state) {

@@ -43,10 +43,12 @@ typedef struct PlayerTickResult {
     bool dug_brick;
 } PlayerTickResult;
 
+bool actor_is_resting(const Actor *actor);
+Vector2 actor_pixel_position(const Actor *actor);
+
 void player_spawn(Player *player, const World *world);
 void player_start_death(Player *player);
 PlayerTickResult player_update(Player *player, World *world, float dt);
-Vector2 player_pixel_position(const Player *player);
 const char *player_state_name(PlayerState state);
 
 #endif

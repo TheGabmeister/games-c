@@ -35,37 +35,37 @@ static void set_error(char *error, int error_size, const char *message) {
     }
 }
 
-static bool tile_is_climbable(TileID tile, bool exit_revealed) {
+bool world_tile_is_climbable(TileID tile, bool exit_revealed) {
     return tile == TILE_LADDER || (tile == TILE_EXIT_LADDER && exit_revealed);
 }
 
-static bool has_support_at(const World *world, int r, int c) {
+bool world_has_support(const World *world, int r, int c) {
     return world_tile_is_support(world_tile_at(world, r + 1, c), world->all_gold_collected);
 }
 
-static bool can_enter_at(const World *world, int r, int c) {
+bool world_can_enter(const World *world, int r, int c) {
     return world_in_bounds(r, c) && world_tile_is_passable(world_tile_at(world, r, c), world->all_gold_collected);
 }
 
-static bool can_step_side_at(const World *world, int r, int c) {
+bool world_can_step_side(const World *world, int r, int c) {
     TileID tile = world_tile_at(world, r, c);
-    return can_enter_at(world, r, c) &&
-           (tile_is_climbable(tile, world->all_gold_collected) ||
+    return world_can_enter(world, r, c) &&
+           (world_tile_is_climbable(tile, world->all_gold_collected) ||
             tile == TILE_ROPE ||
-            has_support_at(world, r, c));
+            world_has_support(world, r, c));
 }
 
 static bool actor_can_move_between(const World *world, int from_r, int from_c, int to_r, int to_c) {
-    if (!world_in_bounds(from_r, from_c) || !can_enter_at(world, to_r, to_c)) {
+    if (!world_in_bounds(from_r, from_c) || !world_can_enter(world, to_r, to_c)) {
         return false;
     }
 
     int dr = to_r - from_r;
     int dc = to_c - from_c;
     TileID from_tile = world_tile_at(world, from_r, from_c);
-    bool on_climb = tile_is_climbable(from_tile, world->all_gold_collected);
+    bool on_climb = world_tile_is_climbable(from_tile, world->all_gold_collected);
     bool on_rope = from_tile == TILE_ROPE;
-    bool falling = !on_climb && !on_rope && !has_support_at(world, from_r, from_c);
+    bool falling = !on_climb && !on_rope && !world_has_support(world, from_r, from_c);
 
     if (falling) {
         return dr == 1 && dc == 0;
@@ -78,9 +78,9 @@ static bool actor_can_move_between(const World *world, int from_r, int from_c, i
     }
     if (dr == 0 && (dc == -1 || dc == 1)) {
         if (on_climb) {
-            return can_step_side_at(world, to_r, to_c);
+            return world_can_step_side(world, to_r, to_c);
         }
-        return can_enter_at(world, to_r, to_c);
+        return world_can_enter(world, to_r, to_c);
     }
     return false;
 }
@@ -307,8 +307,6 @@ WorldTickResult world_update_holes(World *world, float dt, int trap_r, int trap_
                 world->hole_timer[r][c] = 0.0f;
                 result.refilled_hole = true;
                 result.refilled_tiles[r][c] = true;
-                result.refill_r = r;
-                result.refill_c = c;
 
                 if (r == trap_r && c == trap_c) {
                     result.trapped_target = true;

@@ -8,7 +8,9 @@
       "Bash(cmake -S . -B build)",
       "Bash(cmake -B build -G \"Visual Studio 18 2026\" -A x64 -Wno-dev)",
       "Bash(cmake -S . -B build -G \"Visual Studio 18 2026\" -A x64 -Wno-dev)",
-      "WebSearch"
+      "WebSearch",
+      "Bash(grep -E '\\\\.\\(md|txt\\)$|CMake|Makefile')",
+      "Bash(timeout 3 ./template.exe)"
     ]
   }
 }
