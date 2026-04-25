@@ -673,7 +673,53 @@ These can be added later but are explicitly not part of v1 to keep the scope tig
 
 ---
 
-## 13. Acceptance Checklist
+## 13. Milestone Plan
+
+### Milestone 1: World and level loading
+
+- Add `world.h/.c` with the 30 x 22 tile grid, tile enums, spawn positions, gold count, and validation.
+- Load `src/assets/levels/level01.txt` through `level10.txt`, falling back to a built-in level when loading fails.
+- Draw the static world grid with placeholder tile rendering.
+- Done when malformed level files are rejected, a valid level renders, and the player/guard/gold spawn data is available to gameplay code.
+
+### Milestone 2: Player movement and digging
+
+- Add `player.h/.c` with walking, climbing, rope hanging, falling, rope drop, and tile-aligned movement rules.
+- Implement player digging left/right, hole timers, refill warnings, and player death when trapped by refill.
+- Keep lives and score owned by `game.c`; player code reports events instead of mutating run state.
+- Done when the player can traverse a loaded level, dig valid bricks, and reset correctly after death.
+
+### Milestone 3: Guards and pursuit
+
+- Add `guard.h/.c` with guard spawning, movement, falling, hole trapping, climb-out, death, and respawn.
+- Implement the priority-based pursuit behavior and rebuild pursuit data when the grid changes.
+- Add guard/player contact death and guard death from refilled holes.
+- Done when guards can chase, fall, get trapped, respawn, and produce observable pursuit behavior on ladders and ropes.
+
+### Milestone 4: Gold, scoring, and level flow
+
+- Implement gold pickup, guard gold carrying, guard drop-on-death/fall, and random guard drops.
+- Add all-gold-collected latching, exit ladder reveal, level clear, victory after level 10, and loop back to level 1.
+- Add `RunStats` score, lives, level index, restart, game over, and level clear rewards.
+- Done when a full level can be completed from start to clear, with dropped gold handled correctly.
+
+### Milestone 5: HUD, screens, audio, and assets
+
+- Add title, play, level-clear, game-over, and victory screen flows.
+- Add HUD rendering for score, lives, level number, pause state, and zero-padded score.
+- Generate/load final sprites and sounds, with missing sounds skipped gracefully.
+- Done when the game has complete user-facing flow from title to victory/game over.
+
+### Milestone 6: Polish and acceptance pass
+
+- Add bloom on gold, dig dust particles, exit reveal effect, parallax background, death effects, and scanline toggle.
+- Verify no dynamic allocation occurs in `game_update` or `game_draw`.
+- Run through the acceptance checklist and fix any gameplay, rendering, asset, or reset issues found.
+- Done when every v1 checklist item below passes.
+
+---
+
+## 14. Acceptance Checklist
 
 - [ ] Window opens at 1200×900 @ 60 fps with HUD on top, 60 px gutters left/right of grid.
 - [ ] All 10 levels load from text files; load-time validation rejects malformed files.
