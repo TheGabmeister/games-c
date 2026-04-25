@@ -15,6 +15,10 @@ static Vector2 random_direction(void) {
     return Vector2Normalize(direction);
 }
 
+static float random_time_cs(int min_centiseconds, int max_centiseconds) {
+    return (float)GetRandomValue(min_centiseconds, max_centiseconds) / 100.0f;
+}
+
 static Vector2 random_human_velocity(void) {
     return Vector2Scale(random_direction(), HUMAN_SPEED);
 }
@@ -23,8 +27,8 @@ static int find_nearest_human(Game *game, Vector2 position);
 
 static Vector2 edge_drift_velocity(Vector2 position, float speed) {
     Vector2 target = {
-        GetRandomValue(0, 1) == 0 ? 56.0f : WINDOW_WIDTH - 56.0f,
-        GetRandomValue(0, 1) == 0 ? 56.0f : WINDOW_HEIGHT - 56.0f
+        GetRandomValue(0, 1) == 0 ? DRIFTER_EDGE_MARGIN : WINDOW_WIDTH - DRIFTER_EDGE_MARGIN,
+        GetRandomValue(0, 1) == 0 ? DRIFTER_EDGE_MARGIN : WINDOW_HEIGHT - DRIFTER_EDGE_MARGIN
     };
     Vector2 to_target = Vector2Subtract(target, position);
 
@@ -41,7 +45,7 @@ void world_spawn_grunt(Game *game, Vector2 position) {
         if (!grunt->active) {
             grunt->active = true;
             grunt->position = position;
-            grunt->speed = GRUNT_SPEED + fminf((float)(game->wave - 1) * 5.5f, 130.0f);
+            grunt->speed = GRUNT_BASE_SPEED + fminf((float)(game->wave - 1) * GRUNT_WAVE_SPEED_STEP, GRUNT_WAVE_SPEED_CAP);
             grunt->radius = GRUNT_RADIUS;
             return;
         }
@@ -54,7 +58,7 @@ void world_spawn_hulk(Game *game, Vector2 position) {
         if (!hulk->active) {
             hulk->active = true;
             hulk->position = position;
-            hulk->speed = HULK_SPEED + fminf((float)(game->wave - 1) * 2.0f, 60.0f);
+            hulk->speed = HULK_BASE_SPEED + fminf((float)(game->wave - 1) * HULK_WAVE_SPEED_STEP, HULK_WAVE_SPEED_CAP);
             hulk->radius = HULK_RADIUS;
             hulk->stun_timer = 0.0f;
             return;
@@ -68,11 +72,11 @@ void world_spawn_spheroid(Game *game, Vector2 position) {
         if (!spheroid->active) {
             spheroid->active = true;
             spheroid->position = position;
-            spheroid->speed = SPHEROID_SPEED + fminf((float)(game->wave - 1) * 1.1f, 42.0f);
+            spheroid->speed = SPHEROID_BASE_SPEED + fminf((float)(game->wave - 1) * SPHEROID_WAVE_SPEED_STEP, SPHEROID_WAVE_SPEED_CAP);
             spheroid->radius = SPHEROID_RADIUS;
             spheroid->velocity = edge_drift_velocity(position, spheroid->speed);
-            spheroid->spawn_timer = (float)GetRandomValue(280, 430) / 100.0f;
-            spheroid->retarget_timer = (float)GetRandomValue(120, 240) / 100.0f;
+            spheroid->spawn_timer = random_time_cs(SPHEROID_INITIAL_SPAWN_MIN_CS, SPHEROID_INITIAL_SPAWN_MAX_CS);
+            spheroid->retarget_timer = random_time_cs(SPHEROID_RETARGET_MIN_CS, SPHEROID_RETARGET_MAX_CS);
             return;
         }
     }
@@ -84,11 +88,11 @@ void world_spawn_enforcer(Game *game, Vector2 position) {
         if (!enforcer->active) {
             enforcer->active = true;
             enforcer->position = position;
-            enforcer->speed = ENFORCER_SPEED + fminf((float)(game->wave - 1) * 1.4f, 55.0f);
+            enforcer->speed = ENFORCER_BASE_SPEED + fminf((float)(game->wave - 1) * ENFORCER_WAVE_SPEED_STEP, ENFORCER_WAVE_SPEED_CAP);
             enforcer->radius = ENFORCER_RADIUS;
             enforcer->velocity = edge_drift_velocity(position, enforcer->speed);
-            enforcer->shoot_timer = (float)GetRandomValue(90, 170) / 100.0f;
-            enforcer->retarget_timer = (float)GetRandomValue(80, 180) / 100.0f;
+            enforcer->shoot_timer = random_time_cs(ENFORCER_INITIAL_SHOOT_MIN_CS, ENFORCER_INITIAL_SHOOT_MAX_CS);
+            enforcer->retarget_timer = random_time_cs(ENFORCER_RETARGET_MIN_CS, ENFORCER_RETARGET_MAX_CS);
             return;
         }
     }
@@ -100,11 +104,11 @@ void world_spawn_quark(Game *game, Vector2 position) {
         if (!quark->active) {
             quark->active = true;
             quark->position = position;
-            quark->speed = QUARK_SPEED + fminf((float)(game->wave - 1) * 0.9f, 35.0f);
+            quark->speed = QUARK_BASE_SPEED + fminf((float)(game->wave - 1) * QUARK_WAVE_SPEED_STEP, QUARK_WAVE_SPEED_CAP);
             quark->radius = QUARK_RADIUS;
             quark->velocity = edge_drift_velocity(position, quark->speed);
-            quark->spawn_timer = (float)GetRandomValue(360, 520) / 100.0f;
-            quark->retarget_timer = (float)GetRandomValue(120, 260) / 100.0f;
+            quark->spawn_timer = random_time_cs(QUARK_INITIAL_SPAWN_MIN_CS, QUARK_INITIAL_SPAWN_MAX_CS);
+            quark->retarget_timer = random_time_cs(QUARK_RETARGET_MIN_CS, QUARK_RETARGET_MAX_CS);
             return;
         }
     }
@@ -116,11 +120,11 @@ void world_spawn_tank(Game *game, Vector2 position) {
         if (!tank->active) {
             tank->active = true;
             tank->position = position;
-            tank->speed = TANK_SPEED + fminf((float)(game->wave - 1) * 0.8f, 32.0f);
+            tank->speed = TANK_BASE_SPEED + fminf((float)(game->wave - 1) * TANK_WAVE_SPEED_STEP, TANK_WAVE_SPEED_CAP);
             tank->radius = TANK_RADIUS;
             tank->velocity = Vector2Scale(random_direction(), tank->speed);
-            tank->shoot_timer = (float)GetRandomValue(120, 220) / 100.0f;
-            tank->retarget_timer = (float)GetRandomValue(120, 250) / 100.0f;
+            tank->shoot_timer = random_time_cs(TANK_INITIAL_SHOOT_MIN_CS, TANK_INITIAL_SHOOT_MAX_CS);
+            tank->retarget_timer = random_time_cs(TANK_RETARGET_MIN_CS, TANK_RETARGET_MAX_CS);
             return;
         }
     }
@@ -132,9 +136,9 @@ void world_spawn_brain(Game *game, Vector2 position) {
         if (!brain->active) {
             brain->active = true;
             brain->position = position;
-            brain->speed = BRAIN_SPEED + fminf((float)(game->wave - 1) * 1.2f, 52.0f);
+            brain->speed = BRAIN_BASE_SPEED + fminf((float)(game->wave - 1) * BRAIN_WAVE_SPEED_STEP, BRAIN_WAVE_SPEED_CAP);
             brain->radius = BRAIN_RADIUS;
-            brain->shoot_timer = (float)GetRandomValue(110, 210) / 100.0f;
+            brain->shoot_timer = random_time_cs(BRAIN_INITIAL_SHOOT_MIN_CS, BRAIN_INITIAL_SHOOT_MAX_CS);
             brain->wobble = (float)GetRandomValue(0, 628) / 100.0f;
             return;
         }
@@ -147,7 +151,7 @@ void world_spawn_prog(Game *game, Vector2 position) {
         if (!prog->active) {
             prog->active = true;
             prog->position = position;
-            prog->speed = PROG_SPEED + fminf((float)(game->wave - 1) * 2.4f, 95.0f);
+            prog->speed = PROG_BASE_SPEED + fminf((float)(game->wave - 1) * PROG_WAVE_SPEED_STEP, PROG_WAVE_SPEED_CAP);
             prog->radius = PROG_RADIUS;
             return;
         }
@@ -163,7 +167,7 @@ void world_spawn_human(Game *game, Vector2 position, int type) {
             human->position = position;
             human->velocity = random_human_velocity();
             human->radius = HUMAN_RADIUS;
-            human->retarget_timer = (float)GetRandomValue(80, 180) / 100.0f;
+            human->retarget_timer = random_time_cs(HUMAN_RETARGET_MIN_CS, HUMAN_RETARGET_MAX_CS);
             return;
         }
     }
@@ -174,7 +178,7 @@ void world_update_brains_and_progs(Game *game, float dt) {
         Brain *brain = &game->brains[i];
         if (!brain->active) continue;
 
-        brain->wobble += dt * 4.0f;
+        brain->wobble += dt * BRAIN_WOBBLE_SPEED;
 
         Vector2 target = game->player_position;
         int human_index = find_nearest_human(game, brain->position);
@@ -186,7 +190,7 @@ void world_update_brains_and_progs(Game *game, float dt) {
         if (to_target.x != 0.0f || to_target.y != 0.0f) {
             Vector2 direction = Vector2Normalize(to_target);
             Vector2 side = (Vector2){ -direction.y, direction.x };
-            float weave = sinf(brain->wobble) * 0.45f;
+            float weave = sinf(brain->wobble) * BRAIN_WEAVE_AMOUNT;
             direction = Vector2Normalize(Vector2Add(direction, Vector2Scale(side, weave)));
             brain->position.x += direction.x * brain->speed * dt;
             brain->position.y += direction.y * brain->speed * dt;
@@ -204,9 +208,9 @@ void world_update_brains_and_progs(Game *game, float dt) {
                 direction = Vector2Normalize(direction);
             }
             world_spawn_projectile(game, PROJECTILE_CRUISE, brain->position, Vector2Scale(direction, CRUISE_SPEED));
-            float base_timer = 1.9f - (float)game->wave * 0.025f;
-            if (base_timer < 0.9f) base_timer = 0.9f;
-            brain->shoot_timer = base_timer + (float)GetRandomValue(0, 70) / 100.0f;
+            float base_timer = BRAIN_SHOOT_BASE_TIME - (float)game->wave * BRAIN_SHOOT_WAVE_STEP;
+            if (base_timer < BRAIN_SHOOT_MIN_TIME) base_timer = BRAIN_SHOOT_MIN_TIME;
+            brain->shoot_timer = base_timer + random_time_cs(0, BRAIN_SHOOT_RANDOM_MAX_CS);
         }
     }
 
@@ -247,7 +251,7 @@ void world_update_humans(Game *game, float dt) {
         human->retarget_timer -= dt;
         if (human->retarget_timer <= 0.0f) {
             human->velocity = random_human_velocity();
-            human->retarget_timer = (float)GetRandomValue(80, 180) / 100.0f;
+            human->retarget_timer = random_time_cs(HUMAN_RETARGET_MIN_CS, HUMAN_RETARGET_MAX_CS);
         }
 
         human->position.x += human->velocity.x * dt;
@@ -343,7 +347,7 @@ void world_update_spawners_and_shooters(Game *game, float dt) {
         spheroid->retarget_timer -= dt;
         if (spheroid->retarget_timer <= 0.0f) {
             spheroid->velocity = edge_drift_velocity(spheroid->position, spheroid->speed);
-            spheroid->retarget_timer = (float)GetRandomValue(120, 240) / 100.0f;
+            spheroid->retarget_timer = random_time_cs(SPHEROID_RETARGET_MIN_CS, SPHEROID_RETARGET_MAX_CS);
         }
 
         update_drifter(&spheroid->position, &spheroid->velocity, spheroid->radius, dt);
@@ -352,9 +356,9 @@ void world_update_spawners_and_shooters(Game *game, float dt) {
         if (spheroid->spawn_timer <= 0.0f) {
             world_spawn_enforcer(game, spheroid->position);
             world_add_particles(game, spheroid->position, BLUE, 8, 125.0f, 2.5f);
-            float base_timer = 3.7f - (float)game->wave * 0.06f;
-            if (base_timer < 2.0f) base_timer = 2.0f;
-            spheroid->spawn_timer = base_timer + (float)GetRandomValue(0, 100) / 100.0f;
+            float base_timer = SPHEROID_SPAWN_BASE_TIME - (float)game->wave * SPHEROID_SPAWN_WAVE_STEP;
+            if (base_timer < SPHEROID_SPAWN_MIN_TIME) base_timer = SPHEROID_SPAWN_MIN_TIME;
+            spheroid->spawn_timer = base_timer + random_time_cs(0, SPHEROID_SPAWN_RANDOM_MAX_CS);
         }
     }
 
@@ -365,7 +369,7 @@ void world_update_spawners_and_shooters(Game *game, float dt) {
         enforcer->retarget_timer -= dt;
         if (enforcer->retarget_timer <= 0.0f) {
             enforcer->velocity = edge_drift_velocity(enforcer->position, enforcer->speed);
-            enforcer->retarget_timer = (float)GetRandomValue(80, 180) / 100.0f;
+            enforcer->retarget_timer = random_time_cs(ENFORCER_RETARGET_MIN_CS, ENFORCER_RETARGET_MAX_CS);
         }
 
         update_drifter(&enforcer->position, &enforcer->velocity, enforcer->radius, dt);
@@ -373,8 +377,8 @@ void world_update_spawners_and_shooters(Game *game, float dt) {
         enforcer->shoot_timer -= dt;
         if (enforcer->shoot_timer <= 0.0f) {
             Vector2 target = {
-                game->player_position.x + (float)GetRandomValue(-85, 85),
-                game->player_position.y + (float)GetRandomValue(-85, 85)
+                game->player_position.x + (float)GetRandomValue(-ENFORCER_AIM_JITTER_PIXELS, ENFORCER_AIM_JITTER_PIXELS),
+                game->player_position.y + (float)GetRandomValue(-ENFORCER_AIM_JITTER_PIXELS, ENFORCER_AIM_JITTER_PIXELS)
             };
             Vector2 direction = Vector2Subtract(target, enforcer->position);
             if (direction.x == 0.0f && direction.y == 0.0f) {
@@ -383,9 +387,9 @@ void world_update_spawners_and_shooters(Game *game, float dt) {
                 direction = Vector2Normalize(direction);
             }
             world_spawn_projectile(game, PROJECTILE_SPARK, enforcer->position, Vector2Scale(direction, SPARK_SPEED));
-            float base_timer = 1.55f - (float)game->wave * 0.025f;
-            if (base_timer < 0.75f) base_timer = 0.75f;
-            enforcer->shoot_timer = base_timer + (float)GetRandomValue(0, 60) / 100.0f;
+            float base_timer = ENFORCER_SHOOT_BASE_TIME - (float)game->wave * ENFORCER_SHOOT_WAVE_STEP;
+            if (base_timer < ENFORCER_SHOOT_MIN_TIME) base_timer = ENFORCER_SHOOT_MIN_TIME;
+            enforcer->shoot_timer = base_timer + random_time_cs(0, ENFORCER_SHOOT_RANDOM_MAX_CS);
         }
     }
 
@@ -396,7 +400,7 @@ void world_update_spawners_and_shooters(Game *game, float dt) {
         quark->retarget_timer -= dt;
         if (quark->retarget_timer <= 0.0f) {
             quark->velocity = edge_drift_velocity(quark->position, quark->speed);
-            quark->retarget_timer = (float)GetRandomValue(140, 280) / 100.0f;
+            quark->retarget_timer = random_time_cs(QUARK_RETARGET_MIN_CS, QUARK_RETARGET_MAX_CS);
         }
 
         update_drifter(&quark->position, &quark->velocity, quark->radius, dt);
@@ -405,9 +409,9 @@ void world_update_spawners_and_shooters(Game *game, float dt) {
         if (quark->spawn_timer <= 0.0f) {
             world_spawn_tank(game, quark->position);
             world_add_particles(game, quark->position, RED, 8, 115.0f, 2.5f);
-            float base_timer = 4.4f - (float)game->wave * 0.04f;
-            if (base_timer < 2.4f) base_timer = 2.4f;
-            quark->spawn_timer = base_timer + (float)GetRandomValue(0, 120) / 100.0f;
+            float base_timer = QUARK_SPAWN_BASE_TIME - (float)game->wave * QUARK_SPAWN_WAVE_STEP;
+            if (base_timer < QUARK_SPAWN_MIN_TIME) base_timer = QUARK_SPAWN_MIN_TIME;
+            quark->spawn_timer = base_timer + random_time_cs(0, QUARK_SPAWN_RANDOM_MAX_CS);
         }
     }
 
@@ -418,7 +422,7 @@ void world_update_spawners_and_shooters(Game *game, float dt) {
         tank->retarget_timer -= dt;
         if (tank->retarget_timer <= 0.0f) {
             tank->velocity = Vector2Scale(random_direction(), tank->speed);
-            tank->retarget_timer = (float)GetRandomValue(130, 260) / 100.0f;
+            tank->retarget_timer = random_time_cs(TANK_RETARGET_MIN_CS, TANK_RETARGET_MAX_CS);
         }
 
         update_drifter(&tank->position, &tank->velocity, tank->radius, dt);
@@ -432,9 +436,9 @@ void world_update_spawners_and_shooters(Game *game, float dt) {
                 direction = Vector2Normalize(direction);
             }
             world_spawn_projectile(game, PROJECTILE_SHELL, tank->position, Vector2Scale(direction, SHELL_SPEED));
-            float base_timer = 2.1f - (float)game->wave * 0.025f;
-            if (base_timer < 1.05f) base_timer = 1.05f;
-            tank->shoot_timer = base_timer + (float)GetRandomValue(0, 90) / 100.0f;
+            float base_timer = TANK_SHOOT_BASE_TIME - (float)game->wave * TANK_SHOOT_WAVE_STEP;
+            if (base_timer < TANK_SHOOT_MIN_TIME) base_timer = TANK_SHOOT_MIN_TIME;
+            tank->shoot_timer = base_timer + random_time_cs(0, TANK_SHOOT_RANDOM_MAX_CS);
         }
     }
 }

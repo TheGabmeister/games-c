@@ -16,7 +16,7 @@ void world_add_float_text(Game *game, Vector2 position, int value, Color color) 
         if (!text->active) {
             text->active = true;
             text->position = position;
-            text->velocity = (Vector2){ 0.0f, -42.0f };
+            text->velocity = (Vector2){ 0.0f, -FLOAT_TEXT_RISE_SPEED };
             text->lifetime = FLOAT_TEXT_LIFETIME;
             text->value = value;
             text->color = color;
@@ -63,7 +63,7 @@ void world_add_score(Game *game, int value) {
 void world_update_effects(Game *game, float dt) {
     for (int i = 0; i < MAX_ELECTRODES; i++) {
         if (game->electrodes[i].active) {
-            game->electrodes[i].pulse += dt * 5.0f;
+            game->electrodes[i].pulse += dt * ELECTRODE_PULSE_SPEED;
         }
     }
 
@@ -85,7 +85,7 @@ void world_update_effects(Game *game, float dt) {
 
         particle->position.x += particle->velocity.x * dt;
         particle->position.y += particle->velocity.y * dt;
-        particle->velocity = Vector2Scale(particle->velocity, 0.92f);
+        particle->velocity = Vector2Scale(particle->velocity, PARTICLE_DRAG);
         particle->lifetime -= dt;
         if (particle->lifetime <= 0.0f) {
             particle->active = false;

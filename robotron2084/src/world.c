@@ -264,7 +264,7 @@ void world_update_playing(Game *game, float dt) {
 
     if (!world_has_clear_enemies(game)) {
         sound_play(game, SOUND_WAVE_CLEAR);
-        game->screen_flash = 0.12f;
+        game->screen_flash = WAVE_CLEAR_FLASH_TIME;
         game->wave++;
         if (game->wave > 255) {
             game->wave = 1;

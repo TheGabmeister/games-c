@@ -66,7 +66,7 @@ void world_resolve_bullet_collisions(Game *game) {
                 }
                 hulk->position.x = Clamp(hulk->position.x, hulk->radius, WINDOW_WIDTH - hulk->radius);
                 hulk->position.y = Clamp(hulk->position.y, hulk->radius, WINDOW_HEIGHT - hulk->radius);
-                hulk->stun_timer = HULK_STUN_TIME;
+                hulk->stun_timer = HULK_BULLET_STUN_TIME;
                 bullet->active = false;
                 world_add_particles(game, hulk->position, LIME, 5, 105.0f, 2.5f);
                 sound_play(game, SOUND_HULK_HIT);
@@ -233,8 +233,8 @@ void world_resolve_grunt_electrode_collisions(Game *game) {
 
 static void handle_player_death(Game *game) {
     world_add_particles(game, game->player_position, SKYBLUE, 18, 230.0f, 3.0f);
-    game->screen_shake = 0.28f;
-    game->screen_flash = 0.18f;
+    game->screen_shake = SCREEN_SHAKE_DURATION;
+    game->screen_flash = SCREEN_FLASH_DURATION;
     sound_play(game, SOUND_PLAYER_DIE);
     game->lives--;
     if (game->lives <= 0) {

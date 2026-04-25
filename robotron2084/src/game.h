@@ -1,113 +1,11 @@
 #ifndef GAME_H
 #define GAME_H
 
+#include "game_config.h"
 #include "raylib.h"
 #include <stdbool.h>
 #include <stdlib.h>
 #include <string.h>
-
-// --- Window ---
-#define WINDOW_WIDTH        1200
-#define WINDOW_HEIGHT       900
-#define TARGET_FPS          60
-
-// --- Player ---
-#define PLAYER_START_X      (WINDOW_WIDTH * 0.5f)
-#define PLAYER_START_Y      (WINDOW_HEIGHT * 0.5f)
-#define PLAYER_LIVES        3
-#define PLAYER_RADIUS       14.0f
-#define PLAYER_SPEED        360.0f
-
-// --- Bullets ---
-#define MAX_BULLETS         96
-#define BULLET_RADIUS       5.0f
-#define BULLET_SPEED        760.0f
-#define BULLET_LIFETIME     0.8f
-#define BULLET_FIRE_RATE    0.08f
-
-// --- Grunts ---
-#define MAX_GRUNTS          96
-#define GRUNT_RADIUS        13.0f
-#define GRUNT_SPEED         115.0f
-#define GRUNT_SCORE         100
-
-// --- Hulks ---
-#define MAX_HULKS           18
-#define HULK_RADIUS         22.0f
-#define HULK_SPEED          78.0f
-#define HULK_STUN_TIME      0.18f
-#define HULK_KNOCKBACK      24.0f
-
-// --- Spawners and Shooters ---
-#define MAX_SPHEROIDS       12
-#define MAX_ENFORCERS       36
-#define MAX_QUARKS          12
-#define MAX_TANKS           28
-#define SPHEROID_RADIUS     17.0f
-#define ENFORCER_RADIUS     15.0f
-#define QUARK_RADIUS        17.0f
-#define TANK_RADIUS         18.0f
-#define SPHEROID_SPEED      92.0f
-#define ENFORCER_SPEED      105.0f
-#define QUARK_SPEED         82.0f
-#define TANK_SPEED          70.0f
-#define SPHEROID_SCORE      1000
-#define ENFORCER_SCORE      150
-#define QUARK_SCORE         1000
-#define TANK_SCORE          200
-
-// --- Brain Waves ---
-#define MAX_BRAINS          16
-#define MAX_PROGS           40
-#define BRAIN_RADIUS        18.0f
-#define PROG_RADIUS         12.0f
-#define BRAIN_SPEED         88.0f
-#define PROG_SPEED          185.0f
-#define BRAIN_SCORE         500
-#define PROG_SCORE          100
-
-// --- Enemy Projectiles ---
-#define MAX_PROJECTILES     160
-#define SPARK_RADIUS        6.0f
-#define SHELL_RADIUS        8.0f
-#define CRUISE_RADIUS       7.0f
-#define SPARK_SPEED         275.0f
-#define SHELL_SPEED         235.0f
-#define CRUISE_SPEED        245.0f
-#define SPARK_LIFETIME      3.8f
-#define SHELL_LIFETIME      5.5f
-#define CRUISE_LIFETIME     6.0f
-#define SPARK_SCORE         25
-#define SHELL_SCORE         50
-#define CRUISE_SCORE        25
-
-// --- Humans ---
-#define MAX_HUMANS          40
-#define HUMAN_RADIUS        10.0f
-#define HUMAN_SPEED         55.0f
-#define WAVE_START_HUMANS   5
-#define WAVE_HUMAN_MAX      12
-
-// --- Electrodes ---
-#define MAX_ELECTRODES      48
-#define ELECTRODE_RADIUS    12.0f
-#define WAVE_START_ELECTRODES 10
-#define WAVE_ELECTRODE_MAX  24
-
-// --- Floating Text ---
-#define MAX_FLOAT_TEXT      48
-#define FLOAT_TEXT_LIFETIME 0.85f
-
-// --- Particles ---
-#define MAX_PARTICLES       360
-
-// --- Waves ---
-#define WAVE_START_GRUNTS   18
-#define WAVE_GRUNT_STEP     6
-#define RESPAWN_INVULN_TIME 1.25f
-#define PLAYER_DEATH_PAUSE  1.2f
-#define WAVE_INTRO_TIME     1.6f
-#define EXTRA_LIFE_SCORE    25000
 
 typedef enum SoundID {
     SOUND_START = 0,

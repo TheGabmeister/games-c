@@ -124,7 +124,7 @@ void world_update_projectiles(Game *game, float dt) {
         projectile->lifetime -= dt;
 
         if (projectile->type == PROJECTILE_CRUISE) {
-            projectile->wobble += dt * 8.0f;
+            projectile->wobble += dt * CRUISE_WOBBLE_SPEED;
             Vector2 desired = Vector2Subtract(game->player_position, projectile->position);
             if (desired.x != 0.0f || desired.y != 0.0f) {
                 desired = Vector2Normalize(desired);
@@ -136,8 +136,8 @@ void world_update_projectiles(Game *game, float dt) {
                 }
 
                 Vector2 side = (Vector2){ -desired.y, desired.x };
-                desired = Vector2Normalize(Vector2Add(desired, Vector2Scale(side, sinf(projectile->wobble) * 0.55f)));
-                Vector2 blended = Vector2Normalize(Vector2Add(Vector2Scale(current, 0.88f), Vector2Scale(desired, 0.12f)));
+                desired = Vector2Normalize(Vector2Add(desired, Vector2Scale(side, sinf(projectile->wobble) * CRUISE_WEAVE_AMOUNT)));
+                Vector2 blended = Vector2Normalize(Vector2Add(Vector2Scale(current, CRUISE_CURRENT_WEIGHT), Vector2Scale(desired, CRUISE_DESIRED_WEIGHT)));
                 projectile->velocity = Vector2Scale(blended, CRUISE_SPEED);
             }
 

@@ -17,7 +17,8 @@ or sampled audio is used.
 ```
 src/
   main.c              raylib init, main loop, shutdown
-  game.h / game.c     shared constants, enums, structs, top-level state
+  game_config.h       compile-time tuning constants
+  game.h / game.c     enums, structs, central Game state, top-level state
                       transitions, HUD, overlays
   world.h / world.c   playfield simulation entry points
   world_internal.h    shared declarations between world_*.c files
@@ -52,8 +53,8 @@ gameplay falls back to colored primitives or silence.
 ## Where To Edit
 
 - **Tuning numbers** (player speed, fire rate, bullet lifetime, max counts,
-  scoring values, extra-life threshold): constants at the top of
-  [src/game.h](src/game.h).
+  scoring values, spawn timers, wave speed scaling, presentation timings):
+  [src/game_config.h](src/game_config.h).
 - **Game state machine** (title, wave intro, playing, paused, player dead,
   game over): [src/game.c](src/game.c).
 - **Wave contents and difficulty scaling**: wave-building functions in

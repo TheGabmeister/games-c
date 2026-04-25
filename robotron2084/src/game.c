@@ -143,7 +143,7 @@ void game_draw(Game *game) {
 
     Vector2 shake = { 0.0f, 0.0f };
     if (game->screen_shake > 0.0f) {
-        float amount = 10.0f * (game->screen_shake / 0.28f);
+        float amount = 10.0f * (game->screen_shake / SCREEN_SHAKE_DURATION);
         shake.x = (float)GetRandomValue(-(int)amount, (int)amount);
         shake.y = (float)GetRandomValue(-(int)amount, (int)amount);
     }
@@ -187,7 +187,7 @@ void game_draw(Game *game) {
     }
 
     if (game->screen_flash > 0.0f) {
-        float alpha = Clamp(game->screen_flash / 0.18f, 0.0f, 1.0f);
+        float alpha = Clamp(game->screen_flash / SCREEN_FLASH_DURATION, 0.0f, 1.0f);
         DrawRectangle(0, 0, WINDOW_WIDTH, WINDOW_HEIGHT, Fade(RAYWHITE, alpha * 0.22f));
     }
 
