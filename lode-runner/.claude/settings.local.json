@@ -10,7 +10,9 @@
       "Bash(cmake -S . -B build -G \"Visual Studio 18 2026\" -A x64 -Wno-dev)",
       "WebSearch",
       "Bash(grep -E '\\\\.\\(md|txt\\)$|CMake|Makefile')",
-      "Bash(timeout 3 ./template.exe)"
+      "Bash(timeout 3 ./template.exe)",
+      "Bash(where inkscape *)",
+      "Bash(timeout 5 ./template.exe -screenshot)"
     ]
   }
 }

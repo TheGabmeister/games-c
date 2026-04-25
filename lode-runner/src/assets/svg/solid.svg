@@ -1,0 +1,20 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 36 36">
+  <!-- Base -->
+  <rect width="36" height="36" fill="#4C525E"/>
+  <!-- Beveled edges -->
+  <rect x="0" y="0" width="36" height="2" fill="#5E6672"/>
+  <rect x="0" y="0" width="2" height="36" fill="#5E6672"/>
+  <rect x="0" y="34" width="36" height="2" fill="#3A3F48"/>
+  <rect x="34" y="0" width="2" height="36" fill="#3A3F48"/>
+  <!-- Inner inset -->
+  <rect x="5" y="5" width="26" height="26" rx="1" fill="#434950"/>
+  <rect x="5" y="5" width="26" height="26" rx="1" fill="none" stroke="#6E7682" stroke-width="1.5"/>
+  <!-- Rivet details -->
+  <circle cx="9" cy="9" r="2" fill="#5A6170"/>
+  <circle cx="27" cy="9" r="2" fill="#5A6170"/>
+  <circle cx="9" cy="27" r="2" fill="#5A6170"/>
+  <circle cx="27" cy="27" r="2" fill="#5A6170"/>
+  <!-- Center cross -->
+  <line x1="14" y1="18" x2="22" y2="18" stroke="#5A6170" stroke-width="1.5"/>
+  <line x1="18" y1="14" x2="18" y2="22" stroke="#5A6170" stroke-width="1.5"/>
+</svg>

@@ -1,0 +1,15 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 36 36">
+  <!-- Outer glow -->
+  <circle cx="18" cy="18" r="14" fill="#F7C437" opacity="0.15"/>
+  <!-- Coin body -->
+  <circle cx="18" cy="18" r="10" fill="#F7C437"/>
+  <!-- Coin rim -->
+  <circle cx="18" cy="18" r="10" fill="none" stroke="#D4A320" stroke-width="1.5"/>
+  <!-- Inner circle -->
+  <circle cx="18" cy="18" r="7" fill="none" stroke="#FFDF60" stroke-width="1"/>
+  <!-- Dollar sign -->
+  <text x="18" y="23" font-family="sans-serif" font-size="14" font-weight="bold"
+        fill="#D4A320" text-anchor="middle">$</text>
+  <!-- Shine highlight -->
+  <circle cx="14" cy="14" r="3" fill="#FFEF92" opacity="0.7"/>
+</svg>

@@ -1,0 +1,18 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 36 36">
+  <!-- Dark pit -->
+  <rect width="36" height="36" fill="#0D0E12"/>
+  <!-- Crumbling brick edges -->
+  <!-- Top edge fragments -->
+  <rect x="0" y="0" width="10" height="6" rx="1" fill="#6B3D28"/>
+  <rect x="14" y="0" width="8" height="4" rx="1" fill="#5A3320"/>
+  <rect x="26" y="0" width="10" height="6" rx="1" fill="#6B3D28"/>
+  <!-- Bottom edge fragments -->
+  <rect x="0" y="28" width="12" height="8" rx="1" fill="#6B3D28"/>
+  <rect x="16" y="30" width="6" height="6" rx="1" fill="#5A3320"/>
+  <rect x="24" y="28" width="12" height="8" rx="1" fill="#6B3D28"/>
+  <!-- Side crumble -->
+  <rect x="0" y="8" width="4" height="18" fill="#4D3328"/>
+  <rect x="32" y="8" width="4" height="18" fill="#4D3328"/>
+  <!-- Inner shadow gradient -->
+  <rect x="5" y="7" width="26" height="22" rx="2" fill="#080A0D"/>
+</svg>

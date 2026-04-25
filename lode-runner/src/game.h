@@ -6,6 +6,7 @@
 #include "particles.h"
 #include "player.h"
 #include "sounds.h"
+#include "textures.h"
 #include "world.h"
 #include "raylib.h"
 #include <stdbool.h>
@@ -38,6 +39,7 @@ typedef struct Game {
     char level_status[160];
 
     Texture2D bg_texture;
+    Texture2D sprites[TEX_COUNT];
     Sound sounds[SOUND_COUNT];
 } Game;
 

@@ -1,0 +1,20 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 36 36">
+  <!-- Head -->
+  <circle cx="18" cy="10" r="7" fill="#87CEEB"/>
+  <circle cx="18" cy="10" r="7.5" fill="none" stroke="#B8E4F8" stroke-width="1"/>
+  <!-- Visor -->
+  <rect x="12" y="6" width="13" height="8" rx="3" fill="#0F2644"/>
+  <!-- Eye -->
+  <circle cx="22" cy="9" r="2.2" fill="#FFFFFF"/>
+  <!-- Body -->
+  <rect x="12" y="17" width="12" height="10" rx="2" fill="#87CEEB"/>
+  <rect x="12" y="17" width="12" height="10" rx="2" fill="none" stroke="#B8E4F8" stroke-width="0.8"/>
+  <!-- Belt -->
+  <rect x="12" y="23" width="12" height="2" rx="0.5" fill="#3A7AA0"/>
+  <!-- Legs -->
+  <rect x="13" y="27" width="4" height="7" rx="1.5" fill="#5BA0D0"/>
+  <rect x="19" y="27" width="4" height="7" rx="1.5" fill="#5BA0D0"/>
+  <!-- Boots -->
+  <rect x="12" y="32" width="6" height="3" rx="1" fill="#3A6A90"/>
+  <rect x="18" y="32" width="6" height="3" rx="1" fill="#3A6A90"/>
+</svg>

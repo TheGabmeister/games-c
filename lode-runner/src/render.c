@@ -1,121 +1,93 @@
 #include "render.h"
 #include "particles.h"
+#include "textures.h"
 
 #include <math.h>
 
-/* ——— Color helpers ——— */
+/* ——— Sprite helpers ——— */
 
-static Color color_lerp(Color a, Color b, float t) {
-    return (Color){
-        (unsigned char)((float)a.r + ((float)b.r - (float)a.r) * t),
-        (unsigned char)((float)a.g + ((float)b.g - (float)a.g) * t),
-        (unsigned char)((float)a.b + ((float)b.b - (float)a.b) * t),
-        (unsigned char)((float)a.a + ((float)b.a - (float)a.a) * t),
-    };
+static void draw_sprite(Texture2D tex, int x, int y, Color tint) {
+    if (tex.id != 0) {
+        DrawTexture(tex, x, y, tint);
+    }
+}
+
+static void draw_sprite_flipped(Texture2D tex, float cx, float cy, Dir facing, Color tint) {
+    if (tex.id == 0) return;
+    float w = (float)tex.width;
+    float h = (float)tex.height;
+    Rectangle src = { 0, 0, facing == DIR_RIGHT ? w : -w, h };
+    Rectangle dst = { cx - w * 0.5f, cy - h * 0.5f, w, h };
+    DrawTexturePro(tex, src, dst, (Vector2){ 0, 0 }, 0.0f, tint);
 }
 
 /* ——— Tile rendering ——— */
 
-static Color tile_base_color(TileID tile, bool exit_revealed, float exit_alpha) {
-    Color hidden = { 26, 29, 36, 255 };
+static TextureID tex_for_tile(TileID tile) {
     switch (tile) {
-        case TILE_BRICK:        return (Color){ 133, 73, 45, 255 };
-        case TILE_SOLID:        return (Color){ 76, 82, 94, 255 };
-        case TILE_LADDER:       return (Color){ 202, 151, 78, 255 };
-        case TILE_ROPE:         return hidden;
-        case TILE_GOLD:         return hidden;
-        case TILE_EXIT_LADDER:
-            if (exit_revealed)
-                return color_lerp(hidden, (Color){ 93, 190, 207, 255 }, exit_alpha);
-            return hidden;
-        case TILE_TRAPDOOR:     return (Color){ 102, 63, 47, 255 };
-        case TILE_HOLE:         return (Color){ 13, 14, 18, 255 };
-        case TILE_EMPTY:
-        default:
-            return hidden;
+        case TILE_BRICK:        return TEX_BRICK;
+        case TILE_SOLID:        return TEX_SOLID;
+        case TILE_LADDER:       return TEX_LADDER;
+        case TILE_ROPE:         return TEX_ROPE;
+        case TILE_GOLD:         return TEX_GOLD;
+        case TILE_EXIT_LADDER:  return TEX_EXIT_LADDER;
+        case TILE_TRAPDOOR:     return TEX_TRAPDOOR;
+        case TILE_HOLE:         return TEX_HOLE;
+        default:                return TEX_COUNT;
     }
 }
 
-static Rectangle tile_rect(int r, int c) {
-    return (Rectangle){
-        (float)(PLAY_OFFSET_X + c * TILE_SIZE),
-        (float)(PLAY_OFFSET_Y + r * TILE_SIZE),
-        (float)TILE_SIZE,
-        (float)TILE_SIZE
-    };
-}
+static void draw_tile(TileID tile, int r, int c, bool exit_revealed, float exit_alpha,
+                       float hole_timer, const Texture2D sprites[TEX_COUNT]) {
+    int x = PLAY_OFFSET_X + c * TILE_SIZE;
+    int y = PLAY_OFFSET_Y + r * TILE_SIZE;
 
-static void draw_tile(TileID tile, int r, int c, bool exit_revealed, float exit_alpha, float hole_timer) {
-    Rectangle rect = tile_rect(r, c);
-    DrawRectangleRec(rect, tile_base_color(tile, exit_revealed, exit_alpha));
-    DrawRectangleLinesEx(rect, 1.0f, (Color){ 45, 49, 60, 145 });
+    if (tile == TILE_EXIT_LADDER && !exit_revealed) {
+        return;
+    }
 
-    if (tile == TILE_BRICK || tile == TILE_TRAPDOOR) {
-        DrawLine((int)rect.x, (int)(rect.y + 12),
-                 (int)(rect.x + rect.width), (int)(rect.y + 12), (Color){ 94, 48, 33, 180 });
-        DrawLine((int)rect.x, (int)(rect.y + 24),
-                 (int)(rect.x + rect.width), (int)(rect.y + 24), (Color){ 94, 48, 33, 180 });
-        DrawLine((int)(rect.x + 18), (int)rect.y,
-                 (int)(rect.x + 18), (int)(rect.y + 12), (Color){ 94, 48, 33, 180 });
-        DrawLine((int)(rect.x + 9), (int)(rect.y + 12),
-                 (int)(rect.x + 9), (int)(rect.y + 24), (Color){ 94, 48, 33, 180 });
-    } else if (tile == TILE_SOLID) {
-        DrawRectangleLinesEx(
-            (Rectangle){ rect.x + 4, rect.y + 4, rect.width - 8, rect.height - 8 },
-            2.0f, (Color){ 110, 118, 130, 160 });
-    } else if (tile == TILE_LADDER || (tile == TILE_EXIT_LADDER && exit_revealed)) {
-        unsigned char a = (tile == TILE_EXIT_LADDER)
-            ? (unsigned char)(255.0f * exit_alpha) : 255;
-        Color rail = (tile == TILE_EXIT_LADDER)
-            ? (Color){ 138, 235, 243, a }
-            : (Color){ 239, 198, 114, 255 };
-        DrawLineEx((Vector2){ rect.x + 10, rect.y + 3 },
-                   (Vector2){ rect.x + 10, rect.y + rect.height - 3 }, 3.0f, rail);
-        DrawLineEx((Vector2){ rect.x + 26, rect.y + 3 },
-                   (Vector2){ rect.x + 26, rect.y + rect.height - 3 }, 3.0f, rail);
-        DrawLineEx((Vector2){ rect.x + 10, rect.y + 12 },
-                   (Vector2){ rect.x + 26, rect.y + 12 }, 2.0f, rail);
-        DrawLineEx((Vector2){ rect.x + 10, rect.y + 24 },
-                   (Vector2){ rect.x + 26, rect.y + 24 }, 2.0f, rail);
-    } else if (tile == TILE_ROPE) {
-        DrawLineEx((Vector2){ rect.x, rect.y + 12 },
-                   (Vector2){ rect.x + rect.width, rect.y + 12 }, 4.0f, (Color){ 195, 143, 74, 255 });
-        DrawLineEx((Vector2){ rect.x + 8, rect.y + 14 },
-                   (Vector2){ rect.x + 28, rect.y + 14 }, 1.0f, (Color){ 246, 201, 124, 180 });
-    } else if (tile == TILE_GOLD) {
-        Vector2 center = { rect.x + rect.width * 0.5f, rect.y + rect.height * 0.5f };
-        BeginBlendMode(BLEND_ADDITIVE);
-        DrawCircleV(center, 16.0f, (Color){ 247, 196, 55, 40 });
-        EndBlendMode();
-        DrawCircleV(center, 10.0f, (Color){ 247, 196, 55, 255 });
+    TextureID tex_id = tex_for_tile(tile);
+    if (tex_id >= TEX_COUNT) return;
+
+    Color tint = WHITE;
+    if (tile == TILE_EXIT_LADDER) {
+        tint.a = (unsigned char)(255.0f * exit_alpha);
+    }
+
+    draw_sprite(sprites[tex_id], x, y, tint);
+
+    if (tile == TILE_GOLD) {
+        Vector2 center = { (float)x + TILE_SIZE * 0.5f, (float)y + TILE_SIZE * 0.5f };
         float sparkle = 0.5f + 0.5f * sinf((float)GetTime() * 4.0f + (float)(r * 7 + c * 13));
         DrawCircleV((Vector2){ center.x - 3, center.y - 3 },
                     2.0f + sparkle,
                     (Color){ 255, 239, 146, (unsigned char)(180.0f * sparkle) });
     } else if (tile == TILE_HOLE) {
-        Color rim = (Color){ 77, 51, 40, 255 };
+        Rectangle rect = { (float)x, (float)y, (float)TILE_SIZE, (float)TILE_SIZE };
+        Color rim = (Color){ 77, 51, 40, 0 };
         if (hole_timer <= DIG_REFILL_SEC - DIG_WARN_FLASH_AT) {
             rim = RED;
         } else if (hole_timer <= DIG_REFILL_SEC - DIG_WARN_PULSE_AT) {
             rim = ORANGE;
         }
-        DrawRectangleLinesEx(
-            (Rectangle){ rect.x + 3, rect.y + 18, rect.width - 6, 12 }, 3.0f, rim);
+        if (rim.a > 0) {
+            DrawRectangleLinesEx(rect, 2.0f, rim);
+        }
     }
 }
 
 /* ——— World rendering ——— */
 
-static void draw_world(const World *world, float exit_alpha) {
+static void draw_world(const Game *game, float exit_alpha) {
     DrawRectangle(PLAY_OFFSET_X, PLAY_OFFSET_Y,
                   GRID_COLS * TILE_SIZE, GRID_ROWS * TILE_SIZE,
                   (Color){ 15, 17, 23, 255 });
 
     for (int r = 0; r < GRID_ROWS; r++) {
         for (int c = 0; c < GRID_COLS; c++) {
-            draw_tile(world->tiles[r][c], r, c,
-                      world->all_gold_collected, exit_alpha,
-                      world->hole_timer[r][c]);
+            draw_tile(game->world.tiles[r][c], r, c,
+                      game->world.all_gold_collected, exit_alpha,
+                      game->world.hole_timer[r][c], game->sprites);
         }
     }
 }
@@ -138,26 +110,23 @@ static void draw_parallax(const Game *game) {
 
 /* ——— Player rendering ——— */
 
-static void draw_player(const Player *player) {
+static void draw_player(const Game *game) {
+    const Player *player = &game->player;
     Vector2 pos = actor_pixel_position(&player->actor);
-    Color body = SKYBLUE;
+    Color tint = WHITE;
 
     if (player->state == PSTATE_DEAD) {
         float alpha = player->death_timer / 0.6f;
         if (alpha < 0.0f) alpha = 0.0f;
-        body.a = (unsigned char)(255.0f * alpha);
+        tint.a = (unsigned char)(255.0f * alpha);
     } else if (player->state == PSTATE_DIG) {
-        body = (Color){ 80, 210, 255, 255 };
+        tint = (Color){ 180, 230, 255, 255 };
     } else if (player->state == PSTATE_FALL) {
-        body = (Color){ 111, 176, 255, 255 };
+        tint = (Color){ 200, 220, 255, 255 };
     }
 
-    DrawCircleV(pos, 12.0f, body);
-    DrawCircleLines((int)pos.x, (int)pos.y, 13.0f, RAYWHITE);
-    DrawRectangle((int)pos.x - 5, (int)pos.y - 3, 10, 11,
-                  (Color){ 15, 38, 68, body.a });
-    DrawCircle((int)pos.x + (player->actor.facing == DIR_RIGHT ? 4 : -4),
-               (int)pos.y - 4, 2.0f, RAYWHITE);
+    draw_sprite_flipped(game->sprites[TEX_PLAYER], pos.x, pos.y,
+                        player->actor.facing, tint);
 }
 
 /* ——— Guard rendering ——— */
@@ -168,18 +137,15 @@ static void draw_guards(const Game *game) {
         if (!guard->active || guard->state == GSTATE_RESPAWN) continue;
 
         Vector2 pos = actor_pixel_position(&guard->actor);
-        Color body = (Color){ 219, 72, 68, 255 };
+        Color tint = WHITE;
         if (guard->state == GSTATE_TRAPPED)
-            body = (Color){ 168, 84, 68, 255 };
+            tint = (Color){ 180, 160, 150, 255 };
         else if (guard->state == GSTATE_FALL)
-            body = (Color){ 238, 104, 86, 255 };
+            tint = (Color){ 255, 220, 210, 255 };
 
-        DrawRectangleRounded(
-            (Rectangle){ pos.x - 10, pos.y - 12, 20, 24 }, 0.25f, 4, body);
-        DrawRectangleLinesEx(
-            (Rectangle){ pos.x - 10, pos.y - 12, 20, 24 }, 1.0f, RAYWHITE);
-        DrawCircle((int)pos.x + (guard->actor.facing == DIR_RIGHT ? 4 : -4),
-                   (int)pos.y - 5, 2.0f, RAYWHITE);
+        draw_sprite_flipped(game->sprites[TEX_GUARD], pos.x, pos.y,
+                            guard->actor.facing, tint);
+
         if (guard->carries_gold) {
             DrawCircle((int)pos.x, (int)pos.y - 18, 4.0f,
                        (Color){ 247, 196, 55, 255 });
@@ -294,9 +260,9 @@ void game_draw(Game *game) {
             BeginMode2D(cam);
         }
 
-        draw_world(&game->world, exit_alpha);
+        draw_world(game, exit_alpha);
         draw_guards(game);
-        draw_player(&game->player);
+        draw_player(game);
         particles_draw(&game->particles);
 
         if (shaking) EndMode2D();
