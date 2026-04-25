@@ -4,18 +4,20 @@
 int main(void) {
     InitWindow(WINDOW_WIDTH, WINDOW_HEIGHT, "Lode Runner");
     SetTargetFPS(TARGET_FPS);
+    SetExitKey(0);
     InitAudioDevice();
 
     Game game;
     game_init(&game);
     sounds_load(&game);
 
-    while (!WindowShouldClose()) {
+    while (!WindowShouldClose() && !game.quit) {
         game_update(&game);
         game_draw(&game);
     }
 
     sounds_unload(&game);
+    game_shutdown(&game);
     CloseAudioDevice();
     CloseWindow();
     return 0;
