@@ -47,6 +47,6 @@
 #define SHAKE_DURATION      0.15f
 #define SHAKE_MAGNITUDE     4.0f
 #define EXIT_REVEAL_SEC     0.6f
-#define SCANLINE_ALPHA      25
+#define GAMEPAD_DEADZONE    0.5f
 
 #endif

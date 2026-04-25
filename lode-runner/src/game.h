@@ -46,7 +46,6 @@ typedef struct Game {
     bool exit_revealed_prev;
     bool victory;
     bool paused;
-    bool scanline_overlay;
     bool quit;
     bool level_loaded_from_file;
     char level_status[160];

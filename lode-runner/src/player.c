@@ -1,4 +1,5 @@
 #include "player.h"
+#include "input.h"
 
 #include "raylib.h"
 #include <string.h>
@@ -140,21 +141,21 @@ static void decide_next_step(Player *player, World *world, PlayerTickResult *res
         return;
     }
 
-    if (IsKeyPressed(KEY_Z) || IsKeyPressed(KEY_J)) {
+    if (input_dig_left()) {
         if (try_dig(player, world, -1, result)) {
             return;
         }
     }
-    if (IsKeyPressed(KEY_X) || IsKeyPressed(KEY_K)) {
+    if (input_dig_right()) {
         if (try_dig(player, world, 1, result)) {
             return;
         }
     }
 
-    bool left = IsKeyDown(KEY_LEFT) || IsKeyDown(KEY_A);
-    bool right = IsKeyDown(KEY_RIGHT) || IsKeyDown(KEY_D);
-    bool up = IsKeyDown(KEY_UP) || IsKeyDown(KEY_W);
-    bool down = IsKeyDown(KEY_DOWN) || IsKeyDown(KEY_S);
+    bool left = input_left();
+    bool right = input_right();
+    bool up = input_up();
+    bool down = input_down();
     int r = player->actor.tile_r;
     int c = player->actor.tile_c;
 

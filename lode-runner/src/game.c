@@ -1,4 +1,5 @@
 #include "game.h"
+#include "input.h"
 #include "particles.h"
 #include "sounds.h"
 
@@ -270,12 +271,6 @@ static void draw_center_overlay(const char *title, const char *subtitle, Color t
     }
 }
 
-static void draw_scanlines(void) {
-    for (int y = 0; y < WINDOW_HEIGHT; y += 2) {
-        DrawRectangle(0, y, WINDOW_WIDTH, 1, (Color){ 0, 0, 0, SCANLINE_ALPHA });
-    }
-}
-
 /* ——— Title screen ——— */
 
 static void draw_title(const Game *game) {
@@ -298,11 +293,11 @@ static void draw_title(const Game *game) {
     int pw = MeasureText(press, 28);
     DrawText(press, (WINDOW_WIDTH - pw) / 2, 500, 28, (Color){ 255, 255, 255, alpha });
 
-    const char *ctrl = "ARROWS/WASD: Move   Z/X: Dig   P: Pause   F1: Scanlines";
+    const char *ctrl = "ARROWS/WASD/Gamepad: Move   Z/X/LB/RB: Dig   P/Start: Pause";
     int cw = MeasureText(ctrl, 16);
     DrawText(ctrl, (WINDOW_WIDTH - cw) / 2, 700, 16, (Color){ 120, 130, 150, 180 });
 
-    const char *esc = "ESC to Quit";
+    const char *esc = "ESC/B to Quit";
     int ew = MeasureText(esc, 16);
     DrawText(esc, (WINDOW_WIDTH - ew) / 2, 730, 16, (Color){ 120, 130, 150, 140 });
 }
@@ -440,21 +435,19 @@ static void game_update_play(Game *game, float dt) {
 void game_update(Game *game) {
     float dt = GetFrameTime();
 
-    if (IsKeyPressed(KEY_F1)) game->scanline_overlay = !game->scanline_overlay;
-
     particles_update(&game->particles, dt);
     if (game->shake_timer > 0.0f) game->shake_timer -= dt;
     if (game->exit_reveal_timer > 0.0f) game->exit_reveal_timer -= dt;
 
     if (game->screen == SCREEN_TITLE) {
-        if (IsKeyPressed(KEY_ENTER)) start_new_run(game);
-        if (IsKeyPressed(KEY_ESCAPE)) game->quit = true;
+        if (input_confirm()) start_new_run(game);
+        if (input_back()) game->quit = true;
         return;
     }
 
     if (game->screen == SCREEN_LEVEL_CLEAR) {
         if (game->victory) {
-            if (IsKeyPressed(KEY_ENTER)) {
+            if (input_confirm()) {
                 game->screen = SCREEN_PLAY;
                 game->victory = false;
                 load_level(game, 0);
@@ -462,7 +455,7 @@ void game_update(Game *game) {
             return;
         }
         game->screen_timer -= dt;
-        if (game->screen_timer <= 0.0f || IsKeyPressed(KEY_ENTER)) {
+        if (game->screen_timer <= 0.0f || input_confirm()) {
             game->screen = SCREEN_PLAY;
             load_level(game, (game->level_index + 1) % MAX_LEVELS);
         }
@@ -470,22 +463,22 @@ void game_update(Game *game) {
     }
 
     if (game->screen == SCREEN_GAME_OVER) {
-        if (IsKeyPressed(KEY_ENTER)) game->screen = SCREEN_TITLE;
-        if (IsKeyPressed(KEY_ESCAPE)) game->quit = true;
+        if (input_confirm()) game->screen = SCREEN_TITLE;
+        if (input_back()) game->quit = true;
         return;
     }
 
-    if (IsKeyPressed(KEY_ESCAPE)) {
+    if (input_back()) {
         game->paused = false;
         game->screen = SCREEN_TITLE;
         return;
     }
 
-    if (IsKeyPressed(KEY_P)) game->paused = !game->paused;
+    if (input_pause()) game->paused = !game->paused;
 
     if (game->paused) return;
 
-    if (IsKeyPressed(KEY_R) && game->player.state != PSTATE_DEAD) {
+    if (input_restart() && game->player.state != PSTATE_DEAD) {
         game->lives--;
         if (game->lives <= 0) {
             game->screen = SCREEN_GAME_OVER;
@@ -552,8 +545,6 @@ void game_draw(Game *game) {
                 "P to resume / Esc for title", (Color){ 200, 200, 200, 255 });
         }
     }
-
-    if (game->scanline_overlay) draw_scanlines();
 
     EndDrawing();
 }
