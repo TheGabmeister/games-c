@@ -35,6 +35,64 @@ static void set_error(char *error, int error_size, const char *message) {
     }
 }
 
+static bool tile_is_climbable(TileID tile, bool exit_revealed) {
+    return tile == TILE_LADDER || (tile == TILE_EXIT_LADDER && exit_revealed);
+}
+
+static bool has_support_at(const World *world, int r, int c) {
+    return world_tile_is_support(world_tile_at(world, r + 1, c), world->all_gold_collected);
+}
+
+static bool can_enter_at(const World *world, int r, int c) {
+    return world_in_bounds(r, c) && world_tile_is_passable(world_tile_at(world, r, c), world->all_gold_collected);
+}
+
+static bool can_step_side_at(const World *world, int r, int c) {
+    TileID tile = world_tile_at(world, r, c);
+    return can_enter_at(world, r, c) &&
+           (tile_is_climbable(tile, world->all_gold_collected) ||
+            tile == TILE_ROPE ||
+            has_support_at(world, r, c));
+}
+
+static bool actor_can_move_between(const World *world, int from_r, int from_c, int to_r, int to_c) {
+    if (!world_in_bounds(from_r, from_c) || !can_enter_at(world, to_r, to_c)) {
+        return false;
+    }
+
+    int dr = to_r - from_r;
+    int dc = to_c - from_c;
+    TileID from_tile = world_tile_at(world, from_r, from_c);
+    bool on_climb = tile_is_climbable(from_tile, world->all_gold_collected);
+    bool on_rope = from_tile == TILE_ROPE;
+    bool falling = !on_climb && !on_rope && !has_support_at(world, from_r, from_c);
+
+    if (falling) {
+        return dr == 1 && dc == 0;
+    }
+    if (on_climb && dc == 0 && (dr == -1 || dr == 1)) {
+        return true;
+    }
+    if (on_rope && dr == 1 && dc == 0) {
+        return true;
+    }
+    if (dr == 0 && (dc == -1 || dc == 1)) {
+        if (on_climb) {
+            return can_step_side_at(world, to_r, to_c);
+        }
+        return can_enter_at(world, to_r, to_c);
+    }
+    return false;
+}
+
+static PursuitDir dir_from_delta(int dr, int dc) {
+    if (dc < 0) return PURSUE_LEFT;
+    if (dc > 0) return PURSUE_RIGHT;
+    if (dr < 0) return PURSUE_UP;
+    if (dr > 0) return PURSUE_DOWN;
+    return PURSUE_NONE;
+}
+
 static TileID tile_from_char(char ch, bool *is_player, bool *is_guard, bool *ok) {
     *is_player = false;
     *is_guard = false;
@@ -234,6 +292,84 @@ void world_load_builtin(World *world) {
     }
 }
 
+WorldTickResult world_update_holes(World *world, float dt, int trap_r, int trap_c) {
+    WorldTickResult result = { 0 };
+
+    for (int r = 0; r < GRID_ROWS; r++) {
+        for (int c = 0; c < GRID_COLS; c++) {
+            if (world->tiles[r][c] != TILE_HOLE) {
+                continue;
+            }
+
+            world->hole_timer[r][c] -= dt;
+            if (world->hole_timer[r][c] <= 0.0f) {
+                world->tiles[r][c] = TILE_BRICK;
+                world->hole_timer[r][c] = 0.0f;
+                result.refilled_hole = true;
+                result.refilled_tiles[r][c] = true;
+                result.refill_r = r;
+                result.refill_c = c;
+
+                if (r == trap_r && c == trap_c) {
+                    result.trapped_target = true;
+                }
+            }
+        }
+    }
+
+    return result;
+}
+
+void world_rebuild_pursuit(const World *world, int player_r, int player_c, PursuitDir pursuit[GRID_ROWS][GRID_COLS]) {
+    int queue_r[GRID_ROWS * GRID_COLS];
+    int queue_c[GRID_ROWS * GRID_COLS];
+    int head = 0;
+    int tail = 0;
+    bool visited[GRID_ROWS][GRID_COLS] = { 0 };
+
+    for (int r = 0; r < GRID_ROWS; r++) {
+        for (int c = 0; c < GRID_COLS; c++) {
+            pursuit[r][c] = PURSUE_NONE;
+        }
+    }
+
+    if (!world_in_bounds(player_r, player_c)) {
+        return;
+    }
+
+    visited[player_r][player_c] = true;
+    queue_r[tail] = player_r;
+    queue_c[tail] = player_c;
+    tail++;
+
+    while (head < tail) {
+        int r = queue_r[head];
+        int c = queue_c[head];
+        head++;
+
+        const int drs[4] = { 0, 0, -1, 1 };
+        const int dcs[4] = { -1, 1, 0, 0 };
+
+        for (int i = 0; i < 4; i++) {
+            int nr = r + drs[i];
+            int nc = c + dcs[i];
+            if (!world_in_bounds(nr, nc) || visited[nr][nc]) {
+                continue;
+            }
+
+            if (!actor_can_move_between(world, nr, nc, r, c)) {
+                continue;
+            }
+
+            visited[nr][nc] = true;
+            pursuit[nr][nc] = dir_from_delta(r - nr, c - nc);
+            queue_r[tail] = nr;
+            queue_c[tail] = nc;
+            tail++;
+        }
+    }
+}
+
 bool world_in_bounds(int r, int c) {
     return r >= 0 && r < GRID_ROWS && c >= 0 && c < GRID_COLS;
 }
@@ -286,6 +422,17 @@ const char *world_tile_name(TileID tile) {
         case TILE_GOLD: return "GOLD";
         case TILE_EXIT_LADDER: return "EXIT";
         case TILE_TRAPDOOR: return "TRAPDOOR";
+        default: return "UNKNOWN";
+    }
+}
+
+const char *world_pursuit_dir_name(PursuitDir dir) {
+    switch (dir) {
+        case PURSUE_LEFT: return "LEFT";
+        case PURSUE_RIGHT: return "RIGHT";
+        case PURSUE_UP: return "UP";
+        case PURSUE_DOWN: return "DOWN";
+        case PURSUE_NONE: return "NONE";
         default: return "UNKNOWN";
     }
 }

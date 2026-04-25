@@ -9,8 +9,7 @@ or sampled audio is used.
 
 - Resolution: `1200x900` at `60 FPS`.
 - Controls: `WASD` to move, arrow keys to fire (8-direction), `Enter` to
-  start/restart, `P` to pause, `Esc` to quit. Gamepad supported (left stick
-  move, right stick fire).
+  start/restart, `P` to pause, `Esc` to quit.
 
 ## Project Files
 

@@ -4,6 +4,9 @@
 static void load_level(Game *game, int level_index) {
     game->level_index = level_index;
     game->level_loaded_from_file = world_load_level(&game->world, game->level_index, game->level_status, sizeof(game->level_status));
+    player_spawn(&game->player, &game->world);
+    guards_spawn_from_world(game->guards, &game->world);
+    world_rebuild_pursuit(&game->world, game->player.actor.tile_r, game->player.actor.tile_c, game->pursuit);
 }
 
 static Color tile_base_color(TileID tile, bool exit_revealed) {
@@ -32,7 +35,7 @@ static Rectangle tile_rect(int r, int c) {
     };
 }
 
-static void draw_tile(TileID tile, int r, int c, bool exit_revealed) {
+static void draw_tile(TileID tile, int r, int c, bool exit_revealed, float hole_timer) {
     Rectangle rect = tile_rect(r, c);
     DrawRectangleRec(rect, tile_base_color(tile, exit_revealed));
     DrawRectangleLinesEx(rect, 1.0f, (Color){ 45, 49, 60, 145 });
@@ -58,7 +61,13 @@ static void draw_tile(TileID tile, int r, int c, bool exit_revealed) {
         DrawCircleV(center, 10.0f, (Color){ 247, 196, 55, 255 });
         DrawCircleV((Vector2){ center.x - 3, center.y - 3 }, 3.0f, (Color){ 255, 239, 146, 255 });
     } else if (tile == TILE_HOLE) {
-        DrawRectangleLinesEx((Rectangle){ rect.x + 3, rect.y + 18, rect.width - 6, 12 }, 3.0f, (Color){ 77, 51, 40, 255 });
+        Color rim = (Color){ 77, 51, 40, 255 };
+        if (hole_timer <= DIG_REFILL_SEC - DIG_WARN_FLASH_AT) {
+            rim = RED;
+        } else if (hole_timer <= DIG_REFILL_SEC - DIG_WARN_PULSE_AT) {
+            rim = ORANGE;
+        }
+        DrawRectangleLinesEx((Rectangle){ rect.x + 3, rect.y + 18, rect.width - 6, 12 }, 3.0f, rim);
     }
 }
 
@@ -67,18 +76,49 @@ static void draw_world(const World *world) {
 
     for (int r = 0; r < GRID_ROWS; r++) {
         for (int c = 0; c < GRID_COLS; c++) {
-            draw_tile(world->tiles[r][c], r, c, world->all_gold_collected);
+            draw_tile(world->tiles[r][c], r, c, world->all_gold_collected, world->hole_timer[r][c]);
         }
     }
+}
 
-    Rectangle player_rect = tile_rect(world->player_spawn_r, world->player_spawn_c);
-    DrawCircle((int)(player_rect.x + player_rect.width * 0.5f), (int)(player_rect.y + player_rect.height * 0.5f), 11.0f, SKYBLUE);
-    DrawCircleLines((int)(player_rect.x + player_rect.width * 0.5f), (int)(player_rect.y + player_rect.height * 0.5f), 12.0f, RAYWHITE);
+static void draw_player(const Player *player) {
+    Vector2 pos = player_pixel_position(player);
+    Color body = SKYBLUE;
 
-    for (int i = 0; i < world->guard_spawn_count; i++) {
-        Rectangle guard_rect = tile_rect(world->guard_spawn_r[i], world->guard_spawn_c[i]);
-        DrawRectangleRounded((Rectangle){ guard_rect.x + 9, guard_rect.y + 8, 18, 20 }, 0.2f, 4, (Color){ 219, 72, 68, 255 });
-        DrawRectangleLinesEx((Rectangle){ guard_rect.x + 9, guard_rect.y + 8, 18, 20 }, 1.0f, RAYWHITE);
+    if (player->state == PSTATE_DEAD) {
+        float alpha = player->death_timer / 0.6f;
+        if (alpha < 0.0f) alpha = 0.0f;
+        body.a = (unsigned char)(255.0f * alpha);
+    } else if (player->state == PSTATE_DIG) {
+        body = (Color){ 80, 210, 255, 255 };
+    } else if (player->state == PSTATE_FALL) {
+        body = (Color){ 111, 176, 255, 255 };
+    }
+
+    DrawCircleV(pos, 12.0f, body);
+    DrawCircleLines((int)pos.x, (int)pos.y, 13.0f, RAYWHITE);
+    DrawRectangle((int)pos.x - 5, (int)pos.y - 3, 10, 11, (Color){ 15, 38, 68, body.a });
+    DrawCircle((int)pos.x + (player->actor.facing == DIR_RIGHT ? 4 : -4), (int)pos.y - 4, 2.0f, RAYWHITE);
+}
+
+static void draw_guards(const Game *game) {
+    for (int i = 0; i < game->world.guard_count; i++) {
+        const Guard *guard = &game->guards[i];
+        if (!guard->active || guard->state == GSTATE_RESPAWN) {
+            continue;
+        }
+
+        Vector2 pos = guard_pixel_position(guard);
+        Color body = (Color){ 219, 72, 68, 255 };
+        if (guard->state == GSTATE_TRAPPED) {
+            body = (Color){ 168, 84, 68, 255 };
+        } else if (guard->state == GSTATE_FALL) {
+            body = (Color){ 238, 104, 86, 255 };
+        }
+
+        DrawRectangleRounded((Rectangle){ pos.x - 10, pos.y - 12, 20, 24 }, 0.25f, 4, body);
+        DrawRectangleLinesEx((Rectangle){ pos.x - 10, pos.y - 12, 20, 24 }, 1.0f, RAYWHITE);
+        DrawCircle((int)pos.x + (guard->actor.facing == DIR_RIGHT ? 4 : -4), (int)pos.y - 5, 2.0f, RAYWHITE);
     }
 }
 
@@ -88,21 +128,28 @@ static void draw_hud(const Game *game) {
     DrawRectangle(0, HUD_HEIGHT - 2, WINDOW_WIDTH, 2, (Color){ 233, 177, 66, 255 });
 
     DrawText("LODE RUNNER", 40, 30, 32, RAYWHITE);
+    DrawText(TextFormat("SCORE %06d", game->score), 258, 38, 22, (Color){ 233, 221, 183, 255 });
     DrawText(TextFormat("LEVEL %02d / %02d", game->level_index + 1, MAX_LEVELS), 960, 34, 24, (Color){ 233, 221, 183, 255 });
     DrawText(TextFormat("GOLD %02d / %02d", game->world.gold_remaining, game->world.gold_total), 420, 38, 22, (Color){ 247, 196, 55, 255 });
     DrawText(TextFormat("GUARDS %d", game->world.guard_count), 640, 38, 22, (Color){ 226, 111, 98, 255 });
+    DrawText(TextFormat("LIVES %d", game->lives), 780, 38, 22, (Color){ 156, 212, 255, 255 });
+    DrawText(player_state_name(game->player.state), 40, 72, 16, (Color){ 169, 184, 204, 255 });
 
     if (!game->level_loaded_from_file) {
-        DrawText("FALLBACK LEVEL", 40, 72, 16, (Color){ 248, 159, 99, 255 });
+        DrawText("FALLBACK LEVEL", 180, 72, 16, (Color){ 248, 159, 99, 255 });
     }
 }
 
 void game_init(Game *game) {
     memset(game, 0, sizeof(*game));
+    game->lives = PLAYER_LIVES;
     load_level(game, 0);
 }
 
 void game_update(Game *game) {
+    float dt = GetFrameTime();
+    bool rebuild_pursuit = false;
+
     if (IsKeyPressed(KEY_PAGE_DOWN)) {
         load_level(game, (game->level_index + 1) % MAX_LEVELS);
     }
@@ -112,6 +159,68 @@ void game_update(Game *game) {
         if (next < 0) next = MAX_LEVELS - 1;
         load_level(game, next);
     }
+
+    WorldTickResult wr = world_update_holes(&game->world, dt, game->player.actor.tile_r, game->player.actor.tile_c);
+    if (wr.refilled_hole) {
+        sound_play(game, SOUND_REFILL);
+        rebuild_pursuit = true;
+
+        for (int i = 0; i < game->world.guard_count; i++) {
+            Guard *guard = &game->guards[i];
+            if (guard->active && guard->state != GSTATE_RESPAWN &&
+                wr.refilled_tiles[guard->actor.tile_r][guard->actor.tile_c]) {
+                guard_kill_in_refill(guard);
+                game->score += SCORE_GUARD_KILL;
+                sound_play(game, SOUND_GUARD_DIE);
+            }
+        }
+    }
+    if (wr.trapped_target) {
+        player_start_death(&game->player);
+        sound_play(game, SOUND_PLAYER_DIE);
+    }
+
+    PlayerTickResult pr = player_update(&game->player, &game->world, dt);
+    if (pr.collected_gold) {
+        game->score += SCORE_GOLD;
+        sound_play(game, SOUND_COIN);
+    }
+    if (pr.dug_brick) {
+        rebuild_pursuit = true;
+        sound_play(game, SOUND_DIG);
+    }
+    if (pr.committed_new_tile) {
+        rebuild_pursuit = true;
+    }
+
+    if (rebuild_pursuit) {
+        world_rebuild_pursuit(&game->world, game->player.actor.tile_r, game->player.actor.tile_c, game->pursuit);
+    }
+
+    for (int i = 0; i < game->world.guard_count; i++) {
+        GuardTickResult gr = guard_update(&game->guards[i], i, game->guards, &game->world, &game->player, game->pursuit, dt);
+        if (gr.fell_in_hole) {
+            sound_play(game, SOUND_GUARD_FALL);
+        }
+    }
+
+    if (game->player.state != PSTATE_DEAD) {
+        for (int i = 0; i < game->world.guard_count; i++) {
+            if (guard_can_catch_player(&game->guards[i], &game->player)) {
+                player_start_death(&game->player);
+                sound_play(game, SOUND_PLAYER_DIE);
+                break;
+            }
+        }
+    }
+
+    if (pr.died) {
+        game->lives--;
+        if (game->lives <= 0) {
+            game->lives = PLAYER_LIVES;
+        }
+        load_level(game, game->level_index);
+    }
 }
 
 void game_draw(Game *game) {
@@ -120,6 +229,8 @@ void game_draw(Game *game) {
 
     draw_hud(game);
     draw_world(&game->world);
+    draw_guards(game);
+    draw_player(&game->player);
 
     EndDrawing();
 }
