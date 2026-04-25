@@ -69,7 +69,8 @@ inkscape input.svg -o output.png -w 20 -h 20
 Store both SVGs and PNGs in `src/assets/`. Cell size is 20px.
 
 If a texture ID is registered in `src/textures.c`, the corresponding PNG should
-exist under `src/assets/`. Keep source SVGs next to generated PNGs.
+exist under `src/assets/`. Texture loading is intentionally fail-loud for
+missing or invalid registered PNGs. Keep source SVGs next to generated PNGs.
 
 On this Windows machine, Inkscape may not be on `PATH`. Use:
 

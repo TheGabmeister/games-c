@@ -27,7 +27,7 @@ src/
   world_collisions.c  circle-vs-circle resolution and ordering
   world_effects.c     particles, screen shake, floating score text
   world_draw.c        sprite + primitive rendering for the playfield
-  textures.h / .c     optional PNG sprite loading
+  textures.h / .c     required PNG sprite loading
   sounds.h / .c       optional WAV sound loading
   assets/             source SVGs, generated PNGs, generated WAVs
 vendor/raylib/        bundled raylib source
@@ -47,8 +47,9 @@ families, projectiles, effects, collision phases, wave-clear checks, and draw
 entry. The specialized `world_*.c` files keep behavior grouped by concern
 without moving ownership away from `Game`.
 
-Texture and sound loading are resilient. Missing assets are skipped, and
-gameplay falls back to colored primitives or silence.
+Texture loading fails loud when a registered PNG is missing or invalid. Sound
+loading is resilient; missing sounds are skipped and gameplay continues
+silently.
 
 ## Where To Edit
 

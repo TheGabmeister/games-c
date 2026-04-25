@@ -1,4 +1,5 @@
 #include "textures.h"
+#include <stdlib.h>
 
 static const char *texture_files[TEXTURE_COUNT] = {
     [TEXTURE_PLAYER] = "assets/player.png",
@@ -20,14 +21,21 @@ void textures_load(Game *game) {
     game->textures_loaded = false;
 
     for (int i = 0; i < TEXTURE_COUNT; i++) {
-        if (FileExists(texture_files[i])) {
-            game->textures[i] = LoadTexture(texture_files[i]);
-            if (IsTextureValid(game->textures[i])) {
-                SetTextureFilter(game->textures[i], TEXTURE_FILTER_POINT);
-                game->textures_loaded = true;
-            }
+        if (!FileExists(texture_files[i])) {
+            TraceLog(LOG_FATAL, "Missing required texture: %s", texture_files[i]);
+            abort();
         }
+
+        game->textures[i] = LoadTexture(texture_files[i]);
+        if (!IsTextureValid(game->textures[i])) {
+            TraceLog(LOG_FATAL, "Failed to load required texture: %s", texture_files[i]);
+            abort();
+        }
+
+        SetTextureFilter(game->textures[i], TEXTURE_FILTER_POINT);
     }
+
+    game->textures_loaded = true;
 }
 
 void textures_unload(Game *game) {
@@ -36,12 +44,4 @@ void textures_unload(Game *game) {
             UnloadTexture(game->textures[i]);
         }
     }
-}
-
-bool texture_is_ready(Game *game, TextureID id) {
-    if (id < 0 || id >= TEXTURE_COUNT) {
-        return false;
-    }
-
-    return IsTextureValid(game->textures[id]);
 }
