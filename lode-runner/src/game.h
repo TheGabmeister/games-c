@@ -17,17 +17,28 @@ typedef enum SoundID {
     SOUND_PLAYER_DIE,
     SOUND_GUARD_FALL,
     SOUND_GUARD_DIE,
+    SOUND_GOLD_COMPLETE,
+    SOUND_LEVEL_CLEAR,
     SOUND_COUNT
 } SoundID;
+
+typedef enum ScreenID {
+    SCREEN_PLAY,
+    SCREEN_LEVEL_CLEAR,
+    SCREEN_GAME_OVER
+} ScreenID;
 
 typedef struct Game {
     World world;
     Player player;
     Guard guards[MAX_GUARDS];
     PursuitDir pursuit[GRID_ROWS][GRID_COLS];
+    ScreenID screen;
     int level_index;
     int score;
     int lives;
+    float screen_timer;
+    bool victory;
     bool level_loaded_from_file;
     char level_status[160];
 

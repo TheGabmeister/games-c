@@ -73,6 +73,8 @@ static void reset_guard_to_spawn(Guard *guard) {
     guard->actor.dst_c = guard->spawn_c;
     guard->actor.t = 0.0f;
     guard->actor.facing = DIR_LEFT;
+    guard->prev_r = guard->spawn_r;
+    guard->prev_c = guard->spawn_c;
     guard->state = GSTATE_WALK;
     guard->hole_timer = 0.0f;
     guard->respawn_timer = 0.0f;
@@ -177,6 +179,58 @@ static int score_move(const Guard *guard, int guard_index, const Guard guards[MA
     return score;
 }
 
+static bool gold_drop_tile_ok(const World *world, int r, int c) {
+    if (!world_in_bounds(r, c)) {
+        return false;
+    }
+
+    return world_tile_at(world, r, c) == TILE_EMPTY;
+}
+
+static bool guard_drop_gold(Guard *guard, World *world, int preferred_r, int preferred_c) {
+    if (!guard->carries_gold) {
+        return false;
+    }
+
+    const int drs[5] = { 0, 0, 0, -1, 1 };
+    const int dcs[5] = { 0, -1, 1, 0, 0 };
+    for (int i = 0; i < 5; i++) {
+        int r = preferred_r + drs[i];
+        int c = preferred_c + dcs[i];
+        if (gold_drop_tile_ok(world, r, c)) {
+            world->tiles[r][c] = TILE_GOLD;
+            guard->carries_gold = false;
+            return true;
+        }
+    }
+
+    return false;
+}
+
+static bool should_pick_up_gold(const Guard *guard) {
+    return (hash_guard(guard->seed, guard->actor.tile_r, guard->actor.tile_c) % 100u) < 50u;
+}
+
+static bool should_random_drop(float dt) {
+    int threshold = (int)(GUARD_DROP_PROB * dt * 1000000.0f);
+    return threshold > 0 && GetRandomValue(0, 999999) < threshold;
+}
+
+static void handle_gold_on_tile(Guard *guard, World *world, GuardTickResult *result, float dt) {
+    if (guard->carries_gold) {
+        if (should_random_drop(dt) && guard_drop_gold(guard, world, guard->actor.tile_r, guard->actor.tile_c)) {
+            result->dropped_gold = true;
+        }
+        return;
+    }
+
+    if (world_tile_at(world, guard->actor.tile_r, guard->actor.tile_c) == TILE_GOLD && should_pick_up_gold(guard)) {
+        world->tiles[guard->actor.tile_r][guard->actor.tile_c] = TILE_EMPTY;
+        guard->carries_gold = true;
+        result->picked_up_gold = true;
+    }
+}
+
 static void decide_next_step(Guard *guard, int guard_index, const Guard guards[MAX_GUARDS], const World *world, const Player *player, const PursuitDir pursuit[GRID_ROWS][GRID_COLS]) {
     GuardState context = state_for_tile(guard, world);
     PursuitDir best_dir = PURSUE_NONE;
@@ -236,23 +290,26 @@ void guards_spawn_from_world(Guard guards[MAX_GUARDS], const World *world) {
         guards[i].spawn_c = world->guard_spawn_c[i];
         guards[i].seed = 0xA511E9B3u + (uint32_t)i * 0x45D9F3Bu;
         reset_guard_to_spawn(&guards[i]);
+        guards[i].carries_gold = false;
     }
 }
 
-void guard_kill_in_refill(Guard *guard) {
+bool guard_kill_in_refill(Guard *guard, World *world) {
     if (!guard->active || guard->state == GSTATE_RESPAWN) {
-        return;
+        return false;
     }
 
+    bool dropped_gold = guard_drop_gold(guard, world, guard->prev_r, guard->prev_c);
     guard->state = GSTATE_RESPAWN;
     guard->respawn_timer = GUARD_RESPAWN_SEC;
     guard->hole_timer = 0.0f;
     guard->actor.t = 0.0f;
     guard->actor.dst_r = guard->actor.tile_r;
     guard->actor.dst_c = guard->actor.tile_c;
+    return dropped_gold;
 }
 
-GuardTickResult guard_update(Guard *guard, int guard_index, const Guard guards[MAX_GUARDS], const World *world, const Player *player, const PursuitDir pursuit[GRID_ROWS][GRID_COLS], float dt) {
+GuardTickResult guard_update(Guard *guard, int guard_index, const Guard guards[MAX_GUARDS], World *world, const Player *player, const PursuitDir pursuit[GRID_ROWS][GRID_COLS], float dt) {
     GuardTickResult result = { 0 };
 
     if (!guard->active) {
@@ -270,6 +327,7 @@ GuardTickResult guard_update(Guard *guard, int guard_index, const Guard guards[M
 
     if (guard->state == GSTATE_TRAPPED) {
         guard->hole_timer -= dt;
+        handle_gold_on_tile(guard, world, &result, dt);
         if (guard->hole_timer <= 0.0f && can_enter(world, guard->actor.tile_r - 1, guard->actor.tile_c)) {
             start_step(guard, -1, 0, GSTATE_CLIMB);
         }
@@ -279,12 +337,17 @@ GuardTickResult guard_update(Guard *guard, int guard_index, const Guard guards[M
     if (!is_resting(&guard->actor)) {
         guard->actor.t += dt * speed_for_state(guard->state);
         if (guard->actor.t >= 1.0f) {
+            guard->prev_r = guard->actor.tile_r;
+            guard->prev_c = guard->actor.tile_c;
             guard->actor.tile_r = guard->actor.dst_r;
             guard->actor.tile_c = guard->actor.dst_c;
             guard->actor.t = 0.0f;
             result.committed_new_tile = true;
 
             if (world_tile_at(world, guard->actor.tile_r, guard->actor.tile_c) == TILE_HOLE) {
+                if (guard_drop_gold(guard, world, guard->prev_r, guard->prev_c)) {
+                    result.dropped_gold = true;
+                }
                 guard->state = GSTATE_TRAPPED;
                 guard->hole_timer = GUARD_HOLE_SEC;
                 result.fell_in_hole = true;
@@ -294,12 +357,16 @@ GuardTickResult guard_update(Guard *guard, int guard_index, const Guard guards[M
             return result;
         }
     } else if (world_tile_at(world, guard->actor.tile_r, guard->actor.tile_c) == TILE_HOLE) {
+        if (guard_drop_gold(guard, world, guard->prev_r, guard->prev_c)) {
+            result.dropped_gold = true;
+        }
         guard->state = GSTATE_TRAPPED;
         guard->hole_timer = GUARD_HOLE_SEC;
         result.fell_in_hole = true;
         return result;
     }
 
+    handle_gold_on_tile(guard, world, &result, dt);
     decide_next_step(guard, guard_index, guards, world, player, pursuit);
     return result;
 }

@@ -7,6 +7,8 @@ static const char *sound_files[SOUND_COUNT] = {
     [SOUND_PLAYER_DIE] = "assets/player_die.wav",
     [SOUND_GUARD_FALL] = "assets/guard_fall.wav",
     [SOUND_GUARD_DIE] = "assets/guard_die.wav",
+    [SOUND_GOLD_COMPLETE] = "assets/gold_complete.wav",
+    [SOUND_LEVEL_CLEAR] = "assets/level_clear.wav",
 };
 
 void sounds_load(Game *game) {

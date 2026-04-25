@@ -23,11 +23,16 @@ typedef struct Guard {
     float respawn_timer;
     int spawn_r;
     int spawn_c;
+    int prev_r;
+    int prev_c;
     uint32_t seed;
+    bool carries_gold;
     bool active;
 } Guard;
 
 typedef struct GuardTickResult {
+    bool picked_up_gold;
+    bool dropped_gold;
     bool died_in_refill;
     bool fell_in_hole;
     bool respawned;
@@ -35,8 +40,8 @@ typedef struct GuardTickResult {
 } GuardTickResult;
 
 void guards_spawn_from_world(Guard guards[MAX_GUARDS], const World *world);
-void guard_kill_in_refill(Guard *guard);
-GuardTickResult guard_update(Guard *guard, int guard_index, const Guard guards[MAX_GUARDS], const World *world, const Player *player, const PursuitDir pursuit[GRID_ROWS][GRID_COLS], float dt);
+bool guard_kill_in_refill(Guard *guard, World *world);
+GuardTickResult guard_update(Guard *guard, int guard_index, const Guard guards[MAX_GUARDS], World *world, const Player *player, const PursuitDir pursuit[GRID_ROWS][GRID_COLS], float dt);
 bool guard_can_catch_player(const Guard *guard, const Player *player);
 Vector2 guard_pixel_position(const Guard *guard);
 const char *guard_state_name(GuardState state);

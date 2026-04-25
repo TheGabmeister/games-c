@@ -9,6 +9,24 @@ static void load_level(Game *game, int level_index) {
     world_rebuild_pursuit(&game->world, game->player.actor.tile_r, game->player.actor.tile_c, game->pursuit);
 }
 
+static void start_new_run(Game *game) {
+    game->score = 0;
+    game->lives = PLAYER_LIVES;
+    game->screen = SCREEN_PLAY;
+    game->screen_timer = 0.0f;
+    game->victory = false;
+    load_level(game, 0);
+}
+
+static void start_level_clear(Game *game) {
+    game->score += SCORE_LEVEL_CLEAR;
+    game->lives++;
+    game->screen = SCREEN_LEVEL_CLEAR;
+    game->screen_timer = 1.5f;
+    game->victory = game->level_index >= MAX_LEVELS - 1;
+    sound_play(game, SOUND_LEVEL_CLEAR);
+}
+
 static Color tile_base_color(TileID tile, bool exit_revealed) {
     switch (tile) {
         case TILE_BRICK: return (Color){ 133, 73, 45, 255 };
@@ -119,6 +137,19 @@ static void draw_guards(const Game *game) {
         DrawRectangleRounded((Rectangle){ pos.x - 10, pos.y - 12, 20, 24 }, 0.25f, 4, body);
         DrawRectangleLinesEx((Rectangle){ pos.x - 10, pos.y - 12, 20, 24 }, 1.0f, RAYWHITE);
         DrawCircle((int)pos.x + (guard->actor.facing == DIR_RIGHT ? 4 : -4), (int)pos.y - 5, 2.0f, RAYWHITE);
+        if (guard->carries_gold) {
+            DrawCircle((int)pos.x, (int)pos.y - 18, 4.0f, (Color){ 247, 196, 55, 255 });
+        }
+    }
+}
+
+static void draw_center_overlay(const char *title, const char *subtitle, Color tint) {
+    DrawRectangle(0, 0, WINDOW_WIDTH, WINDOW_HEIGHT, (Color){ 0, 0, 0, 145 });
+    int title_width = MeasureText(title, 52);
+    DrawText(title, (WINDOW_WIDTH - title_width) / 2, 354, 52, tint);
+    if (subtitle != NULL) {
+        int subtitle_width = MeasureText(subtitle, 24);
+        DrawText(subtitle, (WINDOW_WIDTH - subtitle_width) / 2, 424, 24, RAYWHITE);
     }
 }
 
@@ -134,20 +165,21 @@ static void draw_hud(const Game *game) {
     DrawText(TextFormat("GUARDS %d", game->world.guard_count), 640, 38, 22, (Color){ 226, 111, 98, 255 });
     DrawText(TextFormat("LIVES %d", game->lives), 780, 38, 22, (Color){ 156, 212, 255, 255 });
     DrawText(player_state_name(game->player.state), 40, 72, 16, (Color){ 169, 184, 204, 255 });
+    if (game->world.all_gold_collected) {
+        DrawText("EXIT OPEN", 150, 72, 16, (Color){ 138, 235, 243, 255 });
+    }
 
     if (!game->level_loaded_from_file) {
-        DrawText("FALLBACK LEVEL", 180, 72, 16, (Color){ 248, 159, 99, 255 });
+        DrawText("FALLBACK LEVEL", 250, 72, 16, (Color){ 248, 159, 99, 255 });
     }
 }
 
 void game_init(Game *game) {
     memset(game, 0, sizeof(*game));
-    game->lives = PLAYER_LIVES;
-    load_level(game, 0);
+    start_new_run(game);
 }
 
-void game_update(Game *game) {
-    float dt = GetFrameTime();
+static void game_update_play(Game *game, float dt) {
     bool rebuild_pursuit = false;
 
     if (IsKeyPressed(KEY_PAGE_DOWN)) {
@@ -169,7 +201,8 @@ void game_update(Game *game) {
             Guard *guard = &game->guards[i];
             if (guard->active && guard->state != GSTATE_RESPAWN &&
                 wr.refilled_tiles[guard->actor.tile_r][guard->actor.tile_c]) {
-                guard_kill_in_refill(guard);
+                bool dropped_gold = guard_kill_in_refill(guard, &game->world);
+                (void)dropped_gold;
                 game->score += SCORE_GUARD_KILL;
                 sound_play(game, SOUND_GUARD_DIE);
             }
@@ -184,6 +217,9 @@ void game_update(Game *game) {
     if (pr.collected_gold) {
         game->score += SCORE_GOLD;
         sound_play(game, SOUND_COIN);
+        if (game->world.all_gold_collected) {
+            sound_play(game, SOUND_GOLD_COMPLETE);
+        }
     }
     if (pr.dug_brick) {
         rebuild_pursuit = true;
@@ -191,6 +227,11 @@ void game_update(Game *game) {
     }
     if (pr.committed_new_tile) {
         rebuild_pursuit = true;
+    }
+
+    if (pr.reached_exit) {
+        start_level_clear(game);
+        return;
     }
 
     if (rebuild_pursuit) {
@@ -217,10 +258,43 @@ void game_update(Game *game) {
     if (pr.died) {
         game->lives--;
         if (game->lives <= 0) {
-            game->lives = PLAYER_LIVES;
+            game->screen = SCREEN_GAME_OVER;
+            game->screen_timer = 0.0f;
+            return;
         }
         load_level(game, game->level_index);
     }
+}
+
+void game_update(Game *game) {
+    float dt = GetFrameTime();
+
+    if (game->screen == SCREEN_LEVEL_CLEAR) {
+        if (game->victory) {
+            if (IsKeyPressed(KEY_ENTER)) {
+                game->screen = SCREEN_PLAY;
+                game->victory = false;
+                load_level(game, 0);
+            }
+            return;
+        }
+
+        game->screen_timer -= dt;
+        if (game->screen_timer <= 0.0f || IsKeyPressed(KEY_ENTER)) {
+            game->screen = SCREEN_PLAY;
+            load_level(game, (game->level_index + 1) % MAX_LEVELS);
+        }
+        return;
+    }
+
+    if (game->screen == SCREEN_GAME_OVER) {
+        if (IsKeyPressed(KEY_ENTER)) {
+            start_new_run(game);
+        }
+        return;
+    }
+
+    game_update_play(game, dt);
 }
 
 void game_draw(Game *game) {
@@ -231,6 +305,16 @@ void game_draw(Game *game) {
     draw_world(&game->world);
     draw_guards(game);
     draw_player(&game->player);
+
+    if (game->screen == SCREEN_LEVEL_CLEAR) {
+        if (game->victory) {
+            draw_center_overlay("VICTORY", "Press Enter for + NEW GAME +", (Color){ 247, 196, 55, 255 });
+        } else {
+            draw_center_overlay("LEVEL CLEAR", "Next vault opening...", (Color){ 138, 235, 243, 255 });
+        }
+    } else if (game->screen == SCREEN_GAME_OVER) {
+        draw_center_overlay("GAME OVER", "Press Enter to restart", (Color){ 226, 111, 98, 255 });
+    }
 
     EndDrawing();
 }
