@@ -43,6 +43,44 @@
 #define FIREBALL_SPEED_X    500.0f
 #define FIREBALL_BOUNCE_VEL -600.0f
 
+// Piranha Plant
+#define PIRANHA_RISE_SPEED  60.0f
+#define PIRANHA_PAUSE_TIME  1.5f
+#define PIRANHA_HIDE_DIST   (TILE_SIZE * 2)
+#define PIRANHA_W           48
+#define PIRANHA_HEIGHT           64
+
+// Firebar
+#define FIREBAR_ANGULAR_SPEED 2.0f
+#define FIREBAR_BALL_RADIUS   10
+#define FIREBAR_BALL_SPACING  24
+#define FIREBAR_BALL_COUNT    6
+
+// Podoboo
+#define PODOBOO_JUMP_VEL    -1200.0f
+#define PODOBOO_INTERVAL    3.0f
+#define PODOBOO_SIZE        32
+
+// Bowser
+#define BOWSER_W            96
+#define BOWSER_HEIGHT            96
+#define BOWSER_SPEED        80.0f
+#define BOWSER_JUMP_VEL     -800.0f
+#define BOWSER_JUMP_INTERVAL 3.0f
+#define BOWSER_FIRE_INTERVAL 2.5f
+#define BOWSER_FIREBALL_SPEED 400.0f
+#define BOWSER_HP           5
+
+// Bowser fireball
+#define BOWSER_FIRE_W       32
+#define BOWSER_FIRE_H       16
+
+// Balance lift
+#define LIFT_W              (TILE_SIZE * 3)
+#define LIFT_H              16
+#define LIFT_FALL_SPEED     120.0f
+#define LIFT_ROPE_SPEED     60.0f
+
 // Mario sizes (in pixels)
 #define MARIO_SMALL_W   48
 #define MARIO_SMALL_H   48
@@ -115,10 +153,18 @@
 #define BLOCK_ONEUP         5
 #define BLOCK_MULTI_COIN    6
 
+// Pipe transition
+#define PIPE_TRANSITION_TIME 1.0f
+
+// Castle complete
+#define BRIDGE_COLLAPSE_RATE 0.15f
+#define CASTLE_MESSAGE_TIME  4.0f
+
 // Colors
 #define COLOR_BG          (Color){92, 148, 252, 255}
 #define COLOR_BG_UNDER    (Color){0, 0, 0, 255}
 #define COLOR_BG_CASTLE   (Color){0, 0, 0, 255}
+#define COLOR_BG_ATHLETIC (Color){92, 148, 252, 255}
 #define COLOR_TEXT         (Color){255, 255, 255, 255}
 #define COLOR_GROUND      (Color){192, 96, 0, 255}
 #define COLOR_BRICK       (Color){180, 80, 0, 255}
@@ -126,6 +172,9 @@
 #define COLOR_USED        (Color){128, 128, 128, 255}
 #define COLOR_PIPE        (Color){0, 168, 0, 255}
 #define COLOR_HARD        (Color){100, 100, 120, 255}
+#define COLOR_LAVA        (Color){255, 80, 0, 255}
+#define COLOR_BRIDGE      (Color){180, 120, 60, 255}
+#define COLOR_AXE         (Color){200, 200, 200, 255}
 #define COLOR_MARIO       (Color){228, 0, 0, 255}
 #define COLOR_MARIO_BIG   (Color){228, 0, 0, 255}
 #define COLOR_GOOMBA      (Color){168, 80, 0, 255}
@@ -137,6 +186,10 @@
 #define COLOR_ONEUP       (Color){0, 200, 0, 255}
 #define COLOR_FIREBALL    (Color){255, 128, 0, 255}
 #define COLOR_COIN_ENT    (Color){255, 200, 0, 255}
+#define COLOR_PIRANHA     (Color){0, 160, 0, 255}
+#define COLOR_BOWSER      (Color){0, 128, 0, 255}
+#define COLOR_PODOBOO     (Color){255, 80, 0, 255}
+#define COLOR_LIFT        (Color){0, 200, 0, 255}
 
 // Direction
 typedef enum {
@@ -153,6 +206,8 @@ typedef enum {
     STATE_GAME_OVER,
     STATE_PAUSED,
     STATE_LEVEL_COMPLETE,
+    STATE_CASTLE_COMPLETE,
+    STATE_PIPE_TRANSITION,
 } GameState;
 
 // Mario power states
@@ -190,6 +245,8 @@ typedef enum {
     ENT_BOWSER,
     ENT_FIREBAR,
     ENT_PODOBOO,
+    ENT_BOWSER_FIRE,
+    ENT_BALANCE_LIFT,
     ENT_TYPE_COUNT,
 } EntityType;
 
@@ -214,6 +271,7 @@ typedef enum {
     TILE_AXE,
     TILE_VINE_BLOCK,
     TILE_BILL_BLASTER,
+    TILE_LAVA,
     TILE_TYPE_COUNT,
 } TileType;
 

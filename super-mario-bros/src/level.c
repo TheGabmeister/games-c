@@ -5,6 +5,10 @@
 #include "items.h"
 #include "enemies/goomba.h"
 #include "enemies/koopa.h"
+#include "enemies/piranha.h"
+#include "enemies/firebar.h"
+#include "enemies/podoboo.h"
+#include "enemies/bowser.h"
 #include <stdlib.h>
 
 bool tile_is_solid(int tile_type) {
@@ -72,7 +76,10 @@ void level_activate_spawns(Level *level, Entity entities[MAX_ENTITIES], float ca
         EntitySpawn *s = &level->spawns[i];
         if (s->activated) continue;
         float sx = s->tile_x * TILE_SIZE;
-        if (sx <= activate_x && sx >= camera_x - TILE_SIZE * 2) {
+        bool in_range = (sx <= activate_x && sx >= camera_x - TILE_SIZE * 2);
+        bool preactivate = (s->type == ENT_BALANCE_LIFT || s->type == ENT_FIREBAR ||
+                           s->type == ENT_PODOBOO);
+        if (in_range || preactivate) {
             s->activated = true;
             float spawn_x = (float)(s->tile_x * TILE_SIZE);
             float spawn_y = (float)(s->tile_y * TILE_SIZE);
@@ -83,9 +90,46 @@ void level_activate_spawns(Level *level, Entity entities[MAX_ENTITIES], float ca
                 case ENT_KOOPA:
                     spawn_koopa(entities, spawn_x, spawn_y, s->extra != 0);
                     break;
+                case ENT_PIRANHA:
+                    spawn_piranha(entities, spawn_x, spawn_y);
+                    break;
+                case ENT_FIREBAR:
+                    spawn_firebar(entities, spawn_x, spawn_y, s->extra);
+                    break;
+                case ENT_PODOBOO:
+                    spawn_podoboo(entities, spawn_x, spawn_y);
+                    break;
+                case ENT_BOWSER:
+                    spawn_bowser(entities, spawn_x, spawn_y);
+                    break;
+                case ENT_BALANCE_LIFT: {
+                    // Spawn individual lift platform; pair_id in extra field
+                    Entity *e = entity_alloc(entities);
+                    if (e) {
+                        extern const EntityVtab lift_vtab;
+                        e->type = ENT_BALANCE_LIFT;
+                        e->vtab = &lift_vtab;
+                        e->x = spawn_x;
+                        e->y = spawn_y;
+                        e->w = LIFT_W;
+                        e->h = LIFT_H;
+                        e->active = true;
+                        e->state_val = s->extra;
+                        e->anim_timer = spawn_y;
+                    }
+                    break;
+                }
             }
         }
     }
+}
+
+PipeWarp *level_get_warp(Level *level, int tx, int ty) {
+    for (int i = 0; i < level->warp_count; i++) {
+        if (level->warps[i].pipe_tx == tx && level->warps[i].pipe_ty == ty)
+            return &level->warps[i];
+    }
+    return NULL;
 }
 
 static void spawn_item_from_block(Level *level, int tx, int ty, Entity *mario, Game *game) {
@@ -189,6 +233,9 @@ static Color tile_color(int tile_type) {
         case TILE_PIPE_BR:      return COLOR_PIPE;
         case TILE_FLAGPOLE:     return GRAY;
         case TILE_FLAGPOLE_BASE: return COLOR_GROUND;
+        case TILE_BRIDGE:       return COLOR_BRIDGE;
+        case TILE_AXE:          return COLOR_AXE;
+        case TILE_LAVA:         return COLOR_LAVA;
         default:                return BLANK;
     }
 }
@@ -237,7 +284,20 @@ void level_draw(Level *level, float camera_x) {
 
             Color c = tile_color(tile);
             if (c.a == 0) continue;
-            DrawRectangle((int)draw_x, (int)draw_y, TILE_SIZE, TILE_SIZE, c);
+
+            if (tile == TILE_LAVA) {
+                float pulse = sinf((float)GetTime() * 3.0f + tx * 0.5f) * 0.15f + 0.85f;
+                c.r = (unsigned char)(c.r * pulse);
+                DrawRectangle((int)draw_x, (int)draw_y, TILE_SIZE, TILE_SIZE, c);
+                Color highlight = {255, 200, 0, 80};
+                DrawRectangle((int)draw_x, (int)draw_y, TILE_SIZE, 8, highlight);
+            } else if (tile == TILE_AXE) {
+                float bob = sinf((float)GetTime() * 4.0f) * 4.0f;
+                DrawRectangle((int)(draw_x + 16), (int)(draw_y + 8 + bob), 32, 48, c);
+                DrawRectangle((int)(draw_x + 8), (int)(draw_y + 8 + bob), 48, 16, c);
+            } else {
+                DrawRectangle((int)draw_x, (int)draw_y, TILE_SIZE, TILE_SIZE, c);
+            }
             Color border = {0, 0, 0, 60};
             DrawRectangleLines((int)draw_x, (int)draw_y, TILE_SIZE, TILE_SIZE, border);
         }
@@ -380,13 +440,29 @@ static void place_qblock(Level *level, int tx, int ty, int content) {
     set_block_content(level, tx, ty, content);
 }
 
+static void add_warp(Level *level, int pipe_tx, int pipe_ty, int dest_w, int dest_s, int dest_tx, int dest_ty) {
+    if (level->warp_count >= MAX_PIPE_WARPS) return;
+    PipeWarp *w = &level->warps[level->warp_count++];
+    w->pipe_tx = pipe_tx;
+    w->pipe_ty = pipe_ty;
+    w->dest_world = dest_w;
+    w->dest_sublevel = dest_s;
+    w->dest_tx = dest_tx;
+    w->dest_ty = dest_ty;
+}
+
 void level_load_1_1(Level *level) {
     level->width = 224;
     level->height = TILES_Y;
     level->tiles = calloc(level->width * level->height, sizeof(int));
     level->bg_color = COLOR_BG;
+    level->type = LEVEL_OVERWORLD;
     level->block_count = 0;
     level->spawn_count = 0;
+    level->warp_count = 0;
+    level->bridge_start_tx = 0;
+    level->bridge_end_tx = 0;
+    level->bridge_ty = 0;
 
     // Ground (with gaps for pits)
     fill_ground(level, 0, 68);
@@ -537,8 +613,355 @@ void level_load_1_1(Level *level) {
     add_spawn(level, ENT_GOOMBA, 175, 12, 0);
 }
 
-void level_load_test(Level *level) {
-    level_load_1_1(level);
+// --- Level 1-2 (Underground) ---
+
+static void level_load_1_2(Level *level) {
+    level->width = 200;
+    level->height = TILES_Y;
+    level->tiles = calloc(level->width * level->height, sizeof(int));
+    level->bg_color = COLOR_BG_UNDER;
+    level->type = LEVEL_UNDERGROUND;
+    level->block_count = 0;
+    level->spawn_count = 0;
+    level->warp_count = 0;
+    level->bridge_start_tx = 0;
+    level->bridge_end_tx = 0;
+    level->bridge_ty = 0;
+
+    // Ceiling
+    for (int x = 0; x < level->width; x++) {
+        set_tile(level, x, 0, TILE_HARD);
+        set_tile(level, x, 1, TILE_HARD);
+    }
+
+    // Ground
+    fill_ground(level, 0, 60);
+    fill_ground(level, 63, 120);
+    fill_ground(level, 123, 199);
+
+    // Brick ceiling sections (lower ceiling areas)
+    for (int x = 4; x <= 14; x++) set_tile(level, x, 5, TILE_BRICK);
+    for (int x = 20; x <= 30; x++) set_tile(level, x, 5, TILE_BRICK);
+    for (int x = 36; x <= 42; x++) set_tile(level, x, 5, TILE_BRICK);
+
+    // Question blocks
+    place_qblock(level, 8, 9, BLOCK_COIN);
+    place_qblock(level, 12, 9, BLOCK_MUSHROOM);
+    place_qblock(level, 24, 9, BLOCK_COIN);
+    place_qblock(level, 25, 9, BLOCK_COIN);
+
+    // Brick blocks with items
+    set_tile(level, 10, 9, TILE_BRICK);
+    set_tile(level, 11, 9, TILE_BRICK);
+    set_tile(level, 13, 9, TILE_BRICK);
+    set_tile(level, 26, 9, TILE_BRICK);
+    set_tile(level, 27, 9, TILE_BRICK);
+
+    // Elevated bricks
+    set_tile(level, 40, 5, TILE_BRICK);
+    set_tile(level, 41, 5, TILE_BRICK);
+    set_tile(level, 42, 5, TILE_BRICK);
+    place_qblock(level, 41, 9, BLOCK_STARMAN);
+
+    // Pipes (some warpable)
+    place_pipe(level, 16, 2);
+    place_pipe(level, 34, 3);
+    place_pipe(level, 50, 2);
+    place_pipe(level, 70, 2);
+    // Exit pipe to overworld (at end of underground)
+    place_pipe(level, 160, 2);
+
+    // Pipe at x=16 leads to coin room area within this level (x=140)
+    add_warp(level, 16, 11, 1, 2, 142, 11);
+
+    // Exit pipe at x=160 leads to 1-1 overworld finish area
+    add_warp(level, 160, 11, 1, 3, 3, 11);
+
+    // Piranha plants on pipes
+    add_spawn(level, ENT_PIRANHA, 34, 10, 0);
+    add_spawn(level, ENT_PIRANHA, 50, 11, 0);
+    add_spawn(level, ENT_PIRANHA, 70, 11, 0);
+
+    // Brick platforms
+    for (int x = 55; x <= 59; x++) set_tile(level, x, 9, TILE_BRICK);
+    for (int x = 74; x <= 78; x++) set_tile(level, x, 9, TILE_BRICK);
+    for (int x = 82; x <= 86; x++) set_tile(level, x, 5, TILE_BRICK);
+    for (int x = 90; x <= 98; x++) set_tile(level, x, 9, TILE_BRICK);
+
+    // Coin rows
+    place_qblock(level, 56, 5, BLOCK_COIN);
+    place_qblock(level, 57, 5, BLOCK_COIN);
+    place_qblock(level, 58, 5, BLOCK_COIN);
+    place_qblock(level, 75, 5, BLOCK_COIN);
+    place_qblock(level, 76, 5, BLOCK_COIN);
+
+    // More blocks
+    place_qblock(level, 92, 5, BLOCK_MUSHROOM);
+    set_tile(level, 93, 5, TILE_BRICK);
+    set_tile(level, 94, 5, TILE_BRICK);
+
+    // Staircase to exit
+    for (int step = 0; step < 4; step++) {
+        int x = 106 + step;
+        for (int row = 12 - step; row <= 12; row++)
+            set_tile(level, x, row, TILE_HARD);
+    }
+
+    // Clear ceiling above stairs so player can run along the top to reach warp zone
+    for (int x = 106; x <= 125; x++) {
+        set_tile(level, x, 0, TILE_EMPTY);
+        set_tile(level, x, 1, TILE_EMPTY);
+    }
+    // Platform to run on above the ceiling
+    for (int x = 106; x <= 155; x++) {
+        set_tile(level, x, 2, TILE_HARD);
+    }
+
+    // Warp zone area (high ceiling opens up)
+    for (int x = 130; x <= 155; x++) {
+        set_tile(level, x, 0, TILE_EMPTY);
+        set_tile(level, x, 1, TILE_EMPTY);
+    }
+    // Warp zone pipes
+    place_pipe(level, 135, 2);
+    place_pipe(level, 143, 2);
+    place_pipe(level, 151, 2);
+    // Warp zone labels (just pipes that warp to different worlds)
+    add_warp(level, 135, 11, 2, 1, 3, 11); // -> 2-1
+    add_warp(level, 143, 11, 3, 1, 3, 11); // -> 3-1
+    add_warp(level, 151, 11, 4, 1, 3, 11); // -> 4-1
+
+    // Coin room area (x=140-155)
+    for (int x = 140; x <= 155; x++) {
+        for (int y = 5; y <= 7; y++)
+            set_tile(level, x, y, TILE_BRICK);
+    }
+
+    // Enemies
+    add_spawn(level, ENT_GOOMBA, 18, 12, 0);
+    add_spawn(level, ENT_GOOMBA, 22, 12, 0);
+    add_spawn(level, ENT_GOOMBA, 23, 12, 0);
+    add_spawn(level, ENT_GOOMBA, 38, 12, 0);
+    add_spawn(level, ENT_GOOMBA, 44, 12, 0);
+    add_spawn(level, ENT_GOOMBA, 45, 12, 0);
+    add_spawn(level, ENT_GOOMBA, 55, 8, 0);
+    add_spawn(level, ENT_GOOMBA, 64, 12, 0);
+    add_spawn(level, ENT_GOOMBA, 65, 12, 0);
+    add_spawn(level, ENT_KOOPA, 80, 12, 0);  // green koopa
+    add_spawn(level, ENT_GOOMBA, 95, 12, 0);
+    add_spawn(level, ENT_GOOMBA, 96, 12, 0);
+    add_spawn(level, ENT_GOOMBA, 102, 12, 0);
+
+    // Flagpole (underground exit variant — use pipe exit instead)
+    // The exit is via pipe warp, so no flagpole in 1-2
+}
+
+// --- Level 1-3 (Athletic/Treetop) ---
+
+static void level_load_1_3(Level *level) {
+    level->width = 180;
+    level->height = TILES_Y;
+    level->tiles = calloc(level->width * level->height, sizeof(int));
+    level->bg_color = COLOR_BG_ATHLETIC;
+    level->type = LEVEL_ATHLETIC;
+    level->block_count = 0;
+    level->spawn_count = 0;
+    level->warp_count = 0;
+    level->bridge_start_tx = 0;
+    level->bridge_end_tx = 0;
+    level->bridge_ty = 0;
+
+    // No continuous ground — elevated platforms with gaps
+    // Starting platform
+    fill_ground(level, 0, 8);
+
+    // Tree platforms (small solid blocks at various heights)
+    // Platform 1
+    for (int x = 12; x <= 16; x++) set_tile(level, x, 10, TILE_HARD);
+    // Platform 2 (higher)
+    for (int x = 19; x <= 22; x++) set_tile(level, x, 8, TILE_HARD);
+    // Platform 3
+    for (int x = 25; x <= 30; x++) set_tile(level, x, 10, TILE_HARD);
+    // Platform 4 (high)
+    for (int x = 33; x <= 36; x++) set_tile(level, x, 6, TILE_HARD);
+    // Platform 5
+    for (int x = 39; x <= 44; x++) set_tile(level, x, 10, TILE_HARD);
+
+    // Mid section ground
+    fill_ground(level, 48, 55);
+
+    // More platforms
+    for (int x = 59; x <= 62; x++) set_tile(level, x, 10, TILE_HARD);
+    for (int x = 65; x <= 68; x++) set_tile(level, x, 8, TILE_HARD);
+    for (int x = 71; x <= 76; x++) set_tile(level, x, 10, TILE_HARD);
+
+    // Ground section before balance lifts
+    fill_ground(level, 80, 86);
+
+    // Balance lift area (gap with lifts)
+    // (lifts spawned as entities, not tiles)
+
+    // Ground after lifts
+    fill_ground(level, 100, 108);
+
+    // More platforms
+    for (int x = 112; x <= 116; x++) set_tile(level, x, 10, TILE_HARD);
+    for (int x = 119; x <= 123; x++) set_tile(level, x, 8, TILE_HARD);
+    for (int x = 126; x <= 132; x++) set_tile(level, x, 10, TILE_HARD);
+
+    // Final ground with flagpole
+    fill_ground(level, 136, 179);
+
+    // Final staircase
+    for (int step = 0; step < 8; step++) {
+        int x = 155 + step;
+        for (int row = 12 - step; row <= 12; row++)
+            set_tile(level, x, row, TILE_GROUND);
+    }
+
+    // Flagpole
+    for (int y = 3; y <= 12; y++)
+        set_tile(level, 165, y, TILE_FLAGPOLE);
+    set_tile(level, 165, 12, TILE_FLAGPOLE_BASE);
+
+    // Question blocks
+    place_qblock(level, 14, 6, BLOCK_COIN);
+    place_qblock(level, 27, 6, BLOCK_MUSHROOM);
+    place_qblock(level, 42, 6, BLOCK_COIN);
+    place_qblock(level, 73, 6, BLOCK_COIN);
+    place_qblock(level, 74, 6, BLOCK_COIN);
+    place_qblock(level, 128, 6, BLOCK_STARMAN);
+
+    // Enemies — mostly Red Koopa Troopas (turn at edges)
+    add_spawn(level, ENT_KOOPA, 14, 9, 1);  // red koopa
+    add_spawn(level, ENT_KOOPA, 27, 9, 1);  // red koopa
+    add_spawn(level, ENT_KOOPA, 41, 9, 1);  // red koopa
+    add_spawn(level, ENT_GOOMBA, 50, 12, 0);
+    add_spawn(level, ENT_GOOMBA, 52, 12, 0);
+    add_spawn(level, ENT_KOOPA, 61, 9, 1);  // red koopa
+    add_spawn(level, ENT_KOOPA, 73, 9, 1);  // red koopa
+    add_spawn(level, ENT_KOOPA, 113, 9, 1); // red koopa
+    add_spawn(level, ENT_KOOPA, 128, 9, 1); // red koopa
+    add_spawn(level, ENT_GOOMBA, 140, 12, 0);
+    add_spawn(level, ENT_GOOMBA, 145, 12, 0);
+
+    // Balance lift pair over gap at x=88-98
+    // extra field = pair_id; two spawns with the same pair_id form a pair
+    add_spawn(level, ENT_BALANCE_LIFT, 89, 8, 1);
+    add_spawn(level, ENT_BALANCE_LIFT, 95, 10, 1);
+}
+
+// --- Level 1-4 (Castle) ---
+
+static void level_load_1_4(Level *level) {
+    level->width = 160;
+    level->height = TILES_Y;
+    level->tiles = calloc(level->width * level->height, sizeof(int));
+    level->bg_color = COLOR_BG_CASTLE;
+    level->type = LEVEL_CASTLE;
+    level->block_count = 0;
+    level->spawn_count = 0;
+    level->warp_count = 0;
+
+    // Ground (hard blocks for castle)
+    for (int x = 0; x < level->width; x++) {
+        set_tile(level, x, 13, TILE_HARD);
+        set_tile(level, x, 14, TILE_HARD);
+    }
+
+    // Lava pits
+    for (int x = 20; x <= 24; x++) {
+        set_tile(level, x, 13, TILE_LAVA);
+        set_tile(level, x, 14, TILE_LAVA);
+    }
+    for (int x = 40; x <= 46; x++) {
+        set_tile(level, x, 13, TILE_LAVA);
+        set_tile(level, x, 14, TILE_LAVA);
+    }
+    for (int x = 65; x <= 70; x++) {
+        set_tile(level, x, 13, TILE_LAVA);
+        set_tile(level, x, 14, TILE_LAVA);
+    }
+    for (int x = 85; x <= 90; x++) {
+        set_tile(level, x, 13, TILE_LAVA);
+        set_tile(level, x, 14, TILE_LAVA);
+    }
+
+    // Ceiling sections
+    for (int x = 0; x < 15; x++) {
+        set_tile(level, x, 0, TILE_HARD);
+        set_tile(level, x, 1, TILE_HARD);
+    }
+    for (int x = 30; x < 60; x++) {
+        set_tile(level, x, 0, TILE_HARD);
+        set_tile(level, x, 1, TILE_HARD);
+    }
+    for (int x = 75; x < 110; x++) {
+        set_tile(level, x, 0, TILE_HARD);
+        set_tile(level, x, 1, TILE_HARD);
+    }
+
+    // Platforms over lava
+    for (int x = 20; x <= 24; x++) set_tile(level, x, 9, TILE_HARD);
+    for (int x = 40; x <= 42; x++) set_tile(level, x, 9, TILE_HARD);
+    for (int x = 44; x <= 46; x++) set_tile(level, x, 7, TILE_HARD);
+    for (int x = 65; x <= 70; x++) set_tile(level, x, 9, TILE_HARD);
+
+    // Hard block walls/obstacles
+    for (int y = 6; y <= 12; y++) set_tile(level, 55, y, TILE_HARD);
+    set_tile(level, 55, 6, TILE_EMPTY); // gap at top to pass through
+    set_tile(level, 55, 7, TILE_EMPTY);
+    set_tile(level, 55, 8, TILE_EMPTY);
+
+    for (int y = 2; y <= 8; y++) set_tile(level, 80, y, TILE_HARD);
+    set_tile(level, 80, 10, TILE_HARD);
+    set_tile(level, 80, 11, TILE_HARD);
+
+    // Bowser area (x=110-140)
+    // Lava under the bridge
+    for (int x = 110; x <= 145; x++) {
+        set_tile(level, x, 13, TILE_LAVA);
+        set_tile(level, x, 14, TILE_LAVA);
+    }
+
+    // Bridge
+    for (int x = 115; x <= 135; x++) {
+        set_tile(level, x, 10, TILE_BRIDGE);
+    }
+    level->bridge_start_tx = 115;
+    level->bridge_end_tx = 135;
+    level->bridge_ty = 10;
+
+    // Axe at the end of the bridge
+    set_tile(level, 137, 10, TILE_AXE);
+    // Platform after axe for Mario to land on
+    for (int x = 137; x <= 145; x++) {
+        set_tile(level, x, 10, TILE_HARD);
+    }
+
+    // Firebars
+    add_spawn(level, ENT_FIREBAR, 18, 12, 0);   // counterclockwise
+    add_spawn(level, ENT_FIREBAR, 35, 8, 1);    // clockwise
+    add_spawn(level, ENT_FIREBAR, 60, 12, 0);
+    add_spawn(level, ENT_FIREBAR, 75, 6, 1);
+    add_spawn(level, ENT_FIREBAR, 95, 12, 0);
+
+    // Podoboos (jump from lava)
+    add_spawn(level, ENT_PODOBOO, 22, 13, 0);
+    add_spawn(level, ENT_PODOBOO, 43, 13, 0);
+    add_spawn(level, ENT_PODOBOO, 67, 13, 0);
+    add_spawn(level, ENT_PODOBOO, 88, 13, 0);
+
+    // Bowser on the bridge
+    add_spawn(level, ENT_BOWSER, 125, 9, 0);
+}
+
+void level_load(Level *level, int world, int sublevel) {
+    if (world == 1 && sublevel == 1) level_load_1_1(level);
+    else if (world == 1 && sublevel == 2) level_load_1_2(level);
+    else if (world == 1 && sublevel == 3) level_load_1_3(level);
+    else if (world == 1 && sublevel == 4) level_load_1_4(level);
+    else level_load_1_1(level);
 }
 
 void level_free(Level *level) {

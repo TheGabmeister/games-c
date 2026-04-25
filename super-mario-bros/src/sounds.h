@@ -13,6 +13,9 @@ typedef enum {
     SND_DEATH,
     SND_KICK,
     SND_FIREBALL,
+    SND_FLAGPOLE,
+    SND_PIPE,
+    SND_BOWSER_FALL,
     SND_COUNT,
 } SoundID;
 

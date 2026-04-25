@@ -13,6 +13,9 @@ static const char *sound_paths[SND_COUNT] = {
     [SND_DEATH]       = "resources/death.wav",
     [SND_KICK]        = "resources/kick.wav",
     [SND_FIREBALL]    = "resources/fireball.wav",
+    [SND_FLAGPOLE]    = "resources/flagpole.wav",
+    [SND_PIPE]        = "resources/pipe.wav",
+    [SND_BOWSER_FALL] = "resources/bowser_fall.wav",
 };
 
 void sounds_load(void) {

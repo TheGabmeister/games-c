@@ -460,3 +460,88 @@ void spawn_score_popup(Entity entities[MAX_ENTITIES], float x, float y, int scor
     e->active = true;
     e->state_val = score;
 }
+
+// --- Balance Lift ---
+// Pair of platforms on a pulley. When Mario stands on one, it sinks and the other rises.
+// state_val = pair_id, anim_timer = base_y
+
+static Entity *find_lift_partner(Entity entities[MAX_ENTITIES], Entity *self) {
+    for (int i = 0; i < MAX_ENTITIES; i++) {
+        Entity *e = &entities[i];
+        if (e == self || e->type != ENT_BALANCE_LIFT) continue;
+        if (e->state_val == self->state_val) return e;
+    }
+    return NULL;
+}
+
+static bool mario_on_lift(Entity *mario, Entity *lift) {
+    return mario->on_ground &&
+           mario->x + mario->w > lift->x && mario->x < lift->x + lift->w &&
+           fabsf((mario->y + mario->h) - lift->y) < 8.0f;
+}
+
+static void lift_update(Entity *self, Game *game) {
+    float dt = GetFrameTime();
+    Entity *mario = &game->entities[game->mario];
+    Entity *partner = find_lift_partner(game->entities, self);
+
+    bool mario_on_me = mario_on_lift(mario, self);
+
+    if (mario_on_me) {
+        self->vy = LIFT_FALL_SPEED;
+        if (partner) partner->vy = -LIFT_FALL_SPEED;
+    } else if (partner && mario_on_lift(mario, partner)) {
+        self->vy = -LIFT_FALL_SPEED;
+    } else {
+        // Drift back toward base
+        float base_y = self->anim_timer;
+        float diff = base_y - self->y;
+        if (fabsf(diff) > 2.0f)
+            self->vy = (diff > 0) ? LIFT_ROPE_SPEED : -LIFT_ROPE_SPEED;
+        else
+            self->vy = 0;
+    }
+
+    self->y += self->vy * dt;
+
+    // Carry Mario
+    if (mario_on_me) {
+        mario->y = self->y - mario->h;
+        mario->vy = 0;
+        mario->on_ground = true;
+    }
+
+    // Despawn if fallen way off screen
+    if (self->y > game->level.height * TILE_SIZE + 200)
+        entity_deactivate(self);
+}
+
+static void lift_draw(Entity *self, float camera_x) {
+    float dx = self->x - camera_x;
+    float dy = self->y;
+    DrawRectangle((int)dx, (int)dy, (int)self->w, (int)self->h, COLOR_LIFT);
+    // Rope going up
+    float cx = dx + self->w / 2;
+    DrawLine((int)cx, 0, (int)cx, (int)dy, GRAY);
+}
+
+const EntityVtab lift_vtab = {
+    .update = lift_update,
+    .draw   = lift_draw,
+};
+
+void spawn_balance_lift_pair(Entity entities[MAX_ENTITIES], float x1, float y1, float x2, float y2, int pair_id) {
+    for (int i = 0; i < 2; i++) {
+        Entity *e = entity_alloc(entities);
+        if (!e) return;
+        e->type = ENT_BALANCE_LIFT;
+        e->vtab = &lift_vtab;
+        e->x = (i == 0) ? x1 : x2;
+        e->y = (i == 0) ? y1 : y2;
+        e->w = LIFT_W;
+        e->h = LIFT_H;
+        e->active = true;
+        e->state_val = pair_id;
+        e->anim_timer = e->y; // base Y
+    }
+}

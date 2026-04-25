@@ -29,6 +29,16 @@ struct Game {
 
     // Camera
     float camera_x;
+
+    // Pipe warp destination (set when entering pipe)
+    int warp_world, warp_sublevel;
+    int warp_tx, warp_ty;
+
+    // Castle complete bridge collapse tracking
+    int bridge_collapse_tx;
+
+    // Mario power to preserve across levels
+    MarioPower saved_power;
 };
 
 void game_init(Game *game);

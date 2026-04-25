@@ -28,7 +28,13 @@
       "Bash(D:/rfxgen_v5.0_win_x64/rfxgen.exe -g explosion -o c:/dev/games-c/super-mario-bros/src/resources/brick_break.wav)",
       "Bash(cmake -B c:/dev/games-c/super-mario-bros/build)",
       "Bash(D:/rfxgen_v5.0_win_x64/rfxgen.exe -g hit -o c:/dev/games-c/super-mario-bros/src/resources/kick.wav)",
-      "Bash(D:/rfxgen_v5.0_win_x64/rfxgen.exe -g laser -o c:/dev/games-c/super-mario-bros/src/resources/fireball.wav)"
+      "Bash(D:/rfxgen_v5.0_win_x64/rfxgen.exe -g laser -o c:/dev/games-c/super-mario-bros/src/resources/fireball.wav)",
+      "Bash(grep -E \"\\\\.c$|\\\\.h$\")",
+      "Bash(\"D:/rfxgen_v5.0_win_x64/rfxgen.exe\" -g blip -o c:/dev/games-c/super-mario-bros/src/resources/flagpole.wav)",
+      "Bash(\"D:/rfxgen_v5.0_win_x64/rfxgen.exe\" -g blip -o c:/dev/games-c/super-mario-bros/src/resources/pipe.wav)",
+      "Bash(\"D:/rfxgen_v5.0_win_x64/rfxgen.exe\" -g explosion -o c:/dev/games-c/super-mario-bros/src/resources/bowser_fall.wav)",
+      "Bash(./build/super_mario_bros/Debug/super_mario_bros)",
+      "Bash(taskkill //f //im super_mario_bros.exe)"
     ],
     "additionalDirectories": [
       "C:\\dev\\games-c\\super-mario-bros\\src\\resources"

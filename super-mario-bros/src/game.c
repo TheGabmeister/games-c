@@ -4,23 +4,36 @@
 #include "sounds.h"
 #include "items.h"
 
-static void start_level(Game *game) {
+static void start_level_at(Game *game, int world, int sublevel, int spawn_tx, int spawn_ty) {
     memset(game->entities, 0, sizeof(game->entities));
     game->mario = -1;
 
     level_free(&game->level);
-    level_load_1_1(&game->level);
+    game->world = world;
+    game->sublevel = sublevel;
+    level_load(&game->level, world, sublevel);
 
-    Entity *m_ent = NULL;
-    spawn_mario(game->entities, &game->mario, 3 * TILE_SIZE, 11 * TILE_SIZE - MARIO_SMALL_H);
-    m_ent = &game->entities[game->mario];
-    // Preserve power state across respawns within a session
-    (void)m_ent;
+    float sx = (float)(spawn_tx * TILE_SIZE);
+    float sy = (float)(spawn_ty * TILE_SIZE - MARIO_SMALL_H);
+    spawn_mario(game->entities, &game->mario, sx, sy);
+
+    Entity *m = &game->entities[game->mario];
+    if (game->saved_power >= MARIO_BIG) {
+        m->power = game->saved_power;
+        if (m->power >= MARIO_BIG) {
+            m->y -= (MARIO_BIG_H - MARIO_SMALL_H);
+            m->h = MARIO_BIG_H;
+        }
+    }
 
     game->camera_x = 0;
     game->timer = LEVEL_TIME;
     game->state = STATE_PLAYING;
     game->state_timer = 0;
+}
+
+static void start_level(Game *game) {
+    start_level_at(game, game->world, game->sublevel, 3, 11);
 }
 
 void game_init(Game *game) {
@@ -131,8 +144,9 @@ static void update_playing(Game *game) {
                 continue;
             }
         }
-        // Dead-falling entities (state_val == 2)
-        if (e->state_val == 2) {
+        // Dead-falling entities (state_val == 2 for goomba/koopa types only)
+        if (e->state_val == 2 && (e->type == ENT_GOOMBA || e->type == ENT_KOOPA ||
+            e->type == ENT_SHELL)) {
             e->vy += GRAVITY * dt;
             e->y += e->vy * dt;
             if (e->y > game->level.height * TILE_SIZE + 200)
@@ -152,6 +166,12 @@ static void update_playing(Game *game) {
         if (e->type == ENT_BRICK_DEBRIS || e->type == ENT_COIN_POPUP || e->type == ENT_SCORE_POPUP)
             continue;
 
+        // These entities handle their own movement or don't need tile collision
+        if (e->type == ENT_FIREBAR || e->type == ENT_PODOBOO ||
+            e->type == ENT_BALANCE_LIFT || e->type == ENT_BOWSER ||
+            e->type == ENT_BOWSER_FIRE || e->type == ENT_PIRANHA)
+            continue;
+
         e->x += e->vx * dt;
         level_collide_x(&game->level, e);
         e->y += e->vy * dt;
@@ -162,6 +182,7 @@ static void update_playing(Game *game) {
     for (int i = 0; i < MAX_ENTITIES; i++) {
         Entity *e = &game->entities[i];
         if (e->type == ENT_NONE || i == game->mario) continue;
+        if (e->type == ENT_BALANCE_LIFT || e->type == ENT_FIREBAR) continue;
 
         if (!entity_overlap(mario, e)) continue;
 
@@ -215,7 +236,9 @@ static void update_playing(Game *game) {
             Entity *b = &game->entities[j];
             if (b->type == ENT_NONE || j == game->mario) continue;
             if (b->type == ENT_BRICK_DEBRIS || b->type == ENT_COIN_POPUP ||
-                b->type == ENT_SCORE_POPUP || b->type == ENT_FIREBALL) continue;
+                b->type == ENT_SCORE_POPUP || b->type == ENT_FIREBALL ||
+                b->type == ENT_BALANCE_LIFT || b->type == ENT_BOWSER_FIRE ||
+                b->type == ENT_FIREBAR || b->type == ENT_PODOBOO) continue;
 
             if (!entity_overlap(a, b)) continue;
 
@@ -245,6 +268,29 @@ static void update_playing(Game *game) {
         }
     }
 
+    // 6b. Firebar collision (per-ball check)
+    for (int i = 0; i < MAX_ENTITIES; i++) {
+        Entity *e = &game->entities[i];
+        if (e->type != ENT_FIREBAR) continue;
+        if (mario->star_active || mario->invincible_timer > 0) continue;
+
+        float cx = e->x + TILE_SIZE / 2;
+        float cy = e->y + TILE_SIZE / 2;
+        float angle = e->anim_timer;
+        for (int b = 1; b <= FIREBAR_BALL_COUNT; b++) {
+            float dist = (float)(b * FIREBAR_BALL_SPACING);
+            float bx = cx + cosf(angle) * dist;
+            float by = cy + sinf(angle) * dist;
+            float r = (float)FIREBAR_BALL_RADIUS;
+            if (bx + r > mario->x && bx - r < mario->x + mario->w &&
+                by + r > mario->y && by - r < mario->y + mario->h) {
+                mario_take_damage(mario, game);
+                if (game->state != STATE_PLAYING) return;
+                break;
+            }
+        }
+    }
+
     // 7. Camera
     camera_update(&game->camera_x, mario, &game->level);
 
@@ -269,6 +315,51 @@ static void update_playing(Game *game) {
         game->state_timer = 0;
         game->score += (int)game->timer * 50;
         game->timer = 0;
+        game->saved_power = mario->power;
+        sound_play(SND_FLAGPOLE);
+    }
+
+    // 11. Axe check (castle levels)
+    if (tile == TILE_AXE) {
+        game->state = STATE_CASTLE_COMPLETE;
+        game->state_timer = 0;
+        game->saved_power = mario->power;
+        game->bridge_collapse_tx = game->level.bridge_end_tx;
+        mario->vx = 0;
+        mario->vy = 0;
+    }
+
+    // 12. Lava death
+    {
+        int feet_tx = (int)((mario->x + mario->w / 2) / TILE_SIZE);
+        int feet_ty = (int)((mario->y + mario->h - 1) / TILE_SIZE);
+        if (level_get_tile(&game->level, feet_tx, feet_ty) == TILE_LAVA) {
+            game->state = STATE_DYING;
+            game->state_timer = 0;
+            sound_play(SND_DEATH);
+        }
+    }
+
+    // 13. Pipe entry check
+    if (mario->on_ground && (IsKeyPressed(KEY_DOWN) || IsKeyPressed(KEY_S) ||
+        (IsGamepadAvailable(0) && IsGamepadButtonPressed(0, GAMEPAD_BUTTON_LEFT_FACE_DOWN)))) {
+        int pipe_tx = (int)((mario->x + mario->w / 2) / TILE_SIZE);
+        int pipe_ty = (int)((mario->y + mario->h) / TILE_SIZE) - 1;
+        int t = level_get_tile(&game->level, pipe_tx, pipe_ty);
+        if (t == TILE_PIPE_TL || t == TILE_PIPE_TR) {
+            int left_tx = (t == TILE_PIPE_TR) ? pipe_tx - 1 : pipe_tx;
+            PipeWarp *w = level_get_warp(&game->level, left_tx, pipe_ty);
+            if (w) {
+                game->warp_world = w->dest_world;
+                game->warp_sublevel = w->dest_sublevel;
+                game->warp_tx = w->dest_tx;
+                game->warp_ty = w->dest_ty;
+                game->state = STATE_PIPE_TRANSITION;
+                game->state_timer = 0;
+                game->saved_power = mario->power;
+                sound_play(SND_PIPE);
+            }
+        }
     }
 }
 
@@ -303,6 +394,7 @@ static void update_dying(Game *game) {
 
     if (game->state_timer >= DEATH_ANIM_TIME) {
         game->lives--;
+        game->saved_power = MARIO_SMALL;
         if (game->lives <= 0) {
             game->state = STATE_GAME_OVER;
             game->state_timer = 0;
@@ -357,6 +449,16 @@ static void draw_paused(Game *game) {
 
 // --- Level Complete ---
 
+static void advance_to_next_level(Game *game) {
+    if (game->sublevel < 4) {
+        game->sublevel++;
+    } else {
+        game->world++;
+        game->sublevel = 1;
+    }
+    start_level(game);
+}
+
 static void update_level_complete(Game *game) {
     float dt = GetFrameTime();
     game->state_timer += dt;
@@ -370,7 +472,7 @@ static void update_level_complete(Game *game) {
     level_collide_entity(&game->level, mario, game);
 
     if (game->state_timer >= LEVEL_COMPLETE_TIME) {
-        start_level(game);
+        advance_to_next_level(game);
     }
 }
 
@@ -379,6 +481,108 @@ static void draw_level_complete(Game *game) {
     const char *text = "LEVEL COMPLETE!";
     int tw = MeasureText(text, 40);
     DrawText(text, (WINDOW_WIDTH - tw) / 2, WINDOW_HEIGHT / 3, 40, COLOR_TEXT);
+}
+
+// --- Castle Complete ---
+
+static void update_castle_complete(Game *game) {
+    float dt = GetFrameTime();
+    game->state_timer += dt;
+
+    // Phase 1: collapse bridge tiles one by one
+    if (game->bridge_collapse_tx >= game->level.bridge_start_tx) {
+        float collapse_elapsed = game->state_timer;
+        int tiles_collapsed = (int)(collapse_elapsed / BRIDGE_COLLAPSE_RATE);
+        int target_tx = game->level.bridge_end_tx - tiles_collapsed;
+        while (game->bridge_collapse_tx >= target_tx &&
+               game->bridge_collapse_tx >= game->level.bridge_start_tx) {
+            level_set_tile(&game->level, game->bridge_collapse_tx, game->level.bridge_ty, TILE_EMPTY);
+            game->bridge_collapse_tx--;
+        }
+    }
+
+    // Make Bowser fall if bridge gone
+    for (int i = 0; i < MAX_ENTITIES; i++) {
+        Entity *e = &game->entities[i];
+        if (e->type == ENT_BOWSER) {
+            e->vy += GRAVITY * dt;
+            if (e->vy > MAX_FALL_SPEED) e->vy = MAX_FALL_SPEED;
+            e->y += e->vy * dt;
+            if (e->y > game->level.height * TILE_SIZE + 200) {
+                entity_deactivate(e);
+                sound_play(SND_BOWSER_FALL);
+            }
+        }
+    }
+
+    // Phase 2: show message after bridge fully collapsed
+    float bridge_tiles = (float)(game->level.bridge_end_tx - game->level.bridge_start_tx + 1);
+    float total_time = bridge_tiles * BRIDGE_COLLAPSE_RATE + CASTLE_MESSAGE_TIME;
+    if (game->state_timer >= total_time) {
+        game->score += (int)game->timer * 50;
+        game->timer = 0;
+        advance_to_next_level(game);
+    }
+}
+
+static void draw_castle_complete(Game *game) {
+    draw_playing(game);
+
+    float bridge_tiles = (float)(game->level.bridge_end_tx - game->level.bridge_start_tx + 1);
+    float msg_start = bridge_tiles * BRIDGE_COLLAPSE_RATE;
+    if (game->state_timer >= msg_start) {
+        const char *text = "THANK YOU MARIO!";
+        int tw = MeasureText(text, 30);
+        DrawText(text, (WINDOW_WIDTH - tw) / 2, WINDOW_HEIGHT / 3, 30, COLOR_TEXT);
+
+        const char *text2 = "BUT OUR PRINCESS IS IN ANOTHER CASTLE!";
+        int tw2 = MeasureText(text2, 20);
+        DrawText(text2, (WINDOW_WIDTH - tw2) / 2, WINDOW_HEIGHT / 3 + 50, 20, COLOR_TEXT);
+    }
+}
+
+// --- Pipe Transition ---
+
+static void update_pipe_transition(Game *game) {
+    float dt = GetFrameTime();
+    game->state_timer += dt;
+
+    // Mario sinks into pipe during first half
+    if (game->state_timer < PIPE_TRANSITION_TIME / 2) {
+        Entity *mario = &game->entities[game->mario];
+        mario->y += 120.0f * dt;
+    }
+
+    if (game->state_timer >= PIPE_TRANSITION_TIME) {
+        // Same world/sublevel = reposition within level
+        if (game->warp_world == game->world && game->warp_sublevel == game->sublevel) {
+            Entity *mario = &game->entities[game->mario];
+            mario->x = (float)(game->warp_tx * TILE_SIZE);
+            mario->y = (float)(game->warp_ty * TILE_SIZE) - mario->h;
+            mario->vx = 0;
+            mario->vy = 0;
+            game->camera_x = mario->x - CAMERA_THRESHOLD;
+            if (game->camera_x < 0) game->camera_x = 0;
+            game->state = STATE_PLAYING;
+        } else {
+            start_level_at(game, game->warp_world, game->warp_sublevel,
+                          game->warp_tx, game->warp_ty);
+        }
+    }
+}
+
+static void draw_pipe_transition(Game *game) {
+    float t = game->state_timer / PIPE_TRANSITION_TIME;
+    if (t < 0.5f) {
+        draw_playing(game);
+        float fade = t * 2.0f;
+        DrawRectangle(0, 0, WINDOW_WIDTH, WINDOW_HEIGHT,
+                      (Color){0, 0, 0, (unsigned char)(fade * 255)});
+    } else {
+        float fade = (1.0f - t) * 2.0f;
+        DrawRectangle(0, 0, WINDOW_WIDTH, WINDOW_HEIGHT,
+                      (Color){0, 0, 0, (unsigned char)(fade * 255)});
+    }
 }
 
 // --- HUD ---
@@ -403,20 +607,23 @@ static void draw_hud(Game *game) {
 
 void game_update(Game *game) {
     switch (game->state) {
-        case STATE_TITLE:          update_title(game);          break;
-        case STATE_PLAYING:        update_playing(game);        break;
-        case STATE_DYING:          update_dying(game);          break;
-        case STATE_GAME_OVER:      update_game_over(game);      break;
-        case STATE_PAUSED:         update_paused(game);         break;
-        case STATE_LEVEL_COMPLETE: update_level_complete(game);  break;
+        case STATE_TITLE:           update_title(game);           break;
+        case STATE_PLAYING:         update_playing(game);         break;
+        case STATE_DYING:           update_dying(game);           break;
+        case STATE_GAME_OVER:       update_game_over(game);       break;
+        case STATE_PAUSED:          update_paused(game);          break;
+        case STATE_LEVEL_COMPLETE:  update_level_complete(game);  break;
+        case STATE_CASTLE_COMPLETE: update_castle_complete(game); break;
+        case STATE_PIPE_TRANSITION: update_pipe_transition(game); break;
     }
 }
 
 void game_draw(Game *game) {
     BeginDrawing();
-    ClearBackground(game->state == STATE_PLAYING || game->state == STATE_PAUSED ||
-                    game->state == STATE_DYING || game->state == STATE_LEVEL_COMPLETE
-                    ? game->level.bg_color : COLOR_BG);
+    bool in_level = (game->state == STATE_PLAYING || game->state == STATE_PAUSED ||
+                     game->state == STATE_DYING || game->state == STATE_LEVEL_COMPLETE ||
+                     game->state == STATE_CASTLE_COMPLETE || game->state == STATE_PIPE_TRANSITION);
+    ClearBackground(in_level ? game->level.bg_color : COLOR_BG);
 
     switch (game->state) {
         case STATE_TITLE:
@@ -440,6 +647,14 @@ void game_draw(Game *game) {
         case STATE_LEVEL_COMPLETE:
             draw_hud(game);
             draw_level_complete(game);
+            break;
+        case STATE_CASTLE_COMPLETE:
+            draw_hud(game);
+            draw_castle_complete(game);
+            break;
+        case STATE_PIPE_TRANSITION:
+            draw_hud(game);
+            draw_pipe_transition(game);
             break;
     }
 
