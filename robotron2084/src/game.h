@@ -56,16 +56,30 @@
 #define QUARK_SCORE         1000
 #define TANK_SCORE          200
 
+// --- Brain Waves ---
+#define MAX_BRAINS          16
+#define MAX_PROGS           40
+#define BRAIN_RADIUS        18.0f
+#define PROG_RADIUS         12.0f
+#define BRAIN_SPEED         88.0f
+#define PROG_SPEED          185.0f
+#define BRAIN_SCORE         500
+#define PROG_SCORE          100
+
 // --- Enemy Projectiles ---
 #define MAX_PROJECTILES     160
 #define SPARK_RADIUS        6.0f
 #define SHELL_RADIUS        8.0f
+#define CRUISE_RADIUS       7.0f
 #define SPARK_SPEED         275.0f
 #define SHELL_SPEED         235.0f
+#define CRUISE_SPEED        245.0f
 #define SPARK_LIFETIME      3.8f
 #define SHELL_LIFETIME      5.5f
+#define CRUISE_LIFETIME     6.0f
 #define SPARK_SCORE         25
 #define SHELL_SCORE         50
+#define CRUISE_SCORE        25
 
 // --- Humans ---
 #define MAX_HUMANS          40
@@ -102,6 +116,7 @@ typedef enum SoundID {
     SOUND_EXTRA_LIFE,
     SOUND_WAVE_CLEAR,
     SOUND_ENEMY_SHOOT,
+    SOUND_BRAIN_MISSILE,
     SOUND_HULK_HIT,
     SOUND_COUNT
 } SoundID;
@@ -118,12 +133,15 @@ typedef enum TextureID {
     TEXTURE_ENFORCER,
     TEXTURE_QUARK,
     TEXTURE_TANK,
+    TEXTURE_BRAIN,
+    TEXTURE_PROG,
     TEXTURE_COUNT
 } TextureID;
 
 typedef enum ProjectileType {
     PROJECTILE_SPARK = 0,
-    PROJECTILE_SHELL
+    PROJECTILE_SHELL,
+    PROJECTILE_CRUISE
 } ProjectileType;
 
 typedef enum GameMode {
@@ -195,6 +213,22 @@ typedef struct Tank {
     float retarget_timer;
 } Tank;
 
+typedef struct Brain {
+    bool active;
+    Vector2 position;
+    float speed;
+    float radius;
+    float shoot_timer;
+    float wobble;
+} Brain;
+
+typedef struct Prog {
+    bool active;
+    Vector2 position;
+    float speed;
+    float radius;
+} Prog;
+
 typedef struct EnemyProjectile {
     bool active;
     ProjectileType type;
@@ -202,6 +236,7 @@ typedef struct EnemyProjectile {
     Vector2 velocity;
     float radius;
     float lifetime;
+    float wobble;
 } EnemyProjectile;
 
 typedef struct Human {
@@ -263,6 +298,8 @@ typedef struct Game {
     Enforcer enforcers[MAX_ENFORCERS];
     Quark quarks[MAX_QUARKS];
     Tank tanks[MAX_TANKS];
+    Brain brains[MAX_BRAINS];
+    Prog progs[MAX_PROGS];
     EnemyProjectile projectiles[MAX_PROJECTILES];
     Human humans[MAX_HUMANS];
     Electrode electrodes[MAX_ELECTRODES];

@@ -12,6 +12,8 @@ static const char *texture_files[TEXTURE_COUNT] = {
     [TEXTURE_ENFORCER] = "assets/enforcer.png",
     [TEXTURE_QUARK] = "assets/quark.png",
     [TEXTURE_TANK] = "assets/tank.png",
+    [TEXTURE_BRAIN] = "assets/brain.png",
+    [TEXTURE_PROG] = "assets/prog.png",
 };
 
 void textures_load(Game *game) {

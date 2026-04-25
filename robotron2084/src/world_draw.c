@@ -153,6 +153,36 @@ void world_draw_playfield(Game *game) {
         }
     }
 
+    for (int i = 0; i < MAX_BRAINS; i++) {
+        Brain brain = game->brains[i];
+        if (!brain.active) continue;
+
+        float pulse = 0.5f + 0.5f * sinf(GetTime() * 5.0f + brain.wobble);
+        DrawCircleV(brain.position, brain.radius + 8.0f + pulse * 3.0f, (Color){ 170, 70, 255, 70 });
+        if (texture_is_ready(game, TEXTURE_BRAIN)) {
+            draw_texture_centered(game, TEXTURE_BRAIN, brain.position, 42.0f, WHITE);
+        } else {
+            DrawCircleV(brain.position, brain.radius, (Color){ 135, 62, 210, 255 });
+            DrawCircleV((Vector2){ brain.position.x - 6.0f, brain.position.y - 3.0f }, 4.0f, BLACK);
+            DrawCircleV((Vector2){ brain.position.x + 6.0f, brain.position.y - 3.0f }, 4.0f, BLACK);
+            DrawCircleLines((int)brain.position.x, (int)brain.position.y, brain.radius + 3.0f, VIOLET);
+        }
+    }
+
+    for (int i = 0; i < MAX_PROGS; i++) {
+        Prog prog = game->progs[i];
+        if (!prog.active) continue;
+
+        DrawCircleV(prog.position, prog.radius + 6.0f, (Color){ 220, 68, 255, 65 });
+        if (texture_is_ready(game, TEXTURE_PROG)) {
+            draw_texture_centered(game, TEXTURE_PROG, prog.position, 32.0f, WHITE);
+        } else {
+            DrawPoly(prog.position, 4, prog.radius + 3.0f, 45.0f, PURPLE);
+            DrawPoly(prog.position, 4, prog.radius - 2.0f, 45.0f, VIOLET);
+            DrawCircleV(prog.position, 3.0f, RAYWHITE);
+        }
+    }
+
     for (int i = 0; i < MAX_GRUNTS; i++) {
         Grunt grunt = game->grunts[i];
         if (!grunt.active) continue;

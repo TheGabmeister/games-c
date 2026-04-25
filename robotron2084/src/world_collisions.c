@@ -12,8 +12,15 @@ void world_resolve_bullet_collisions(Game *game) {
             if (!projectile->active) continue;
 
             if (world_circles_overlap(bullet->position, BULLET_RADIUS, projectile->position, projectile->radius)) {
-                int score = projectile->type == PROJECTILE_SHELL ? SHELL_SCORE : SPARK_SCORE;
-                Color color = projectile->type == PROJECTILE_SHELL ? ORANGE : SKYBLUE;
+                int score = SPARK_SCORE;
+                Color color = SKYBLUE;
+                if (projectile->type == PROJECTILE_SHELL) {
+                    score = SHELL_SCORE;
+                    color = ORANGE;
+                } else if (projectile->type == PROJECTILE_CRUISE) {
+                    score = CRUISE_SCORE;
+                    color = VIOLET;
+                }
                 world_add_particles(game, projectile->position, color, 7, 150.0f, 2.5f);
                 world_add_score(game, score);
                 bullet->active = false;
@@ -119,6 +126,36 @@ void world_resolve_bullet_collisions(Game *game) {
         }
         if (!bullet->active) continue;
 
+        for (int brain_index = 0; brain_index < MAX_BRAINS; brain_index++) {
+            Brain *brain = &game->brains[brain_index];
+            if (!brain->active) continue;
+
+            if (world_circles_overlap(bullet->position, BULLET_RADIUS, brain->position, brain->radius)) {
+                world_add_particles(game, brain->position, VIOLET, 12, 175.0f, 3.0f);
+                bullet->active = false;
+                brain->active = false;
+                world_add_score(game, BRAIN_SCORE);
+                sound_play(game, SOUND_ENEMY_EXPLODE);
+                break;
+            }
+        }
+        if (!bullet->active) continue;
+
+        for (int prog_index = 0; prog_index < MAX_PROGS; prog_index++) {
+            Prog *prog = &game->progs[prog_index];
+            if (!prog->active) continue;
+
+            if (world_circles_overlap(bullet->position, BULLET_RADIUS, prog->position, prog->radius)) {
+                world_add_particles(game, prog->position, PURPLE, 9, 165.0f, 2.6f);
+                bullet->active = false;
+                prog->active = false;
+                world_add_score(game, PROG_SCORE);
+                sound_play(game, SOUND_ENEMY_EXPLODE);
+                break;
+            }
+        }
+        if (!bullet->active) continue;
+
         for (int grunt_index = 0; grunt_index < MAX_GRUNTS; grunt_index++) {
             Grunt *grunt = &game->grunts[grunt_index];
             if (!grunt->active) continue;
@@ -129,6 +166,24 @@ void world_resolve_bullet_collisions(Game *game) {
                 grunt->active = false;
                 world_add_score(game, GRUNT_SCORE);
                 sound_play(game, SOUND_ENEMY_EXPLODE);
+                break;
+            }
+        }
+    }
+
+    for (int brain_index = 0; brain_index < MAX_BRAINS; brain_index++) {
+        Brain *brain = &game->brains[brain_index];
+        if (!brain->active) continue;
+
+        for (int human_index = 0; human_index < MAX_HUMANS; human_index++) {
+            Human *human = &game->humans[human_index];
+            if (!human->active) continue;
+
+            if (world_circles_overlap(brain->position, brain->radius, human->position, human->radius)) {
+                Vector2 position = human->position;
+                human->active = false;
+                world_spawn_prog(game, position);
+                world_add_particles(game, position, VIOLET, 8, 135.0f, 2.4f);
                 break;
             }
         }
@@ -256,6 +311,22 @@ void world_resolve_player_death_collisions(Game *game) {
     for (int i = 0; i < MAX_TANKS; i++) {
         Tank *tank = &game->tanks[i];
         if (tank->active && world_circles_overlap(game->player_position, game->player_radius, tank->position, tank->radius)) {
+            handle_player_death(game);
+            return;
+        }
+    }
+
+    for (int i = 0; i < MAX_BRAINS; i++) {
+        Brain *brain = &game->brains[i];
+        if (brain->active && world_circles_overlap(game->player_position, game->player_radius, brain->position, brain->radius)) {
+            handle_player_death(game);
+            return;
+        }
+    }
+
+    for (int i = 0; i < MAX_PROGS; i++) {
+        Prog *prog = &game->progs[i];
+        if (prog->active && world_circles_overlap(game->player_position, game->player_radius, prog->position, prog->radius)) {
             handle_player_death(game);
             return;
         }

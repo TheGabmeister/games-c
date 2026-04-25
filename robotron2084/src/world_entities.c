@@ -1,5 +1,6 @@
 #include "world_internal.h"
 #include "raymath.h"
+#include <math.h>
 
 static Vector2 random_direction(void) {
     Vector2 direction = {
@@ -123,6 +124,34 @@ void world_spawn_tank(Game *game, Vector2 position) {
     }
 }
 
+void world_spawn_brain(Game *game, Vector2 position) {
+    for (int i = 0; i < MAX_BRAINS; i++) {
+        Brain *brain = &game->brains[i];
+        if (!brain->active) {
+            brain->active = true;
+            brain->position = position;
+            brain->speed = BRAIN_SPEED + (float)(game->wave - 1) * 1.6f;
+            brain->radius = BRAIN_RADIUS;
+            brain->shoot_timer = (float)GetRandomValue(110, 210) / 100.0f;
+            brain->wobble = (float)GetRandomValue(0, 628) / 100.0f;
+            return;
+        }
+    }
+}
+
+void world_spawn_prog(Game *game, Vector2 position) {
+    for (int i = 0; i < MAX_PROGS; i++) {
+        Prog *prog = &game->progs[i];
+        if (!prog->active) {
+            prog->active = true;
+            prog->position = position;
+            prog->speed = PROG_SPEED + (float)(game->wave - 1) * 3.0f;
+            prog->radius = PROG_RADIUS;
+            return;
+        }
+    }
+}
+
 void world_spawn_human(Game *game, Vector2 position, int type) {
     for (int i = 0; i < MAX_HUMANS; i++) {
         Human *human = &game->humans[i];
@@ -135,6 +164,63 @@ void world_spawn_human(Game *game, Vector2 position, int type) {
             human->retarget_timer = (float)GetRandomValue(80, 180) / 100.0f;
             return;
         }
+    }
+}
+
+void world_update_brains_and_progs(Game *game, float dt) {
+    for (int i = 0; i < MAX_BRAINS; i++) {
+        Brain *brain = &game->brains[i];
+        if (!brain->active) continue;
+
+        brain->wobble += dt * 4.0f;
+
+        Vector2 target = game->player_position;
+        int human_index = find_nearest_human(game, brain->position);
+        if (human_index >= 0) {
+            target = game->humans[human_index].position;
+        }
+
+        Vector2 to_target = Vector2Subtract(target, brain->position);
+        if (to_target.x != 0.0f || to_target.y != 0.0f) {
+            Vector2 direction = Vector2Normalize(to_target);
+            Vector2 side = (Vector2){ -direction.y, direction.x };
+            float weave = sinf(brain->wobble) * 0.45f;
+            direction = Vector2Normalize(Vector2Add(direction, Vector2Scale(side, weave)));
+            brain->position.x += direction.x * brain->speed * dt;
+            brain->position.y += direction.y * brain->speed * dt;
+        }
+
+        brain->position.x = Clamp(brain->position.x, brain->radius, WINDOW_WIDTH - brain->radius);
+        brain->position.y = Clamp(brain->position.y, brain->radius, WINDOW_HEIGHT - brain->radius);
+
+        brain->shoot_timer -= dt;
+        if (brain->shoot_timer <= 0.0f) {
+            Vector2 direction = Vector2Subtract(game->player_position, brain->position);
+            if (direction.x == 0.0f && direction.y == 0.0f) {
+                direction = random_direction();
+            } else {
+                direction = Vector2Normalize(direction);
+            }
+            world_spawn_projectile(game, PROJECTILE_CRUISE, brain->position, Vector2Scale(direction, CRUISE_SPEED));
+            float base_timer = 1.9f - (float)game->wave * 0.025f;
+            if (base_timer < 0.9f) base_timer = 0.9f;
+            brain->shoot_timer = base_timer + (float)GetRandomValue(0, 70) / 100.0f;
+        }
+    }
+
+    for (int i = 0; i < MAX_PROGS; i++) {
+        Prog *prog = &game->progs[i];
+        if (!prog->active) continue;
+
+        Vector2 to_player = Vector2Subtract(game->player_position, prog->position);
+        if (to_player.x != 0.0f || to_player.y != 0.0f) {
+            Vector2 direction = Vector2Normalize(to_player);
+            prog->position.x += direction.x * prog->speed * dt;
+            prog->position.y += direction.y * prog->speed * dt;
+        }
+
+        prog->position.x = Clamp(prog->position.x, prog->radius, WINDOW_WIDTH - prog->radius);
+        prog->position.y = Clamp(prog->position.y, prog->radius, WINDOW_HEIGHT - prog->radius);
     }
 }
 

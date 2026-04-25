@@ -53,7 +53,7 @@ void game_update(Game *game) {
 
 static void draw_overlay(Game *game) {
     DrawText("ROBOTRON 2084 - SPAWNER ENEMIES", 24, 24, 24, RAYWHITE);
-    DrawText(TextFormat("SCORE %06d   HIGH %06d   WAVE %d   LIVES %d   G %d   S %d   E %d   Q %d   T %d   SHOTS %d",
+    DrawText(TextFormat("SCORE %06d   HIGH %06d   WAVE %d   LIVES %d   G %d   S %d   E %d   Q %d   T %d   B %d   P %d   SHOTS %d",
         game->score,
         game->high_score,
         game->wave,
@@ -63,6 +63,8 @@ static void draw_overlay(Game *game) {
         world_count_active_enforcers(game),
         world_count_active_quarks(game),
         world_count_active_tanks(game),
+        world_count_active_brains(game),
+        world_count_active_progs(game),
         world_count_active_projectiles(game)), 24, 56, 18, LIGHTGRAY);
     DrawText(TextFormat("WASD move  |  Arrow keys fire  |  P pause  |  Humans %d  Hulks %d  Electrodes %d  Next rescue +%d",
         world_count_active_humans(game),

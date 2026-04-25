@@ -58,6 +58,22 @@ int world_count_active_tanks(Game *game) {
     return count;
 }
 
+int world_count_active_brains(Game *game) {
+    int count = 0;
+    for (int i = 0; i < MAX_BRAINS; i++) {
+        if (game->brains[i].active) count++;
+    }
+    return count;
+}
+
+int world_count_active_progs(Game *game) {
+    int count = 0;
+    for (int i = 0; i < MAX_PROGS; i++) {
+        if (game->progs[i].active) count++;
+    }
+    return count;
+}
+
 int world_count_active_projectiles(Game *game) {
     int count = 0;
     for (int i = 0; i < MAX_PROJECTILES; i++) {
@@ -91,6 +107,8 @@ static void clear_wave_entities(Game *game) {
     memset(game->enforcers, 0, sizeof(game->enforcers));
     memset(game->quarks, 0, sizeof(game->quarks));
     memset(game->tanks, 0, sizeof(game->tanks));
+    memset(game->brains, 0, sizeof(game->brains));
+    memset(game->progs, 0, sizeof(game->progs));
     memset(game->projectiles, 0, sizeof(game->projectiles));
     memset(game->humans, 0, sizeof(game->humans));
     memset(game->electrodes, 0, sizeof(game->electrodes));
@@ -129,6 +147,33 @@ static Vector2 random_arena_position(float margin) {
 void world_spawn_wave(Game *game) {
     clear_wave_entities(game);
     world_reset_player(game);
+
+    bool brain_wave = (game->wave % 5) == 0;
+
+    if (brain_wave) {
+        int brain_count = 6 + game->wave / 3;
+        if (brain_count > MAX_BRAINS) brain_count = MAX_BRAINS;
+        for (int i = 0; i < brain_count; i++) {
+            world_spawn_brain(game, random_edge_position(76.0f));
+        }
+
+        int human_count = 10 + game->wave / 2;
+        if (human_count > MAX_HUMANS) human_count = MAX_HUMANS;
+        for (int i = 0; i < human_count; i++) {
+            world_spawn_human(game, random_arena_position(80.0f), i % 3);
+        }
+
+        int electrode_count = 8 + game->wave / 10;
+        if (electrode_count > WAVE_ELECTRODE_MAX) electrode_count = WAVE_ELECTRODE_MAX;
+        for (int i = 0; i < electrode_count; i++) {
+            Vector2 position = random_arena_position(70.0f);
+            if (Vector2Distance(position, game->player_position) > 135.0f) {
+                world_spawn_electrode(game, position);
+            }
+        }
+
+        return;
+    }
 
     int grunt_count = WAVE_START_GRUNTS + (game->wave - 1) * WAVE_GRUNT_STEP;
     if (grunt_count > MAX_GRUNTS) grunt_count = MAX_GRUNTS;
@@ -197,6 +242,7 @@ void world_update_playing(Game *game, float dt) {
     world_update_humans(game, dt);
     world_update_grunts_and_hulks(game, dt);
     world_update_spawners_and_shooters(game, dt);
+    world_update_brains_and_progs(game, dt);
     world_update_projectiles(game, dt);
     world_update_effects(game, dt);
 
@@ -208,7 +254,9 @@ void world_update_playing(Game *game, float dt) {
         world_count_active_spheroids(game) == 0 &&
         world_count_active_enforcers(game) == 0 &&
         world_count_active_quarks(game) == 0 &&
-        world_count_active_tanks(game) == 0) {
+        world_count_active_tanks(game) == 0 &&
+        world_count_active_brains(game) == 0 &&
+        world_count_active_progs(game) == 0) {
         sound_play(game, SOUND_WAVE_CLEAR);
         game->screen_flash = 0.12f;
         game->wave++;
