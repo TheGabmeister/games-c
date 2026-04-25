@@ -2,7 +2,7 @@
 #include "sounds.h"
 
 int main(void) {
-    InitWindow(WINDOW_WIDTH, WINDOW_HEIGHT, "Template");
+    InitWindow(WINDOW_WIDTH, WINDOW_HEIGHT, "Lode Runner");
     SetTargetFPS(TARGET_FPS);
     InitAudioDevice();
 
