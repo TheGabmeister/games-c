@@ -33,6 +33,7 @@ void world_draw_projectiles(Game *game);
 void world_draw_bullets(Game *game);
 
 void world_resolve_bullet_collisions(Game *game);
+void world_resolve_brain_human_collisions(Game *game);
 void world_resolve_human_collisions(Game *game);
 void world_resolve_grunt_electrode_collisions(Game *game);
 void world_resolve_player_death_collisions(Game *game);

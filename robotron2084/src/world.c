@@ -2,93 +2,28 @@
 #include "sounds.h"
 #include "raymath.h"
 
-int world_count_active_grunts(Game *game) {
-    int count = 0;
-    for (int i = 0; i < MAX_GRUNTS; i++) {
-        if (game->grunts[i].active) count++;
+#define DEFINE_ACTIVE_COUNTER(function_name, array_name, max_count) \
+    int function_name(Game *game) { \
+        int count = 0; \
+        for (int i = 0; i < max_count; i++) { \
+            if (game->array_name[i].active) count++; \
+        } \
+        return count; \
     }
-    return count;
-}
 
-int world_count_active_humans(Game *game) {
-    int count = 0;
-    for (int i = 0; i < MAX_HUMANS; i++) {
-        if (game->humans[i].active) count++;
-    }
-    return count;
-}
+DEFINE_ACTIVE_COUNTER(world_count_active_grunts, grunts, MAX_GRUNTS)
+DEFINE_ACTIVE_COUNTER(world_count_active_humans, humans, MAX_HUMANS)
+DEFINE_ACTIVE_COUNTER(world_count_active_hulks, hulks, MAX_HULKS)
+DEFINE_ACTIVE_COUNTER(world_count_active_spheroids, spheroids, MAX_SPHEROIDS)
+DEFINE_ACTIVE_COUNTER(world_count_active_enforcers, enforcers, MAX_ENFORCERS)
+DEFINE_ACTIVE_COUNTER(world_count_active_quarks, quarks, MAX_QUARKS)
+DEFINE_ACTIVE_COUNTER(world_count_active_tanks, tanks, MAX_TANKS)
+DEFINE_ACTIVE_COUNTER(world_count_active_brains, brains, MAX_BRAINS)
+DEFINE_ACTIVE_COUNTER(world_count_active_progs, progs, MAX_PROGS)
+DEFINE_ACTIVE_COUNTER(world_count_active_projectiles, projectiles, MAX_PROJECTILES)
+DEFINE_ACTIVE_COUNTER(world_count_active_electrodes, electrodes, MAX_ELECTRODES)
 
-int world_count_active_hulks(Game *game) {
-    int count = 0;
-    for (int i = 0; i < MAX_HULKS; i++) {
-        if (game->hulks[i].active) count++;
-    }
-    return count;
-}
-
-int world_count_active_spheroids(Game *game) {
-    int count = 0;
-    for (int i = 0; i < MAX_SPHEROIDS; i++) {
-        if (game->spheroids[i].active) count++;
-    }
-    return count;
-}
-
-int world_count_active_enforcers(Game *game) {
-    int count = 0;
-    for (int i = 0; i < MAX_ENFORCERS; i++) {
-        if (game->enforcers[i].active) count++;
-    }
-    return count;
-}
-
-int world_count_active_quarks(Game *game) {
-    int count = 0;
-    for (int i = 0; i < MAX_QUARKS; i++) {
-        if (game->quarks[i].active) count++;
-    }
-    return count;
-}
-
-int world_count_active_tanks(Game *game) {
-    int count = 0;
-    for (int i = 0; i < MAX_TANKS; i++) {
-        if (game->tanks[i].active) count++;
-    }
-    return count;
-}
-
-int world_count_active_brains(Game *game) {
-    int count = 0;
-    for (int i = 0; i < MAX_BRAINS; i++) {
-        if (game->brains[i].active) count++;
-    }
-    return count;
-}
-
-int world_count_active_progs(Game *game) {
-    int count = 0;
-    for (int i = 0; i < MAX_PROGS; i++) {
-        if (game->progs[i].active) count++;
-    }
-    return count;
-}
-
-int world_count_active_projectiles(Game *game) {
-    int count = 0;
-    for (int i = 0; i < MAX_PROJECTILES; i++) {
-        if (game->projectiles[i].active) count++;
-    }
-    return count;
-}
-
-int world_count_active_electrodes(Game *game) {
-    int count = 0;
-    for (int i = 0; i < MAX_ELECTRODES; i++) {
-        if (game->electrodes[i].active) count++;
-    }
-    return count;
-}
+#undef DEFINE_ACTIVE_COUNTER
 
 void world_reset_player(Game *game) {
     game->player_position = (Vector2){ PLAYER_START_X, PLAYER_START_Y };
@@ -303,6 +238,16 @@ int world_next_human_rescue_score(Game *game) {
     return rescue_index * 1000;
 }
 
+static bool world_has_clear_enemies(Game *game) {
+    return world_count_active_grunts(game) > 0 ||
+        world_count_active_spheroids(game) > 0 ||
+        world_count_active_enforcers(game) > 0 ||
+        world_count_active_quarks(game) > 0 ||
+        world_count_active_tanks(game) > 0 ||
+        world_count_active_brains(game) > 0 ||
+        world_count_active_progs(game) > 0;
+}
+
 void world_update_playing(Game *game, float dt) {
     world_update_player_and_bullets(game, dt);
     world_update_humans(game, dt);
@@ -313,16 +258,11 @@ void world_update_playing(Game *game, float dt) {
     world_update_effects(game, dt);
 
     world_resolve_bullet_collisions(game);
+    world_resolve_brain_human_collisions(game);
     world_resolve_human_collisions(game);
     world_resolve_grunt_electrode_collisions(game);
 
-    if (world_count_active_grunts(game) == 0 &&
-        world_count_active_spheroids(game) == 0 &&
-        world_count_active_enforcers(game) == 0 &&
-        world_count_active_quarks(game) == 0 &&
-        world_count_active_tanks(game) == 0 &&
-        world_count_active_brains(game) == 0 &&
-        world_count_active_progs(game) == 0) {
+    if (!world_has_clear_enemies(game)) {
         sound_play(game, SOUND_WAVE_CLEAR);
         game->screen_flash = 0.12f;
         game->wave++;

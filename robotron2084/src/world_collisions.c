@@ -2,6 +2,15 @@
 #include "sounds.h"
 #include "raymath.h"
 
+static void kill_enemy_from_bullet(Game *game, Bullet *bullet, bool *active, Vector2 position,
+    int score, Color particle_color, int particle_count, float particle_speed, float particle_radius) {
+    world_add_particles(game, position, particle_color, particle_count, particle_speed, particle_radius);
+    bullet->active = false;
+    *active = false;
+    world_add_score(game, score);
+    sound_play(game, SOUND_ENEMY_EXPLODE);
+}
+
 void world_resolve_bullet_collisions(Game *game) {
     for (int bullet_index = 0; bullet_index < MAX_BULLETS; bullet_index++) {
         Bullet *bullet = &game->bullets[bullet_index];
@@ -71,11 +80,8 @@ void world_resolve_bullet_collisions(Game *game) {
             if (!spheroid->active) continue;
 
             if (world_circles_overlap(bullet->position, BULLET_RADIUS, spheroid->position, spheroid->radius)) {
-                world_add_particles(game, spheroid->position, BLUE, 12, 175.0f, 3.0f);
-                bullet->active = false;
-                spheroid->active = false;
-                world_add_score(game, SPHEROID_SCORE);
-                sound_play(game, SOUND_ENEMY_EXPLODE);
+                kill_enemy_from_bullet(game, bullet, &spheroid->active, spheroid->position,
+                    SPHEROID_SCORE, BLUE, 12, 175.0f, 3.0f);
                 break;
             }
         }
@@ -86,11 +92,8 @@ void world_resolve_bullet_collisions(Game *game) {
             if (!enforcer->active) continue;
 
             if (world_circles_overlap(bullet->position, BULLET_RADIUS, enforcer->position, enforcer->radius)) {
-                world_add_particles(game, enforcer->position, SKYBLUE, 10, 165.0f, 3.0f);
-                bullet->active = false;
-                enforcer->active = false;
-                world_add_score(game, ENFORCER_SCORE);
-                sound_play(game, SOUND_ENEMY_EXPLODE);
+                kill_enemy_from_bullet(game, bullet, &enforcer->active, enforcer->position,
+                    ENFORCER_SCORE, SKYBLUE, 10, 165.0f, 3.0f);
                 break;
             }
         }
@@ -101,11 +104,8 @@ void world_resolve_bullet_collisions(Game *game) {
             if (!quark->active) continue;
 
             if (world_circles_overlap(bullet->position, BULLET_RADIUS, quark->position, quark->radius)) {
-                world_add_particles(game, quark->position, RAYWHITE, 12, 175.0f, 3.0f);
-                bullet->active = false;
-                quark->active = false;
-                world_add_score(game, QUARK_SCORE);
-                sound_play(game, SOUND_ENEMY_EXPLODE);
+                kill_enemy_from_bullet(game, bullet, &quark->active, quark->position,
+                    QUARK_SCORE, RAYWHITE, 12, 175.0f, 3.0f);
                 break;
             }
         }
@@ -116,11 +116,8 @@ void world_resolve_bullet_collisions(Game *game) {
             if (!tank->active) continue;
 
             if (world_circles_overlap(bullet->position, BULLET_RADIUS, tank->position, tank->radius)) {
-                world_add_particles(game, tank->position, RED, 10, 165.0f, 3.0f);
-                bullet->active = false;
-                tank->active = false;
-                world_add_score(game, TANK_SCORE);
-                sound_play(game, SOUND_ENEMY_EXPLODE);
+                kill_enemy_from_bullet(game, bullet, &tank->active, tank->position,
+                    TANK_SCORE, RED, 10, 165.0f, 3.0f);
                 break;
             }
         }
@@ -131,11 +128,8 @@ void world_resolve_bullet_collisions(Game *game) {
             if (!brain->active) continue;
 
             if (world_circles_overlap(bullet->position, BULLET_RADIUS, brain->position, brain->radius)) {
-                world_add_particles(game, brain->position, VIOLET, 12, 175.0f, 3.0f);
-                bullet->active = false;
-                brain->active = false;
-                world_add_score(game, BRAIN_SCORE);
-                sound_play(game, SOUND_ENEMY_EXPLODE);
+                kill_enemy_from_bullet(game, bullet, &brain->active, brain->position,
+                    BRAIN_SCORE, VIOLET, 12, 175.0f, 3.0f);
                 break;
             }
         }
@@ -146,11 +140,8 @@ void world_resolve_bullet_collisions(Game *game) {
             if (!prog->active) continue;
 
             if (world_circles_overlap(bullet->position, BULLET_RADIUS, prog->position, prog->radius)) {
-                world_add_particles(game, prog->position, PURPLE, 9, 165.0f, 2.6f);
-                bullet->active = false;
-                prog->active = false;
-                world_add_score(game, PROG_SCORE);
-                sound_play(game, SOUND_ENEMY_EXPLODE);
+                kill_enemy_from_bullet(game, bullet, &prog->active, prog->position,
+                    PROG_SCORE, PURPLE, 9, 165.0f, 2.6f);
                 break;
             }
         }
@@ -161,16 +152,16 @@ void world_resolve_bullet_collisions(Game *game) {
             if (!grunt->active) continue;
 
             if (world_circles_overlap(bullet->position, BULLET_RADIUS, grunt->position, grunt->radius)) {
-                world_add_particles(game, grunt->position, RED, 10, 180.0f, 3.0f);
-                bullet->active = false;
-                grunt->active = false;
-                world_add_score(game, GRUNT_SCORE);
-                sound_play(game, SOUND_ENEMY_EXPLODE);
+                kill_enemy_from_bullet(game, bullet, &grunt->active, grunt->position,
+                    GRUNT_SCORE, RED, 10, 180.0f, 3.0f);
                 break;
             }
         }
     }
 
+}
+
+void world_resolve_brain_human_collisions(Game *game) {
     for (int brain_index = 0; brain_index < MAX_BRAINS; brain_index++) {
         Brain *brain = &game->brains[brain_index];
         if (!brain->active) continue;
@@ -259,6 +250,30 @@ static void handle_player_death(Game *game) {
     }
 }
 
+static bool player_overlaps_enemy_family(Game *game) {
+#define CHECK_PLAYER_OVERLAP(array_name, max_count) \
+    for (int i = 0; i < max_count; i++) { \
+        if (game->array_name[i].active && \
+            world_circles_overlap(game->player_position, game->player_radius, \
+                game->array_name[i].position, game->array_name[i].radius)) { \
+            return true; \
+        } \
+    }
+
+    CHECK_PLAYER_OVERLAP(hulks, MAX_HULKS)
+    CHECK_PLAYER_OVERLAP(spheroids, MAX_SPHEROIDS)
+    CHECK_PLAYER_OVERLAP(enforcers, MAX_ENFORCERS)
+    CHECK_PLAYER_OVERLAP(quarks, MAX_QUARKS)
+    CHECK_PLAYER_OVERLAP(tanks, MAX_TANKS)
+    CHECK_PLAYER_OVERLAP(brains, MAX_BRAINS)
+    CHECK_PLAYER_OVERLAP(progs, MAX_PROGS)
+    CHECK_PLAYER_OVERLAP(grunts, MAX_GRUNTS)
+
+#undef CHECK_PLAYER_OVERLAP
+
+    return false;
+}
+
 void world_resolve_player_death_collisions(Game *game) {
     if (game->player_invulnerable_timer > 0.0f) {
         return;
@@ -280,67 +295,7 @@ void world_resolve_player_death_collisions(Game *game) {
         }
     }
 
-    for (int i = 0; i < MAX_HULKS; i++) {
-        Hulk *hulk = &game->hulks[i];
-        if (hulk->active && world_circles_overlap(game->player_position, game->player_radius, hulk->position, hulk->radius)) {
-            handle_player_death(game);
-            return;
-        }
-    }
-
-    for (int i = 0; i < MAX_SPHEROIDS; i++) {
-        Spheroid *spheroid = &game->spheroids[i];
-        if (spheroid->active && world_circles_overlap(game->player_position, game->player_radius, spheroid->position, spheroid->radius)) {
-            handle_player_death(game);
-            return;
-        }
-    }
-
-    for (int i = 0; i < MAX_ENFORCERS; i++) {
-        Enforcer *enforcer = &game->enforcers[i];
-        if (enforcer->active && world_circles_overlap(game->player_position, game->player_radius, enforcer->position, enforcer->radius)) {
-            handle_player_death(game);
-            return;
-        }
-    }
-
-    for (int i = 0; i < MAX_QUARKS; i++) {
-        Quark *quark = &game->quarks[i];
-        if (quark->active && world_circles_overlap(game->player_position, game->player_radius, quark->position, quark->radius)) {
-            handle_player_death(game);
-            return;
-        }
-    }
-
-    for (int i = 0; i < MAX_TANKS; i++) {
-        Tank *tank = &game->tanks[i];
-        if (tank->active && world_circles_overlap(game->player_position, game->player_radius, tank->position, tank->radius)) {
-            handle_player_death(game);
-            return;
-        }
-    }
-
-    for (int i = 0; i < MAX_BRAINS; i++) {
-        Brain *brain = &game->brains[i];
-        if (brain->active && world_circles_overlap(game->player_position, game->player_radius, brain->position, brain->radius)) {
-            handle_player_death(game);
-            return;
-        }
-    }
-
-    for (int i = 0; i < MAX_PROGS; i++) {
-        Prog *prog = &game->progs[i];
-        if (prog->active && world_circles_overlap(game->player_position, game->player_radius, prog->position, prog->radius)) {
-            handle_player_death(game);
-            return;
-        }
-    }
-
-    for (int i = 0; i < MAX_GRUNTS; i++) {
-        Grunt *grunt = &game->grunts[i];
-        if (grunt->active && world_circles_overlap(game->player_position, game->player_radius, grunt->position, grunt->radius)) {
-            handle_player_death(game);
-            return;
-        }
+    if (player_overlaps_enemy_family(game)) {
+        handle_player_death(game);
     }
 }
