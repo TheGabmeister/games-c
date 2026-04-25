@@ -1,10 +1,90 @@
 #include "game.h"
 #include "raymath.h"
 
+static bool circles_overlap(Vector2 a, float ar, Vector2 b, float br) {
+    float dx = a.x - b.x;
+    float dy = a.y - b.y;
+    float radius = ar + br;
+    return dx * dx + dy * dy <= radius * radius;
+}
+
+static int count_active_grunts(Game *game) {
+    int count = 0;
+    for (int i = 0; i < MAX_GRUNTS; i++) {
+        if (game->grunts[i].active) {
+            count++;
+        }
+    }
+    return count;
+}
+
 static void reset_player(Game *game) {
     game->player_position = (Vector2){ PLAYER_START_X, PLAYER_START_Y };
     game->player_fire_timer = 0.0f;
+    game->player_invulnerable_timer = RESPAWN_INVULN_TIME;
     memset(game->bullets, 0, sizeof(game->bullets));
+}
+
+static void clear_wave_entities(Game *game) {
+    memset(game->bullets, 0, sizeof(game->bullets));
+    memset(game->grunts, 0, sizeof(game->grunts));
+}
+
+static Vector2 random_grunt_spawn_position(void) {
+    int side = GetRandomValue(0, 3);
+    float margin = 42.0f;
+    Vector2 position = { 0.0f, 0.0f };
+
+    if (side == 0) {
+        position.x = (float)GetRandomValue((int)margin, WINDOW_WIDTH - (int)margin);
+        position.y = margin;
+    } else if (side == 1) {
+        position.x = (float)GetRandomValue((int)margin, WINDOW_WIDTH - (int)margin);
+        position.y = WINDOW_HEIGHT - margin;
+    } else if (side == 2) {
+        position.x = margin;
+        position.y = (float)GetRandomValue((int)margin, WINDOW_HEIGHT - (int)margin);
+    } else {
+        position.x = WINDOW_WIDTH - margin;
+        position.y = (float)GetRandomValue((int)margin, WINDOW_HEIGHT - (int)margin);
+    }
+
+    return position;
+}
+
+static void spawn_grunt(Game *game, Vector2 position) {
+    for (int i = 0; i < MAX_GRUNTS; i++) {
+        Grunt *grunt = &game->grunts[i];
+        if (!grunt->active) {
+            grunt->active = true;
+            grunt->position = position;
+            grunt->speed = GRUNT_SPEED + (float)(game->wave - 1) * 8.0f;
+            grunt->radius = GRUNT_RADIUS;
+            return;
+        }
+    }
+}
+
+static void spawn_wave(Game *game) {
+    clear_wave_entities(game);
+    reset_player(game);
+
+    int grunt_count = WAVE_START_GRUNTS + (game->wave - 1) * WAVE_GRUNT_STEP;
+    if (grunt_count > MAX_GRUNTS) {
+        grunt_count = MAX_GRUNTS;
+    }
+
+    for (int i = 0; i < grunt_count; i++) {
+        spawn_grunt(game, random_grunt_spawn_position());
+    }
+}
+
+static void start_new_game(Game *game) {
+    game->score = 0;
+    game->lives = PLAYER_LIVES;
+    game->wave = 1;
+    game->mode = GAME_MODE_PLAYING;
+    spawn_wave(game);
 }
 
 static Vector2 get_move_input(void) {
@@ -51,6 +131,10 @@ static void spawn_bullet(Game *game, Vector2 direction) {
 }
 
 static void update_playing(Game *game, float dt) {
+    if (game->player_invulnerable_timer > 0.0f) {
+        game->player_invulnerable_timer -= dt;
+    }
+
     Vector2 move = get_move_input();
     game->player_position.x += move.x * game->player_speed * dt;
     game->player_position.y += move.y * game->player_speed * dt;
@@ -86,6 +170,70 @@ static void update_playing(Game *game, float dt) {
             bullet->active = false;
         }
     }
+
+    for (int i = 0; i < MAX_GRUNTS; i++) {
+        Grunt *grunt = &game->grunts[i];
+        if (!grunt->active) {
+            continue;
+        }
+
+        Vector2 to_player = Vector2Subtract(game->player_position, grunt->position);
+        if (to_player.x != 0.0f || to_player.y != 0.0f) {
+            Vector2 direction = Vector2Normalize(to_player);
+            grunt->position.x += direction.x * grunt->speed * dt;
+            grunt->position.y += direction.y * grunt->speed * dt;
+        }
+    }
+
+    for (int bullet_index = 0; bullet_index < MAX_BULLETS; bullet_index++) {
+        Bullet *bullet = &game->bullets[bullet_index];
+        if (!bullet->active) {
+            continue;
+        }
+
+        for (int grunt_index = 0; grunt_index < MAX_GRUNTS; grunt_index++) {
+            Grunt *grunt = &game->grunts[grunt_index];
+            if (!grunt->active) {
+                continue;
+            }
+
+            if (circles_overlap(bullet->position, BULLET_RADIUS, grunt->position, grunt->radius)) {
+                bullet->active = false;
+                grunt->active = false;
+                game->score += GRUNT_SCORE;
+                if (game->score > game->high_score) {
+                    game->high_score = game->score;
+                }
+                break;
+            }
+        }
+    }
+
+    if (count_active_grunts(game) == 0) {
+        game->wave++;
+        spawn_wave(game);
+        return;
+    }
+
+    if (game->player_invulnerable_timer <= 0.0f) {
+        for (int i = 0; i < MAX_GRUNTS; i++) {
+            Grunt *grunt = &game->grunts[i];
+            if (!grunt->active) {
+                continue;
+            }
+
+            if (circles_overlap(game->player_position, game->player_radius, grunt->position, grunt->radius)) {
+                game->lives--;
+                if (game->lives <= 0) {
+                    game->mode = GAME_MODE_GAME_OVER;
+                    memset(game->bullets, 0, sizeof(game->bullets));
+                } else {
+                    reset_player(game);
+                }
+                return;
+            }
+        }
+    }
 }
 
 void game_init(Game *game) {
@@ -100,9 +248,8 @@ void game_init(Game *game) {
 void game_update(Game *game) {
     float dt = GetFrameTime();
 
-    if (IsKeyPressed(KEY_ENTER)) {
-        reset_player(game);
-        game->mode = GAME_MODE_PLAYING;
+    if ((game->mode == GAME_MODE_TITLE || game->mode == GAME_MODE_GAME_OVER) && IsKeyPressed(KEY_ENTER)) {
+        start_new_game(game);
     }
 
     if (game->mode == GAME_MODE_PLAYING && IsKeyPressed(KEY_P)) {
@@ -132,6 +279,18 @@ static void draw_arena_grid(void) {
 static void draw_playfield(Game *game) {
     draw_arena_grid();
 
+    for (int i = 0; i < MAX_GRUNTS; i++) {
+        Grunt grunt = game->grunts[i];
+        if (!grunt.active) {
+            continue;
+        }
+
+        DrawCircleV(grunt.position, grunt.radius + 5.0f, (Color){ 255, 62, 103, 65 });
+        DrawCircleV(grunt.position, grunt.radius, (Color){ 230, 40, 72, 255 });
+        DrawCircleV((Vector2){ grunt.position.x - 4.0f, grunt.position.y - 3.0f }, 3.0f, BLACK);
+        DrawCircleV((Vector2){ grunt.position.x + 4.0f, grunt.position.y - 3.0f }, 3.0f, BLACK);
+    }
+
     for (int i = 0; i < MAX_BULLETS; i++) {
         Bullet bullet = game->bullets[i];
         if (!bullet.active) {
@@ -142,9 +301,12 @@ static void draw_playfield(Game *game) {
         DrawCircleV(bullet.position, BULLET_RADIUS, RAYWHITE);
     }
 
-    DrawCircleV(game->player_position, game->player_radius + 6.0f, (Color){ 77, 214, 255, 80 });
-    DrawCircleV(game->player_position, game->player_radius, game->player_color);
-    DrawCircleV(game->player_position, 4.0f, RAYWHITE);
+    bool blink_off = game->player_invulnerable_timer > 0.0f && ((int)(game->player_invulnerable_timer * 12.0f) % 2) == 0;
+    if (!blink_off || game->mode != GAME_MODE_PLAYING) {
+        DrawCircleV(game->player_position, game->player_radius + 6.0f, (Color){ 77, 214, 255, 80 });
+        DrawCircleV(game->player_position, game->player_radius, game->player_color);
+        DrawCircleV(game->player_position, 4.0f, RAYWHITE);
+    }
 }
 
 void game_draw(Game *game) {
@@ -153,8 +315,14 @@ void game_draw(Game *game) {
 
     draw_playfield(game);
 
-    DrawText("ROBOTRON 2084 - MOVEMENT PROTOTYPE", 24, 24, 24, RAYWHITE);
-    DrawText("WASD move  |  Arrow keys fire  |  P pause  |  Enter start/reset", 24, 56, 18, LIGHTGRAY);
+    DrawText("ROBOTRON 2084 - CORE COMBAT LOOP", 24, 24, 24, RAYWHITE);
+    DrawText(TextFormat("SCORE %06d   HIGH %06d   WAVE %d   LIVES %d   GRUNTS %d",
+        game->score,
+        game->high_score,
+        game->wave,
+        game->lives,
+        count_active_grunts(game)), 24, 56, 18, LIGHTGRAY);
+    DrawText("WASD move  |  Arrow keys fire  |  P pause  |  Enter start", 24, 82, 18, GRAY);
 
     if (game->mode == GAME_MODE_TITLE) {
         DrawRectangle(0, 0, WINDOW_WIDTH, WINDOW_HEIGHT, (Color){ 0, 0, 0, 150 });
@@ -167,7 +335,8 @@ void game_draw(Game *game) {
     } else if (game->mode == GAME_MODE_GAME_OVER) {
         DrawRectangle(0, 0, WINDOW_WIDTH, WINDOW_HEIGHT, (Color){ 0, 0, 0, 170 });
         DrawText("GAME OVER", 460, 390, 48, RAYWHITE);
-        DrawText("Press Enter", 520, 450, 24, SKYBLUE);
+        DrawText(TextFormat("Final score: %d", game->score), 500, 445, 24, LIGHTGRAY);
+        DrawText("Press Enter", 520, 485, 24, SKYBLUE);
     }
 
     EndDrawing();

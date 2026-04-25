@@ -25,6 +25,17 @@
 #define BULLET_LIFETIME     0.8f
 #define BULLET_FIRE_RATE    0.08f
 
+// --- Grunts ---
+#define MAX_GRUNTS          96
+#define GRUNT_RADIUS        13.0f
+#define GRUNT_SPEED         115.0f
+#define GRUNT_SCORE         100
+
+// --- Waves ---
+#define WAVE_START_GRUNTS   18
+#define WAVE_GRUNT_STEP     6
+#define RESPAWN_INVULN_TIME 1.25f
+
 typedef enum SoundID {
     SOUND_COIN = 0,
     SOUND_COUNT
@@ -44,16 +55,30 @@ typedef struct Bullet {
     float lifetime;
 } Bullet;
 
+typedef struct Grunt {
+    bool active;
+    Vector2 position;
+    float speed;
+    float radius;
+} Grunt;
+
 typedef struct Game {
     GameMode mode;
+
+    int score;
+    int high_score;
+    int lives;
+    int wave;
 
     Vector2 player_position;
     float player_speed;
     float player_radius;
     Color player_color;
     float player_fire_timer;
+    float player_invulnerable_timer;
 
     Bullet bullets[MAX_BULLETS];
+    Grunt grunts[MAX_GRUNTS];
 
     Sound sounds[SOUND_COUNT];
     bool sounds_loaded;
