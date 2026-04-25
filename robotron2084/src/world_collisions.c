@@ -251,7 +251,11 @@ static void handle_player_death(Game *game) {
         memset(game->bullets, 0, sizeof(game->bullets));
         memset(game->projectiles, 0, sizeof(game->projectiles));
     } else {
-        world_reset_player(game);
+        game->mode = GAME_MODE_PLAYER_DEAD;
+        game->mode_timer = PLAYER_DEATH_PAUSE;
+        game->humans_rescued_this_wave = 0;
+        memset(game->bullets, 0, sizeof(game->bullets));
+        memset(game->projectiles, 0, sizeof(game->projectiles));
     }
 }
 

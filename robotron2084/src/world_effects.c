@@ -49,6 +49,7 @@ void world_add_score(Game *game, int value) {
     game->score += value;
     if (game->score > game->high_score) {
         game->high_score = game->score;
+        game->high_score_dirty = true;
     }
 
     while (game->score >= game->next_extra_life_score) {

@@ -105,6 +105,8 @@
 #define WAVE_START_GRUNTS   18
 #define WAVE_GRUNT_STEP     6
 #define RESPAWN_INVULN_TIME 1.25f
+#define PLAYER_DEATH_PAUSE  1.2f
+#define WAVE_INTRO_TIME     1.6f
 #define EXTRA_LIFE_SCORE    25000
 
 typedef enum SoundID {
@@ -146,8 +148,10 @@ typedef enum ProjectileType {
 
 typedef enum GameMode {
     GAME_MODE_TITLE = 0,
+    GAME_MODE_WAVE_INTRO,
     GAME_MODE_PLAYING,
     GAME_MODE_PAUSED,
+    GAME_MODE_PLAYER_DEAD,
     GAME_MODE_GAME_OVER
 } GameMode;
 
@@ -283,6 +287,8 @@ typedef struct Game {
     int wave;
     int next_extra_life_score;
     int humans_rescued_this_wave;
+    bool high_score_dirty;
+    float mode_timer;
 
     Vector2 player_position;
     float player_speed;
@@ -318,5 +324,6 @@ typedef struct Game {
 void game_init(Game *game);
 void game_update(Game *game);
 void game_draw(Game *game);
+void game_shutdown(Game *game);
 
 #endif

@@ -14,6 +14,7 @@ void world_draw_effects(Game *game);
 void world_spawn_grunt(Game *game, Vector2 position);
 void world_spawn_hulk(Game *game, Vector2 position);
 void world_spawn_spheroid(Game *game, Vector2 position);
+void world_spawn_enforcer(Game *game, Vector2 position);
 void world_spawn_quark(Game *game, Vector2 position);
 void world_spawn_tank(Game *game, Vector2 position);
 void world_spawn_brain(Game *game, Vector2 position);

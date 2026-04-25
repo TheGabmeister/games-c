@@ -71,7 +71,7 @@ The game should be recognizably Robotron-inspired but visually modern:
 
 Recommended visual language:
 
-- Black or near-black arena floor with subtle grid/CRT scanline treatment.
+- Black or near-black arena floor with a subtle readable grid treatment.
 - Bright cyan/white player.
 - Red/pink Grunts.
 - Green Hulks.
@@ -123,11 +123,6 @@ Gamepad:
 - Move: left stick or D-pad.
 - Fire: right stick.
 - Start: start/menu button.
-
-Mouse fallback:
-
-- Optional modern mode: `WASD` movement and mouse aim/fire while left mouse is
-  down. Keep this optional so keyboard twin-stick remains the default.
 
 Implementation detail:
 
@@ -530,8 +525,7 @@ Implementation detail:
 
 Use raylib's simple rendering strengths before adding complexity:
 
-- `RenderTexture2D` for world rendering, then draw it to screen for screen shake
-  and optional post effects.
+- `RenderTexture2D` may be used for world rendering and screen shake if needed.
 - `BeginBlendMode(BLEND_ADDITIVE)` for glows, laser trails, explosions, and
   enemy spawn pulses.
 - `DrawCircleGradient`, `DrawLineEx`, and translucent rectangles for bloom-like
@@ -540,11 +534,6 @@ Use raylib's simple rendering strengths before adding complexity:
 - Floating score text using `DrawText`.
 - Per-entity hit flash timers.
 - Brief full-screen flash on player death and wave clear.
-
-Optional later polish:
-
-- A very lightweight shader for CRT curvature or chromatic aberration.
-- Background grid distortion during wave transitions.
 
 ## Collision
 
@@ -771,8 +760,6 @@ Goal: finish the arcade wrapper after the game is already fun.
 - Refine title, pause, death, wave-intro, and game-over screens.
 - Add persistent high score if desired.
 - Add better HUD icons and final sprite cleanup.
-- Add optional mouse aim mode if keyboard/gamepad controls are solid.
-- Add optional lightweight CRT/grid post effect.
 - Balance sounds so repeated shooting is not fatiguing.
 
 Playtest question:

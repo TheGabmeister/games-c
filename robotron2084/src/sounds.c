@@ -23,6 +23,19 @@ void sounds_load(Game *game) {
             }
         }
     }
+
+    if (IsSoundValid(game->sounds[SOUND_PLAYER_SHOOT])) {
+        SetSoundVolume(game->sounds[SOUND_PLAYER_SHOOT], 0.28f);
+    }
+    if (IsSoundValid(game->sounds[SOUND_ENEMY_SHOOT])) {
+        SetSoundVolume(game->sounds[SOUND_ENEMY_SHOOT], 0.38f);
+    }
+    if (IsSoundValid(game->sounds[SOUND_BRAIN_MISSILE])) {
+        SetSoundVolume(game->sounds[SOUND_BRAIN_MISSILE], 0.42f);
+    }
+    if (IsSoundValid(game->sounds[SOUND_HULK_HIT])) {
+        SetSoundVolume(game->sounds[SOUND_HULK_HIT], 0.55f);
+    }
 }
 
 void sounds_unload(Game *game) {

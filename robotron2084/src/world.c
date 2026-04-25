@@ -144,84 +144,150 @@ static Vector2 random_arena_position(float margin) {
     };
 }
 
+typedef struct WavePlan {
+    int grunts;
+    int hulks;
+    int spheroids;
+    int enforcers;
+    int quarks;
+    int tanks;
+    int brains;
+    int humans;
+    int electrodes;
+} WavePlan;
+
+static int clamp_int(int value, int min, int max) {
+    if (value < min) return min;
+    if (value > max) return max;
+    return value;
+}
+
+static int wave_cycle(int wave) {
+    int cycle = ((wave - 1) % 255) + 1;
+    return cycle > 0 ? cycle : 1;
+}
+
+static WavePlan build_wave_plan(int wave) {
+    int w = wave_cycle(wave);
+    int decade = (w - 1) / 10;
+
+    static const WavePlan templates[10] = {
+        { 18, 2, 0, 0, 0, 0, 0, 5, 10 },
+        { 24, 2, 2, 0, 0, 0, 0, 5, 12 },
+        { 32, 3, 3, 0, 0, 0, 0, 6, 12 },
+        { 38, 3, 3, 0, 0, 0, 0, 6, 14 },
+        { 0, 0, 0, 0, 0, 0, 8, 12, 8 },
+        { 42, 4, 4, 0, 0, 0, 0, 6, 12 },
+        { 16, 0, 0, 0, 2, 4, 0, 4, 10 },
+        { 44, 4, 4, 0, 0, 0, 0, 5, 14 },
+        { 70, 2, 0, 0, 0, 0, 0, 4, 8 },
+        { 0, 0, 0, 0, 0, 0, 10, 14, 8 },
+    };
+
+    if (w <= 10) {
+        return templates[w - 1];
+    }
+
+    if ((w % 5) == 0) {
+        WavePlan plan = { 0 };
+        plan.brains = clamp_int(8 + decade, 8, MAX_BRAINS);
+        plan.humans = clamp_int(12 + decade, 12, 22);
+        plan.electrodes = clamp_int(8 + decade / 2, 8, WAVE_ELECTRODE_MAX);
+        return plan;
+    }
+
+    if ((w % 20) == 14) {
+        WavePlan plan = { 0 };
+        plan.grunts = clamp_int(18 + decade * 3, 18, 46);
+        plan.hulks = clamp_int(8 + decade, 8, MAX_HULKS);
+        plan.humans = clamp_int(3 + decade / 4, 3, 6);
+        plan.electrodes = clamp_int(10 + decade / 2, 10, WAVE_ELECTRODE_MAX);
+        return plan;
+    }
+
+    if ((w % 10) == 9) {
+        WavePlan plan = { 0 };
+        plan.grunts = clamp_int(70 + decade * 3, 70, MAX_GRUNTS);
+        plan.hulks = clamp_int(2 + decade / 4, 2, 6);
+        plan.humans = 4;
+        plan.electrodes = clamp_int(8 + decade / 2, 8, 16);
+        return plan;
+    }
+
+    if (w >= 24 && (w % 20) == 4) {
+        WavePlan plan = { 0 };
+        plan.grunts = clamp_int(22 + decade * 2, 22, 50);
+        plan.spheroids = clamp_int(3 + decade / 5, 3, MAX_SPHEROIDS);
+        plan.enforcers = clamp_int(3 + decade / 4, 3, 10);
+        plan.quarks = clamp_int(2 + decade / 5, 2, MAX_QUARKS);
+        plan.tanks = clamp_int(4 + decade / 3, 4, 12);
+        plan.humans = 4;
+        plan.electrodes = clamp_int(12 + decade / 2, 12, WAVE_ELECTRODE_MAX);
+        return plan;
+    }
+
+    if (w >= 7 && ((w - 7) % 5) == 0) {
+        WavePlan plan = { 0 };
+        plan.grunts = clamp_int(16 + decade * 3, 16, 54);
+        plan.quarks = clamp_int(2 + decade / 4, 2, MAX_QUARKS);
+        plan.tanks = clamp_int(4 + decade / 3, 4, 12);
+        plan.humans = 4;
+        plan.electrodes = clamp_int(10 + decade / 2, 10, WAVE_ELECTRODE_MAX);
+        return plan;
+    }
+
+    WavePlan plan = { 0 };
+    plan.grunts = clamp_int(34 + decade * 4, 34, 72);
+    plan.hulks = clamp_int(3 + decade / 3, 3, 9);
+    plan.spheroids = clamp_int(3 + decade / 4, 3, 7);
+    if (w >= 28) {
+        plan.quarks = clamp_int(1 + decade / 6, 1, 4);
+        plan.tanks = clamp_int(1 + decade / 5, 1, 6);
+    }
+    plan.humans = clamp_int(5 + decade / 3, 5, WAVE_HUMAN_MAX);
+    plan.electrodes = clamp_int(12 + decade / 2, 12, WAVE_ELECTRODE_MAX);
+    return plan;
+}
+
 void world_spawn_wave(Game *game) {
     clear_wave_entities(game);
     world_reset_player(game);
 
-    bool brain_wave = (game->wave % 5) == 0;
+    WavePlan plan = build_wave_plan(game->wave);
 
-    if (brain_wave) {
-        int brain_count = 6 + game->wave / 3;
-        if (brain_count > MAX_BRAINS) brain_count = MAX_BRAINS;
-        for (int i = 0; i < brain_count; i++) {
-            world_spawn_brain(game, random_edge_position(76.0f));
-        }
-
-        int human_count = 10 + game->wave / 2;
-        if (human_count > MAX_HUMANS) human_count = MAX_HUMANS;
-        for (int i = 0; i < human_count; i++) {
-            world_spawn_human(game, random_arena_position(80.0f), i % 3);
-        }
-
-        int electrode_count = 8 + game->wave / 10;
-        if (electrode_count > WAVE_ELECTRODE_MAX) electrode_count = WAVE_ELECTRODE_MAX;
-        for (int i = 0; i < electrode_count; i++) {
-            Vector2 position = random_arena_position(70.0f);
-            if (Vector2Distance(position, game->player_position) > 135.0f) {
-                world_spawn_electrode(game, position);
-            }
-        }
-
-        return;
-    }
-
-    int grunt_count = WAVE_START_GRUNTS + (game->wave - 1) * WAVE_GRUNT_STEP;
-    if (grunt_count > MAX_GRUNTS) grunt_count = MAX_GRUNTS;
-
-    for (int i = 0; i < grunt_count; i++) {
+    for (int i = 0; i < plan.grunts; i++) {
         world_spawn_grunt(game, random_edge_position(42.0f));
     }
 
-    if (game->wave >= 2) {
-        int spheroid_count = 1 + game->wave / 2;
-        if (spheroid_count > 5) spheroid_count = 5;
-        for (int i = 0; i < spheroid_count; i++) {
-            world_spawn_spheroid(game, random_edge_position(72.0f));
-        }
+    for (int i = 0; i < plan.spheroids; i++) {
+        world_spawn_spheroid(game, random_edge_position(72.0f));
     }
 
-    if (game->wave >= 7) {
-        int quark_count = 1 + (game->wave - 7) / 3;
-        if (quark_count > 3) quark_count = 3;
-        for (int i = 0; i < quark_count; i++) {
-            world_spawn_quark(game, random_edge_position(84.0f));
-        }
-
-        int tank_count = 2 + (game->wave - 7) / 2;
-        if (tank_count > 6) tank_count = 6;
-        for (int i = 0; i < tank_count; i++) {
-            world_spawn_tank(game, random_edge_position(90.0f));
-        }
+    for (int i = 0; i < plan.enforcers; i++) {
+        world_spawn_enforcer(game, random_edge_position(84.0f));
     }
 
-    int human_count = WAVE_START_HUMANS + game->wave / 2;
-    if (human_count > WAVE_HUMAN_MAX) human_count = WAVE_HUMAN_MAX;
-
-    for (int i = 0; i < human_count; i++) {
-        world_spawn_human(game, random_arena_position(80.0f), i % 3);
+    for (int i = 0; i < plan.quarks; i++) {
+        world_spawn_quark(game, random_edge_position(84.0f));
     }
 
-    int hulk_count = 1 + game->wave / 3;
-    if (hulk_count > MAX_HULKS) hulk_count = MAX_HULKS;
+    for (int i = 0; i < plan.tanks; i++) {
+        world_spawn_tank(game, random_edge_position(90.0f));
+    }
 
-    for (int i = 0; i < hulk_count; i++) {
+    for (int i = 0; i < plan.brains; i++) {
+        world_spawn_brain(game, random_edge_position(76.0f));
+    }
+
+    for (int i = 0; i < plan.hulks; i++) {
         world_spawn_hulk(game, random_edge_position(70.0f));
     }
 
-    int electrode_count = WAVE_START_ELECTRODES + game->wave;
-    if (electrode_count > WAVE_ELECTRODE_MAX) electrode_count = WAVE_ELECTRODE_MAX;
+    for (int i = 0; i < plan.humans; i++) {
+        world_spawn_human(game, random_arena_position(80.0f), i % 3);
+    }
 
-    for (int i = 0; i < electrode_count; i++) {
+    for (int i = 0; i < plan.electrodes; i++) {
         Vector2 position = random_arena_position(70.0f);
         if (Vector2Distance(position, game->player_position) > 135.0f) {
             world_spawn_electrode(game, position);
@@ -260,7 +326,12 @@ void world_update_playing(Game *game, float dt) {
         sound_play(game, SOUND_WAVE_CLEAR);
         game->screen_flash = 0.12f;
         game->wave++;
+        if (game->wave > 255) {
+            game->wave = 1;
+        }
         world_spawn_wave(game);
+        game->mode = GAME_MODE_WAVE_INTRO;
+        game->mode_timer = WAVE_INTRO_TIME;
         return;
     }
 

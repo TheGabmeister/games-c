@@ -18,6 +18,7 @@ int main(void) {
     }
 
     sounds_unload(&game);
+    game_shutdown(&game);
     textures_unload(&game);
     CloseAudioDevice();
     CloseWindow();
