@@ -3,6 +3,7 @@
 #include "camera.h"
 #include "sounds.h"
 #include "items.h"
+#include "enemies/firebar.h"
 
 static void start_level_at(Game *game, int world, int sublevel, int spawn_tx, int spawn_ty) {
     memset(game->entities, 0, sizeof(game->entities));
@@ -43,31 +44,6 @@ void game_init(Game *game) {
     game->world = 1;
     game->sublevel = 1;
     game->mario = -1;
-}
-
-// --- Helpers ---
-
-static bool mario_is_stomping(Entity *mario, Entity *enemy) {
-    // Mario is falling and his bottom overlaps enemy's top half
-    return mario->vy > 0 &&
-           (mario->y + mario->h) > enemy->y &&
-           (mario->y + mario->h) < enemy->y + enemy->h * 0.6f;
-}
-
-static void mario_take_damage(Entity *mario, Game *game) {
-    if (mario->invincible_timer > 0 || mario->star_active) return;
-
-    if (mario->power > MARIO_SMALL) {
-        mario->power = MARIO_SMALL;
-        mario->y += (mario->h - MARIO_SMALL_H);
-        mario->h = MARIO_SMALL_H;
-        mario->invincible_timer = DAMAGE_INVINCIBLE_TIME;
-        sound_play(SND_BUMP);
-    } else {
-        game->state = STATE_DYING;
-        game->state_timer = 0;
-        sound_play(SND_DEATH);
-    }
 }
 
 // --- Title ---
@@ -268,26 +244,14 @@ static void update_playing(Game *game) {
         }
     }
 
-    // 6b. Firebar collision (per-ball check)
+    // 6b. Firebar collision (per-ball check, logic lives in firebar.c)
     for (int i = 0; i < MAX_ENTITIES; i++) {
         Entity *e = &game->entities[i];
         if (e->type != ENT_FIREBAR) continue;
         if (mario->star_active || mario->invincible_timer > 0) continue;
-
-        float cx = e->x + TILE_SIZE / 2;
-        float cy = e->y + TILE_SIZE / 2;
-        float angle = e->anim_timer;
-        for (int b = 1; b <= FIREBAR_BALL_COUNT; b++) {
-            float dist = (float)(b * FIREBAR_BALL_SPACING);
-            float bx = cx + cosf(angle) * dist;
-            float by = cy + sinf(angle) * dist;
-            float r = (float)FIREBAR_BALL_RADIUS;
-            if (bx + r > mario->x && bx - r < mario->x + mario->w &&
-                by + r > mario->y && by - r < mario->y + mario->h) {
-                mario_take_damage(mario, game);
-                if (game->state != STATE_PLAYING) return;
-                break;
-            }
+        if (firebar_overlaps_entity(e, mario)) {
+            mario_take_damage(mario, game);
+            if (game->state != STATE_PLAYING) return;
         }
     }
 

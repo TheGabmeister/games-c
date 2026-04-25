@@ -197,3 +197,25 @@ void spawn_mario(Entity entities[MAX_ENTITIES], int *mario_idx, float x, float y
 
     *mario_idx = (int)(m - entities);
 }
+
+bool mario_is_stomping(Entity *mario, Entity *enemy) {
+    return mario->vy > 0 &&
+           (mario->y + mario->h) > enemy->y &&
+           (mario->y + mario->h) < enemy->y + enemy->h * 0.6f;
+}
+
+void mario_take_damage(Entity *mario, Game *game) {
+    if (mario->invincible_timer > 0 || mario->star_active) return;
+
+    if (mario->power > MARIO_SMALL) {
+        mario->power = MARIO_SMALL;
+        mario->y += (mario->h - MARIO_SMALL_H);
+        mario->h = MARIO_SMALL_H;
+        mario->invincible_timer = DAMAGE_INVINCIBLE_TIME;
+        sound_play(SND_BUMP);
+    } else {
+        game->state = STATE_DYING;
+        game->state_timer = 0;
+        sound_play(SND_DEATH);
+    }
+}

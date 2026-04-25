@@ -31,6 +31,23 @@ static const EntityVtab firebar_vtab = {
     .draw   = firebar_draw,
 };
 
+bool firebar_overlaps_entity(Entity *firebar, Entity *target) {
+    float cx = firebar->x + TILE_SIZE / 2;
+    float cy = firebar->y + TILE_SIZE / 2;
+    float angle = firebar->anim_timer;
+    for (int b = 1; b <= FIREBAR_BALL_COUNT; b++) {
+        float dist = (float)(b * FIREBAR_BALL_SPACING);
+        float bx = cx + cosf(angle) * dist;
+        float by = cy + sinf(angle) * dist;
+        float r = (float)FIREBAR_BALL_RADIUS;
+        if (bx + r > target->x && bx - r < target->x + target->w &&
+            by + r > target->y && by - r < target->y + target->h) {
+            return true;
+        }
+    }
+    return false;
+}
+
 void spawn_firebar(Entity entities[MAX_ENTITIES], float x, float y, int clockwise) {
     Entity *e = entity_alloc(entities);
     if (!e) return;
