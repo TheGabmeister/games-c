@@ -14,30 +14,30 @@ static const char *sound_files[SOUND_COUNT] = {
     [SOUND_PAUSE] = "assets/pause.wav",
 };
 
-void sounds_load(Game *game) {
-    game->sounds_loaded = false;
+void sounds_load(Resources *res) {
     for (int i = 0; i < SOUND_COUNT; i++) {
+        res->sounds[i].loaded = false;
         if (FileExists(sound_files[i])) {
-            game->sounds[i] = LoadSound(sound_files[i]);
-            game->sounds_loaded = true;
+            res->sounds[i].sound = LoadSound(sound_files[i]);
+            res->sounds[i].loaded = IsSoundValid(res->sounds[i].sound);
         }
     }
 }
 
-void sounds_unload(Game *game) {
+void sounds_unload(Resources *res) {
     for (int i = 0; i < SOUND_COUNT; i++) {
-        if (IsSoundValid(game->sounds[i])) {
-            UnloadSound(game->sounds[i]);
+        if (res->sounds[i].loaded && IsSoundValid(res->sounds[i].sound)) {
+            UnloadSound(res->sounds[i].sound);
         }
+        res->sounds[i].loaded = false;
     }
 }
 
-void sound_play(Game *game, SoundID id) {
+void sound_play(Resources *res, SoundID id) {
     if (id < 0 || id >= SOUND_COUNT) {
         return;
     }
-
-    if (IsSoundValid(game->sounds[id])) {
-        PlaySound(game->sounds[id]);
+    if (res->sounds[id].loaded) {
+        PlaySound(res->sounds[id].sound);
     }
 }

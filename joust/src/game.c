@@ -13,6 +13,41 @@
 #define ENEMY_SPAWN_GRACE      0.75f
 #define PARTICLE_TIME          0.45f
 
+typedef struct EnemyTuning {
+    float accel;
+    float max_speed_x;
+    float flap_velocity;
+    float flap_cooldown;
+    float think_interval;
+    int   score;
+    Color color;
+    TextureID texture;
+} EnemyTuning;
+
+static const EnemyTuning ENEMY_TUNING[ENEMY_COUNT] = {
+    [ENEMY_GRUNT] = {
+        .accel = 560.0f, .max_speed_x = 190.0f,
+        .flap_velocity = -365.0f, .flap_cooldown = 0.48f,
+        .think_interval = 0.70f, .score = 500,
+        .color = { 180, 113, 226, 255 },
+        .texture = TEXTURE_ENEMY_GRUNT,
+    },
+    [ENEMY_HUNTER] = {
+        .accel = 690.0f, .max_speed_x = 245.0f,
+        .flap_velocity = -405.0f, .flap_cooldown = 0.34f,
+        .think_interval = 0.45f, .score = 750,
+        .color = { 238, 90, 75, 255 },
+        .texture = TEXTURE_ENEMY_HUNTER,
+    },
+    [ENEMY_CHAMPION] = {
+        .accel = 760.0f, .max_speed_x = 285.0f,
+        .flap_velocity = -440.0f, .flap_cooldown = 0.25f,
+        .think_interval = 0.32f, .score = 1000,
+        .color = { 244, 202, 82, 255 },
+        .texture = TEXTURE_ENEMY_CHAMPION,
+    },
+};
+
 static const Platform INITIAL_PLATFORMS[] = {
     { {  90.0f, 230.0f, 260.0f, 28.0f } },
     { { 850.0f, 230.0f, 260.0f, 28.0f } },
@@ -30,6 +65,7 @@ static const Vector2 ENEMY_SPAWN_POINTS[] = {
 };
 
 static float frame_dt(void) {
+    // Cap dt so collisions stay sane during hitches/debug breaks.
     float dt = GetFrameTime();
     if (dt > 1.0f / 30.0f) {
         dt = 1.0f / 30.0f;
@@ -118,12 +154,12 @@ static void spawn_particles(Game *game, Vector2 position, Color color, int count
     for (int i = 0; i < MAX_PARTICLES && count > 0; i++) {
         Particle *particle = &game->particles[i];
         if (!particle->active) {
-            float angle = (float)GetRandomValue(0, 628) * 0.01f;
-            float speed = (float)GetRandomValue(60, 220);
+            float angle = (float)GetRandomValue(0, 359) * DEG2RAD;
+            float speed = (float)GetRandomValue(PARTICLE_SPEED_MIN, PARTICLE_SPEED_MAX);
             particle->active = true;
             particle->position = position;
             particle->velocity = (Vector2){ cosf(angle) * speed, sinf(angle) * speed };
-            particle->radius = (float)GetRandomValue(2, 5);
+            particle->radius = (float)GetRandomValue(PARTICLE_RADIUS_MIN, PARTICLE_RADIUS_MAX);
             particle->lifetime = PARTICLE_TIME;
             particle->max_lifetime = PARTICLE_TIME;
             particle->color = color;
@@ -135,33 +171,6 @@ static void spawn_particles(Game *game, Vector2 position, Color color, int count
 static void clear_wave_entities(Game *game) {
     memset(game->enemies, 0, sizeof(game->enemies));
     memset(game->eggs, 0, sizeof(game->eggs));
-}
-
-static int score_for_enemy(EnemyType type) {
-    switch (type) {
-        case ENEMY_HUNTER: return 750;
-        case ENEMY_CHAMPION: return 1000;
-        case ENEMY_GRUNT:
-        default: return 500;
-    }
-}
-
-static Color enemy_color(EnemyType type) {
-    switch (type) {
-        case ENEMY_HUNTER: return (Color){ 238, 90, 75, 255 };
-        case ENEMY_CHAMPION: return (Color){ 244, 202, 82, 255 };
-        case ENEMY_GRUNT:
-        default: return (Color){ 180, 113, 226, 255 };
-    }
-}
-
-static TextureID texture_for_enemy(EnemyType type) {
-    switch (type) {
-        case ENEMY_HUNTER: return TEXTURE_ENEMY_HUNTER;
-        case ENEMY_CHAMPION: return TEXTURE_ENEMY_CHAMPION;
-        case ENEMY_GRUNT:
-        default: return TEXTURE_ENEMY_GRUNT;
-    }
 }
 
 static void spawn_enemy(Game *game, EnemyType type, Vector2 position) {
@@ -247,7 +256,7 @@ static void setup_wave(Game *game) {
     }
 }
 
-static void start_new_game(Game *game) {
+static void start_new_game(Game *game, Resources *res) {
     game->score = 0;
     game->lives = PLAYER_LIVES;
     game->wave = 1;
@@ -256,10 +265,10 @@ static void start_new_game(Game *game) {
     game->mode_timer = 0.0f;
     memset(game->particles, 0, sizeof(game->particles));
     setup_wave(game);
-    sound_play(game, SOUND_START);
+    sound_play(res, SOUND_START);
 }
 
-static void kill_player(Game *game) {
+static void kill_player(Game *game, Resources *res) {
     if (game->mode != GAME_MODE_PLAYING || game->player.invuln_timer > 0.0f) {
         return;
     }
@@ -270,57 +279,77 @@ static void kill_player(Game *game) {
     game->mode = GAME_MODE_PLAYER_DEAD;
     game->mode_timer = PLAYER_DEAD_TIME;
     spawn_particles(game, game->player.position, (Color){ 92, 205, 255, 255 }, 28);
-    sound_play(game, SOUND_PLAYER_DIE);
+    sound_play(res, SOUND_PLAYER_DIE);
     if (game->score > game->high_score) {
         game->high_score = game->score;
     }
 }
 
-static void defeat_enemy(Game *game, Enemy *enemy) {
+static void defeat_enemy(Game *game, Resources *res, Enemy *enemy) {
     enemy->actor.alive = false;
     game->combo++;
     int multiplier = game->combo > 1 ? game->combo : 1;
     if (multiplier > 5) multiplier = 5;
-    game->score += score_for_enemy(enemy->type) * multiplier;
+    game->score += ENEMY_TUNING[enemy->type].score * multiplier;
     if (game->score > game->high_score) {
         game->high_score = game->score;
     }
     spawn_egg(game, enemy->actor.position, enemy->type);
-    spawn_particles(game, enemy->actor.position, enemy_color(enemy->type), 22);
-    sound_play(game, SOUND_JOUST_WIN);
+    spawn_particles(game, enemy->actor.position, ENEMY_TUNING[enemy->type].color, 22);
+    sound_play(res, SOUND_JOUST_WIN);
 }
 
+// Swept platform landing: treat the actor's previous->current path as a vertical
+// segment and check intersection with the platform top, so high-velocity falls
+// don't tunnel through thin platforms.
 static void resolve_actor_platforms(Game *game, Actor *actor) {
     actor->grounded = false;
+    if (actor->velocity.y < 0.0f) return;
+
+    float prev_bottom = actor->previous_position.y + actor->radius;
+    float curr_bottom = actor->position.y + actor->radius;
+
     for (int i = 0; i < game->platform_count; i++) {
         Rectangle bounds = game->platforms[i].bounds;
-        bool was_above = actor->previous_position.y + actor->radius <= bounds.y + LANDING_TOLERANCE;
-        bool is_falling = actor->velocity.y >= 0.0f;
-        bool overlaps = CheckCollisionCircleRec(actor->position, actor->radius, bounds);
-        if (was_above && is_falling && overlaps) {
-            actor->position.y = bounds.y - actor->radius;
-            actor->velocity.y = 0.0f;
-            actor->grounded = true;
-        }
+
+        // Was the actor's bottom above the platform top last frame (within tolerance)?
+        if (prev_bottom > bounds.y + LANDING_TOLERANCE) continue;
+        // Did it cross the platform top this frame?
+        if (curr_bottom < bounds.y) continue;
+        // Is the actor horizontally over the platform now?
+        if (actor->position.x + actor->radius < bounds.x) continue;
+        if (actor->position.x - actor->radius > bounds.x + bounds.width) continue;
+
+        actor->position.y = bounds.y - actor->radius;
+        actor->velocity.y = 0.0f;
+        actor->grounded = true;
+        return;
     }
 }
 
+// Returns true if the egg landed on a platform this frame.
 static bool resolve_egg_platforms(Game *game, Egg *egg) {
+    if (egg->velocity.y < 0.0f) return false;
+
+    float prev_bottom = egg->previous_position.y + EGG_RADIUS;
+    float curr_bottom = egg->position.y + EGG_RADIUS;
+
     for (int i = 0; i < game->platform_count; i++) {
         Rectangle bounds = game->platforms[i].bounds;
-        bool was_above = egg->previous_position.y + EGG_RADIUS <= bounds.y + LANDING_TOLERANCE;
-        bool is_falling = egg->velocity.y >= 0.0f;
-        bool overlaps = CheckCollisionCircleRec(egg->position, EGG_RADIUS, bounds);
-        if (was_above && is_falling && overlaps) {
-            egg->position.y = bounds.y - EGG_RADIUS;
-            egg->velocity = (Vector2){ 0.0f, 0.0f };
-            return true;
-        }
+
+        if (prev_bottom > bounds.y + LANDING_TOLERANCE) continue;
+        if (curr_bottom < bounds.y) continue;
+        if (egg->position.x + EGG_RADIUS < bounds.x) continue;
+        if (egg->position.x - EGG_RADIUS > bounds.x + bounds.width) continue;
+
+        egg->position.y = bounds.y - EGG_RADIUS;
+        egg->velocity = (Vector2){ 0.0f, 0.0f };
+        return true;
     }
     return false;
 }
 
-static void update_player(Game *game, float dt) {
+static void update_player(Game *game, Resources *res, float dt) {
     Actor *player = &game->player;
     player->previous_position = player->position;
     if (player->invuln_timer > 0.0f) player->invuln_timer -= dt;
@@ -338,7 +367,7 @@ static void update_player(Game *game, float dt) {
         player->velocity.y = PLAYER_FLAP_VELOCITY;
         player->flap_cooldown = PLAYER_FLAP_COOLDOWN;
         player->grounded = false;
-        sound_play(game, SOUND_FLAP);
+        sound_play(res, SOUND_FLAP);
     }
 
     player->velocity.y += PLAYER_GRAVITY * dt;
@@ -358,97 +387,55 @@ static void update_player(Game *game, float dt) {
     }
 }
 
-static float enemy_accel(EnemyType type) {
-    switch (type) {
-        case ENEMY_HUNTER: return 690.0f;
-        case ENEMY_CHAMPION: return 760.0f;
-        case ENEMY_GRUNT:
-        default: return 560.0f;
-    }
-}
-
-static float enemy_max_speed_x(EnemyType type) {
-    switch (type) {
-        case ENEMY_HUNTER: return 245.0f;
-        case ENEMY_CHAMPION: return 285.0f;
-        case ENEMY_GRUNT:
-        default: return 190.0f;
-    }
-}
-
-static float enemy_flap_velocity(EnemyType type) {
-    switch (type) {
-        case ENEMY_HUNTER: return -405.0f;
-        case ENEMY_CHAMPION: return -440.0f;
-        case ENEMY_GRUNT:
-        default: return -365.0f;
-    }
-}
-
-static float enemy_flap_cooldown(EnemyType type) {
-    switch (type) {
-        case ENEMY_HUNTER: return 0.34f;
-        case ENEMY_CHAMPION: return 0.25f;
-        case ENEMY_GRUNT:
-        default: return 0.48f;
-    }
-}
-
-static float enemy_think_interval(EnemyType type) {
-    switch (type) {
-        case ENEMY_HUNTER: return 0.45f;
-        case ENEMY_CHAMPION: return 0.32f;
-        case ENEMY_GRUNT:
-        default: return 0.70f;
-    }
-}
-
 static void update_enemy(Game *game, Enemy *enemy, float dt) {
     Actor *actor = &enemy->actor;
+    const EnemyTuning *tuning = &ENEMY_TUNING[enemy->type];
     actor->previous_position = actor->position;
     if (actor->flap_cooldown > 0.0f) actor->flap_cooldown -= dt;
     if (enemy->spawn_grace_timer > 0.0f) enemy->spawn_grace_timer -= dt;
+    if (enemy->lava_recover_timer > 0.0f) enemy->lava_recover_timer -= dt;
 
     enemy->think_timer -= dt;
     if (enemy->think_timer <= 0.0f) {
-        enemy->think_timer = enemy_think_interval(enemy->type);
+        enemy->think_timer = tuning->think_interval;
         float offset = (float)GetRandomValue(-80, 80);
         if (enemy->type == ENEMY_HUNTER) offset = (float)GetRandomValue(-110, 30);
         if (enemy->type == ENEMY_CHAMPION) offset = (float)GetRandomValue(-140, -30);
-        enemy->target_y = Clamp(game->player.position.y + offset, 90.0f, WINDOW_HEIGHT - LAVA_HEIGHT - 80.0f);
+        enemy->target_y = Clamp(game->player.position.y + offset,
+            ENEMY_AI_TARGET_Y_MIN,
+            WINDOW_HEIGHT - LAVA_HEIGHT - ENEMY_AI_TARGET_Y_PAD);
     }
 
     float dx = wrapped_delta_x(actor->position.x, game->player.position.x);
-    int desired_dir = dx < -8.0f ? -1 : 1;
-    if (fabsf(dx) <= 8.0f) desired_dir = actor->facing;
+    int desired_dir = dx < -ENEMY_AI_DEADZONE_X ? -1 : 1;
+    if (fabsf(dx) <= ENEMY_AI_DEADZONE_X) desired_dir = actor->facing;
 
-    bool trying_to_climb = actor->position.y > enemy->target_y + 10.0f;
-    if (trying_to_climb && fabsf(actor->position.y - actor->previous_position.y) < 0.4f) {
+    bool trying_to_climb = actor->position.y > enemy->target_y + ENEMY_AI_CLIMB_MARGIN;
+    if (trying_to_climb && fabsf(actor->position.y - actor->previous_position.y) < ENEMY_AI_STUCK_EPS) {
         enemy->stuck_timer += dt;
     } else {
-        enemy->stuck_timer -= dt * 0.5f;
+        enemy->stuck_timer -= dt * ENEMY_AI_STUCK_DECAY;
         if (enemy->stuck_timer < 0.0f) enemy->stuck_timer = 0.0f;
     }
-    if (enemy->stuck_timer > 0.7f) {
-        if (enemy->escape_dir == 0) enemy->escape_dir = GetRandomValue(0, 1) == 0 ? -1 : 1;
+    if (enemy->stuck_timer > ENEMY_AI_STUCK_ENTER) {
         desired_dir = enemy->escape_dir;
-        if (enemy->stuck_timer > 1.6f) {
+        if (enemy->stuck_timer > ENEMY_AI_STUCK_FLIP) {
             enemy->stuck_timer = 0.0f;
             enemy->escape_dir = -enemy->escape_dir;
         }
     }
 
-    actor->velocity.x += (float)desired_dir * enemy_accel(enemy->type) * dt;
+    actor->velocity.x += (float)desired_dir * tuning->accel * dt;
     actor->facing = desired_dir;
 
     if (actor->position.y > enemy->target_y && actor->flap_cooldown <= 0.0f) {
-        actor->velocity.y = enemy_flap_velocity(enemy->type);
-        actor->flap_cooldown = enemy_flap_cooldown(enemy->type);
+        actor->velocity.y = tuning->flap_velocity;
+        actor->flap_cooldown = tuning->flap_cooldown;
     }
 
     actor->velocity.y += PLAYER_GRAVITY * dt;
-    actor->velocity.x *= powf(0.985f, dt * TARGET_FPS);
-    actor->velocity.x = Clamp(actor->velocity.x, -enemy_max_speed_x(enemy->type), enemy_max_speed_x(enemy->type));
+    actor->velocity.x *= powf(ENEMY_AIR_DRAG, dt * TARGET_FPS);
+    actor->velocity.x = Clamp(actor->velocity.x, -tuning->max_speed_x, tuning->max_speed_x);
     actor->velocity.y = Clamp(actor->velocity.y, -PLAYER_MAX_SPEED_Y, PLAYER_MAX_SPEED_Y);
     actor->position.x += actor->velocity.x * dt;
     actor->position.y += actor->velocity.y * dt;
@@ -461,7 +448,7 @@ static void update_enemy(Game *game, Enemy *enemy, float dt) {
     resolve_actor_platforms(game, actor);
 }
 
-static void update_eggs(Game *game, float dt) {
+static void update_eggs(Game *game, Resources *res, float dt) {
     for (int i = 0; i < MAX_EGGS; i++) {
         Egg *egg = &game->eggs[i];
         if (!egg->active) continue;
@@ -475,21 +462,29 @@ static void update_eggs(Game *game, float dt) {
             if (resolve_egg_platforms(game, egg)) {
                 egg->state = EGG_RESTING;
                 egg->timer = EGG_HATCH_WAIT;
+                egg->on_lava = false;
             } else if (CheckCollisionCircleRec(egg->position, EGG_RADIUS, game->lava)) {
                 egg->position.y = game->lava.y - EGG_RADIUS;
                 egg->velocity = (Vector2){ 0.0f, 0.0f };
                 egg->state = EGG_RESTING;
                 egg->timer = EGG_HATCH_WAIT * 0.5f;
+                egg->on_lava = true;
             }
         } else {
             egg->timer -= dt;
             if (egg->state == EGG_RESTING && egg->timer <= 0.0f) {
                 egg->state = EGG_HATCHING;
                 egg->timer = EGG_HATCH_WARNING;
-                sound_play(game, SOUND_EGG_HATCH);
+                sound_play(res, SOUND_EGG_HATCH);
             } else if (egg->state == EGG_HATCHING && egg->timer <= 0.0f) {
+                // Spawn the new enemy clear of lava so it doesn't immediately
+                // re-collide and loop on the lava-bounce response.
+                Vector2 spawn_pos = egg->position;
+                if (egg->on_lava) {
+                    spawn_pos.y = game->lava.y - ENEMY_RADIUS - 2.0f;
+                }
                 int before = active_enemy_count(game);
-                spawn_enemy(game, egg->hatch_type, egg->position);
+                spawn_enemy(game, egg->hatch_type, spawn_pos);
                 if (active_enemy_count(game) > before) {
                     egg->active = false;
                     spawn_particles(game, egg->position, (Color){ 255, 235, 135, 255 }, 14);
@@ -510,13 +505,13 @@ static void update_particles(Game *game, float dt) {
             particle->active = false;
             continue;
         }
-        particle->velocity.y += 420.0f * dt;
+        particle->velocity.y += PARTICLE_GRAVITY * dt;
         particle->position.x += particle->velocity.x * dt;
         particle->position.y += particle->velocity.y * dt;
     }
 }
 
-static void resolve_jousts(Game *game) {
+static void resolve_jousts(Game *game, Resources *res) {
     for (int i = 0; i < MAX_ENEMIES; i++) {
         Enemy *enemy = &game->enemies[i];
         if (!enemy->actor.alive || enemy->spawn_grace_timer > 0.0f) continue;
@@ -526,20 +521,20 @@ static void resolve_jousts(Game *game) {
 
         if (game->player.invuln_timer > 0.0f) {
             bounce_actors(&game->player, &enemy->actor);
-            sound_play(game, SOUND_JOUST_BOUNCE);
+            sound_play(res, SOUND_JOUST_BOUNCE);
             continue;
         }
 
         float vertical_delta = enemy->actor.position.y - game->player.position.y;
         if (vertical_delta > JOUST_WIN_HEIGHT) {
-            defeat_enemy(game, enemy);
+            defeat_enemy(game, res, enemy);
             game->player.velocity.y = PLAYER_FLAP_VELOCITY * 0.45f;
         } else if (-vertical_delta > JOUST_WIN_HEIGHT) {
-            kill_player(game);
+            kill_player(game, res);
             return;
         } else {
             bounce_actors(&game->player, &enemy->actor);
-            sound_play(game, SOUND_JOUST_BOUNCE);
+            sound_play(res, SOUND_JOUST_BOUNCE);
         }
     }
 
@@ -556,7 +551,7 @@ static void resolve_jousts(Game *game) {
     }
 }
 
-static void collect_eggs(Game *game) {
+static void collect_eggs(Game *game, Resources *res) {
     for (int i = 0; i < MAX_EGGS; i++) {
         Egg *egg = &game->eggs[i];
         if (!egg->active) continue;
@@ -565,39 +560,49 @@ static void collect_eggs(Game *game) {
             game->score += 250;
             if (game->score > game->high_score) game->high_score = game->score;
             spawn_particles(game, egg->position, (Color){ 255, 245, 181, 255 }, 12);
-            sound_play(game, SOUND_EGG_COLLECT);
+            sound_play(res, SOUND_EGG_COLLECT);
         }
     }
 }
 
-static void resolve_hazards(Game *game) {
+static void resolve_hazards(Game *game, Resources *res) {
     if (CheckCollisionCircleRec(game->player.position, game->player.radius, game->lava)) {
-        sound_play(game, SOUND_LAVA);
-        kill_player(game);
+        if (game->player.invuln_timer > 0.0f) {
+            // Don't kill while invulnerable, but don't let the player sit silently
+            // in the lava either — bounce out the way an enemy would.
+            game->player.position.y = game->lava.y - game->player.radius;
+            game->player.velocity.y = PLAYER_FLAP_VELOCITY * 0.6f;
+        } else {
+            sound_play(res, SOUND_LAVA);
+            kill_player(game, res);
+        }
     }
 
     for (int i = 0; i < MAX_ENEMIES; i++) {
         Enemy *enemy = &game->enemies[i];
         if (!enemy->actor.alive) continue;
+        if (enemy->lava_recover_timer > 0.0f) continue;
         if (CheckCollisionCircleRec(enemy->actor.position, enemy->actor.radius, game->lava)) {
             enemy->actor.position.y = game->lava.y - enemy->actor.radius;
-            enemy->actor.velocity.y = enemy_flap_velocity(enemy->type) * 0.85f;
+            enemy->actor.velocity.y = ENEMY_TUNING[enemy->type].flap_velocity * ENEMY_LAVA_BOUNCE_SCALE;
+            enemy->actor.flap_cooldown = ENEMY_TUNING[enemy->type].flap_cooldown;
+            enemy->lava_recover_timer = ENEMY_LAVA_RECOVER_GRACE;
         }
     }
 }
 
-static void update_playing(Game *game, float dt) {
-    update_player(game, dt);
+static void update_playing(Game *game, Resources *res, float dt) {
+    update_player(game, res, dt);
     for (int i = 0; i < MAX_ENEMIES; i++) {
         if (game->enemies[i].actor.alive) {
             update_enemy(game, &game->enemies[i], dt);
         }
     }
-    update_eggs(game, dt);
-    resolve_jousts(game);
+    update_eggs(game, res, dt);
+    resolve_jousts(game, res);
     if (game->mode != GAME_MODE_PLAYING) return;
-    collect_eggs(game);
-    resolve_hazards(game);
+    collect_eggs(game, res);
+    resolve_hazards(game, res);
 
     if (active_enemy_count(game) == 0 && active_egg_count(game) == 0) {
         game->score += 1000 + game->wave * 250;
@@ -605,11 +610,11 @@ static void update_playing(Game *game, float dt) {
         game->mode = GAME_MODE_WAVE_CLEAR;
         game->mode_timer = WAVE_CLEAR_TIME;
         spawn_particles(game, (Vector2){ WINDOW_WIDTH * 0.5f, WINDOW_HEIGHT * 0.42f }, (Color){ 139, 238, 164, 255 }, 52);
-        sound_play(game, SOUND_WAVE_CLEAR);
+        sound_play(res, SOUND_WAVE_CLEAR);
     }
 }
 
-static void update_debug(Game *game) {
+static void update_debug(Game *game, Resources *res) {
     if (IsKeyPressed(KEY_F1)) {
         game->debug_draw = !game->debug_draw;
     }
@@ -624,7 +629,7 @@ static void update_debug(Game *game) {
     }
     if (IsKeyPressed(KEY_F4)) {
         game->player.invuln_timer = 0.0f;
-        kill_player(game);
+        kill_player(game, res);
     }
 }
 
@@ -639,14 +644,14 @@ void game_init(Game *game) {
     reset_actor(&game->player, (Vector2){ WINDOW_WIDTH * 0.5f, 150.0f }, PLAYER_RADIUS);
 }
 
-void game_update(Game *game) {
+void game_update(Game *game, Resources *res) {
     float dt = frame_dt();
-    update_debug(game);
+    update_debug(game, res);
 
     if (game->mode == GAME_MODE_TITLE) {
         update_particles(game, dt);
         if (start_pressed()) {
-            start_new_game(game);
+            start_new_game(game, res);
         }
         return;
     }
@@ -654,7 +659,7 @@ void game_update(Game *game) {
     if (game->mode == GAME_MODE_GAME_OVER) {
         update_particles(game, dt);
         if (start_pressed()) {
-            start_new_game(game);
+            start_new_game(game, res);
         }
         return;
     }
@@ -662,7 +667,7 @@ void game_update(Game *game) {
     if (game->mode == GAME_MODE_PAUSED) {
         if (pause_pressed()) {
             game->mode = game->paused_from;
-            sound_play(game, SOUND_PAUSE);
+            sound_play(res, SOUND_PAUSE);
         }
         return;
     }
@@ -670,14 +675,14 @@ void game_update(Game *game) {
     if (pause_pressed() && game->mode == GAME_MODE_PLAYING) {
         game->paused_from = game->mode;
         game->mode = GAME_MODE_PAUSED;
-        sound_play(game, SOUND_PAUSE);
+        sound_play(res, SOUND_PAUSE);
         return;
     }
 
     update_particles(game, dt);
 
     if (game->mode == GAME_MODE_PLAYING) {
-        update_playing(game, dt);
+        update_playing(game, res, dt);
     } else if (game->mode == GAME_MODE_WAVE_CLEAR) {
         game->mode_timer -= dt;
         if (game->mode_timer <= 0.0f) {
@@ -698,10 +703,10 @@ void game_update(Game *game) {
     }
 }
 
-static void draw_centered_texture(Game *game, TextureID id, Vector2 position, float scale, int facing, Color tint) {
-    if (!game->textures[id].loaded) return;
+static void draw_centered_texture(Resources *res, TextureID id, Vector2 position, float scale, int facing, Color tint) {
+    if (!res->textures[id].loaded) return;
 
-    Texture2D texture = game->textures[id].texture;
+    Texture2D texture = res->textures[id].texture;
     Rectangle source = { 0.0f, 0.0f, (float)texture.width, (float)texture.height };
     if (facing < 0) {
         source.width = -source.width;
@@ -725,9 +730,9 @@ static void draw_background(void) {
     DrawCircleGradient(WINDOW_WIDTH / 2, WINDOW_HEIGHT / 2, 520.0f, (Color){ 24, 36, 54, 120 }, (Color){ 12, 17, 27, 0 });
 }
 
-static void draw_platform(Game *game, Platform platform) {
-    if (game->textures[TEXTURE_PLATFORM].loaded) {
-        Texture2D texture = game->textures[TEXTURE_PLATFORM].texture;
+static void draw_platform(Resources *res, Platform platform) {
+    if (res->textures[TEXTURE_PLATFORM].loaded) {
+        Texture2D texture = res->textures[TEXTURE_PLATFORM].texture;
         DrawTexturePro(texture,
             (Rectangle){ 0.0f, 0.0f, (float)texture.width, (float)texture.height },
             platform.bounds,
@@ -740,9 +745,9 @@ static void draw_platform(Game *game, Platform platform) {
     }
 }
 
-static void draw_lava(Game *game) {
-    if (game->textures[TEXTURE_LAVA].loaded) {
-        Texture2D texture = game->textures[TEXTURE_LAVA].texture;
+static void draw_lava(Game *game, Resources *res) {
+    if (res->textures[TEXTURE_LAVA].loaded) {
+        Texture2D texture = res->textures[TEXTURE_LAVA].texture;
         DrawTexturePro(texture,
             (Rectangle){ 0.0f, 0.0f, (float)texture.width, (float)texture.height },
             game->lava,
@@ -765,7 +770,7 @@ static void draw_actor_fallback(Actor actor, Color body, Color mount) {
         mount);
 }
 
-static void draw_player(Game *game) {
+static void draw_player(Game *game, Resources *res) {
     if (!game->player.alive) return;
     bool flicker = game->player.invuln_timer > 0.0f && ((int)(game->player.invuln_timer * 12.0f) % 2) == 0;
     if (flicker) return;
@@ -774,49 +779,50 @@ static void draw_player(Game *game) {
     if (game->player.flap_cooldown > PLAYER_FLAP_COOLDOWN * 0.5f) id = TEXTURE_PLAYER_FLAP_1;
     else if (game->player.velocity.y < -80.0f) id = TEXTURE_PLAYER_FLAP_2;
 
-    if (game->textures[id].loaded) {
-        draw_centered_texture(game, id, game->player.position, 3.4f, game->player.facing, WHITE);
+    if (res->textures[id].loaded) {
+        draw_centered_texture(res, id, game->player.position, 3.4f, game->player.facing, WHITE);
     } else {
         draw_actor_fallback(game->player, (Color){ 240, 246, 255, 255 }, (Color){ 61, 188, 236, 255 });
     }
 }
 
-static void draw_enemy(Game *game, Enemy *enemy) {
+static void draw_enemy(Resources *res, Enemy *enemy) {
     if (!enemy->actor.alive) return;
-    TextureID id = texture_for_enemy(enemy->type);
+    const EnemyTuning *tuning = &ENEMY_TUNING[enemy->type];
+    TextureID id = tuning->texture;
     Color tint = enemy->spawn_grace_timer > 0.0f ? Fade(WHITE, 0.55f) : WHITE;
-    if (game->textures[id].loaded) {
-        draw_centered_texture(game, id, enemy->actor.position, 3.4f, enemy->actor.facing, tint);
+    if (res->textures[id].loaded) {
+        draw_centered_texture(res, id, enemy->actor.position, 3.4f, enemy->actor.facing, tint);
     } else {
-        Color color = enemy_color(enemy->type);
+        Color color = tuning->color;
         if (enemy->spawn_grace_timer > 0.0f) color = Fade(color, 0.55f);
         draw_actor_fallback(enemy->actor, (Color){ 235, 229, 255, 255 }, color);
     }
 }
 
-static void draw_egg(Game *game, Egg *egg) {
+static void draw_egg(Resources *res, Egg *egg) {
     if (!egg->active) return;
     TextureID id = egg->state == EGG_HATCHING ? TEXTURE_EGG_HATCHING : TEXTURE_EGG;
     Color tint = WHITE;
     if (egg->state == EGG_HATCHING && ((int)(egg->timer * 12.0f) % 2) == 0) {
         tint = (Color){ 255, 214, 125, 255 };
     }
-    if (game->textures[id].loaded) {
-        draw_centered_texture(game, id, egg->position, 3.0f, 1, tint);
+    if (res->textures[id].loaded) {
+        draw_centered_texture(res, id, egg->position, 3.0f, 1, tint);
     } else {
         DrawCircleV(egg->position, EGG_RADIUS, tint);
         DrawCircleLines((int)egg->position.x, (int)egg->position.y, EGG_RADIUS, (Color){ 115, 84, 42, 255 });
     }
 }
 
-static void draw_particles(Game *game) {
+static void draw_particles(Game *game, Resources *res) {
     for (int i = 0; i < MAX_PARTICLES; i++) {
         Particle *particle = &game->particles[i];
         if (!particle->active) continue;
         float alpha = particle->lifetime / particle->max_lifetime;
         Color tint = Fade(particle->color, alpha);
-        if (game->textures[TEXTURE_SPARK].loaded) {
-            draw_centered_texture(game, TEXTURE_SPARK, particle->position, particle->radius * 0.35f, 1, tint);
+        if (res->textures[TEXTURE_SPARK].loaded) {
+            draw_centered_texture(res, TEXTURE_SPARK, particle->position, particle->radius * 0.35f, 1, tint);
         } else {
             DrawCircleV(particle->position, particle->radius, tint);
         }
@@ -858,22 +864,22 @@ static void draw_overlay_center(const char *title, const char *subtitle) {
     DrawText(subtitle, WINDOW_WIDTH / 2 - subtitle_width / 2, WINDOW_HEIGHT / 2 + 4, 24, (Color){ 196, 219, 232, 255 });
 }
 
-void game_draw(Game *game) {
+void game_draw(Game *game, Resources *res) {
     BeginDrawing();
     draw_background();
 
-    draw_lava(game);
+    draw_lava(game, res);
     for (int i = 0; i < game->platform_count; i++) {
-        draw_platform(game, game->platforms[i]);
+        draw_platform(res, game->platforms[i]);
     }
     for (int i = 0; i < MAX_EGGS; i++) {
-        draw_egg(game, &game->eggs[i]);
+        draw_egg(res, &game->eggs[i]);
     }
     for (int i = 0; i < MAX_ENEMIES; i++) {
-        draw_enemy(game, &game->enemies[i]);
+        draw_enemy(res, &game->enemies[i]);
     }
-    draw_player(game);
-    draw_particles(game);
+    draw_player(game, res);
+    draw_particles(game, res);
 
     if (game->mode != GAME_MODE_TITLE) {
         draw_hud(game);

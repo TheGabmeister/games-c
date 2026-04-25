@@ -3,7 +3,7 @@
 
 #include "game.h"
 
-void assets_load(Game *game);
-void assets_unload(Game *game);
+void assets_load(Resources *res);
+void assets_unload(Resources *res);
 
 #endif

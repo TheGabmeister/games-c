@@ -14,24 +14,24 @@ static const char *texture_files[TEXTURE_COUNT] = {
     [TEXTURE_SPARK] = "assets/spark.png",
 };
 
-void assets_load(Game *game) {
+void assets_load(Resources *res) {
     for (int i = 0; i < TEXTURE_COUNT; i++) {
-        game->textures[i].loaded = false;
+        res->textures[i].loaded = false;
         if (FileExists(texture_files[i])) {
-            game->textures[i].texture = LoadTexture(texture_files[i]);
-            game->textures[i].loaded = IsTextureValid(game->textures[i].texture);
-            if (game->textures[i].loaded) {
-                SetTextureFilter(game->textures[i].texture, TEXTURE_FILTER_POINT);
+            res->textures[i].texture = LoadTexture(texture_files[i]);
+            res->textures[i].loaded = IsTextureValid(res->textures[i].texture);
+            if (res->textures[i].loaded) {
+                SetTextureFilter(res->textures[i].texture, TEXTURE_FILTER_POINT);
             }
         }
     }
 }
 
-void assets_unload(Game *game) {
+void assets_unload(Resources *res) {
     for (int i = 0; i < TEXTURE_COUNT; i++) {
-        if (game->textures[i].loaded && IsTextureValid(game->textures[i].texture)) {
-            UnloadTexture(game->textures[i].texture);
+        if (res->textures[i].loaded && IsTextureValid(res->textures[i].texture)) {
+            UnloadTexture(res->textures[i].texture);
         }
-        game->textures[i].loaded = false;
+        res->textures[i].loaded = false;
     }
 }

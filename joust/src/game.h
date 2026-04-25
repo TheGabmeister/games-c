@@ -31,6 +31,26 @@
 #define JOUST_WIN_HEIGHT     10.0f
 #define JOUST_BOUNCE_SPEED   220.0f
 
+// --- AI ---
+#define ENEMY_AI_DEADZONE_X     8.0f
+#define ENEMY_AI_CLIMB_MARGIN   10.0f
+#define ENEMY_AI_STUCK_EPS      0.4f
+#define ENEMY_AI_STUCK_ENTER    0.7f
+#define ENEMY_AI_STUCK_FLIP     1.6f
+#define ENEMY_AI_STUCK_DECAY    0.5f
+#define ENEMY_AI_TARGET_Y_MIN   90.0f
+#define ENEMY_AI_TARGET_Y_PAD   80.0f
+#define ENEMY_LAVA_RECOVER_GRACE 0.35f
+#define ENEMY_LAVA_BOUNCE_SCALE  0.85f
+#define ENEMY_AIR_DRAG           0.985f
+
+// --- Particles ---
+#define PARTICLE_GRAVITY    420.0f
+#define PARTICLE_SPEED_MIN   60
+#define PARTICLE_SPEED_MAX  220
+#define PARTICLE_RADIUS_MIN   2
+#define PARTICLE_RADIUS_MAX   5
+
 // --- Collections ---
 #define MAX_ENEMIES          16
 #define MAX_EGGS             16
@@ -78,7 +98,8 @@ typedef enum TextureID {
 typedef enum EnemyType {
     ENEMY_GRUNT,
     ENEMY_HUNTER,
-    ENEMY_CHAMPION
+    ENEMY_CHAMPION,
+    ENEMY_COUNT
 } EnemyType;
 
 typedef enum EggState {
@@ -106,6 +127,7 @@ typedef struct Enemy {
     float target_y;
     float spawn_grace_timer;
     float stuck_timer;
+    float lava_recover_timer;
     int escape_dir;
 } Enemy;
 
@@ -117,6 +139,7 @@ typedef struct Egg {
     float timer;
     EnemyType hatch_type;
     bool active;
+    bool on_lava;
 } Egg;
 
 typedef struct Platform {
@@ -138,6 +161,16 @@ typedef struct GameTexture {
     bool loaded;
 } GameTexture;
 
+typedef struct GameSound {
+    Sound sound;
+    bool loaded;
+} GameSound;
+
+typedef struct Resources {
+    GameTexture textures[TEXTURE_COUNT];
+    GameSound sounds[SOUND_COUNT];
+} Resources;
+
 typedef struct Game {
     GameMode mode;
     float mode_timer;
@@ -151,8 +184,6 @@ typedef struct Game {
     int platform_count;
 
     Rectangle lava;
-    GameTexture textures[TEXTURE_COUNT];
-    Sound sounds[SOUND_COUNT];
 
     int score;
     int high_score;
@@ -160,11 +191,10 @@ typedef struct Game {
     int wave;
     int combo;
     bool debug_draw;
-    bool sounds_loaded;
 } Game;
 
 void game_init(Game *game);
-void game_update(Game *game);
-void game_draw(Game *game);
+void game_update(Game *game, Resources *res);
+void game_draw(Game *game, Resources *res);
 
 #endif
