@@ -8,6 +8,7 @@ static const char *sound_files[SOUND_COUNT] = {
     [SOUND_HUMAN_RESCUE] = "assets/human_rescue.wav",
     [SOUND_EXTRA_LIFE] = "assets/extra_life.wav",
     [SOUND_WAVE_CLEAR] = "assets/wave_clear.wav",
+    [SOUND_ENEMY_SHOOT] = "assets/enemy_shoot.wav",
     [SOUND_HULK_HIT] = "assets/hulk_hit.wav",
 };
 

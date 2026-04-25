@@ -8,6 +8,10 @@ static const char *texture_files[TEXTURE_COUNT] = {
     [TEXTURE_HUMAN_DADDY] = "assets/human_daddy.png",
     [TEXTURE_HUMAN_MIKEY] = "assets/human_mikey.png",
     [TEXTURE_ELECTRODE] = "assets/electrode.png",
+    [TEXTURE_SPHEROID] = "assets/spheroid.png",
+    [TEXTURE_ENFORCER] = "assets/enforcer.png",
+    [TEXTURE_QUARK] = "assets/quark.png",
+    [TEXTURE_TANK] = "assets/tank.png",
 };
 
 void textures_load(Game *game) {

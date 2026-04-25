@@ -52,17 +52,22 @@ void game_update(Game *game) {
 }
 
 static void draw_overlay(Game *game) {
-    DrawText("ROBOTRON 2084 - ARENA HAZARDS", 24, 24, 24, RAYWHITE);
-    DrawText(TextFormat("SCORE %06d   HIGH %06d   WAVE %d   LIVES %d   GRUNTS %d   HUMANS %d   HULKS %d   ELECTRODES %d",
+    DrawText("ROBOTRON 2084 - SPAWNER ENEMIES", 24, 24, 24, RAYWHITE);
+    DrawText(TextFormat("SCORE %06d   HIGH %06d   WAVE %d   LIVES %d   G %d   S %d   E %d   Q %d   T %d   SHOTS %d",
         game->score,
         game->high_score,
         game->wave,
         game->lives,
         world_count_active_grunts(game),
+        world_count_active_spheroids(game),
+        world_count_active_enforcers(game),
+        world_count_active_quarks(game),
+        world_count_active_tanks(game),
+        world_count_active_projectiles(game)), 24, 56, 18, LIGHTGRAY);
+    DrawText(TextFormat("WASD move  |  Arrow keys fire  |  P pause  |  Humans %d  Hulks %d  Electrodes %d  Next rescue +%d",
         world_count_active_humans(game),
         world_count_active_hulks(game),
-        world_count_active_electrodes(game)), 24, 56, 18, LIGHTGRAY);
-    DrawText(TextFormat("WASD move  |  Arrow keys fire  |  P pause  |  Enter start  |  Next rescue +%d",
+        world_count_active_electrodes(game),
         world_next_human_rescue_score(game)), 24, 82, 18, GRAY);
 }
 

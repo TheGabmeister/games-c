@@ -38,6 +38,35 @@
 #define HULK_STUN_TIME      0.18f
 #define HULK_KNOCKBACK      24.0f
 
+// --- Spawners and Shooters ---
+#define MAX_SPHEROIDS       12
+#define MAX_ENFORCERS       36
+#define MAX_QUARKS          12
+#define MAX_TANKS           28
+#define SPHEROID_RADIUS     17.0f
+#define ENFORCER_RADIUS     15.0f
+#define QUARK_RADIUS        17.0f
+#define TANK_RADIUS         18.0f
+#define SPHEROID_SPEED      92.0f
+#define ENFORCER_SPEED      105.0f
+#define QUARK_SPEED         82.0f
+#define TANK_SPEED          70.0f
+#define SPHEROID_SCORE      1000
+#define ENFORCER_SCORE      150
+#define QUARK_SCORE         1000
+#define TANK_SCORE          200
+
+// --- Enemy Projectiles ---
+#define MAX_PROJECTILES     160
+#define SPARK_RADIUS        6.0f
+#define SHELL_RADIUS        8.0f
+#define SPARK_SPEED         275.0f
+#define SHELL_SPEED         235.0f
+#define SPARK_LIFETIME      3.8f
+#define SHELL_LIFETIME      5.5f
+#define SPARK_SCORE         25
+#define SHELL_SCORE         50
+
 // --- Humans ---
 #define MAX_HUMANS          40
 #define HUMAN_RADIUS        10.0f
@@ -72,6 +101,7 @@ typedef enum SoundID {
     SOUND_HUMAN_RESCUE,
     SOUND_EXTRA_LIFE,
     SOUND_WAVE_CLEAR,
+    SOUND_ENEMY_SHOOT,
     SOUND_HULK_HIT,
     SOUND_COUNT
 } SoundID;
@@ -84,8 +114,17 @@ typedef enum TextureID {
     TEXTURE_HUMAN_DADDY,
     TEXTURE_HUMAN_MIKEY,
     TEXTURE_ELECTRODE,
+    TEXTURE_SPHEROID,
+    TEXTURE_ENFORCER,
+    TEXTURE_QUARK,
+    TEXTURE_TANK,
     TEXTURE_COUNT
 } TextureID;
+
+typedef enum ProjectileType {
+    PROJECTILE_SPARK = 0,
+    PROJECTILE_SHELL
+} ProjectileType;
 
 typedef enum GameMode {
     GAME_MODE_TITLE = 0,
@@ -115,6 +154,55 @@ typedef struct Hulk {
     float radius;
     float stun_timer;
 } Hulk;
+
+typedef struct Spheroid {
+    bool active;
+    Vector2 position;
+    Vector2 velocity;
+    float speed;
+    float radius;
+    float spawn_timer;
+    float retarget_timer;
+} Spheroid;
+
+typedef struct Enforcer {
+    bool active;
+    Vector2 position;
+    Vector2 velocity;
+    float speed;
+    float radius;
+    float shoot_timer;
+    float retarget_timer;
+} Enforcer;
+
+typedef struct Quark {
+    bool active;
+    Vector2 position;
+    Vector2 velocity;
+    float speed;
+    float radius;
+    float spawn_timer;
+    float retarget_timer;
+} Quark;
+
+typedef struct Tank {
+    bool active;
+    Vector2 position;
+    Vector2 velocity;
+    float speed;
+    float radius;
+    float shoot_timer;
+    float retarget_timer;
+} Tank;
+
+typedef struct EnemyProjectile {
+    bool active;
+    ProjectileType type;
+    Vector2 position;
+    Vector2 velocity;
+    float radius;
+    float lifetime;
+} EnemyProjectile;
 
 typedef struct Human {
     bool active;
@@ -171,6 +259,11 @@ typedef struct Game {
     Bullet bullets[MAX_BULLETS];
     Grunt grunts[MAX_GRUNTS];
     Hulk hulks[MAX_HULKS];
+    Spheroid spheroids[MAX_SPHEROIDS];
+    Enforcer enforcers[MAX_ENFORCERS];
+    Quark quarks[MAX_QUARKS];
+    Tank tanks[MAX_TANKS];
+    EnemyProjectile projectiles[MAX_PROJECTILES];
     Human humans[MAX_HUMANS];
     Electrode electrodes[MAX_ELECTRODES];
     FloatText float_text[MAX_FLOAT_TEXT];

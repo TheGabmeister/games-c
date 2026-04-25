@@ -35,6 +35,46 @@ int world_count_active_hulks(Game *game) {
     return count;
 }
 
+int world_count_active_spheroids(Game *game) {
+    int count = 0;
+    for (int i = 0; i < MAX_SPHEROIDS; i++) {
+        if (game->spheroids[i].active) count++;
+    }
+    return count;
+}
+
+int world_count_active_enforcers(Game *game) {
+    int count = 0;
+    for (int i = 0; i < MAX_ENFORCERS; i++) {
+        if (game->enforcers[i].active) count++;
+    }
+    return count;
+}
+
+int world_count_active_quarks(Game *game) {
+    int count = 0;
+    for (int i = 0; i < MAX_QUARKS; i++) {
+        if (game->quarks[i].active) count++;
+    }
+    return count;
+}
+
+int world_count_active_tanks(Game *game) {
+    int count = 0;
+    for (int i = 0; i < MAX_TANKS; i++) {
+        if (game->tanks[i].active) count++;
+    }
+    return count;
+}
+
+int world_count_active_projectiles(Game *game) {
+    int count = 0;
+    for (int i = 0; i < MAX_PROJECTILES; i++) {
+        if (game->projectiles[i].active) count++;
+    }
+    return count;
+}
+
 int world_count_active_electrodes(Game *game) {
     int count = 0;
     for (int i = 0; i < MAX_ELECTRODES; i++) {
@@ -98,12 +138,18 @@ void world_reset_player(Game *game) {
     game->player_invulnerable_timer = RESPAWN_INVULN_TIME;
     game->humans_rescued_this_wave = 0;
     memset(game->bullets, 0, sizeof(game->bullets));
+    memset(game->projectiles, 0, sizeof(game->projectiles));
 }
 
 static void clear_wave_entities(Game *game) {
     memset(game->bullets, 0, sizeof(game->bullets));
     memset(game->grunts, 0, sizeof(game->grunts));
     memset(game->hulks, 0, sizeof(game->hulks));
+    memset(game->spheroids, 0, sizeof(game->spheroids));
+    memset(game->enforcers, 0, sizeof(game->enforcers));
+    memset(game->quarks, 0, sizeof(game->quarks));
+    memset(game->tanks, 0, sizeof(game->tanks));
+    memset(game->projectiles, 0, sizeof(game->projectiles));
     memset(game->humans, 0, sizeof(game->humans));
     memset(game->electrodes, 0, sizeof(game->electrodes));
     memset(game->float_text, 0, sizeof(game->float_text));
@@ -151,6 +197,33 @@ static Vector2 random_human_velocity(void) {
     return Vector2Scale(Vector2Normalize(direction), HUMAN_SPEED);
 }
 
+static Vector2 random_direction(void) {
+    Vector2 direction = {
+        (float)GetRandomValue(-100, 100) / 100.0f,
+        (float)GetRandomValue(-100, 100) / 100.0f
+    };
+
+    if (direction.x == 0.0f && direction.y == 0.0f) {
+        direction.x = 1.0f;
+    }
+
+    return Vector2Normalize(direction);
+}
+
+static Vector2 edge_drift_velocity(Vector2 position, float speed) {
+    Vector2 target = {
+        GetRandomValue(0, 1) == 0 ? 56.0f : WINDOW_WIDTH - 56.0f,
+        GetRandomValue(0, 1) == 0 ? 56.0f : WINDOW_HEIGHT - 56.0f
+    };
+    Vector2 to_target = Vector2Subtract(target, position);
+
+    if (to_target.x == 0.0f && to_target.y == 0.0f) {
+        return Vector2Scale(random_direction(), speed);
+    }
+
+    return Vector2Scale(Vector2Normalize(to_target), speed);
+}
+
 static void spawn_grunt(Game *game, Vector2 position) {
     for (int i = 0; i < MAX_GRUNTS; i++) {
         Grunt *grunt = &game->grunts[i];
@@ -173,6 +246,86 @@ static void spawn_hulk(Game *game, Vector2 position) {
             hulk->speed = HULK_SPEED + (float)(game->wave - 1) * 3.0f;
             hulk->radius = HULK_RADIUS;
             hulk->stun_timer = 0.0f;
+            return;
+        }
+    }
+}
+
+static void spawn_spheroid(Game *game, Vector2 position) {
+    for (int i = 0; i < MAX_SPHEROIDS; i++) {
+        Spheroid *spheroid = &game->spheroids[i];
+        if (!spheroid->active) {
+            spheroid->active = true;
+            spheroid->position = position;
+            spheroid->speed = SPHEROID_SPEED + (float)(game->wave - 1) * 1.5f;
+            spheroid->radius = SPHEROID_RADIUS;
+            spheroid->velocity = edge_drift_velocity(position, spheroid->speed);
+            spheroid->spawn_timer = (float)GetRandomValue(280, 430) / 100.0f;
+            spheroid->retarget_timer = (float)GetRandomValue(120, 240) / 100.0f;
+            return;
+        }
+    }
+}
+
+static void spawn_enforcer(Game *game, Vector2 position) {
+    for (int i = 0; i < MAX_ENFORCERS; i++) {
+        Enforcer *enforcer = &game->enforcers[i];
+        if (!enforcer->active) {
+            enforcer->active = true;
+            enforcer->position = position;
+            enforcer->speed = ENFORCER_SPEED + (float)(game->wave - 1) * 2.0f;
+            enforcer->radius = ENFORCER_RADIUS;
+            enforcer->velocity = edge_drift_velocity(position, enforcer->speed);
+            enforcer->shoot_timer = (float)GetRandomValue(90, 170) / 100.0f;
+            enforcer->retarget_timer = (float)GetRandomValue(80, 180) / 100.0f;
+            return;
+        }
+    }
+}
+
+static void spawn_quark(Game *game, Vector2 position) {
+    for (int i = 0; i < MAX_QUARKS; i++) {
+        Quark *quark = &game->quarks[i];
+        if (!quark->active) {
+            quark->active = true;
+            quark->position = position;
+            quark->speed = QUARK_SPEED + (float)(game->wave - 1) * 1.2f;
+            quark->radius = QUARK_RADIUS;
+            quark->velocity = edge_drift_velocity(position, quark->speed);
+            quark->spawn_timer = (float)GetRandomValue(360, 520) / 100.0f;
+            quark->retarget_timer = (float)GetRandomValue(120, 260) / 100.0f;
+            return;
+        }
+    }
+}
+
+static void spawn_tank(Game *game, Vector2 position) {
+    for (int i = 0; i < MAX_TANKS; i++) {
+        Tank *tank = &game->tanks[i];
+        if (!tank->active) {
+            tank->active = true;
+            tank->position = position;
+            tank->speed = TANK_SPEED + (float)(game->wave - 1) * 1.0f;
+            tank->radius = TANK_RADIUS;
+            tank->velocity = Vector2Scale(random_direction(), tank->speed);
+            tank->shoot_timer = (float)GetRandomValue(120, 220) / 100.0f;
+            tank->retarget_timer = (float)GetRandomValue(120, 250) / 100.0f;
+            return;
+        }
+    }
+}
+
+static void spawn_projectile(Game *game, ProjectileType type, Vector2 position, Vector2 velocity) {
+    for (int i = 0; i < MAX_PROJECTILES; i++) {
+        EnemyProjectile *projectile = &game->projectiles[i];
+        if (!projectile->active) {
+            projectile->active = true;
+            projectile->type = type;
+            projectile->position = position;
+            projectile->velocity = velocity;
+            projectile->radius = type == PROJECTILE_SPARK ? SPARK_RADIUS : SHELL_RADIUS;
+            projectile->lifetime = type == PROJECTILE_SPARK ? SPARK_LIFETIME : SHELL_LIFETIME;
+            sound_play(game, SOUND_ENEMY_SHOOT);
             return;
         }
     }
@@ -215,6 +368,28 @@ void world_spawn_wave(Game *game) {
 
     for (int i = 0; i < grunt_count; i++) {
         spawn_grunt(game, random_edge_position(42.0f));
+    }
+
+    if (game->wave >= 2) {
+        int spheroid_count = 1 + game->wave / 2;
+        if (spheroid_count > 5) spheroid_count = 5;
+        for (int i = 0; i < spheroid_count; i++) {
+            spawn_spheroid(game, random_edge_position(72.0f));
+        }
+    }
+
+    if (game->wave >= 7) {
+        int quark_count = 1 + (game->wave - 7) / 3;
+        if (quark_count > 3) quark_count = 3;
+        for (int i = 0; i < quark_count; i++) {
+            spawn_quark(game, random_edge_position(84.0f));
+        }
+
+        int tank_count = 2 + (game->wave - 7) / 2;
+        if (tank_count > 6) tank_count = 6;
+        for (int i = 0; i < tank_count; i++) {
+            spawn_tank(game, random_edge_position(90.0f));
+        }
     }
 
     int human_count = WAVE_START_HUMANS + game->wave / 2;
@@ -415,6 +590,158 @@ static void update_grunts_and_hulks(Game *game, float dt) {
     }
 }
 
+static void update_drifter(Vector2 *position, Vector2 *velocity, float radius, float dt) {
+    position->x += velocity->x * dt;
+    position->y += velocity->y * dt;
+
+    if (position->x < radius || position->x > WINDOW_WIDTH - radius) {
+        velocity->x *= -1.0f;
+        position->x = Clamp(position->x, radius, WINDOW_WIDTH - radius);
+    }
+
+    if (position->y < radius || position->y > WINDOW_HEIGHT - radius) {
+        velocity->y *= -1.0f;
+        position->y = Clamp(position->y, radius, WINDOW_HEIGHT - radius);
+    }
+}
+
+static void update_spawners_and_shooters(Game *game, float dt) {
+    for (int i = 0; i < MAX_SPHEROIDS; i++) {
+        Spheroid *spheroid = &game->spheroids[i];
+        if (!spheroid->active) continue;
+
+        spheroid->retarget_timer -= dt;
+        if (spheroid->retarget_timer <= 0.0f) {
+            spheroid->velocity = edge_drift_velocity(spheroid->position, spheroid->speed);
+            spheroid->retarget_timer = (float)GetRandomValue(120, 240) / 100.0f;
+        }
+
+        update_drifter(&spheroid->position, &spheroid->velocity, spheroid->radius, dt);
+
+        spheroid->spawn_timer -= dt;
+        if (spheroid->spawn_timer <= 0.0f) {
+            spawn_enforcer(game, spheroid->position);
+            add_particles(game, spheroid->position, BLUE, 8, 125.0f, 2.5f);
+            float base_timer = 3.7f - (float)game->wave * 0.06f;
+            if (base_timer < 2.0f) base_timer = 2.0f;
+            spheroid->spawn_timer = base_timer + (float)GetRandomValue(0, 100) / 100.0f;
+        }
+    }
+
+    for (int i = 0; i < MAX_ENFORCERS; i++) {
+        Enforcer *enforcer = &game->enforcers[i];
+        if (!enforcer->active) continue;
+
+        enforcer->retarget_timer -= dt;
+        if (enforcer->retarget_timer <= 0.0f) {
+            enforcer->velocity = edge_drift_velocity(enforcer->position, enforcer->speed);
+            enforcer->retarget_timer = (float)GetRandomValue(80, 180) / 100.0f;
+        }
+
+        update_drifter(&enforcer->position, &enforcer->velocity, enforcer->radius, dt);
+
+        enforcer->shoot_timer -= dt;
+        if (enforcer->shoot_timer <= 0.0f) {
+            Vector2 target = {
+                game->player_position.x + (float)GetRandomValue(-85, 85),
+                game->player_position.y + (float)GetRandomValue(-85, 85)
+            };
+            Vector2 direction = Vector2Subtract(target, enforcer->position);
+            if (direction.x == 0.0f && direction.y == 0.0f) {
+                direction = random_direction();
+            } else {
+                direction = Vector2Normalize(direction);
+            }
+            spawn_projectile(game, PROJECTILE_SPARK, enforcer->position, Vector2Scale(direction, SPARK_SPEED));
+            float base_timer = 1.55f - (float)game->wave * 0.025f;
+            if (base_timer < 0.75f) base_timer = 0.75f;
+            enforcer->shoot_timer = base_timer + (float)GetRandomValue(0, 60) / 100.0f;
+        }
+    }
+
+    for (int i = 0; i < MAX_QUARKS; i++) {
+        Quark *quark = &game->quarks[i];
+        if (!quark->active) continue;
+
+        quark->retarget_timer -= dt;
+        if (quark->retarget_timer <= 0.0f) {
+            quark->velocity = edge_drift_velocity(quark->position, quark->speed);
+            quark->retarget_timer = (float)GetRandomValue(140, 280) / 100.0f;
+        }
+
+        update_drifter(&quark->position, &quark->velocity, quark->radius, dt);
+
+        quark->spawn_timer -= dt;
+        if (quark->spawn_timer <= 0.0f) {
+            spawn_tank(game, quark->position);
+            add_particles(game, quark->position, RED, 8, 115.0f, 2.5f);
+            float base_timer = 4.4f - (float)game->wave * 0.04f;
+            if (base_timer < 2.4f) base_timer = 2.4f;
+            quark->spawn_timer = base_timer + (float)GetRandomValue(0, 120) / 100.0f;
+        }
+    }
+
+    for (int i = 0; i < MAX_TANKS; i++) {
+        Tank *tank = &game->tanks[i];
+        if (!tank->active) continue;
+
+        tank->retarget_timer -= dt;
+        if (tank->retarget_timer <= 0.0f) {
+            tank->velocity = Vector2Scale(random_direction(), tank->speed);
+            tank->retarget_timer = (float)GetRandomValue(130, 260) / 100.0f;
+        }
+
+        update_drifter(&tank->position, &tank->velocity, tank->radius, dt);
+
+        tank->shoot_timer -= dt;
+        if (tank->shoot_timer <= 0.0f) {
+            Vector2 direction = Vector2Subtract(game->player_position, tank->position);
+            if (direction.x == 0.0f && direction.y == 0.0f) {
+                direction = random_direction();
+            } else {
+                direction = Vector2Normalize(direction);
+            }
+            spawn_projectile(game, PROJECTILE_SHELL, tank->position, Vector2Scale(direction, SHELL_SPEED));
+            float base_timer = 2.1f - (float)game->wave * 0.025f;
+            if (base_timer < 1.05f) base_timer = 1.05f;
+            tank->shoot_timer = base_timer + (float)GetRandomValue(0, 90) / 100.0f;
+        }
+    }
+}
+
+static void update_projectiles(Game *game, float dt) {
+    for (int i = 0; i < MAX_PROJECTILES; i++) {
+        EnemyProjectile *projectile = &game->projectiles[i];
+        if (!projectile->active) continue;
+
+        projectile->position.x += projectile->velocity.x * dt;
+        projectile->position.y += projectile->velocity.y * dt;
+        projectile->lifetime -= dt;
+
+        if (projectile->type == PROJECTILE_SHELL) {
+            if (projectile->position.x < projectile->radius || projectile->position.x > WINDOW_WIDTH - projectile->radius) {
+                projectile->velocity.x *= -1.0f;
+                projectile->position.x = Clamp(projectile->position.x, projectile->radius, WINDOW_WIDTH - projectile->radius);
+            }
+
+            if (projectile->position.y < projectile->radius || projectile->position.y > WINDOW_HEIGHT - projectile->radius) {
+                projectile->velocity.y *= -1.0f;
+                projectile->position.y = Clamp(projectile->position.y, projectile->radius, WINDOW_HEIGHT - projectile->radius);
+            }
+        } else if (projectile->position.x < -projectile->radius ||
+            projectile->position.x > WINDOW_WIDTH + projectile->radius ||
+            projectile->position.y < -projectile->radius ||
+            projectile->position.y > WINDOW_HEIGHT + projectile->radius) {
+            projectile->active = false;
+            continue;
+        }
+
+        if (projectile->lifetime <= 0.0f) {
+            projectile->active = false;
+        }
+    }
+}
+
 static void update_electrodes_and_float_text(Game *game, float dt) {
     for (int i = 0; i < MAX_ELECTRODES; i++) {
         if (game->electrodes[i].active) {
@@ -454,6 +781,23 @@ static void resolve_bullet_collisions(Game *game) {
         Bullet *bullet = &game->bullets[bullet_index];
         if (!bullet->active) continue;
 
+        for (int projectile_index = 0; projectile_index < MAX_PROJECTILES; projectile_index++) {
+            EnemyProjectile *projectile = &game->projectiles[projectile_index];
+            if (!projectile->active) continue;
+
+            if (circles_overlap(bullet->position, BULLET_RADIUS, projectile->position, projectile->radius)) {
+                int score = projectile->type == PROJECTILE_SHELL ? SHELL_SCORE : SPARK_SCORE;
+                Color color = projectile->type == PROJECTILE_SHELL ? ORANGE : SKYBLUE;
+                add_particles(game, projectile->position, color, 7, 150.0f, 2.5f);
+                add_score(game, score);
+                bullet->active = false;
+                projectile->active = false;
+                sound_play(game, SOUND_ENEMY_EXPLODE);
+                break;
+            }
+        }
+        if (!bullet->active) continue;
+
         for (int electrode_index = 0; electrode_index < MAX_ELECTRODES; electrode_index++) {
             Electrode *electrode = &game->electrodes[electrode_index];
             if (!electrode->active) continue;
@@ -484,6 +828,66 @@ static void resolve_bullet_collisions(Game *game) {
                 bullet->active = false;
                 add_particles(game, hulk->position, LIME, 5, 105.0f, 2.5f);
                 sound_play(game, SOUND_HULK_HIT);
+                break;
+            }
+        }
+        if (!bullet->active) continue;
+
+        for (int spheroid_index = 0; spheroid_index < MAX_SPHEROIDS; spheroid_index++) {
+            Spheroid *spheroid = &game->spheroids[spheroid_index];
+            if (!spheroid->active) continue;
+
+            if (circles_overlap(bullet->position, BULLET_RADIUS, spheroid->position, spheroid->radius)) {
+                add_particles(game, spheroid->position, BLUE, 12, 175.0f, 3.0f);
+                bullet->active = false;
+                spheroid->active = false;
+                add_score(game, SPHEROID_SCORE);
+                sound_play(game, SOUND_ENEMY_EXPLODE);
+                break;
+            }
+        }
+        if (!bullet->active) continue;
+
+        for (int enforcer_index = 0; enforcer_index < MAX_ENFORCERS; enforcer_index++) {
+            Enforcer *enforcer = &game->enforcers[enforcer_index];
+            if (!enforcer->active) continue;
+
+            if (circles_overlap(bullet->position, BULLET_RADIUS, enforcer->position, enforcer->radius)) {
+                add_particles(game, enforcer->position, SKYBLUE, 10, 165.0f, 3.0f);
+                bullet->active = false;
+                enforcer->active = false;
+                add_score(game, ENFORCER_SCORE);
+                sound_play(game, SOUND_ENEMY_EXPLODE);
+                break;
+            }
+        }
+        if (!bullet->active) continue;
+
+        for (int quark_index = 0; quark_index < MAX_QUARKS; quark_index++) {
+            Quark *quark = &game->quarks[quark_index];
+            if (!quark->active) continue;
+
+            if (circles_overlap(bullet->position, BULLET_RADIUS, quark->position, quark->radius)) {
+                add_particles(game, quark->position, RAYWHITE, 12, 175.0f, 3.0f);
+                bullet->active = false;
+                quark->active = false;
+                add_score(game, QUARK_SCORE);
+                sound_play(game, SOUND_ENEMY_EXPLODE);
+                break;
+            }
+        }
+        if (!bullet->active) continue;
+
+        for (int tank_index = 0; tank_index < MAX_TANKS; tank_index++) {
+            Tank *tank = &game->tanks[tank_index];
+            if (!tank->active) continue;
+
+            if (circles_overlap(bullet->position, BULLET_RADIUS, tank->position, tank->radius)) {
+                add_particles(game, tank->position, RED, 10, 165.0f, 3.0f);
+                bullet->active = false;
+                tank->active = false;
+                add_score(game, TANK_SCORE);
+                sound_play(game, SOUND_ENEMY_EXPLODE);
                 break;
             }
         }
@@ -564,6 +968,7 @@ static void handle_player_death(Game *game) {
     if (game->lives <= 0) {
         game->mode = GAME_MODE_GAME_OVER;
         memset(game->bullets, 0, sizeof(game->bullets));
+        memset(game->projectiles, 0, sizeof(game->projectiles));
     } else {
         world_reset_player(game);
     }
@@ -572,6 +977,14 @@ static void handle_player_death(Game *game) {
 static void resolve_player_death_collisions(Game *game) {
     if (game->player_invulnerable_timer > 0.0f) {
         return;
+    }
+
+    for (int i = 0; i < MAX_PROJECTILES; i++) {
+        EnemyProjectile *projectile = &game->projectiles[i];
+        if (projectile->active && circles_overlap(game->player_position, game->player_radius, projectile->position, projectile->radius)) {
+            handle_player_death(game);
+            return;
+        }
     }
 
     for (int i = 0; i < MAX_ELECTRODES; i++) {
@@ -590,6 +1003,38 @@ static void resolve_player_death_collisions(Game *game) {
         }
     }
 
+    for (int i = 0; i < MAX_SPHEROIDS; i++) {
+        Spheroid *spheroid = &game->spheroids[i];
+        if (spheroid->active && circles_overlap(game->player_position, game->player_radius, spheroid->position, spheroid->radius)) {
+            handle_player_death(game);
+            return;
+        }
+    }
+
+    for (int i = 0; i < MAX_ENFORCERS; i++) {
+        Enforcer *enforcer = &game->enforcers[i];
+        if (enforcer->active && circles_overlap(game->player_position, game->player_radius, enforcer->position, enforcer->radius)) {
+            handle_player_death(game);
+            return;
+        }
+    }
+
+    for (int i = 0; i < MAX_QUARKS; i++) {
+        Quark *quark = &game->quarks[i];
+        if (quark->active && circles_overlap(game->player_position, game->player_radius, quark->position, quark->radius)) {
+            handle_player_death(game);
+            return;
+        }
+    }
+
+    for (int i = 0; i < MAX_TANKS; i++) {
+        Tank *tank = &game->tanks[i];
+        if (tank->active && circles_overlap(game->player_position, game->player_radius, tank->position, tank->radius)) {
+            handle_player_death(game);
+            return;
+        }
+    }
+
     for (int i = 0; i < MAX_GRUNTS; i++) {
         Grunt *grunt = &game->grunts[i];
         if (grunt->active && circles_overlap(game->player_position, game->player_radius, grunt->position, grunt->radius)) {
@@ -603,13 +1048,19 @@ void world_update_playing(Game *game, float dt) {
     update_player_and_bullets(game, dt);
     update_humans(game, dt);
     update_grunts_and_hulks(game, dt);
+    update_spawners_and_shooters(game, dt);
+    update_projectiles(game, dt);
     update_electrodes_and_float_text(game, dt);
 
     resolve_bullet_collisions(game);
     resolve_human_collisions(game);
     resolve_grunt_electrode_collisions(game);
 
-    if (world_count_active_grunts(game) == 0) {
+    if (world_count_active_grunts(game) == 0 &&
+        world_count_active_spheroids(game) == 0 &&
+        world_count_active_enforcers(game) == 0 &&
+        world_count_active_quarks(game) == 0 &&
+        world_count_active_tanks(game) == 0) {
         sound_play(game, SOUND_WAVE_CLEAR);
         game->screen_flash = 0.12f;
         game->wave++;
@@ -705,6 +1156,71 @@ void world_draw_playfield(Game *game) {
         }
     }
 
+    for (int i = 0; i < MAX_SPHEROIDS; i++) {
+        Spheroid spheroid = game->spheroids[i];
+        if (!spheroid.active) continue;
+
+        float pulse = 0.5f + 0.5f * sinf(GetTime() * 5.0f + (float)i);
+        DrawCircleV(spheroid.position, spheroid.radius + 8.0f + pulse * 2.0f, (Color){ 70, 115, 255, 65 });
+        if (texture_is_ready(game, TEXTURE_SPHEROID)) {
+            draw_texture_centered(game, TEXTURE_SPHEROID, spheroid.position, 40.0f, WHITE);
+        } else {
+            DrawCircleLines((int)spheroid.position.x, (int)spheroid.position.y, spheroid.radius + 3.0f, BLUE);
+            DrawCircleV(spheroid.position, spheroid.radius, (Color){ 64, 95, 240, 255 });
+            DrawCircleV(spheroid.position, spheroid.radius * 0.45f, BLACK);
+        }
+    }
+
+    for (int i = 0; i < MAX_ENFORCERS; i++) {
+        Enforcer enforcer = game->enforcers[i];
+        if (!enforcer.active) continue;
+
+        DrawCircleV(enforcer.position, enforcer.radius + 7.0f, (Color){ 68, 200, 255, 60 });
+        if (texture_is_ready(game, TEXTURE_ENFORCER)) {
+            draw_texture_centered(game, TEXTURE_ENFORCER, enforcer.position, 36.0f, WHITE);
+        } else {
+            DrawPoly(enforcer.position, 3, enforcer.radius + 4.0f, 90.0f, SKYBLUE);
+            DrawPoly(enforcer.position, 3, enforcer.radius - 2.0f, 90.0f, DARKBLUE);
+            DrawCircleV(enforcer.position, 4.0f, RAYWHITE);
+        }
+    }
+
+    for (int i = 0; i < MAX_QUARKS; i++) {
+        Quark quark = game->quarks[i];
+        if (!quark.active) continue;
+
+        float pulse = 0.5f + 0.5f * sinf(GetTime() * 4.0f + (float)i);
+        DrawCircleV(quark.position, quark.radius + 8.0f + pulse * 2.0f, (Color){ 245, 245, 245, 60 });
+        if (texture_is_ready(game, TEXTURE_QUARK)) {
+            draw_texture_centered(game, TEXTURE_QUARK, quark.position, 40.0f, WHITE);
+        } else {
+            DrawRectanglePro((Rectangle){ quark.position.x, quark.position.y, 30.0f, 30.0f },
+                (Vector2){ 15.0f, 15.0f }, 45.0f, RAYWHITE);
+            DrawRectanglePro((Rectangle){ quark.position.x, quark.position.y, 16.0f, 16.0f },
+                (Vector2){ 8.0f, 8.0f }, 45.0f, BLACK);
+        }
+    }
+
+    for (int i = 0; i < MAX_TANKS; i++) {
+        Tank tank = game->tanks[i];
+        if (!tank.active) continue;
+
+        DrawCircleV(tank.position, tank.radius + 7.0f, (Color){ 255, 64, 42, 60 });
+        if (texture_is_ready(game, TEXTURE_TANK)) {
+            draw_texture_centered(game, TEXTURE_TANK, tank.position, 42.0f, WHITE);
+        } else {
+            DrawRectangle((int)(tank.position.x - 15.0f), (int)(tank.position.y - 12.0f), 30, 24, MAROON);
+            DrawRectangle((int)(tank.position.x - 9.0f), (int)(tank.position.y - 7.0f), 18, 14, RED);
+            Vector2 barrel = tank.velocity;
+            if (barrel.x == 0.0f && barrel.y == 0.0f) {
+                barrel = (Vector2){ 0.0f, -1.0f };
+            } else {
+                barrel = Vector2Normalize(barrel);
+            }
+            DrawLineEx(tank.position, Vector2Add(tank.position, Vector2Scale(barrel, 22.0f)), 4.0f, ORANGE);
+        }
+    }
+
     for (int i = 0; i < MAX_GRUNTS; i++) {
         Grunt grunt = game->grunts[i];
         if (!grunt.active) continue;
@@ -716,6 +1232,21 @@ void world_draw_playfield(Game *game) {
             DrawCircleV(grunt.position, grunt.radius, (Color){ 230, 40, 72, 255 });
             DrawCircleV((Vector2){ grunt.position.x - 4.0f, grunt.position.y - 3.0f }, 3.0f, BLACK);
             DrawCircleV((Vector2){ grunt.position.x + 4.0f, grunt.position.y - 3.0f }, 3.0f, BLACK);
+        }
+    }
+
+    for (int i = 0; i < MAX_PROJECTILES; i++) {
+        EnemyProjectile projectile = game->projectiles[i];
+        if (!projectile.active) continue;
+
+        if (projectile.type == PROJECTILE_SHELL) {
+            DrawCircleV(projectile.position, projectile.radius + 4.0f, (Color){ 255, 132, 24, 75 });
+            DrawCircleV(projectile.position, projectile.radius, ORANGE);
+            DrawCircleLines((int)projectile.position.x, (int)projectile.position.y, projectile.radius + 2.0f, RED);
+        } else {
+            DrawCircleV(projectile.position, projectile.radius + 4.0f, (Color){ 70, 210, 255, 75 });
+            DrawCircleV(projectile.position, projectile.radius, SKYBLUE);
+            DrawCircleV(projectile.position, projectile.radius * 0.45f, RAYWHITE);
         }
     }
 

@@ -9,6 +9,11 @@ void world_update_playing(Game *game, float dt);
 void world_draw_playfield(Game *game);
 
 int world_count_active_grunts(Game *game);
+int world_count_active_spheroids(Game *game);
+int world_count_active_enforcers(Game *game);
+int world_count_active_quarks(Game *game);
+int world_count_active_tanks(Game *game);
+int world_count_active_projectiles(Game *game);
 int world_count_active_humans(Game *game);
 int world_count_active_hulks(Game *game);
 int world_count_active_electrodes(Game *game);
