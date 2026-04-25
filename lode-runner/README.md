@@ -20,18 +20,21 @@ The executable lands at `build/template/Debug/template.exe`. Assets are copied t
 
 **Module dependency rule (one direction only):**
 ```
+main.c ──> game.c, render.c, sounds.c, textures.c
 game.c ──> player.c, guard.c, world.c, input.c, particles.c, sounds.c
+render.c ──> game.h, player.h, guard.h, particles.c, textures.h
 player.c ──> world.c, input.c
 guard.c ──> world.c (reads Player as const for tile position)
 input.c ──> (standalone, no game dependencies)
 ```
 
-`player.c` and `guard.c` do NOT know about each other, `RunStats`, or `ScreenID`. They report what happened via POD return structs (`PlayerTickResult`, `GuardTickResult`), and `game.c` is the sole writer of score/lives/screen state.
+`player.c` and `guard.c` do NOT know about each other or `ScreenID`. They report what happened via POD return structs (`PlayerTickResult`, `GuardTickResult`), and `game.c` is the sole writer of score/lives/screen state. Rendering is fully separated in `render.c`.
 
 **Key design patterns:**
 - **Tile-based movement with continuous interpolation**: actors are always resting on a tile or traversing between two adjacent tiles. `Actor.t` interpolates 0→1; input/AI re-evaluate only on tile arrival.
-- **Single source of truth for tiles**: all movement queries go through `world_tile_is_support()` and `world_tile_is_passable()` — no scattered tile checks.
-- **No dynamic allocation in game_update/game_draw**: particles use a fixed pool (`MAX_PARTICLES`), guards use a fixed array (`MAX_GUARDS`). Heap allocation is only in init (texture generation, sound loading).
+- **Shared tile/actor queries**: movement predicates (`world_can_enter`, `world_has_support`, etc.) live in `world.h`; actor utilities (`actor_is_resting`, `actor_pixel_position`) live in `player.h`. No duplication across modules.
+- **No dynamic allocation in the game loop**: particles use a fixed pool (`MAX_PARTICLES`), guards use a fixed array (`MAX_GUARDS`). Heap allocation is only in init (texture/sound loading).
+- **Sprite-based rendering**: tiles and actors are drawn from 36×36 PNG sprites (SVG sources in `src/assets/svg/`). Animated effects (gold sparkle, hole warnings, exit reveal) are overlaid procedurally.
 - **Procedural sound fallback**: `sounds.c` generates sine-wave tones at init when WAV files are missing. Existing WAV files take priority.
 
 **Guard AI**: BFS flood-fill from player tile builds a pursuit table (`PursuitDir[GRID_ROWS][GRID_COLS]`). Guards score candidate directions using pursuit match (+100), vertical/horizontal bias, stacking penalty (-15), and per-guard jitter. Table is rebuilt when the player commits a new tile or holes open/close.
@@ -81,12 +84,14 @@ The number of `G` tiles determines the guard count for that level. At least one 
 
 ## Visual and audio
 
-- Bloom glow and pulsing sparkles on gold
+- **Sprite-based rendering**: all tiles and actors use 36×36 PNG sprites (SVG sources in `src/assets/svg/`, converted via Inkscape)
+- Pulsing sparkle overlay on gold sprites
 - Dig dust particles with additive blending
-- Exit ladder fade-in when all gold is collected
+- Exit ladder sprite fade-in when all gold is collected
 - Camera shake on player death
-- Scrolling parallax cave-wall background
+- Scrolling parallax cave-wall background (procedurally generated)
 - Brick refill warning: orange pulse at 1.5s remaining, red flash at 0.5s
+- Player and guard sprites flip horizontally based on facing direction, tinted by state
 - Procedurally generated sound effects as fallback when WAV files are missing
 
 ## Scoring
