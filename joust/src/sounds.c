@@ -1,7 +1,17 @@
 #include "sounds.h"
 
 static const char *sound_files[SOUND_COUNT] = {
-    [SOUND_COIN] = "assets/coin.wav",
+    [SOUND_FLAP] = "assets/flap.wav",
+    [SOUND_JOUST_WIN] = "assets/joust_win.wav",
+    [SOUND_JOUST_BOUNCE] = "assets/joust_bounce.wav",
+    [SOUND_EGG_COLLECT] = "assets/egg_collect.wav",
+    [SOUND_EGG_HATCH] = "assets/egg_hatch.wav",
+    [SOUND_PLAYER_DIE] = "assets/player_die.wav",
+    [SOUND_WAVE_CLEAR] = "assets/wave_clear.wav",
+    [SOUND_START] = "assets/start.wav",
+    [SOUND_LAVA] = "assets/lava.wav",
+    [SOUND_PREDATOR] = "assets/predator.wav",
+    [SOUND_PAUSE] = "assets/pause.wav",
 };
 
 void sounds_load(Game *game) {
