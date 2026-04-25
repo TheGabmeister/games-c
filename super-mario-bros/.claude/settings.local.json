@@ -34,10 +34,13 @@
       "Bash(\"D:/rfxgen_v5.0_win_x64/rfxgen.exe\" -g blip -o c:/dev/games-c/super-mario-bros/src/resources/pipe.wav)",
       "Bash(\"D:/rfxgen_v5.0_win_x64/rfxgen.exe\" -g explosion -o c:/dev/games-c/super-mario-bros/src/resources/bowser_fall.wav)",
       "Bash(./build/super_mario_bros/Debug/super_mario_bros)",
-      "Bash(taskkill //f //im super_mario_bros.exe)"
+      "Bash(taskkill //f //im super_mario_bros.exe)",
+      "Bash(mkdir -p c:/dev/games-c/super-mario-bros/build/super_mario_bros/Debug/resources/levels)",
+      "Bash(./super_mario_bros)"
     ],
     "additionalDirectories": [
-      "C:\\dev\\games-c\\super-mario-bros\\src\\resources"
+      "C:\\dev\\games-c\\super-mario-bros\\src\\resources",
+      "c:\\dev\\games-c\\super-mario-bros\\build\\super_mario_bros\\Debug\\resources\\levels"
     ]
   }
 }

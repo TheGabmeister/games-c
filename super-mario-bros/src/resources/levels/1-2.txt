@@ -1,0 +1,57 @@
+type underground
+bg 0 0 0
+
+tiles
+HHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHH....................HHHH..........................HHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHH
+HHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHH....................HHHH..........................HHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHH
+..........................................................................................................HHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHH............................................
+........................................................................................................................................................................................................
+........................................................................................................................................................................................................
+....BBBBBBBBBBB.....BBBBBBBBBBB.....BBBBBBB.............QQQ................QQ.....BBBBB.....QBB.............................................BBBBBBBBBBBBBBBB............................................
+............................................................................................................................................BBBBBBBBBBBBBBBB............................................
+............................................................................................................................................BBBBBBBBBBBBBBBB............................................
+........................................................................................................................................................................................................
+........Q.BBQB..........QQBB.............Q.............BBBBB..............BBBBB...........BBBBBBBBB..........H..........................................................................................
+..................................[]........................................................................HH..........................................................................................
+................[]................{}..............[]..................[]...................................HHH.........................[]......[]......[].......[]......................................
+................{}................{}..............{}..................{}..................................HHHH.........................{}......{}......{}.......{}......................................
+GGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGG..GGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGG..GGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGG
+GGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGG..GGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGG..GGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGG
+
+blocks
+8 9 coin
+12 9 mushroom
+24 9 coin
+25 9 coin
+41 9 starman
+56 5 coin
+57 5 coin
+58 5 coin
+75 5 coin
+76 5 coin
+92 5 mushroom
+
+spawns
+34 10 piranha
+50 11 piranha
+70 11 piranha
+18 12 goomba
+22 12 goomba
+23 12 goomba
+38 12 goomba
+44 12 goomba
+45 12 goomba
+55 8 goomba
+64 12 goomba
+65 12 goomba
+80 12 koopa
+95 12 goomba
+96 12 goomba
+102 12 goomba
+
+warps
+16 11 1 2 142 11
+160 11 1 3 3 11
+135 11 2 1 3 11
+143 11 3 1 3 11
+151 11 4 1 3 11
