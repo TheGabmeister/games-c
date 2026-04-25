@@ -55,6 +55,9 @@
 #define MAX_FLOAT_TEXT      48
 #define FLOAT_TEXT_LIFETIME 0.85f
 
+// --- Particles ---
+#define MAX_PARTICLES       360
+
 // --- Waves ---
 #define WAVE_START_GRUNTS   18
 #define WAVE_GRUNT_STEP     6
@@ -62,9 +65,27 @@
 #define EXTRA_LIFE_SCORE    25000
 
 typedef enum SoundID {
-    SOUND_COIN = 0,
+    SOUND_START = 0,
+    SOUND_PLAYER_SHOOT,
+    SOUND_ENEMY_EXPLODE,
+    SOUND_PLAYER_DIE,
+    SOUND_HUMAN_RESCUE,
+    SOUND_EXTRA_LIFE,
+    SOUND_WAVE_CLEAR,
+    SOUND_HULK_HIT,
     SOUND_COUNT
 } SoundID;
+
+typedef enum TextureID {
+    TEXTURE_PLAYER = 0,
+    TEXTURE_GRUNT,
+    TEXTURE_HULK,
+    TEXTURE_HUMAN_MOMMY,
+    TEXTURE_HUMAN_DADDY,
+    TEXTURE_HUMAN_MIKEY,
+    TEXTURE_ELECTRODE,
+    TEXTURE_COUNT
+} TextureID;
 
 typedef enum GameMode {
     GAME_MODE_TITLE = 0,
@@ -113,6 +134,16 @@ typedef struct FloatText {
     Color color;
 } FloatText;
 
+typedef struct Particle {
+    bool active;
+    Vector2 position;
+    Vector2 velocity;
+    float radius;
+    float lifetime;
+    float max_lifetime;
+    Color color;
+} Particle;
+
 typedef struct Electrode {
     bool active;
     Vector2 position;
@@ -143,7 +174,13 @@ typedef struct Game {
     Human humans[MAX_HUMANS];
     Electrode electrodes[MAX_ELECTRODES];
     FloatText float_text[MAX_FLOAT_TEXT];
+    Particle particles[MAX_PARTICLES];
 
+    float screen_shake;
+    float screen_flash;
+
+    Texture2D textures[TEXTURE_COUNT];
+    bool textures_loaded;
     Sound sounds[SOUND_COUNT];
     bool sounds_loaded;
 } Game;

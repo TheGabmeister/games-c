@@ -1,4 +1,6 @@
 #include "world.h"
+#include "sounds.h"
+#include "textures.h"
 #include "raymath.h"
 #include <math.h>
 
@@ -56,6 +58,26 @@ static void add_float_text(Game *game, Vector2 position, int value, Color color)
     }
 }
 
+static void add_particles(Game *game, Vector2 position, Color color, int count, float speed, float radius) {
+    for (int n = 0; n < count; n++) {
+        for (int i = 0; i < MAX_PARTICLES; i++) {
+            Particle *particle = &game->particles[i];
+            if (!particle->active) {
+                float angle = (float)GetRandomValue(0, 628) / 100.0f;
+                float force = speed * (float)GetRandomValue(45, 100) / 100.0f;
+                particle->active = true;
+                particle->position = position;
+                particle->velocity = (Vector2){ cosf(angle) * force, sinf(angle) * force };
+                particle->radius = radius * (float)GetRandomValue(60, 120) / 100.0f;
+                particle->lifetime = (float)GetRandomValue(25, 55) / 100.0f;
+                particle->max_lifetime = particle->lifetime;
+                particle->color = color;
+                break;
+            }
+        }
+    }
+}
+
 static void add_score(Game *game, int value) {
     game->score += value;
     if (game->score > game->high_score) {
@@ -66,6 +88,7 @@ static void add_score(Game *game, int value) {
         game->lives++;
         game->next_extra_life_score += EXTRA_LIFE_SCORE;
         add_float_text(game, (Vector2){ game->player_position.x, game->player_position.y - 28.0f }, 0, GREEN);
+        sound_play(game, SOUND_EXTRA_LIFE);
     }
 }
 
@@ -84,6 +107,7 @@ static void clear_wave_entities(Game *game) {
     memset(game->humans, 0, sizeof(game->humans));
     memset(game->electrodes, 0, sizeof(game->electrodes));
     memset(game->float_text, 0, sizeof(game->float_text));
+    memset(game->particles, 0, sizeof(game->particles));
 }
 
 static Vector2 random_edge_position(float margin) {
@@ -256,6 +280,7 @@ static void spawn_bullet(Game *game, Vector2 direction) {
             bullet->position = game->player_position;
             bullet->velocity = Vector2Scale(direction, BULLET_SPEED);
             bullet->lifetime = BULLET_LIFETIME;
+            sound_play(game, SOUND_PLAYER_SHOOT);
             return;
         }
     }
@@ -408,6 +433,20 @@ static void update_electrodes_and_float_text(Game *game, float dt) {
             text->active = false;
         }
     }
+
+    for (int i = 0; i < MAX_PARTICLES; i++) {
+        Particle *particle = &game->particles[i];
+        if (!particle->active) continue;
+
+        particle->position.x += particle->velocity.x * dt;
+        particle->position.y += particle->velocity.y * dt;
+        particle->velocity = Vector2Scale(particle->velocity, 0.92f);
+        particle->lifetime -= dt;
+        if (particle->lifetime <= 0.0f) {
+            particle->active = false;
+        }
+    }
+
 }
 
 static void resolve_bullet_collisions(Game *game) {
@@ -420,8 +459,10 @@ static void resolve_bullet_collisions(Game *game) {
             if (!electrode->active) continue;
 
             if (circles_overlap(bullet->position, BULLET_RADIUS, electrode->position, electrode->radius)) {
+                add_particles(game, electrode->position, YELLOW, 8, 160.0f, 3.0f);
                 bullet->active = false;
                 electrode->active = false;
+                sound_play(game, SOUND_ENEMY_EXPLODE);
                 break;
             }
         }
@@ -441,6 +482,8 @@ static void resolve_bullet_collisions(Game *game) {
                 hulk->position.y = Clamp(hulk->position.y, hulk->radius, WINDOW_HEIGHT - hulk->radius);
                 hulk->stun_timer = HULK_STUN_TIME;
                 bullet->active = false;
+                add_particles(game, hulk->position, LIME, 5, 105.0f, 2.5f);
+                sound_play(game, SOUND_HULK_HIT);
                 break;
             }
         }
@@ -451,9 +494,11 @@ static void resolve_bullet_collisions(Game *game) {
             if (!grunt->active) continue;
 
             if (circles_overlap(bullet->position, BULLET_RADIUS, grunt->position, grunt->radius)) {
+                add_particles(game, grunt->position, RED, 10, 180.0f, 3.0f);
                 bullet->active = false;
                 grunt->active = false;
                 add_score(game, GRUNT_SCORE);
+                sound_play(game, SOUND_ENEMY_EXPLODE);
                 break;
             }
         }
@@ -471,6 +516,8 @@ static void resolve_human_collisions(Game *game) {
             game->humans_rescued_this_wave++;
             add_score(game, rescue_score);
             add_float_text(game, human->position, rescue_score, GOLD);
+            add_particles(game, human->position, GOLD, 8, 120.0f, 2.5f);
+            sound_play(game, SOUND_HUMAN_RESCUE);
         }
     }
 
@@ -483,6 +530,7 @@ static void resolve_human_collisions(Game *game) {
             if (!human->active) continue;
 
             if (circles_overlap(hulk->position, hulk->radius, human->position, human->radius)) {
+                add_particles(game, human->position, ORANGE, 6, 110.0f, 2.0f);
                 human->active = false;
             }
         }
@@ -499,6 +547,7 @@ static void resolve_grunt_electrode_collisions(Game *game) {
             if (!electrode->active) continue;
 
             if (circles_overlap(grunt->position, grunt->radius, electrode->position, electrode->radius)) {
+                add_particles(game, grunt->position, RED, 7, 150.0f, 2.5f);
                 grunt->active = false;
                 break;
             }
@@ -507,6 +556,10 @@ static void resolve_grunt_electrode_collisions(Game *game) {
 }
 
 static void handle_player_death(Game *game) {
+    add_particles(game, game->player_position, SKYBLUE, 18, 230.0f, 3.0f);
+    game->screen_shake = 0.28f;
+    game->screen_flash = 0.18f;
+    sound_play(game, SOUND_PLAYER_DIE);
     game->lives--;
     if (game->lives <= 0) {
         game->mode = GAME_MODE_GAME_OVER;
@@ -557,6 +610,8 @@ void world_update_playing(Game *game, float dt) {
     resolve_grunt_electrode_collisions(game);
 
     if (world_count_active_grunts(game) == 0) {
+        sound_play(game, SOUND_WAVE_CLEAR);
+        game->screen_flash = 0.12f;
         game->wave++;
         world_spawn_wave(game);
         return;
@@ -578,6 +633,18 @@ static void draw_arena_grid(void) {
     }
 }
 
+static void draw_texture_centered(Game *game, TextureID id, Vector2 position, float size, Color tint) {
+    if (!texture_is_ready(game, id)) {
+        return;
+    }
+
+    Texture2D texture = game->textures[id];
+    Rectangle source = { 0.0f, 0.0f, (float)texture.width, (float)texture.height };
+    Rectangle dest = { position.x, position.y, size, size };
+    Vector2 origin = { size * 0.5f, size * 0.5f };
+    DrawTexturePro(texture, source, dest, origin, 0.0f, tint);
+}
+
 void world_draw_playfield(Game *game) {
     draw_arena_grid();
 
@@ -588,11 +655,15 @@ void world_draw_playfield(Game *game) {
         float pulse = 0.5f + 0.5f * sinf(electrode.pulse);
         Color glow = (Color){ 255, 190, 42, (unsigned char)(70 + pulse * 70) };
         DrawCircleV(electrode.position, electrode.radius + 7.0f + pulse * 3.0f, glow);
-        DrawCircleLines((int)electrode.position.x, (int)electrode.position.y, electrode.radius + 5.0f, ORANGE);
-        DrawLineEx((Vector2){ electrode.position.x - 11.0f, electrode.position.y },
-            (Vector2){ electrode.position.x + 11.0f, electrode.position.y }, 4.0f, YELLOW);
-        DrawLineEx((Vector2){ electrode.position.x, electrode.position.y - 11.0f },
-            (Vector2){ electrode.position.x, electrode.position.y + 11.0f }, 4.0f, YELLOW);
+        if (texture_is_ready(game, TEXTURE_ELECTRODE)) {
+            draw_texture_centered(game, TEXTURE_ELECTRODE, electrode.position, 34.0f + pulse * 3.0f, WHITE);
+        } else {
+            DrawCircleLines((int)electrode.position.x, (int)electrode.position.y, electrode.radius + 5.0f, ORANGE);
+            DrawLineEx((Vector2){ electrode.position.x - 11.0f, electrode.position.y },
+                (Vector2){ electrode.position.x + 11.0f, electrode.position.y }, 4.0f, YELLOW);
+            DrawLineEx((Vector2){ electrode.position.x, electrode.position.y - 11.0f },
+                (Vector2){ electrode.position.x, electrode.position.y + 11.0f }, 4.0f, YELLOW);
+        }
     }
 
     for (int i = 0; i < MAX_HUMANS; i++) {
@@ -600,12 +671,22 @@ void world_draw_playfield(Game *game) {
         if (!human.active) continue;
 
         Color color = GOLD;
-        if (human.type == 1) color = ORANGE;
-        else if (human.type == 2) color = LIME;
+        TextureID texture_id = TEXTURE_HUMAN_MOMMY;
+        if (human.type == 1) {
+            color = ORANGE;
+            texture_id = TEXTURE_HUMAN_DADDY;
+        } else if (human.type == 2) {
+            color = LIME;
+            texture_id = TEXTURE_HUMAN_MIKEY;
+        }
 
         DrawCircleV(human.position, human.radius + 5.0f, Fade(color, 0.35f));
-        DrawCircleV(human.position, human.radius, color);
-        DrawCircleV((Vector2){ human.position.x, human.position.y - 3.0f }, 3.0f, RAYWHITE);
+        if (texture_is_ready(game, texture_id)) {
+            draw_texture_centered(game, texture_id, human.position, 28.0f, WHITE);
+        } else {
+            DrawCircleV(human.position, human.radius, color);
+            DrawCircleV((Vector2){ human.position.x, human.position.y - 3.0f }, 3.0f, RAYWHITE);
+        }
     }
 
     for (int i = 0; i < MAX_HULKS; i++) {
@@ -613,8 +694,12 @@ void world_draw_playfield(Game *game) {
         if (!hulk.active) continue;
 
         DrawCircleV(hulk.position, hulk.radius + 6.0f, (Color){ 60, 255, 120, 70 });
-        DrawCircleV(hulk.position, hulk.radius, (Color){ 38, 176, 82, 255 });
-        DrawRectangle((int)(hulk.position.x - 12.0f), (int)(hulk.position.y - 8.0f), 24, 10, DARKGREEN);
+        if (texture_is_ready(game, TEXTURE_HULK)) {
+            draw_texture_centered(game, TEXTURE_HULK, hulk.position, 52.0f, WHITE);
+        } else {
+            DrawCircleV(hulk.position, hulk.radius, (Color){ 38, 176, 82, 255 });
+            DrawRectangle((int)(hulk.position.x - 12.0f), (int)(hulk.position.y - 8.0f), 24, 10, DARKGREEN);
+        }
         if (hulk.stun_timer > 0.0f) {
             DrawCircleLines((int)hulk.position.x, (int)hulk.position.y, hulk.radius + 10.0f, RAYWHITE);
         }
@@ -625,9 +710,13 @@ void world_draw_playfield(Game *game) {
         if (!grunt.active) continue;
 
         DrawCircleV(grunt.position, grunt.radius + 5.0f, (Color){ 255, 62, 103, 65 });
-        DrawCircleV(grunt.position, grunt.radius, (Color){ 230, 40, 72, 255 });
-        DrawCircleV((Vector2){ grunt.position.x - 4.0f, grunt.position.y - 3.0f }, 3.0f, BLACK);
-        DrawCircleV((Vector2){ grunt.position.x + 4.0f, grunt.position.y - 3.0f }, 3.0f, BLACK);
+        if (texture_is_ready(game, TEXTURE_GRUNT)) {
+            draw_texture_centered(game, TEXTURE_GRUNT, grunt.position, 34.0f, WHITE);
+        } else {
+            DrawCircleV(grunt.position, grunt.radius, (Color){ 230, 40, 72, 255 });
+            DrawCircleV((Vector2){ grunt.position.x - 4.0f, grunt.position.y - 3.0f }, 3.0f, BLACK);
+            DrawCircleV((Vector2){ grunt.position.x + 4.0f, grunt.position.y - 3.0f }, 3.0f, BLACK);
+        }
     }
 
     for (int i = 0; i < MAX_BULLETS; i++) {
@@ -641,8 +730,20 @@ void world_draw_playfield(Game *game) {
     bool blink_off = game->player_invulnerable_timer > 0.0f && ((int)(game->player_invulnerable_timer * 12.0f) % 2) == 0;
     if (!blink_off || game->mode != GAME_MODE_PLAYING) {
         DrawCircleV(game->player_position, game->player_radius + 6.0f, (Color){ 77, 214, 255, 80 });
-        DrawCircleV(game->player_position, game->player_radius, game->player_color);
-        DrawCircleV(game->player_position, 4.0f, RAYWHITE);
+        if (texture_is_ready(game, TEXTURE_PLAYER)) {
+            draw_texture_centered(game, TEXTURE_PLAYER, game->player_position, 36.0f, WHITE);
+        } else {
+            DrawCircleV(game->player_position, game->player_radius, game->player_color);
+            DrawCircleV(game->player_position, 4.0f, RAYWHITE);
+        }
+    }
+
+    for (int i = 0; i < MAX_PARTICLES; i++) {
+        Particle particle = game->particles[i];
+        if (!particle.active) continue;
+
+        float alpha = Clamp(particle.lifetime / particle.max_lifetime, 0.0f, 1.0f);
+        DrawCircleV(particle.position, particle.radius, Fade(particle.color, alpha));
     }
 
     for (int i = 0; i < MAX_FLOAT_TEXT; i++) {

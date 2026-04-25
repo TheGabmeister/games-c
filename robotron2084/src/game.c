@@ -1,4 +1,5 @@
 #include "game.h"
+#include "sounds.h"
 #include "world.h"
 
 static void start_new_game(Game *game) {
@@ -8,6 +9,7 @@ static void start_new_game(Game *game) {
     game->next_extra_life_score = EXTRA_LIFE_SCORE;
     game->humans_rescued_this_wave = 0;
     game->mode = GAME_MODE_PLAYING;
+    sound_play(game, SOUND_START);
     world_spawn_wave(game);
 }
 
@@ -25,6 +27,14 @@ void game_init(Game *game) {
 
 void game_update(Game *game) {
     float dt = GetFrameTime();
+
+    if (game->screen_shake > 0.0f) {
+        game->screen_shake -= dt;
+    }
+
+    if (game->screen_flash > 0.0f) {
+        game->screen_flash -= dt;
+    }
 
     if ((game->mode == GAME_MODE_TITLE || game->mode == GAME_MODE_GAME_OVER) && IsKeyPressed(KEY_ENTER)) {
         start_new_game(game);
@@ -60,7 +70,23 @@ void game_draw(Game *game) {
     BeginDrawing();
     ClearBackground((Color){ 10, 12, 18, 255 });
 
+    Vector2 shake = { 0.0f, 0.0f };
+    if (game->screen_shake > 0.0f) {
+        float amount = 10.0f * (game->screen_shake / 0.28f);
+        shake.x = (float)GetRandomValue(-(int)amount, (int)amount);
+        shake.y = (float)GetRandomValue(-(int)amount, (int)amount);
+    }
+
+    Camera2D camera = { 0 };
+    camera.offset = shake;
+    camera.target = (Vector2){ 0.0f, 0.0f };
+    camera.rotation = 0.0f;
+    camera.zoom = 1.0f;
+
+    BeginMode2D(camera);
     world_draw_playfield(game);
+    EndMode2D();
+
     draw_overlay(game);
 
     if (game->mode == GAME_MODE_TITLE) {
@@ -76,6 +102,11 @@ void game_draw(Game *game) {
         DrawText("GAME OVER", 460, 390, 48, RAYWHITE);
         DrawText(TextFormat("Final score: %d", game->score), 500, 445, 24, LIGHTGRAY);
         DrawText("Press Enter", 520, 485, 24, SKYBLUE);
+    }
+
+    if (game->screen_flash > 0.0f) {
+        float alpha = Clamp(game->screen_flash / 0.18f, 0.0f, 1.0f);
+        DrawRectangle(0, 0, WINDOW_WIDTH, WINDOW_HEIGHT, Fade(RAYWHITE, alpha * 0.22f));
     }
 
     EndDrawing();
