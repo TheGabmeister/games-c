@@ -69,6 +69,58 @@ Modern quality-of-life targets:
 - Optional restart/continue from dungeon entrance after defeat.
 - Save and continue support for player progress.
 
+## Movement and Collision Model
+
+Screen and tile geometry:
+
+- Logical resolution: 256x240 pixels, matching the NES aspect ratio. The
+  renderer scales this uniformly to fill the window, letterboxing if needed.
+- Tile size: 16x16 logical pixels.
+- HUD: top strip, 256x56 pixels (16 tiles wide, 3.5 tiles tall). Displays
+  hearts, rupees, bombs, keys, equipped item, and dungeon map indicator.
+- Play area: 256x176 pixels (16 tiles wide, 11 tiles tall). This is one
+  screen of the overworld or one room of a dungeon.
+- Player sprite: 16x16 pixels (one tile). The player's hitbox matches the
+  sprite.
+- Overworld: 16x8 grid of screens. Each screen is 16x11 playable tiles.
+  Total overworld tile area: 256x88 tiles.
+- Dungeon rooms: same 16x11 tile dimensions as overworld screens. Dungeon
+  layouts are grids of rooms (up to 8x8 rooms per dungeon).
+
+Movement:
+
+- The world is built on a tile grid. The player always occupies exactly one
+  tile and cannot stop between tiles.
+- Pressing a direction begins a smooth slide to the adjacent tile center.
+  The slide is purely visual — the player's logical tile changes at the start
+  of the move, and the sprite catches up over a short duration.
+- Movement speed is measured in tiles per second. Base speed should feel brisk
+  but readable — roughly four to five tiles per second.
+- Only one direction at a time. Pressing a new direction while sliding queues
+  it and executes when the current slide finishes.
+- Facing updates immediately on input, even if movement is blocked by a wall
+  or obstacle.
+
+Collision:
+
+- Tile collision (walls, water, pits) uses the logical tile grid. A tile is
+  passable or impassable. The player cannot enter impassable tiles. Logical
+  tile position is only used for terrain checks.
+- Combat collision (sword, projectiles, enemy contact) uses hitbox overlap on
+  actual sprite positions, not tile occupancy. This applies to all damage
+  sources including contact damage — an enemy and player moving toward each
+  other take contact damage when their sprites overlap, not when their
+  logical tiles match.
+- The sword hitbox is a rectangle extending from the player's sprite in the
+  facing direction. It is active for a fixed number of frames per swing.
+- Enemy hitboxes are rectangles matching their sprite bounds. Contact damage
+  occurs when the player's hitbox overlaps an enemy's hitbox.
+- Projectile hitboxes are small rectangles that travel in a straight line and
+  check overlap each frame.
+- Knockback from damage pushes the player or enemy a fixed distance in the
+  hit direction, ignoring the tile grid for the slide but snapping back to
+  the nearest valid tile center when the knockback ends.
+
 ## Health, Damage, and Recovery
 
 - Player health is measured in heart containers. Each heart has two halves,
@@ -116,8 +168,9 @@ consumables, and quest relics.
 - Bombs: damage enemies and reveal cracked or suspicious walls.
 - Bow: fires arrows when arrows or currency are available.
 - Silver/light arrow: required to finish the final boss.
-- Candle/fire tool: lights dark rooms, burns shrubs, damages enemies.
-- Red candle/fire upgrade: reusable fire tool.
+- Candle/fire tool: lights dark rooms, burns shrubs, damages enemies. Limited
+  to one use per screen; resets on screen transition.
+- Red candle/fire upgrade: unlimited uses per screen.
 - Recorder/flute: affects sound-sensitive enemies, reveals hidden entrances,
   and may create fast-travel whirlwinds to completed dungeons.
 - Food/bait: distracts specific enemies and solves at least one dungeon gate.
@@ -135,11 +188,28 @@ consumables, and quest relics.
 
 ### Dungeon Items
 
-- Small key: opens one locked dungeon door.
-- Magic key: opens locked doors indefinitely after found.
-- Dungeon map: reveals room layout for the current dungeon.
-- Compass: marks the relic/boss objective in the current dungeon.
+- Small key: opens one locked dungeon door. Keys are global — a key found in
+  any dungeon can be used in any other dungeon. Keys are consumed on use and
+  persist through death. This allows players to stockpile keys from easier
+  dungeons.
+- Magic key: opens locked doors indefinitely after found. Replaces the need
+  for small keys entirely.
+- Dungeon map: reveals room layout for the current dungeon. Per-dungeon item;
+  each dungeon has its own map to find.
+- Compass: marks the relic/boss room in the current dungeon. Per-dungeon
+  item; each dungeon has its own compass to find.
 - Relic fragment: one of eight pieces needed to unlock the final dungeon.
+  Fragments are permanent — never lost.
+
+Door and room persistence:
+
+- Locked doors stay open permanently once unlocked (persists through death
+  and save/load).
+- Shutter doors (lock until all enemies are defeated) reset on room re-entry
+  and enemies respawn.
+- Bombable walls stay revealed permanently once bombed.
+- Pushed blocks reset on room re-entry, but any stairs they revealed remain
+  accessible.
 
 ### Currency and Drops
 
@@ -240,6 +310,62 @@ Enemy spawning:
   enemies on re-entry. Rooms cleared by pushing a block to reveal stairs do
   not respawn those enemies.
 - Boss rooms remain empty after the boss is defeated.
+
+## Tuning Defaults
+
+All values are first-pass defaults at 60 FPS. Tune from playtesting.
+
+Timing (in frames at 60 FPS):
+
+- Input buffer window: 6 frames (100ms). A sword or item press within this
+  window before the previous action ends queues the next action.
+- Sword swing active frames: 8 frames (~133ms). The hitbox is live during
+  this window.
+- Invulnerability after damage: 60 frames (1 second). Player flashes and
+  cannot take further damage.
+- Knockback duration: 8 frames. Player or enemy slides during this time.
+- Knockback distance: half a tile (8 logical pixels).
+- Boss attack tell: minimum 20 frames (~333ms) of visible windup before any
+  major attack.
+
+Damage (in half-hearts):
+
+- Basic sword: 1. Strong sword: 2. Master sword: 4. Sword beam: 1.
+- Bombs: 4.
+- Arrows: 2. Silver arrow: instant kill on final boss.
+- Boomerang: 0 (stun only). Long boomerang: 0 (longer stun).
+- Magic rod: 2. Magic rod with spell book: 2 + fire damage over time.
+
+Enemy damage tiers (contact / projectile):
+
+- Tier 1 (slime, bat, hopper): 1 / 1.
+- Tier 2 (skeleton, snake, spear thrower): 2 / 2.
+- Tier 3 (knight, mage, mountain guard): 4 / 4.
+- Bosses: 2-4 depending on the attack.
+- Blue armor halves all incoming damage. Red armor quarters it.
+
+Enemy health (in basic sword hits to kill):
+
+- Tier 1: 1 hit. Tier 2: 2 hits. Tier 3: 4 hits.
+- Mini-bosses: 8 hits. Bosses: 12-16 hits.
+
+Speeds (in tiles per second):
+
+- Player movement: 4.
+- Slow enemy (slime, mummy): 1-2.
+- Normal enemy (skeleton, snake): 2-3.
+- Fast enemy (charging snake, centipede): 5-6.
+- Player projectiles (arrow, sword beam, magic rod): 8.
+- Enemy projectiles (rocks, spears, magic): 3-4.
+- Boomerang: 6 outbound, 6 return.
+
+Drop table (kill-counter cycle, repeats every 10 kills):
+
+- Kill 1: rupee (1). Kill 2: nothing. Kill 3: rupee (1). Kill 4: heart.
+  Kill 5: rupee (1). Kill 6: nothing. Kill 7: bomb. Kill 8: heart.
+  Kill 9: rupee (5). Kill 10: nothing.
+- Every 40th kill: fairy instead of the normal drop.
+- Clock/time-freeze: replaces the rupee(5) drop once per 100 kills.
 
 ## Enemy Roster
 
@@ -388,7 +514,8 @@ can be mostly open, but item gates should create a soft intended route.
 - Role: penultimate mastery dungeon.
 - Theme: white stone, many knights, complex room graph.
 - Main items: spell book and magic key.
-- Entrance requirement: fire tool.
+- Entrance requirement: any fire tool (the base candle from shops is
+  sufficient; the red candle from D7 is not required).
 - New concepts: heavy combat, optional-but-powerful upgrades, many mini-bosses.
 - Mini-bosses: four-headed plants and eye crabs.
 - Boss: four-headed dragon.
@@ -447,6 +574,41 @@ Soft gates:
 - Some dungeons can be entered early but are hostile without better gear.
 - Potion shops require letter/prescription.
 - Expensive items require economy engagement.
+
+### Intended Route and Dependency Graph
+
+Intended route: D1 → D2 → D3 → D4 → D5 → D6 → D7 → D8 → D9.
+
+Hard dependencies (entrance or boss requires a specific item):
+
+- D6 boss (eye crab) requires bow → bow is found in D1. D1 must be completed
+  before D6 boss can be defeated.
+- D7 entrance requires recorder → recorder is found in D5. D5 must be
+  completed before D7 can be entered.
+- D8 entrance requires any fire tool → the base candle is sold in shops from
+  early game. No dungeon dependency.
+- D9 entrance requires all eight fragments → all eight dungeons must be
+  completed.
+- D9 final boss requires silver/light arrow → silver/light arrow is found
+  inside D9 before the boss room.
+
+Minimum required ordering: D1 before D6, D5 before D7, all eight before D9.
+
+Allowed sequence breaks:
+
+- D2, D3, D4, D5 can be done in any order without D1, as long as the player
+  returns to D1 before attempting D6's boss.
+- D8 can be done before D7 (shop candle satisfies entrance).
+- D6 can be entered and partially explored without the bow, but the boss
+  cannot be defeated. The player can leave and return.
+- Any dungeon can be entered, explored partially, and exited. Progress within
+  a dungeon (opened doors, collected items) persists.
+
+Softlock analysis: no softlocks are possible because dungeons can always be
+exited, bombs are available from the start (no bomb-gated dungeon entrance
+traps the player), and all boss-required items are either found within the
+same dungeon (D5 recorder, D9 silver arrow) or obtainable from shops/earlier
+dungeons.
 
 ## Difficulty Curve
 
@@ -515,6 +677,48 @@ Quality of life:
 - Optional map viewing for discovered overworld screens.
 - Clear distinction between discovered, hinted, and unexplored dungeon areas.
 - No long unskippable text.
+
+## Save Data Contract
+
+Each save slot persists the following state:
+
+Player state:
+
+- Current and maximum heart count (half-heart precision).
+- Rupee count, bomb count, bomb capacity, key count.
+- Current equipped item.
+- Current sword, shield, and armor tier.
+
+Collected items:
+
+- Bitfield of all permanent equipment and active items obtained.
+- Per-dungeon: map collected, compass collected, boss defeated, fragment
+  collected.
+
+World state:
+
+- Set of permanently opened doors (locked doors, by dungeon and room ID).
+- Set of revealed bombable walls (by screen/room ID).
+- Set of collected heart containers (by world location).
+- Set of collected overworld items (caves, gifts, upgrades).
+- Set of shop purchases that are one-time (upgrades, letter).
+- NPCs whose one-time dialogue or gift has been triggered.
+
+Position and context:
+
+- Whether the player is in the overworld or a dungeon (and which one).
+- On continue after death: overworld places the player at the starting
+  screen; dungeon places the player at that dungeon's entrance room. Health
+  resets to three hearts. All other state above is retained.
+
+Not persisted (resets on death or save/load):
+
+- Current screen scroll position.
+- Shutter door state (resets per room entry).
+- Pushed block positions (reset per room entry).
+- Enemy positions and health.
+- Active projectiles, drops, and timers.
+- Clock/time-freeze effect.
 
 ## NPCs and Hints
 
