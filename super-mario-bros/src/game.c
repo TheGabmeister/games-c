@@ -120,11 +120,8 @@ static void update_playing(Game *game) {
                 continue;
             }
         }
-        // Dead-falling entities (state_val == 2 for goomba/koopa types only)
-        if (e->state_val == 2 && (e->type == ENT_GOOMBA || e->type == ENT_KOOPA ||
-            e->type == ENT_SHELL || e->type == ENT_PARATROOPA ||
-            e->type == ENT_HAMMER_BRO || e->type == ENT_BUZZY_BEETLE ||
-            e->type == ENT_SPINY)) {
+        // Dead-falling entities
+        if (e->dead_falling) {
             e->vy += GRAVITY * dt;
             e->y += e->vy * dt;
             if (e->y > game->level.height * TILE_SIZE + 200)
@@ -135,26 +132,7 @@ static void update_playing(Game *game) {
         if (e->vtab && e->vtab->update)
             e->vtab->update(e, game);
 
-        // Items rising from blocks skip tile collision
-        if ((e->type == ENT_MUSHROOM || e->type == ENT_FIRE_FLOWER ||
-             e->type == ENT_STARMAN || e->type == ENT_ONEUP) && e->state_val == 0)
-            continue;
-
-        // Debris/popups skip tile collision
-        if (e->type == ENT_BRICK_DEBRIS || e->type == ENT_COIN_POPUP || e->type == ENT_SCORE_POPUP)
-            continue;
-
-        // These entities handle their own movement or don't need tile collision
-        if (e->type == ENT_FIREBAR || e->type == ENT_PODOBOO ||
-            e->type == ENT_BALANCE_LIFT || e->type == ENT_BOWSER ||
-            e->type == ENT_BOWSER_FIRE || e->type == ENT_PIRANHA ||
-            e->type == ENT_BLOOPER || e->type == ENT_HAMMER ||
-            e->type == ENT_LAKITU || e->type == ENT_VINE)
-            continue;
-
-        // Swimming cheep-cheep manages its own movement (leaping variant uses gravity)
-        if (e->type == ENT_CHEEP_CHEEP && e->state_val != 2)
-            continue;
+        if (e->self_moving) continue;
 
         e->x += e->vx * dt;
         level_collide_x(&game->level, e);
@@ -219,16 +197,17 @@ static void update_playing(Game *game) {
             if (i == j) continue;
             Entity *b = &game->entities[j];
             if (b->type == ENT_NONE || j == game->mario) continue;
-            if (b->type == ENT_BRICK_DEBRIS || b->type == ENT_COIN_POPUP ||
-                b->type == ENT_SCORE_POPUP || b->type == ENT_FIREBALL ||
-                b->type == ENT_BALANCE_LIFT || b->type == ENT_BOWSER_FIRE ||
-                b->type == ENT_FIREBAR || b->type == ENT_PODOBOO ||
-                b->type == ENT_HAMMER) continue;
+            if (!b->destructible) continue;
 
             if (!entity_overlap(a, b)) continue;
 
             if (a_is_fireball && b->type != ENT_SHELL) {
-                if (!b->fire_immune && b->vtab && b->vtab->hit_by_fire) {
+                if (b->fire_immune) {
+                    if (b->vtab && b->vtab->hit_by_fire)
+                        b->vtab->hit_by_fire(b, game);
+                    continue;
+                }
+                if (b->vtab && b->vtab->hit_by_fire) {
                     b->vtab->hit_by_fire(b, game);
                     spawn_score_popup(game->entities, b->x, b->y - 16, SCORE_FIREBALL_KILL);
                 }
@@ -236,7 +215,7 @@ static void update_playing(Game *game) {
                 break;
             }
 
-            if (a_is_shell && b->type != ENT_SHELL && b->type != ENT_FIREBALL) {
+            if (a_is_shell && b->type != ENT_SHELL) {
                 if (b->shell_killable && b->vtab && b->vtab->hit_by_shell) {
                     b->vtab->hit_by_shell(b, game);
                     spawn_score_popup(game->entities, b->x, b->y - 16, SCORE_SHELL_KILL);

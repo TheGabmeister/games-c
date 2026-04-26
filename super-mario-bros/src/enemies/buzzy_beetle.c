@@ -61,6 +61,7 @@ static void buzzy_hit_by_shell(Entity *self, Game *game) {
     self->damages_mario = false;
     self->stompable = false;
     self->state_val = 2;
+    self->dead_falling = true;
 }
 
 static void buzzy_hit_by_star(Entity *self, Game *game) {
@@ -69,6 +70,7 @@ static void buzzy_hit_by_star(Entity *self, Game *game) {
     self->damages_mario = false;
     self->stompable = false;
     self->state_val = 2;
+    self->dead_falling = true;
 }
 
 static void buzzy_bumped(Entity *self, Game *game) {
@@ -78,6 +80,7 @@ static void buzzy_bumped(Entity *self, Game *game) {
     self->damages_mario = false;
     self->stompable = false;
     self->state_val = 2;
+    self->dead_falling = true;
 }
 
 static void buzzy_touch(Entity *self, Entity *other, Game *game) {

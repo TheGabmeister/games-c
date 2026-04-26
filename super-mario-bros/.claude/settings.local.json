@@ -40,7 +40,8 @@
       "Bash(taskkill /f /im super_mario_bros.exe)",
       "Bash(powershell -Command \"Stop-Process -Name super_mario_bros -Force -ErrorAction SilentlyContinue\")",
       "Bash(python3 -c ' *)",
-      "Bash(python3)"
+      "Bash(python3)",
+      "Bash(timeout 5 ./build/super_mario_bros/Debug/super_mario_bros.exe)"
     ],
     "additionalDirectories": [
       "C:\\dev\\games-c\\super-mario-bros\\src\\resources",

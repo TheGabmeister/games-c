@@ -60,6 +60,7 @@ static void mushroom_update(Entity *self, Game *game) {
         self->y -= 60.0f * dt;
         if (self->state_timer >= 0.8f) {
             self->state_val = 1;
+            self->self_moving = false;
             self->vx = MUSHROOM_SPEED;
             self->facing = DIR_RIGHT;
         }
@@ -111,6 +112,7 @@ void spawn_mushroom(Entity entities[MAX_ENTITIES], float x, float y) {
     e->active = true;
     e->state_val = 0;
     e->state_timer = 0;
+    e->self_moving = true;
 }
 
 // --- Fire Flower ---
@@ -123,6 +125,7 @@ static void flower_update(Entity *self, Game *game) {
         self->y -= 60.0f * dt;
         if (self->state_timer >= 0.8f) {
             self->state_val = 1;
+            self->self_moving = false;
         }
         return;
     }
@@ -171,6 +174,7 @@ void spawn_fire_flower(Entity entities[MAX_ENTITIES], float x, float y) {
     e->active = true;
     e->state_val = 0;
     e->state_timer = 0;
+    e->self_moving = true;
 }
 
 // --- Starman ---
@@ -183,6 +187,7 @@ static void star_update(Entity *self, Game *game) {
         self->y -= 60.0f * dt;
         if (self->state_timer >= 0.8f) {
             self->state_val = 1;
+            self->self_moving = false;
             self->vx = STARMAN_SPEED;
             self->vy = STARMAN_BOUNCE_VEL;
         }
@@ -236,6 +241,7 @@ void spawn_starman(Entity entities[MAX_ENTITIES], float x, float y) {
     e->active = true;
     e->state_val = 0;
     e->state_timer = 0;
+    e->self_moving = true;
 }
 
 // --- 1-Up Mushroom ---
@@ -247,6 +253,7 @@ static void oneup_update(Entity *self, Game *game) {
         self->y -= 60.0f * dt;
         if (self->state_timer >= 0.8f) {
             self->state_val = 1;
+            self->self_moving = false;
             self->vx = MUSHROOM_SPEED;
             self->facing = DIR_RIGHT;
         }
@@ -292,6 +299,7 @@ void spawn_oneup(Entity entities[MAX_ENTITIES], float x, float y) {
     e->active = true;
     e->state_val = 0;
     e->state_timer = 0;
+    e->self_moving = true;
 }
 
 // --- Fireball ---
@@ -384,6 +392,7 @@ void spawn_brick_debris(Entity entities[MAX_ENTITIES], float x, float y) {
         e->vx = speeds[i][0];
         e->vy = speeds[i][1];
         e->active = true;
+        e->self_moving = true;
     }
 }
 
@@ -423,6 +432,7 @@ void spawn_coin_popup(Entity entities[MAX_ENTITIES], float x, float y) {
     e->h = 32;
     e->vy = -800.0f;
     e->active = true;
+    e->self_moving = true;
 }
 
 // --- Score Popup ---
@@ -459,6 +469,7 @@ void spawn_score_popup(Entity entities[MAX_ENTITIES], float x, float y, int scor
     e->y = y;
     e->active = true;
     e->state_val = score;
+    e->self_moving = true;
 }
 
 // --- Balance Lift ---
@@ -543,5 +554,6 @@ void spawn_balance_lift_pair(Entity entities[MAX_ENTITIES], float x1, float y1, 
         e->active = true;
         e->state_val = pair_id;
         e->anim_timer = e->y; // base Y
+        e->self_moving = true;
     }
 }

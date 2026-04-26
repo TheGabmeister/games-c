@@ -106,4 +106,5 @@ void spawn_lakitu(Entity entities[MAX_ENTITIES], float x, float y) {
     e->shell_killable = true;
     e->star_killable = true;
     e->destructible = true;
+    e->self_moving = true;
 }

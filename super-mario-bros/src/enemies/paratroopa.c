@@ -58,6 +58,7 @@ static void paratroopa_hit_by_fire(Entity *self, Game *game) {
     self->damages_mario = false;
     self->stompable = false;
     self->state_val = 2;
+    self->dead_falling = true;
 }
 
 static void paratroopa_hit_by_shell(Entity *self, Game *game) {
@@ -66,6 +67,7 @@ static void paratroopa_hit_by_shell(Entity *self, Game *game) {
     self->damages_mario = false;
     self->stompable = false;
     self->state_val = 2;
+    self->dead_falling = true;
 }
 
 static void paratroopa_hit_by_star(Entity *self, Game *game) {
@@ -74,6 +76,7 @@ static void paratroopa_hit_by_star(Entity *self, Game *game) {
     self->damages_mario = false;
     self->stompable = false;
     self->state_val = 2;
+    self->dead_falling = true;
 }
 
 static void paratroopa_bumped(Entity *self, Game *game) {
@@ -83,6 +86,7 @@ static void paratroopa_bumped(Entity *self, Game *game) {
     self->damages_mario = false;
     self->stompable = false;
     self->state_val = 2;
+    self->dead_falling = true;
 }
 
 static const EntityVtab paratroopa_vtab = {

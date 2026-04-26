@@ -86,6 +86,17 @@ void level_activate_spawns(Level *level, Entity entities[MAX_ENTITIES], float ca
             }
             if (!still_alive) s->activated = false;
         }
+        // Lakitu respawns after being killed
+        if (s->activated && s->type == ENT_LAKITU) {
+            bool still_alive = false;
+            for (int j = 0; j < MAX_ENTITIES; j++) {
+                if (entities[j].type == ENT_LAKITU) {
+                    still_alive = true;
+                    break;
+                }
+            }
+            if (!still_alive) s->activated = false;
+        }
         if (s->activated) continue;
         float sx = s->tile_x * TILE_SIZE;
         bool in_range = (sx <= activate_x && sx >= camera_x - TILE_SIZE * 2);

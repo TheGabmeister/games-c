@@ -72,4 +72,5 @@ void spawn_podoboo(Entity entities[MAX_ENTITIES], float x, float y) {
     e->shell_killable = false;
     e->star_killable = false;
     e->destructible = false;
+    e->self_moving = true;
 }

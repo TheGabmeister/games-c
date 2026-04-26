@@ -85,4 +85,5 @@ void spawn_vine(Entity entities[MAX_ENTITIES], float x, float y) {
 
     e->damages_mario = false;
     e->stompable = false;
+    e->self_moving = true;
 }

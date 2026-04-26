@@ -46,6 +46,7 @@ static void spawn_bowser_fireball(Entity entities[MAX_ENTITIES], float x, float 
     e->shell_killable = false;
     e->star_killable = false;
     e->destructible = false;
+    e->self_moving = true;
 }
 
 // --- Bowser ---
@@ -139,7 +140,8 @@ static void bowser_hit_by_fire(Entity *self, Game *game) {
         self->damages_mario = false;
         self->stompable = false;
         self->type = ENT_GOOMBA; // visual: transforms into true enemy
-        self->state_val = 2; // dead-falling
+        self->state_val = 2;
+        self->dead_falling = true;
     }
 }
 
@@ -171,4 +173,5 @@ void spawn_bowser(Entity entities[MAX_ENTITIES], float x, float y) {
     e->shell_killable = false;
     e->star_killable = false;
     e->destructible = true;
+    e->self_moving = true;
 }

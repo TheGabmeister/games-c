@@ -63,6 +63,7 @@ static void shell_hit_by_shell(Entity *self, Game *game) {
     self->damages_mario = false;
     self->stompable = false;
     self->state_val = 2;
+    self->dead_falling = true;
 }
 
 static const EntityVtab shell_vtab = {
@@ -80,7 +81,7 @@ void spawn_shell(Entity entities[MAX_ENTITIES], float x, float y, float kick_vx)
     e->type = ENT_SHELL;
     e->vtab = &shell_vtab;
     e->x = x;
-    e->y = y + (KOOPA_HEIGHT - SHELL_H);
+    e->y = y;
     e->w = SHELL_W;
     e->h = SHELL_H;
     e->vx = kick_vx;
@@ -135,7 +136,7 @@ static void koopa_stomped(Entity *self, Entity *mario, Game *game) {
     game->score += SCORE_KOOPA_STOMP;
     sound_play(SND_STOMP);
     // Transform into shell
-    spawn_shell(game->entities, self->x, self->y, 0);
+    spawn_shell(game->entities, self->x, self->y + (KOOPA_HEIGHT - SHELL_H), 0);
     entity_deactivate(self);
 }
 
@@ -145,6 +146,7 @@ static void koopa_hit_by_fire(Entity *self, Game *game) {
     self->damages_mario = false;
     self->stompable = false;
     self->state_val = 2;
+    self->dead_falling = true;
 }
 
 static void koopa_hit_by_shell(Entity *self, Game *game) {
@@ -153,6 +155,7 @@ static void koopa_hit_by_shell(Entity *self, Game *game) {
     self->damages_mario = false;
     self->stompable = false;
     self->state_val = 2;
+    self->dead_falling = true;
 }
 
 static void koopa_hit_by_star(Entity *self, Game *game) {
@@ -161,6 +164,7 @@ static void koopa_hit_by_star(Entity *self, Game *game) {
     self->damages_mario = false;
     self->stompable = false;
     self->state_val = 2;
+    self->dead_falling = true;
 }
 
 static void koopa_bumped(Entity *self, Game *game) {
@@ -170,6 +174,7 @@ static void koopa_bumped(Entity *self, Game *game) {
     self->damages_mario = false;
     self->stompable = false;
     self->state_val = 2;
+    self->dead_falling = true;
 }
 
 static void koopa_touch(Entity *self, Entity *other, Game *game) {

@@ -69,7 +69,8 @@ static void goomba_hit_by_fire(Entity *self, Game *game) {
     self->vy = -400.0f;
     self->damages_mario = false;
     self->stompable = false;
-    self->state_val = 2; // dead-falling
+    self->state_val = 2;
+    self->dead_falling = true; // dead-falling
 }
 
 static void goomba_hit_by_shell(Entity *self, Game *game) {
@@ -78,6 +79,7 @@ static void goomba_hit_by_shell(Entity *self, Game *game) {
     self->damages_mario = false;
     self->stompable = false;
     self->state_val = 2;
+    self->dead_falling = true;
 }
 
 static void goomba_hit_by_star(Entity *self, Game *game) {
@@ -86,6 +88,7 @@ static void goomba_hit_by_star(Entity *self, Game *game) {
     self->damages_mario = false;
     self->stompable = false;
     self->state_val = 2;
+    self->dead_falling = true;
 }
 
 static void goomba_bumped(Entity *self, Game *game) {
@@ -95,6 +98,7 @@ static void goomba_bumped(Entity *self, Game *game) {
     self->damages_mario = false;
     self->stompable = false;
     self->state_val = 2;
+    self->dead_falling = true;
 }
 
 static const EntityVtab goomba_vtab = {

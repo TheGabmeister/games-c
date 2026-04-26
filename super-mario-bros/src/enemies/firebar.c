@@ -68,4 +68,5 @@ void spawn_firebar(Entity entities[MAX_ENTITIES], float x, float y, int clockwis
     e->shell_killable = false;
     e->star_killable = false;
     e->destructible = false;
+    e->self_moving = true;
 }

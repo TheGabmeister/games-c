@@ -42,6 +42,10 @@ struct Entity {
     bool star_killable;
     bool destructible;
 
+    // Movement/state flags
+    bool self_moving;
+    bool dead_falling;
+
     // Mario-specific state
     MarioPower power;
     bool jumping;

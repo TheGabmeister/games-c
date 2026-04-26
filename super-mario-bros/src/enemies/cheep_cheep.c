@@ -133,6 +133,7 @@ void spawn_cheep_cheep(Entity entities[MAX_ENTITIES], float x, float y, int vari
         e->vx = -speed;
         e->facing = DIR_LEFT;
         e->stompable = false;
+        e->self_moving = true;
         e->state_timer = y; // base Y for sine wave
     }
 }

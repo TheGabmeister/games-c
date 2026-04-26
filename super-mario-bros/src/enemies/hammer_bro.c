@@ -53,6 +53,7 @@ static void spawn_hammer(Entity entities[MAX_ENTITIES], float x, float y, Direct
     e->active = true;
     e->damages_mario = true;
     e->fire_immune = true;
+    e->self_moving = true;
 }
 
 // --- Hammer Bro ---
@@ -138,6 +139,7 @@ static void hammer_bro_hit_by_fire(Entity *self, Game *game) {
     self->damages_mario = false;
     self->stompable = false;
     self->state_val = 2;
+    self->dead_falling = true;
 }
 
 static void hammer_bro_hit_by_shell(Entity *self, Game *game) {
@@ -146,6 +148,7 @@ static void hammer_bro_hit_by_shell(Entity *self, Game *game) {
     self->damages_mario = false;
     self->stompable = false;
     self->state_val = 2;
+    self->dead_falling = true;
 }
 
 static void hammer_bro_hit_by_star(Entity *self, Game *game) {
@@ -154,6 +157,7 @@ static void hammer_bro_hit_by_star(Entity *self, Game *game) {
     self->damages_mario = false;
     self->stompable = false;
     self->state_val = 2;
+    self->dead_falling = true;
 }
 
 static void hammer_bro_bumped(Entity *self, Game *game) {
@@ -163,6 +167,7 @@ static void hammer_bro_bumped(Entity *self, Game *game) {
     self->damages_mario = false;
     self->stompable = false;
     self->state_val = 2;
+    self->dead_falling = true;
 }
 
 static const EntityVtab hammer_bro_vtab = {
