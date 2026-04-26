@@ -103,7 +103,8 @@ static const EntityVtab cheep_leap_vtab = {
     .hit_by_star = cheep_hit_by_star,
 };
 
-void spawn_cheep_cheep(Entity entities[MAX_ENTITIES], float x, float y, int variant) {
+void spawn_cheep_cheep(Entity entities[MAX_ENTITIES], float x, float y, int extra) {
+    int variant = extra;
     Entity *e = entity_alloc(entities);
     if (!e) return;
 

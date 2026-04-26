@@ -12,6 +12,6 @@ void spawn_fireball(Entity entities[MAX_ENTITIES], float x, float y, Direction d
 void spawn_brick_debris(Entity entities[MAX_ENTITIES], float x, float y);
 void spawn_coin_popup(Entity entities[MAX_ENTITIES], float x, float y);
 void spawn_score_popup(Entity entities[MAX_ENTITIES], float x, float y, int score);
-void spawn_balance_lift_pair(Entity entities[MAX_ENTITIES], float x1, float y1, float x2, float y2, int pair_id);
+void spawn_balance_lift(Entity entities[MAX_ENTITIES], float x, float y, int extra);
 
 #endif

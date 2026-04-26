@@ -48,7 +48,7 @@ bool firebar_overlaps_entity(Entity *firebar, Entity *target) {
     return false;
 }
 
-void spawn_firebar(Entity entities[MAX_ENTITIES], float x, float y, int clockwise) {
+void spawn_firebar(Entity entities[MAX_ENTITIES], float x, float y, int extra) {
     Entity *e = entity_alloc(entities);
     if (!e) return;
 
@@ -59,7 +59,7 @@ void spawn_firebar(Entity entities[MAX_ENTITIES], float x, float y, int clockwis
     e->w = TILE_SIZE;
     e->h = TILE_SIZE;
     e->active = true;
-    e->state_val = clockwise;
+    e->state_val = extra;
     e->anim_timer = 0;
 
     e->stompable = false;

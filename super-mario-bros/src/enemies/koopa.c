@@ -196,7 +196,8 @@ static const EntityVtab koopa_vtab = {
     .bumped       = koopa_bumped,
 };
 
-void spawn_koopa(Entity entities[MAX_ENTITIES], float x, float y, bool red) {
+void spawn_koopa(Entity entities[MAX_ENTITIES], float x, float y, int extra) {
+    bool red = (extra != 0);
     Entity *e = entity_alloc(entities);
     if (!e) return;
 

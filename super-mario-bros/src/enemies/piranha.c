@@ -93,7 +93,8 @@ static const EntityVtab piranha_vtab = {
     .hit_by_star  = piranha_hit_by_star,
 };
 
-void spawn_piranha(Entity entities[MAX_ENTITIES], float x, float y) {
+void spawn_piranha(Entity entities[MAX_ENTITIES], float x, float y, int extra) {
+    (void)extra;
     Entity *e = entity_alloc(entities);
     if (!e) return;
 

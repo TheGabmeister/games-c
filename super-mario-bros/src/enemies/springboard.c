@@ -64,7 +64,8 @@ static const EntityVtab springboard_vtab = {
     .touch  = springboard_touch,
 };
 
-void spawn_springboard(Entity entities[MAX_ENTITIES], float x, float y) {
+void spawn_springboard(Entity entities[MAX_ENTITIES], float x, float y, int extra) {
+    (void)extra;
     Entity *e = entity_alloc(entities);
     if (!e) return;
 

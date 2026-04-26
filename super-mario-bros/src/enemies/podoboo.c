@@ -51,7 +51,8 @@ static const EntityVtab podoboo_vtab = {
     .draw   = podoboo_draw,
 };
 
-void spawn_podoboo(Entity entities[MAX_ENTITIES], float x, float y) {
+void spawn_podoboo(Entity entities[MAX_ENTITIES], float x, float y, int extra) {
+    (void)extra;
     Entity *e = entity_alloc(entities);
     if (!e) return;
 

@@ -541,19 +541,17 @@ const EntityVtab lift_vtab = {
     .draw   = lift_draw,
 };
 
-void spawn_balance_lift_pair(Entity entities[MAX_ENTITIES], float x1, float y1, float x2, float y2, int pair_id) {
-    for (int i = 0; i < 2; i++) {
-        Entity *e = entity_alloc(entities);
-        if (!e) return;
-        e->type = ENT_BALANCE_LIFT;
-        e->vtab = &lift_vtab;
-        e->x = (i == 0) ? x1 : x2;
-        e->y = (i == 0) ? y1 : y2;
-        e->w = LIFT_W;
-        e->h = LIFT_H;
-        e->active = true;
-        e->state_val = pair_id;
-        e->anim_timer = e->y; // base Y
-        e->self_moving = true;
-    }
+void spawn_balance_lift(Entity entities[MAX_ENTITIES], float x, float y, int extra) {
+    Entity *e = entity_alloc(entities);
+    if (!e) return;
+    e->type = ENT_BALANCE_LIFT;
+    e->vtab = &lift_vtab;
+    e->x = x;
+    e->y = y;
+    e->w = LIFT_W;
+    e->h = LIFT_H;
+    e->active = true;
+    e->state_val = extra;
+    e->anim_timer = y;
+    e->self_moving = true;
 }

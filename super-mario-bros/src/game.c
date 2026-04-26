@@ -112,14 +112,6 @@ static void update_playing(Game *game) {
         if (game->entities[i].type == ENT_NONE || i == game->mario) continue;
         Entity *e = &game->entities[i];
 
-        // Squished goomba timer
-        if (e->type == ENT_GOOMBA && e->state_val == 1) {
-            e->state_timer -= dt;
-            if (e->state_timer <= 0) {
-                entity_deactivate(e);
-                continue;
-            }
-        }
         // Dead-falling entities
         if (e->dead_falling) {
             e->vy += GRAVITY * dt;

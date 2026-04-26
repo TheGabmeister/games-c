@@ -48,7 +48,7 @@ static void paratroopa_stomped(Entity *self, Entity *mario, Game *game) {
     game->score += SCORE_KOOPA_STOMP;
     sound_play(SND_STOMP);
     // Lose wings, become regular green koopa
-    spawn_koopa(game->entities, self->x, self->y + (KOOPA_HEIGHT - TILE_SIZE), false);
+    spawn_koopa(game->entities, self->x, self->y + (KOOPA_HEIGHT - TILE_SIZE), 0);
     entity_deactivate(self);
 }
 
@@ -99,7 +99,8 @@ static const EntityVtab paratroopa_vtab = {
     .bumped       = paratroopa_bumped,
 };
 
-void spawn_paratroopa(Entity entities[MAX_ENTITIES], float x, float y) {
+void spawn_paratroopa(Entity entities[MAX_ENTITIES], float x, float y, int extra) {
+    (void)extra;
     Entity *e = entity_alloc(entities);
     if (!e) return;
 

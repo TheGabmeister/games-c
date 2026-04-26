@@ -32,9 +32,9 @@ No tests or linter — the build is the only verification step. The build copies
 
 - One `Game` struct holds all state, passed by pointer.
 - **Tagged entity array with vtables:** all dynamic objects (Mario, enemies, items, projectiles, debris) live in a flat `Entity entities[MAX_ENTITIES]` array. Each entity has a `type` tag and a pointer to a `const EntityVtab` (function pointers: `update`, `draw`, `touch`, `stomped`, `hit_by_fire`, `hit_by_shell`, `hit_by_star`, `bumped`, `kill`). The engine calls these callbacks — the entity type defines its own behavior.
-- **Collision flags on entities:** `stompable`, `damages_mario`, `fire_immune`, `shell_killable`, `star_killable`, `destructible`. Set at spawn time. The engine checks flags to decide *what kind* of interaction, then calls the vtable callback for the *type-specific response*.
+- **Collision flags on entities:** `stompable`, `damages_mario`, `fire_immune`, `shell_killable`, `star_killable`, `destructible`, `self_moving`, `dead_falling`. Set at spawn time (or at runtime for `dead_falling`). The engine checks flags to decide *what kind* of interaction, then calls the vtable callback for the *type-specific response*.
 - **game.c is the orchestrator:** runs update/collision loops and calls vtable callbacks. It does not contain entity-specific or tile-specific logic. Mario helpers (`mario_is_stomping`, `mario_take_damage`) live in `mario.c`. Firebar per-ball collision (`firebar_overlaps_entity`) lives in `firebar.c`.
-- Each entity type has its own file(s) defining its vtable, spawn function, and behavior. Enemy files live under `src/enemies/`.
+- Each entity type has its own file(s) defining its vtable, spawn function, and behavior. Enemy files live under `src/enemies/`. All spawn functions share the signature `(Entity entities[], float x, float y, int extra)` and are registered in the `spawn_registry` table in `level.c`.
 - `game_update()` dispatches to one handler function per game state. `game_draw()` has a similar per-state switch.
 - Named constants for all tunable values live in `common.h` (`#define`). New magic numbers should be added there, not hardcoded inline.
 - **Entities that manage their own movement** set `self_moving = true` at spawn time. The engine skips generic tile collision for these entities. When adding a new self-moving entity, set the flag in the spawn function — no changes to game.c needed.
@@ -68,7 +68,7 @@ Tile characters: `.` empty, `G` ground, `B` brick, `Q` question, `U` used, `H` h
 
 Spawn type names (used in `.txt` files): `goomba`, `koopa`, `piranha`, `firebar`, `podoboo`, `bowser`, `lift`, `paratroopa`, `springboard`, `blooper`, `cheep`, `hammer_bro`, `lakitu`, `spiny`, `buzzy`.
 
-`level.c` contains the tile engine (collision, drawing, spawn activation) and the `.txt` parser. Level data lives entirely in the `.txt` files — adding a new level requires no code changes.
+`level.c` contains the tile engine (collision, drawing, spawn activation), the `.txt` parser, and the `spawn_registry` table. Level data lives entirely in the `.txt` files — adding a new level requires no code changes. Adding a new enemy type requires: (1) its own `.c`/`.h` files with a `spawn_xxx(entities, x, y, extra)` function, (2) one entry in `spawn_registry`, (3) one entry in `parse_spawn_type`, (4) one `#include`.
 
 Underwater levels (`type underwater`) modify Mario's physics in `mario.c`: reduced gravity, swim impulse on jump press, no running. The `V` (vine block) tile spawns a vine entity when hit from below and uses the `warps` section (keyed by the vine block's tile position) to define where the vine takes Mario.
 

@@ -3,6 +3,6 @@
 
 #include "../entity.h"
 
-void spawn_springboard(Entity entities[MAX_ENTITIES], float x, float y);
+void spawn_springboard(Entity entities[MAX_ENTITIES], float x, float y, int extra);
 
 #endif

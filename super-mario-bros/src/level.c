@@ -71,6 +71,36 @@ static void set_block_content(Level *level, int tx, int ty, int content) {
     b->content = content;
 }
 
+// --- Spawn registry ---
+// Maps EntityType to spawn function + metadata. Adding a new enemy type:
+// 1. Add the #include above  2. Add one entry here  3. Add to parse_spawn_type
+
+typedef void (*SpawnFunc)(Entity entities[MAX_ENTITIES], float x, float y, int extra);
+
+typedef struct {
+    SpawnFunc spawn;
+    bool preactivate;
+    bool respawns;
+} SpawnInfo;
+
+static const SpawnInfo spawn_registry[ENT_TYPE_COUNT] = {
+    [ENT_GOOMBA]       = { spawn_goomba,       false, false },
+    [ENT_KOOPA]        = { spawn_koopa,         false, false },
+    [ENT_PIRANHA]      = { spawn_piranha,       false, false },
+    [ENT_FIREBAR]      = { spawn_firebar,       true,  false },
+    [ENT_PODOBOO]      = { spawn_podoboo,       true,  false },
+    [ENT_BOWSER]       = { spawn_bowser,        false, false },
+    [ENT_PARATROOPA]   = { spawn_paratroopa,    false, false },
+    [ENT_SPRINGBOARD]  = { spawn_springboard,   false, false },
+    [ENT_BLOOPER]      = { spawn_blooper,       false, false },
+    [ENT_CHEEP_CHEEP]  = { spawn_cheep_cheep,   false, false },
+    [ENT_HAMMER_BRO]   = { spawn_hammer_bro,    false, false },
+    [ENT_LAKITU]       = { spawn_lakitu,        true,  true  },
+    [ENT_SPINY]        = { spawn_spiny,         false, false },
+    [ENT_BUZZY_BEETLE] = { spawn_buzzy_beetle,  false, false },
+    [ENT_BALANCE_LIFT] = { spawn_balance_lift,   true,  false },
+};
+
 void level_activate_spawns(Level *level, Entity entities[MAX_ENTITIES], float camera_x) {
     float activate_x = camera_x + WINDOW_WIDTH + TILE_SIZE;
     for (int i = 0; i < level->spawn_count; i++) {
@@ -86,86 +116,23 @@ void level_activate_spawns(Level *level, Entity entities[MAX_ENTITIES], float ca
             }
             if (!still_alive) s->activated = false;
         }
-        // Lakitu respawns after being killed
-        if (s->activated && s->type == ENT_LAKITU) {
+        // Respawning entities (e.g. lakitu): reset if no live instance exists
+        if (s->activated && spawn_registry[s->type].respawns) {
             bool still_alive = false;
             for (int j = 0; j < MAX_ENTITIES; j++) {
-                if (entities[j].type == ENT_LAKITU) {
-                    still_alive = true;
-                    break;
-                }
+                if (entities[j].type == s->type) { still_alive = true; break; }
             }
             if (!still_alive) s->activated = false;
         }
         if (s->activated) continue;
         float sx = s->tile_x * TILE_SIZE;
         bool in_range = (sx <= activate_x && sx >= camera_x - TILE_SIZE * 2);
-        bool preactivate = (s->type == ENT_BALANCE_LIFT || s->type == ENT_FIREBAR ||
-                           s->type == ENT_PODOBOO || s->type == ENT_LAKITU);
-        if (in_range || preactivate) {
+        if (in_range || spawn_registry[s->type].preactivate) {
             s->activated = true;
             float spawn_x = (float)(s->tile_x * TILE_SIZE);
             float spawn_y = (float)(s->tile_y * TILE_SIZE);
-            switch (s->type) {
-                case ENT_GOOMBA:
-                    spawn_goomba(entities, spawn_x, spawn_y);
-                    break;
-                case ENT_KOOPA:
-                    spawn_koopa(entities, spawn_x, spawn_y, s->extra != 0);
-                    break;
-                case ENT_PIRANHA:
-                    spawn_piranha(entities, spawn_x, spawn_y);
-                    break;
-                case ENT_FIREBAR:
-                    spawn_firebar(entities, spawn_x, spawn_y, s->extra);
-                    break;
-                case ENT_PODOBOO:
-                    spawn_podoboo(entities, spawn_x, spawn_y);
-                    break;
-                case ENT_BOWSER:
-                    spawn_bowser(entities, spawn_x, spawn_y);
-                    break;
-                case ENT_PARATROOPA:
-                    spawn_paratroopa(entities, spawn_x, spawn_y);
-                    break;
-                case ENT_SPRINGBOARD:
-                    spawn_springboard(entities, spawn_x, spawn_y);
-                    break;
-                case ENT_BLOOPER:
-                    spawn_blooper(entities, spawn_x, spawn_y);
-                    break;
-                case ENT_CHEEP_CHEEP:
-                    spawn_cheep_cheep(entities, spawn_x, spawn_y, s->extra);
-                    break;
-                case ENT_HAMMER_BRO:
-                    spawn_hammer_bro(entities, spawn_x, spawn_y);
-                    break;
-                case ENT_LAKITU:
-                    spawn_lakitu(entities, spawn_x, spawn_y);
-                    break;
-                case ENT_SPINY:
-                    spawn_spiny(entities, spawn_x, spawn_y);
-                    break;
-                case ENT_BUZZY_BEETLE:
-                    spawn_buzzy_beetle(entities, spawn_x, spawn_y);
-                    break;
-                case ENT_BALANCE_LIFT: {
-                    Entity *e = entity_alloc(entities);
-                    if (e) {
-                        extern const EntityVtab lift_vtab;
-                        e->type = ENT_BALANCE_LIFT;
-                        e->vtab = &lift_vtab;
-                        e->x = spawn_x;
-                        e->y = spawn_y;
-                        e->w = LIFT_W;
-                        e->h = LIFT_H;
-                        e->active = true;
-                        e->state_val = s->extra;
-                        e->anim_timer = spawn_y;
-                    }
-                    break;
-                }
-            }
+            if (spawn_registry[s->type].spawn)
+                spawn_registry[s->type].spawn(entities, spawn_x, spawn_y, s->extra);
         }
     }
 }

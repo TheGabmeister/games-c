@@ -4,6 +4,6 @@
 #include "../entity.h"
 
 // extra: 0 = gray slow swim, 1 = red fast swim, 2 = leaping
-void spawn_cheep_cheep(Entity entities[MAX_ENTITIES], float x, float y, int variant);
+void spawn_cheep_cheep(Entity entities[MAX_ENTITIES], float x, float y, int extra);
 
 #endif

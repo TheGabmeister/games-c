@@ -90,7 +90,8 @@ static const EntityVtab spiny_vtab = {
     .bumped       = spiny_bumped,
 };
 
-void spawn_spiny(Entity entities[MAX_ENTITIES], float x, float y) {
+void spawn_spiny(Entity entities[MAX_ENTITIES], float x, float y, int extra) {
+    (void)extra;
     Entity *e = entity_alloc(entities);
     if (!e) return;
 

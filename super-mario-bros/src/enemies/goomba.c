@@ -3,8 +3,14 @@
 #include "../sounds.h"
 
 static void goomba_update(Entity *self, Game *game) {
-    (void)game;
     float dt = GetFrameTime();
+
+    if (self->state_val == 1) {
+        self->state_timer -= dt;
+        if (self->state_timer <= 0)
+            entity_deactivate(self);
+        return;
+    }
 
     self->vy += GRAVITY * dt;
     if (self->vy > MAX_FALL_SPEED) self->vy = MAX_FALL_SPEED;
@@ -113,7 +119,8 @@ static const EntityVtab goomba_vtab = {
     .kill        = goomba_kill,
 };
 
-void spawn_goomba(Entity entities[MAX_ENTITIES], float x, float y) {
+void spawn_goomba(Entity entities[MAX_ENTITIES], float x, float y, int extra) {
+    (void)extra;
     Entity *e = entity_alloc(entities);
     if (!e) return;
 

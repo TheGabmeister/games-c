@@ -151,7 +151,8 @@ static const EntityVtab bowser_vtab = {
     .hit_by_fire = bowser_hit_by_fire,
 };
 
-void spawn_bowser(Entity entities[MAX_ENTITIES], float x, float y) {
+void spawn_bowser(Entity entities[MAX_ENTITIES], float x, float y, int extra) {
+    (void)extra;
     Entity *e = entity_alloc(entities);
     if (!e) return;
 

@@ -41,7 +41,13 @@
       "Bash(powershell -Command \"Stop-Process -Name super_mario_bros -Force -ErrorAction SilentlyContinue\")",
       "Bash(python3 -c ' *)",
       "Bash(python3)",
-      "Bash(timeout 5 ./build/super_mario_bros/Debug/super_mario_bros.exe)"
+      "Bash(timeout 5 ./build/super_mario_bros/Debug/super_mario_bros.exe)",
+      "Bash(sed -i 's/void spawn_goomba\\(Entity entities\\\\[MAX_ENTITIES\\\\], float x, float y\\);/void spawn_goomba\\(Entity entities[MAX_ENTITIES], float x, float y, int extra\\);/' src/enemies/goomba.h)",
+      "Bash(sed -i 's/void spawn_koopa\\(Entity entities\\\\[MAX_ENTITIES\\\\], float x, float y, bool red\\);/void spawn_koopa\\(Entity entities[MAX_ENTITIES], float x, float y, int extra\\);/' src/enemies/koopa.h)",
+      "Bash(sed -i 's/void spawn_piranha\\(Entity entities\\\\[MAX_ENTITIES\\\\], float x, float y\\);/void spawn_piranha\\(Entity entities[MAX_ENTITIES], float x, float y, int extra\\);/' src/enemies/piranha.h)",
+      "Bash(sed -i 's/void spawn_firebar\\(Entity entities\\\\[MAX_ENTITIES\\\\], float x, float y, int clockwise\\);/void spawn_firebar\\(Entity entities[MAX_ENTITIES], float x, float y, int extra\\);/' src/enemies/firebar.h)",
+      "Bash(sed -i 's/void spawn_podoboo\\(Entity entities\\\\[MAX_ENTITIES\\\\], float x, float y\\);/void spawn_podoboo\\(Entity entities[MAX_ENTITIES], float x, float y, int extra\\);/' src/enemies/podoboo.h)",
+      "Bash(timeout 4 ./build/super_mario_bros/Debug/super_mario_bros.exe)"
     ],
     "additionalDirectories": [
       "C:\\dev\\games-c\\super-mario-bros\\src\\resources",

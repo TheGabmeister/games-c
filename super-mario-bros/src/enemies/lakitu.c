@@ -89,7 +89,8 @@ static const EntityVtab lakitu_vtab = {
     .hit_by_star  = lakitu_hit_by_star,
 };
 
-void spawn_lakitu(Entity entities[MAX_ENTITIES], float x, float y) {
+void spawn_lakitu(Entity entities[MAX_ENTITIES], float x, float y, int extra) {
+    (void)extra;
     Entity *e = entity_alloc(entities);
     if (!e) return;
 

@@ -180,7 +180,8 @@ static const EntityVtab hammer_bro_vtab = {
     .bumped       = hammer_bro_bumped,
 };
 
-void spawn_hammer_bro(Entity entities[MAX_ENTITIES], float x, float y) {
+void spawn_hammer_bro(Entity entities[MAX_ENTITIES], float x, float y, int extra) {
+    (void)extra;
     Entity *e = entity_alloc(entities);
     if (!e) return;
 

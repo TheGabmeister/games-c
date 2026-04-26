@@ -85,7 +85,8 @@ static const EntityVtab blooper_vtab = {
     .hit_by_star = blooper_hit_by_star,
 };
 
-void spawn_blooper(Entity entities[MAX_ENTITIES], float x, float y) {
+void spawn_blooper(Entity entities[MAX_ENTITIES], float x, float y, int extra) {
+    (void)extra;
     Entity *e = entity_alloc(entities);
     if (!e) return;
 
