@@ -37,12 +37,13 @@ Studio generator configuration.
 
 ## Coding principles
 
-- **C game programming best practices** -- prefer stack/static allocation for fixed-size data, use heap when the size varies at runtime. Keep hot data contiguous, avoid unnecessary indirection.
-- **KISS** -- simplest thing that works. No clever patterns where a plain `if` does the job.
-- **YAGNI** -- don't build for hypothetical needs. No abstraction layers "for later."
-- **DRY** -- remove real duplication, not shape-similar code. Wrong abstraction costs more than repetition.
+- **C game programming best practices** — prefer stack/static allocation for fixed-size data, use heap when the size varies at runtime (e.g. level tile grids). Keep hot data contiguous, avoid unnecessary indirection.
+- **KISS** — simplest thing that works. No clever patterns where a plain `if` does the job. But a plain `if` that must be copy-pasted into every new feature is not simple — it's a maintenance trap.
+- **YAGNI** — don't build for hypothetical needs. No abstraction layers "for later."
+- **DRY** — remove real duplication, not shape-similar code. Wrong abstraction costs more than repetition.
+- **Locality of change** — adding a new entity, tile, or feature should require changes in as few files as possible. Prefer data-driven dispatch (flags, vtables) over centralized type switches when the set of types is expected to grow. If a new enemy requires editing the orchestrator, the abstraction is missing.
 
-When in doubt, lean KISS over DRY.
+When in doubt: for code one person owns and rarely changes, lean KISS. For interfaces many contributors touch, lean locality of change.
 
 ## Sprite Generation
 
