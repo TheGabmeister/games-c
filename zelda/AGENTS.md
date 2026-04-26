@@ -46,13 +46,22 @@ When in doubt, lean KISS over DRY.
 
 ## Sprite Generation
 
-Workflow: write SVG markup, then convert to PNG with Inkscape.
+Sprites are spritesheets — one SVG per entity or tile set, with all frames
+laid out on a grid. Cell size is 20px. Export the full sheet as one PNG.
 
 ```bash
-inkscape input.svg -o output.png -w 20 -h 20
+# single sprite (1x1 cell)
+inkscape item_heart.svg -o item_heart.png -w 20 -h 20
+
+# spritesheet (e.g., player: 4 columns x 4 rows)
+inkscape player.svg -o player.png -w 80 -h 80
 ```
 
-Store both SVGs and PNGs in `src/assets/`. Cell size is 20px.
+The code loads one `Texture2D` per sheet and indexes into it by row/column
+using source rectangles. One sheet per category: player, each enemy type,
+tiles, items, HUD, projectiles.
+
+Store both SVGs and PNGs in `src/assets/sprites/`.
 
 ## Sound Generation
 

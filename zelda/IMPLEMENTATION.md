@@ -2,6 +2,9 @@
 
 High-level code architecture for the game described in SPEC.md.
 
+Window: 1024x960 pixels. Logical resolution: 256x240 at 4x scale, no
+letterboxing.
+
 ## Game Loop
 
 The main loop runs at 60 FPS. Each frame has four phases:
@@ -32,7 +35,12 @@ src/
   game_config.h     compile-time constants
   input.h/c         input abstraction (keyboard + gamepad)
   player.h/c        player state, movement, combat, items
-  enemy.h/c         enemy definitions, AI, spawning
+  enemy/
+    enemy.h/c       shared types, def table, dispatch, spawning
+    slime.c         slime update/draw
+    bat.c           bat update/draw
+    ghost.c         ghost update/draw
+    ...             one file per enemy type
   projectile.h/c    player and enemy projectiles
   tilemap.h/c       tile data, screen/room loading, tile collision
   camera.h/c        screen transitions, scroll animation
@@ -81,12 +89,81 @@ Struct with:
 - Inventory (rupees, bombs, keys, equipped item).
 - Invulnerability timer.
 
+### Inventory
+
+Player inventory is split by data shape:
+
+```c
+typedef struct Inventory {
+    // Collected items — one bit each, never lost
+    uint32_t items;           // bitfield indexed by ItemID enum
+
+    // Equipment tiers — higher value = better
+    int sword_tier;           // 0=none, 1=basic, 2=strong, 3=master
+    int shield_tier;          // 0=none, 1=small, 2=large
+    int armor_tier;           // 0=none, 1=blue, 2=red
+
+    // Consumables — counts
+    int rupees;
+    int bombs;
+    int bomb_capacity;
+    int keys;
+
+    // Active item slot
+    ItemID equipped;          // which item the use button activates
+} Inventory;
+```
+
+Checking if the player has an item: `inventory.items & (1 << ITEM_RAFT)`.
+The conditional tile passability system uses the same check.
+
+Equipping: the pause screen sets `inventory.equipped` to the selected
+`ItemID`. Only items flagged as active (boomerang, bombs, bow, candle,
+recorder, food, magic rod, potion) can be equipped. Passive items (raft,
+ladder, bracelet) take effect automatically and are never equipped.
+
+Using items: when the player presses the item button, the player enters the
+USING_ITEM state and a switch on `inventory.equipped` runs the effect:
+
+```c
+switch (player->inventory.equipped) {
+    case ITEM_BOOMERANG:  spawn_boomerang(player, projectiles); break;
+    case ITEM_BOMB:       place_bomb(player, &inventory); break;
+    case ITEM_BOW:        try_fire_arrow(player, &inventory, projectiles); break;
+    case ITEM_CANDLE:     use_candle(player, tilemap, events); break;
+    case ITEM_RECORDER:   use_recorder(player, events); break;
+    case ITEM_POTION:     use_potion(player, &inventory); break;
+    // ...
+}
+```
+
+A switch is appropriate here — the item set is small (~12 equippable items)
+and stable. Each case calls a function that owns the item's full behavior:
+consuming ammo, spawning projectiles, modifying state, or pushing events.
+
+Pause screen flow:
+
+1. Player presses pause → game enters `STATE_PAUSE`.
+2. Pause screen reads `inventory` to display collected items and equipment.
+3. Player navigates the item grid and selects an item → sets
+   `inventory.equipped`.
+4. Player presses pause again → game returns to `STATE_PLAY`.
+5. No game logic runs during pause. The pause screen only writes to
+   `inventory.equipped`.
+
 ### Enemy
 
 Data-driven design with function pointers. Each enemy type has a static
 definition table:
 
 ```c
+typedef struct EnemyContext {
+    Vector2 player_pos;
+    const TileMap *tilemap;
+    EventQueue *events;
+    ProjectileList *projectiles;
+} EnemyContext;
+
 typedef struct EnemyDef {
     int health;
     int contact_damage;
@@ -94,14 +171,22 @@ typedef struct EnemyDef {
     int speed;
     int tier;
     bool ignores_walls;
-    void (*update)(Enemy *self, Game *game);
-    void (*draw)(Enemy *self, Game *game);
+    void (*update)(Enemy *self, const EnemyContext *ctx);
+    void (*draw)(const Enemy *self);
 } EnemyDef;
 ```
 
+`EnemyContext` is built once per frame from the current game state and
+passed to all enemy updates. It exposes only what enemies need: where the
+player is, what tiles block movement, where to push events, and where to
+spawn projectiles. Enemies cannot reach the full game state.
+
+`draw` takes only the enemy itself — rendering should not have side effects
+or need game-wide access.
+
 The `EnemyDef` table is a const array indexed by `EnemyType` enum. Adding a
 new enemy means writing its update/draw functions and adding a row to the
-table. The orchestrator calls `enemy->def->update(enemy, game)` — no switch
+table. The orchestrator calls `enemy->def->update(enemy, &ctx)` — no switch
 on enemy type.
 
 Runtime enemy instances hold a pointer to their def plus per-instance state:
@@ -110,6 +195,17 @@ Runtime enemy instances hold a pointer to their def plus per-instance state:
 - Current health.
 - AI state and timer (meaning varies per enemy type).
 - Active/inactive flag.
+
+Enemy movement:
+
+- Enemies move in continuous pixel space, same as the player.
+- Enemies that respect walls (most ground enemies) check their pixel hitbox
+  against impassable tiles the same way the player does, via the tilemap
+  passed in `EnemyContext`.
+- Enemies with `ignores_walls = true` (bats, ghosts, flying enemies) skip
+  tile collision entirely.
+- Enemy speed is in pixels per second. Each enemy's update function advances
+  position by `speed * dt` in its chosen direction.
 
 ### Projectile
 
@@ -136,6 +232,46 @@ Use switch statements for state machines with few, stable states: game
 state (6 states), player state (6 states). These are small enough that a
 switch is clearer than indirection.
 
+### Animation
+
+Sprites are driven by an `Anim` struct shared by all entities:
+
+```c
+typedef struct AnimDef {
+    int first_frame;
+    int frame_count;
+    int frame_duration;   // frames per sprite frame
+    bool loops;
+} AnimDef;
+
+typedef struct Anim {
+    const AnimDef *def;
+    int timer;            // counts down each game frame
+    int current_frame;    // index within the def's frame range
+    bool finished;
+} Anim;
+```
+
+Each entity type defines its animations as a static array of `AnimDef`s
+indexed by state and facing direction. For example, the player has:
+
+- `ANIM_IDLE_N`, `ANIM_IDLE_S`, `ANIM_IDLE_E`, `ANIM_IDLE_W` (1 frame each).
+- `ANIM_WALK_N`, `ANIM_WALK_S`, `ANIM_WALK_E`, `ANIM_WALK_W` (2-4 frames, looping).
+- `ANIM_ATTACK_N`, ... (2-3 frames, non-looping).
+
+When an entity changes state or facing, it sets `anim.def` to the
+appropriate `AnimDef` and resets the timer. Each frame, `anim_tick(&anim)`
+decrements the timer and advances `current_frame` when it hits zero.
+
+At draw time, the sprite frame index is `anim.def->first_frame +
+anim.current_frame`. This indexes into the spritesheet by row/column to
+produce the source rectangle.
+
+Enemy animations follow the same pattern — each enemy's file defines its
+own `AnimDef` array. Simple enemies (slime, bat) may have just idle and
+move. Complex enemies (shield knight) may have idle, move, block, and
+stagger.
+
 ### Tilemap
 
 Each screen/room is a 16x11 grid of tile IDs:
@@ -144,13 +280,71 @@ Each screen/room is a 16x11 grid of tile IDs:
 uint8_t tiles[SCREEN_TILES_Y][SCREEN_TILES_X];
 ```
 
-Tile IDs map to a tile property table that stores: passability, type
-(floor, wall, water, pit, door, stairs, etc.), and sprite index. This keeps
-tile collision as a simple table lookup.
+Tile IDs map to a tile property table:
 
-Screen data also includes: enemy spawn list, item placements, door
-positions, and special triggers (shutter room flag, pushable block
-positions).
+```c
+typedef struct TileDef {
+    TileType type;        // FLOOR, WALL, WATER, PIT, DOCK, GAP, etc.
+    int sprite_index;
+    bool passable;        // default passability
+    ItemID pass_requires; // ITEM_NONE, ITEM_RAFT, ITEM_LADDER, etc.
+} TileDef;
+```
+
+Tile collision checks `passable` first. If false and `pass_requires` is set,
+the collision system checks the player's inventory — if the required item is
+collected, the tile is treated as passable. This handles:
+
+- Water tiles: `passable = false`, `pass_requires = ITEM_RAFT`. Only
+  passable at dock tiles (which are always passable and trigger raft
+  launch).
+- Gap tiles: `passable = false`, `pass_requires = ITEM_LADDER`. The ladder
+  activates automatically when the player steps onto a gap.
+- Heavy rocks: `passable = false`, `pass_requires = ITEM_BRACELET`. The
+  rock becomes pushable with the bracelet.
+
+Enemies ignore `pass_requires` — they use only the base `passable` flag
+(unless `ignores_walls` is set, in which case they skip tile collision).
+
+### Screen file format
+
+One plain text file per screen, stored in `assets/screens/` (overworld) and
+`assets/dungeons/<n>/` (per dungeon). Human-editable, one character per
+tile.
+
+```
+# metadata
+shutter: true
+enemy: slime 4 3
+enemy: bat 10 7
+item: key 8 5
+door: north 8 locked
+
+# tilemap (16 wide, 11 tall)
+WWWWWWWWWWWWWWWW
+W..............W
+W..............W
+W....WWWW......W
+W..............W
+D..............D
+W......PP......W
+W..............W
+W..............W
+W..............W
+WWWWWWWWWWWWWWWW
+```
+
+Header lines before the tilemap declare metadata: enemy spawns (type,
+tile x, tile y), item placements, door positions and lock state, and room
+flags (shutter, dark). Lines starting with `#` are comments.
+
+The tile character map is defined once in code (e.g., `W` = wall, `.` =
+floor, `~` = water, `D` = door, `P` = pushable block, `S` = stairs). Adding
+a new tile type means adding a character mapping and a row in the tile
+property table.
+
+Overworld screens are named by grid position: `overworld/03_05.txt` for
+column 3, row 5. Dungeon rooms similarly: `dungeons/1/02_03.txt`.
 
 ## Event System
 
@@ -172,19 +366,26 @@ typedef enum EventType {
 
 typedef struct Event {
     EventType type;
-    int param;
+    union {
+        struct { Vector2 pos; int enemy_type; } enemy_killed;
+        struct { int item_id; bool is_major; } item_pickup;
+        struct { Vector2 pos; } secret_revealed;
+        struct { int damage; Direction from; } player_damaged;
+    };
 } Event;
 ```
 
-Producers push events during update (e.g., collision detects a kill and
-pushes `EVENT_ENEMY_KILLED`). Consumers read them at drain time:
+Each event type has its own payload struct in the union. Producers fill the
+relevant fields when pushing. Consumers read them at drain time:
 
-- `EVENT_ENEMY_KILLED` → increment kill counter (drop table), check if room
-  is clear (shutter doors), play sound.
-- `EVENT_ITEM_PICKUP` → update inventory, play jingle, enter ITEM_GET state
-  if major item.
-- `EVENT_SECRET_REVEALED` → play secret jingle, mark in world state.
-- `EVENT_PLAYER_DAMAGED` → flash effect, start invulnerability timer.
+- `EVENT_ENEMY_KILLED` → use `enemy_type` and `pos` for drop table lookup,
+  play death sound, check if room is clear (shutter doors).
+- `EVENT_ITEM_PICKUP` → use `item_id` to update inventory, `is_major` to
+  decide whether to enter ITEM_GET state and play the big jingle.
+- `EVENT_SECRET_REVEALED` → play secret jingle, mark location in world
+  state.
+- `EVENT_PLAYER_DAMAGED` → use `damage` for health reduction, `from` for
+  knockback direction, start invulnerability timer.
 - `EVENT_SHUTTER_CLEAR` → open shutter doors in current room.
 
 The queue is a fixed-size ring buffer. Events that overflow are dropped
@@ -194,9 +395,9 @@ The queue is a fixed-size ring buffer. Events that overflow are dropped
 
 Runs once per frame during update, after all positions have been advanced:
 
-1. **Tile collision**: for each moving entity, check destination tile in the
-   tile property table. Block if impassable. This uses logical grid
-   positions, not pixel positions.
+1. **Tile collision**: for each moving entity, check the player's pixel
+   hitbox against impassable tile rectangles. Block if overlapping. The
+   player moves in pixel space but the tile grid determines passability.
 
 2. **Hitbox collision**: build hitboxes from visual positions for all active
    entities, the sword (if swinging), and all projectiles. Check overlaps
@@ -221,6 +422,20 @@ against their own team.
 
 The overworld is a 16x8 grid of screen data. Dungeons are separate grids
 (up to 8x8 rooms). The game tracks the current screen coordinates.
+
+Connectivity:
+
+- Overworld screens connect implicitly by grid adjacency. Walking off the
+  north edge of screen (3, 5) enters screen (3, 4). If the adjacent cell
+  has no screen file, the edge is blocked (impassable border tiles).
+- Dungeon rooms also connect by grid adjacency by default. A door on the
+  north wall leads to the room one row up in the grid.
+- Non-adjacent connections (warp stairs, one-way passages) are declared in
+  the screen file metadata with a `warp` line:
+  `warp: stairs 8 5 -> 02_07` — stairs tile at (8,5) warps to room 02_07.
+- Cave entrances from the overworld use a similar warp:
+  `warp: cave 7 3 -> cave_12` — entering the cave tile warps to cave room
+  file `assets/caves/cave_12.txt`.
 
 On screen transition:
 
@@ -260,15 +475,18 @@ file, then rename) to prevent corruption.
 Runtime assets are loaded from the `assets/` directory relative to the
 executable (copied there by CMake at build time).
 
-- **Sprites**: loaded as raylib `Texture2D`. Spritesheets where possible
-  (one texture for all player frames, one for all enemy types, one for
-  tiles). Individual sprites are regions within the sheet.
+- **Sprites**: one spritesheet PNG per category (player, each enemy type,
+  tiles, items, HUD, projectiles). Each sheet is drawn as a single SVG
+  with frames on a 20px grid, exported via Inkscape. Loaded as raylib
+  `Texture2D`. Individual frames are accessed by source rectangle using
+  row/column indices. Stored in `assets/sprites/`.
 - **Sounds**: loaded as raylib `Sound`. One WAV per effect. Loaded at
   startup, held for the game's lifetime.
 - **Music**: loaded as raylib `Music` (streamed). One track per
   biome/dungeon/boss.
-- **Map data**: screen/room layouts stored as binary or simple text files.
-  Loaded on demand when entering a new screen.
+- **Map data**: plain text screen files (see Screen file format above).
+  Stored in `assets/screens/` and `assets/dungeons/<n>/`. Loaded on demand
+  when entering a new screen.
 
 ## Memory Model
 
