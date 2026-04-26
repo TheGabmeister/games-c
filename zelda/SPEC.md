@@ -61,24 +61,6 @@ Core actions:
 - Transition between screens, caves, stair passages, and dungeons.
 - Pause/open inventory to choose the equipped item.
 
-Modern quality-of-life targets:
-
-- Buffered sword/item input for a few frames.
-- Brief invulnerability after damage.
-- Clear hit flashes, knockback, shield deflect effects, and low-health feedback.
-- Optional restart/continue from dungeon entrance after defeat.
-- Save and continue support for player progress.
-
-## Inventory and Pause Screen
-
-- One equipped-item slot. The player opens the inventory to swap which active
-  item is assigned to the use button.
-- Grid of collected items. Items not yet found show as empty slots.
-- Current sword, shield, armor, and ring shown in an equipment section.
-- Dungeon map view when a map has been collected, with compass marker if the
-  compass has been collected.
-- Three save slots with file select at the title screen.
-
 ## Movement and Collision Model
 
 Screen and tile geometry:
@@ -92,8 +74,6 @@ Screen and tile geometry:
   screen of the overworld or one room of a dungeon.
 - Player sprite: 16x16 pixels (one tile). The player's hitbox matches the
   sprite.
-- Overworld: 16x8 grid of screens. Each screen is 16x11 playable tiles.
-  Total overworld tile area: 256x88 tiles.
 - Dungeon rooms: same 16x11 tile dimensions as overworld screens. Dungeon
   layouts are grids of rooms (up to 8x8 rooms per dungeon).
 
@@ -104,8 +84,8 @@ Movement:
 - Pressing a direction begins a smooth slide to the adjacent tile center.
   The slide is purely visual — the player's logical tile changes at the start
   of the move, and the sprite catches up over a short duration.
-- Movement speed is measured in tiles per second. Base speed should feel brisk
-  but readable — roughly four to five tiles per second.
+- Movement speed is measured in tiles per second. See Tuning Defaults for
+  concrete values.
 - Only one direction at a time. Pressing a new direction while sliding queues
   it and executes when the current slide finishes.
 - Facing updates immediately on input, even if movement is blocked by a wall
@@ -127,6 +107,7 @@ Collision:
   occurs when the player's hitbox overlaps an enemy's hitbox.
 - Projectile hitboxes are small rectangles that travel in a straight line and
   check overlap each frame.
+
 Collision layers:
 
 - Player ↔ Terrain: blocked by impassable tiles (tile-grid check).
@@ -157,24 +138,28 @@ Collision layers:
 - Fairy encounters restore a large amount or full health.
 - Potions restore all health and can have one-use or two-use variants.
 - Defensive rings/tunics reduce incoming damage.
-- At full health, sword attacks may fire a ranged beam.
 
 Death/defeat behavior:
 
-- Overworld defeat returns the player to the starting area or last safe continue
-  point with retained permanent progress.
-- Dungeon defeat returns the player to that dungeon entrance with retained
-  permanent progress.
-- The player restarts with three hearts after defeat. Consumable quantities
-  (bombs, arrows) are retained. Keys collected and doors opened persist.
-- Consumable quantities and current health after continue should follow the
-  classic feel: forgiving enough to keep exploring, not so generous that danger
-  vanishes.
+- Overworld defeat returns the player to the starting screen.
+- Dungeon defeat returns the player to that dungeon's entrance room.
+- Health resets to three hearts. All permanent progress is retained.
+- See Save Data Contract for the full list of what persists.
 
 ## Inventory and Items
 
 Items should be divided into permanent equipment, active items, dungeon items,
 consumables, and quest relics.
+
+Pause screen:
+
+- One equipped-item slot. The player opens the inventory to swap which active
+  item is assigned to the use button.
+- Grid of collected items. Items not yet found show as empty slots.
+- Current sword, shield, armor, and ring shown in an equipment section.
+- Dungeon map view when a map has been collected, with compass marker if the
+  compass has been collected.
+- Three save slots with file select at the title screen.
 
 ### Permanent Equipment
 
@@ -183,8 +168,9 @@ consumables, and quest relics.
 - Master sword equivalent: late-game upgrade gated by higher maximum health.
 - Small shield: blocks simple frontal projectiles.
 - Large shield: blocks stronger projectiles and magic attacks.
-- Blue armor/ring: halves incoming damage.
-- Red armor/ring: reduces incoming damage further.
+- Blue armor/ring: reduces incoming damage.
+- Red armor/ring: reduces incoming damage further. See Tuning Defaults for
+  multipliers.
 - Strength bracelet: allows pushing or moving heavy overworld objects.
 
 ### Active Items
@@ -205,13 +191,6 @@ consumables, and quest relics.
 - Potion: restores health.
 - Letter/prescription: unlocks potion shops or healer services.
 
-### Traversal Items
-
-- Raft: launches from docks to cross water routes.
-- Ladder: crosses one-tile gaps, rivers, or dungeon pits.
-- Strength bracelet: doubles as a traversal item for heavy rocks.
-- Recorder/flute: reveals certain entrances and enables fast travel.
-
 ### Dungeon Items
 
 - Small key: opens one locked dungeon door. Keys are global — a key found in
@@ -227,23 +206,12 @@ consumables, and quest relics.
 - Relic fragment: one of eight pieces needed to unlock the final dungeon.
   Fragments are permanent — never lost.
 
-Door and room persistence:
+Persistence:
 
 - Locked doors stay open permanently once unlocked (persists through death
   and save/load).
-- Shutter doors (lock until all enemies are defeated) reset on room re-entry
-  and enemies respawn.
 - Bombable walls stay revealed permanently once bombed.
-- Pushed blocks reset on room re-entry, but any stairs they revealed remain
-  accessible.
-
-### Currency and Drops
-
-- Rupees/gems: money for shops, arrows, hints, and services.
-- Heart drops: health recovery.
-- Fairy drops: rare full or large recovery.
-- Clock/time-freeze drop: temporarily freezes enemies on the current screen.
-- Bomb drops: replenish bombs.
+- See Combat Model for enemy spawning and room reset rules.
 
 ### Item Acquisition Summary
 
@@ -288,8 +256,8 @@ Economy expectations:
   exploration.
 - Arrows cost one rupee per shot, preserving the classic economy pressure.
   The bow is useless without currency or arrow drops.
-- The player starts with eight bombs. Bomb capacity upgrades (up to sixteen)
-  should exist and be optional, found in caves or purchased.
+- Bomb capacity upgrades (up to sixteen) should exist and be optional, found
+  in caves or purchased.
 - Arrow quiver starts unlimited (uses rupees). An optional quiver upgrade
   allows carrying arrows as a separate resource.
 - Prices should make early purchases meaningful without requiring grinding.
@@ -315,9 +283,7 @@ Player combat:
 
 - Sword has a short active arc or thrust in the facing direction.
 - Sword beam fires only at full health.
-- Shield blocks from the facing direction while idle.
 - Items create alternative strategies but do not replace sword fundamentals.
-- Damage knockback should be short and predictable.
 
 Enemy combat:
 
@@ -654,7 +620,6 @@ Audio:
   fragment collection.
 - Readable combat sounds for sword, shield, damage, enemy defeat, bombs, arrows,
   fire, magic, and low health.
-
 
 ## Save Data Contract
 
