@@ -37,7 +37,7 @@ No tests or linter — the build is the only verification step. The build copies
 - Each entity type has its own file(s) defining its vtable, spawn function, and behavior. Enemy files live under `src/enemies/`.
 - `game_update()` dispatches to one handler function per game state. `game_draw()` has a similar per-state switch.
 - Named constants for all tunable values live in `common.h` (`#define`). New magic numbers should be added there, not hardcoded inline.
-- **Entities that manage their own movement** (firebar, podoboo, balance lift, bowser, piranha, bowser fireballs, blooper, hammer, lakitu, vine; swimming cheep-cheep) are skipped by the generic tile-collision loop in `update_playing`. When adding a new self-moving entity, add it to the skip list in game.c step 4.
+- **Entities that manage their own movement** set `self_moving = true` at spawn time. The engine skips generic tile collision for these entities. When adding a new self-moving entity, set the flag in the spawn function — no changes to game.c needed.
 
 ### Level system
 
@@ -79,7 +79,7 @@ Underwater levels (`type underwater`) modify Mario's physics in `mario.c`: reduc
 ### Important caveats
 
 - `DIR_NONE` is -1. Always guard with `if (dir != DIR_NONE)` before using direction as an array index.
-- `state_val == 2` is used as a "dead-falling" flag for goomba/koopa/shell/paratroopa/hammer_bro/buzzy_beetle/spiny. Other entity types (piranha, bowser) use `state_val` for their own state machines — don't add generic `state_val == 2` checks in game.c.
+- Dead-falling is signaled by setting `dead_falling = true` on the entity (alongside `state_val = 2` for backwards compat). The engine checks the flag, not the type — no type lists in game.c. Other entity types (piranha) use `state_val` for their own state machines and must not set `dead_falling`.
 - Macro names must not collide with header include guards (e.g., use `PIRANHA_HEIGHT` not `PIRANHA_H`, `BOWSER_HEIGHT` not `BOWSER_H`).
 
 ## Asset Pipeline
@@ -106,8 +106,9 @@ Store WAV files in `src/resources/`.
 ## Coding principles
 
 - **C game programming best practices** — prefer stack/static allocation for fixed-size data, use heap when the size varies at runtime (e.g. level tile grids). Keep hot data contiguous, avoid unnecessary indirection.
-- **KISS** — simplest thing that works. No clever patterns where a plain `if` does the job.
+- **KISS** — simplest thing that works. No clever patterns where a plain `if` does the job. But a plain `if` that must be copy-pasted into every new feature is not simple — it's a maintenance trap.
 - **YAGNI** — don't build for hypothetical needs. No abstraction layers "for later."
 - **DRY** — remove real duplication, not shape-similar code. Wrong abstraction costs more than repetition.
+- **Locality of change** — adding a new entity, tile, or feature should require changes in as few files as possible. Prefer data-driven dispatch (flags, vtables) over centralized type switches when the set of types is expected to grow. If a new enemy requires editing the orchestrator, the abstraction is missing.
 
-When in doubt, lean KISS over DRY.
+When in doubt: for code one person owns and rarely changes, lean KISS. For interfaces many contributors touch, lean locality of change.
