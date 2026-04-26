@@ -1,30 +1,14 @@
 # SPEC.md
 
-# Modern 2D Adventure Game Spec
+# Modern 2D recreation of The Legend of Zelda
 
 ## Intent
 
 Build a modernized top-down 2D action-adventure inspired by the 1986 classic
-adventure formula: explore a dangerous overworld, find hidden entrances, collect
-tools, solve compact room puzzles, clear dungeons, defeat bosses, and assemble
-eight sacred fragments to unlock the final lair.
+The Legend of Zelda.
 
 This project should preserve the feel of the original gameplay loop while using
-original art direction, original names where practical, original layouts, and
-original audio. The goal is not a pixel-perfect remake, it recreates the gameplay mechanics while modernizing the graphics.
-
-## Core Game Loop
-
-1. Explore overworld screens.
-2. Fight or avoid enemies.
-3. Find caves, shops, secret rooms, fairy springs, and dungeon entrances.
-4. Earn currency, hearts, keys, and equipment.
-5. Enter a dungeon and search for its map, compass, major item, boss, and relic
-   fragment.
-6. Use new items to reveal more overworld secrets and reach later dungeons.
-7. Complete eight fragment dungeons.
-8. Enter the final dungeon, find the final weapon upgrade, defeat the final
-   boss, and rescue the captive ruler.
+original art direction, original layouts, and original audio. The goal is not a pixel-perfect remake, it recreates the gameplay mechanics while modernizing the graphics.
 
 ## World Structure
 
