@@ -69,6 +69,16 @@ Modern quality-of-life targets:
 - Optional restart/continue from dungeon entrance after defeat.
 - Save and continue support for player progress.
 
+## Inventory and Pause Screen
+
+- One equipped-item slot. The player opens the inventory to swap which active
+  item is assigned to the use button.
+- Grid of collected items. Items not yet found show as empty slots.
+- Current sword, shield, armor, and ring shown in an equipment section.
+- Dungeon map view when a map has been collected, with compass marker if the
+  compass has been collected.
+- Three save slots with file select at the title screen.
+
 ## Movement and Collision Model
 
 Screen and tile geometry:
@@ -117,6 +127,22 @@ Collision:
   occurs when the player's hitbox overlaps an enemy's hitbox.
 - Projectile hitboxes are small rectangles that travel in a straight line and
   check overlap each frame.
+Collision layers:
+
+- Player ↔ Terrain: blocked by impassable tiles (tile-grid check).
+- Player ↔ Enemy body: contact damage to player.
+- Player ↔ Enemy projectile: damage to player, unless shield faces the
+  projectile.
+- Player ↔ Pickup: collect on overlap.
+- Player weapon ↔ Enemy body: damage to enemy.
+- Player weapon ↔ Terrain: stopped (arrows, sword beam, magic rod hit walls).
+- Enemy ↔ Terrain: blocked for most enemies. Bats, ghosts, and flying
+  enemies ignore walls.
+- Enemy ↔ Enemy: no collision. Enemies overlap freely.
+- Enemy projectile ↔ Terrain: stopped.
+- Player projectile ↔ Enemy projectile: pass through each other.
+- Bomb blast ↔ Bombable wall: reveal permanently.
+
 - Knockback from damage pushes the player or enemy a fixed distance in the
   hit direction, ignoring the tile grid for the slide but snapping back to
   the nearest valid tile center when the knockback ends.
@@ -610,18 +636,6 @@ traps the player), and all boss-required items are either found within the
 same dungeon (D5 recorder, D9 silver arrow) or obtainable from shops/earlier
 dungeons.
 
-## Difficulty Curve
-
-- Early game: simple movement, low projectile density, short dungeons.
-- Mid game: item gates, dark rooms, shielded enemies, stronger projectiles.
-- Late game: teleporting enemies, equipment-stealing threats, multi-boss rooms,
-  maze navigation, and higher damage.
-- Final game: tests full mastery of combat, resource management, secret reading,
-  and item usage.
-
-The game should allow brave players to sequence-break some optional upgrades,
-but it should not require obscure knowledge to finish.
-
 ## Modernization Targets
 
 Visuals:
@@ -641,42 +655,6 @@ Audio:
 - Readable combat sounds for sword, shield, damage, enemy defeat, bombs, arrows,
   fire, magic, and low health.
 
-Feedback:
-
-- Secret reveals should have a satisfying visual/audio cue.
-- New items should briefly show a name and icon.
-- Damage, block, stun, and invulnerability states should be visually clear.
-- Boss phase changes should be noticeable.
-
-HUD:
-
-- Top or side bar showing: current hearts, rupee count, bomb count, equipped
-  item icon, and current key count (in dungeons).
-- The HUD should not overlap the play area. Reserve a strip for it and size
-  the play area to fill the remainder.
-- Low-health indicator: flashing hearts or audio cue when at one heart or
-  below.
-- Dungeon map and compass indicator when those items have been collected for
-  the current dungeon.
-
-Inventory/pause screen:
-
-- One equipped-item slot. The player opens the inventory to swap which active
-  item is assigned to the use button.
-- Grid of collected items with clear icons. Items not yet found are blank or
-  silhouetted.
-- Current sword, shield, armor, and ring shown in an equipment section.
-- Dungeon map view when a map has been collected, with compass marker if the
-  compass has been collected.
-- Three save slots with file select at the title screen.
-
-Quality of life:
-
-- Save and continue support. Auto-save on dungeon entry, screen transition,
-  and item pickup.
-- Optional map viewing for discovered overworld screens.
-- Clear distinction between discovered, hinted, and unexplored dungeon areas.
-- No long unskippable text.
 
 ## Save Data Contract
 
@@ -762,30 +740,7 @@ Optional completion:
 - All overworld secrets found.
 - All dungeon maps and compasses collected.
 
-## Content Scope
-
-Minimum complete game:
-
-- Full overworld with all required regions.
-- 8 fragment dungeons.
-- Final dungeon.
-- Complete item set needed for progression.
-- Full enemy roster needed to support dungeon variety.
-- All bosses listed above.
-- Save/continue.
-- Shops, hints, caves, secrets, and heart upgrades.
-- Original visual and sound assets.
-
-Possible stretch goals:
-
-- Second Quest mode with remixed dungeon layouts, changed entrances, harder
-  enemy placements, and altered item order.
-- Optional modern map pins or notes.
-- Accessibility toggles for damage, flashing effects, and input buffering.
-- Hero mode after completion.
-- Time trials or boss rush.
-
-## Out of Scope for the First Full Version
+## Out of Scope
 
 - Side-scrolling areas.
 - RPG leveling or experience points.
@@ -796,36 +751,3 @@ Possible stretch goals:
 - Physics-heavy puzzles.
 - Pixel-perfect recreation of the 1986 map, sprites, music, text, or exact room
   layouts.
-
-## Research Notes
-
-The original reference game uses:
-
-- A main screen for action and a sub screen for treasure selection.
-- Sword on the primary action and item use on the secondary action.
-- Overworld exploration across forests, lakes, mountains, caves, shops, NPCs,
-  and hidden entrances.
-- Underworld labyrinths containing more enemies, maps, compasses, keys, locked
-  doors, hidden treasures, and relic fragments.
-- Items such as boomerangs, bombs, bow/arrows, candles, recorder, bait, potion,
-  magic rod, raft, ladder, rings, bracelet, map, compass, keys, and magic key.
-- Eight fragment dungeons followed by a ninth final dungeon.
-- Dungeon names/themes in the first quest: Eagle, Moon, Manji, Snake, Lizard,
-  Dragon, Demon, Lion, and Death Mountain.
-- Bosses including Aquamentus, Dodongo, Manhandla, Gleeok, Digdogger, Gohma, and
-  Ganon.
-
-Primary research links:
-
-- NES instruction manual transcription:
-  https://www.world-of-nintendo.com/manuals/nes/legend_of_zelda.shtml
-- Items in The Legend of Zelda:
-  https://zeldawiki.wiki/wiki/Items_in_The_Legend_of_Zelda
-- Enemies in The Legend of Zelda:
-  https://zeldawiki.wiki/wiki/Enemies_in_The_Legend_of_Zelda
-- Dungeons in The Legend of Zelda:
-  https://www.zeldadungeon.net/wiki/The_Legend_of_Zelda_Dungeons
-- Level 9 / final dungeon notes:
-  https://zeldawiki.wiki/wiki/Level_9
-- Recorder item behavior:
-  https://www.zeldadungeon.net/wiki/Recorder
