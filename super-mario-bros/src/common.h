@@ -107,6 +107,17 @@
 #define UNDERWATER_SWIM_VEL     -350.0f
 #define UNDERWATER_WALK_SPEED   200.0f
 
+// Hammer Bro
+#define HAMMER_BRO_SPEED        60.0f
+#define HAMMER_BRO_JUMP_VEL     -800.0f
+#define HAMMER_BRO_JUMP_INTERVAL 2.5f
+#define HAMMER_BRO_THROW_INTERVAL 1.2f
+#define HAMMER_BRO_ADVANCE_DIST  (TILE_SIZE * 6)
+#define HAMMER_SPEED_X           200.0f
+#define HAMMER_SPEED_Y           -600.0f
+#define HAMMER_W                 24
+#define HAMMER_HEIGHT            24
+
 // Balance lift
 #define LIFT_W              (TILE_SIZE * 3)
 #define LIFT_H              16
@@ -228,6 +239,8 @@
 #define COLOR_CHEEP_RED   (Color){228, 60, 60, 255}
 #define COLOR_CHEEP_GRAY  (Color){160, 160, 180, 255}
 #define COLOR_BG_WATER    (Color){16, 48, 120, 255}
+#define COLOR_HAMMER_BRO  (Color){0, 160, 0, 255}
+#define COLOR_HAMMER      (Color){140, 100, 60, 255}
 
 // Direction
 typedef enum {
@@ -286,6 +299,7 @@ typedef enum {
     ENT_BOWSER_FIRE,
     ENT_BALANCE_LIFT,
     ENT_SPRINGBOARD,
+    ENT_HAMMER,
     ENT_TYPE_COUNT,
 } EntityType;
 

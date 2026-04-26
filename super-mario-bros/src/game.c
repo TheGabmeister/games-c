@@ -122,7 +122,8 @@ static void update_playing(Game *game) {
         }
         // Dead-falling entities (state_val == 2 for goomba/koopa types only)
         if (e->state_val == 2 && (e->type == ENT_GOOMBA || e->type == ENT_KOOPA ||
-            e->type == ENT_SHELL || e->type == ENT_PARATROOPA)) {
+            e->type == ENT_SHELL || e->type == ENT_PARATROOPA ||
+            e->type == ENT_HAMMER_BRO)) {
             e->vy += GRAVITY * dt;
             e->y += e->vy * dt;
             if (e->y > game->level.height * TILE_SIZE + 200)
@@ -146,7 +147,7 @@ static void update_playing(Game *game) {
         if (e->type == ENT_FIREBAR || e->type == ENT_PODOBOO ||
             e->type == ENT_BALANCE_LIFT || e->type == ENT_BOWSER ||
             e->type == ENT_BOWSER_FIRE || e->type == ENT_PIRANHA ||
-            e->type == ENT_BLOOPER)
+            e->type == ENT_BLOOPER || e->type == ENT_HAMMER)
             continue;
 
         // Swimming cheep-cheep manages its own movement (leaping variant uses gravity)
@@ -219,7 +220,8 @@ static void update_playing(Game *game) {
             if (b->type == ENT_BRICK_DEBRIS || b->type == ENT_COIN_POPUP ||
                 b->type == ENT_SCORE_POPUP || b->type == ENT_FIREBALL ||
                 b->type == ENT_BALANCE_LIFT || b->type == ENT_BOWSER_FIRE ||
-                b->type == ENT_FIREBAR || b->type == ENT_PODOBOO) continue;
+                b->type == ENT_FIREBAR || b->type == ENT_PODOBOO ||
+                b->type == ENT_HAMMER) continue;
 
             if (!entity_overlap(a, b)) continue;
 

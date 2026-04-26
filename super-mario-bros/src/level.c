@@ -13,6 +13,7 @@
 #include "enemies/springboard.h"
 #include "enemies/blooper.h"
 #include "enemies/cheep_cheep.h"
+#include "enemies/hammer_bro.h"
 #include <stdlib.h>
 #include <stdio.h>
 
@@ -119,6 +120,9 @@ void level_activate_spawns(Level *level, Entity entities[MAX_ENTITIES], float ca
                     break;
                 case ENT_CHEEP_CHEEP:
                     spawn_cheep_cheep(entities, spawn_x, spawn_y, s->extra);
+                    break;
+                case ENT_HAMMER_BRO:
+                    spawn_hammer_bro(entities, spawn_x, spawn_y);
                     break;
                 case ENT_BALANCE_LIFT: {
                     Entity *e = entity_alloc(entities);
@@ -482,6 +486,7 @@ static int parse_spawn_type(const char *name) {
     if (strcmp(name, "springboard") == 0) return ENT_SPRINGBOARD;
     if (strcmp(name, "blooper") == 0) return ENT_BLOOPER;
     if (strcmp(name, "cheep") == 0) return ENT_CHEEP_CHEEP;
+    if (strcmp(name, "hammer_bro") == 0) return ENT_HAMMER_BRO;
     return ENT_NONE;
 }
 
