@@ -37,14 +37,14 @@ No tests or linter — the build is the only verification step. The build copies
 - Each entity type has its own file(s) defining its vtable, spawn function, and behavior. Enemy files live under `src/enemies/`.
 - `game_update()` dispatches to one handler function per game state. `game_draw()` has a similar per-state switch.
 - Named constants for all tunable values live in `common.h` (`#define`). New magic numbers should be added there, not hardcoded inline.
-- **Entities that manage their own movement** (firebar, podoboo, balance lift, bowser, piranha, bowser fireballs) are skipped by the generic tile-collision loop in `update_playing`. When adding a new self-moving entity, add it to the skip list in game.c step 4.
+- **Entities that manage their own movement** (firebar, podoboo, balance lift, bowser, piranha, bowser fireballs, blooper, hammer, lakitu, vine; swimming cheep-cheep) are skipped by the generic tile-collision loop in `update_playing`. When adding a new self-moving entity, add it to the skip list in game.c step 4.
 
 ### Level system
 
 Levels are stored as `.txt` files in `src/resources/levels/` (e.g., `1-1.txt`, `1-2.txt`). The format is:
 
 ```
-type overworld|underground|castle|athletic
+type overworld|underground|castle|athletic|underwater
 bg R G B
 bridge start_tx end_tx ty    # castle levels only
 
@@ -58,6 +58,7 @@ blocks
 spawns
 22 12 goomba      # tx ty type [extra]
 107 12 koopa red  # extra: "red" for red koopa, "cw" for clockwise firebar, pair_id for lifts
+55 6 cheep 1      # extra: 0=gray slow, 1=red fast, 2=leaping
 
 warps
 16 11 1 2 142 11  # pipe_tx pipe_ty dest_world dest_sublevel dest_tx dest_ty
@@ -65,7 +66,11 @@ warps
 
 Tile characters: `.` empty, `G` ground, `B` brick, `Q` question, `U` used, `H` hard, `[` `]` pipe top, `{` `}` pipe body, `F` flagpole, `f` flagpole base, `=` bridge, `X` axe, `L` lava, `D` castle door, `I` invisible, `C` coral, `V` vine block, `T` bill blaster.
 
+Spawn type names (used in `.txt` files): `goomba`, `koopa`, `piranha`, `firebar`, `podoboo`, `bowser`, `lift`, `paratroopa`, `springboard`, `blooper`, `cheep`, `hammer_bro`, `lakitu`, `spiny`, `buzzy`.
+
 `level.c` contains the tile engine (collision, drawing, spawn activation) and the `.txt` parser. Level data lives entirely in the `.txt` files — adding a new level requires no code changes.
+
+Underwater levels (`type underwater`) modify Mario's physics in `mario.c`: reduced gravity, swim impulse on jump press, no running. The `V` (vine block) tile spawns a vine entity when hit from below and uses the `warps` section (keyed by the vine block's tile position) to define where the vine takes Mario.
 
 ### Game states
 
@@ -74,7 +79,7 @@ Tile characters: `.` empty, `G` ground, `B` brick, `Q` question, `U` used, `H` h
 ### Important caveats
 
 - `DIR_NONE` is -1. Always guard with `if (dir != DIR_NONE)` before using direction as an array index.
-- `state_val == 2` is used as a "dead-falling" flag for goomba/koopa/shell only. Other entity types (piranha, bowser) use `state_val` for their own state machines — don't add generic `state_val == 2` checks in game.c.
+- `state_val == 2` is used as a "dead-falling" flag for goomba/koopa/shell/paratroopa/hammer_bro/buzzy_beetle/spiny. Other entity types (piranha, bowser) use `state_val` for their own state machines — don't add generic `state_val == 2` checks in game.c.
 - Macro names must not collide with header include guards (e.g., use `PIRANHA_HEIGHT` not `PIRANHA_H`, `BOWSER_HEIGHT` not `BOWSER_H`).
 
 ## Asset Pipeline
