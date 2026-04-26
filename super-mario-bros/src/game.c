@@ -82,8 +82,9 @@ static void update_playing(Game *game) {
 
     Entity *mario = &game->entities[game->mario];
 
-    // 0. Activate enemies that scrolled into view
+    // 0. Activate enemies that scrolled into view + Bill Blasters
     level_activate_spawns(&game->level, game->entities, game->camera_x);
+    level_update_blasters(&game->level, game->entities, game->mario, game->camera_x, &game->blaster_timer);
 
     // 1. Mario update (input + velocity computation)
     if (mario->vtab && mario->vtab->update)
@@ -465,7 +466,12 @@ static void update_castle_complete(Game *game) {
     if (game->state_timer >= total_time) {
         game->score += (int)game->timer * 50;
         game->timer = 0;
-        advance_to_next_level(game);
+        if (game->world == 8 && game->sublevel == 4) {
+            game->state = STATE_WIN;
+            game->state_timer = 0;
+        } else {
+            advance_to_next_level(game);
+        }
     }
 }
 
@@ -483,6 +489,37 @@ static void draw_castle_complete(Game *game) {
         int tw2 = MeasureText(text2, 20);
         DrawText(text2, (WINDOW_WIDTH - tw2) / 2, WINDOW_HEIGHT / 3 + 50, 20, COLOR_TEXT);
     }
+}
+
+// --- Win ---
+
+#define WIN_DISPLAY_TIME 8.0f
+
+static void update_win(Game *game) {
+    float dt = GetFrameTime();
+    game->state_timer += dt;
+    if (game->state_timer >= WIN_DISPLAY_TIME) {
+        game_init(game);
+    }
+}
+
+static void draw_win(Game *game) {
+    (void)game;
+    const char *t1 = "THANK YOU MARIO!";
+    int tw1 = MeasureText(t1, 40);
+    DrawText(t1, (WINDOW_WIDTH - tw1) / 2, WINDOW_HEIGHT / 3, 40, COLOR_TEXT);
+
+    const char *t2 = "YOUR QUEST IS OVER.";
+    int tw2 = MeasureText(t2, 30);
+    DrawText(t2, (WINDOW_WIDTH - tw2) / 2, WINDOW_HEIGHT / 3 + 60, 30, COLOR_TEXT);
+
+    const char *t3 = "WE PRESENT YOU A NEW QUEST.";
+    int tw3 = MeasureText(t3, 20);
+    DrawText(t3, (WINDOW_WIDTH - tw3) / 2, WINDOW_HEIGHT / 3 + 110, 20, COLOR_TEXT);
+
+    const char *t4 = "PRESS ENTER";
+    int tw4 = MeasureText(t4, 20);
+    DrawText(t4, (WINDOW_WIDTH - tw4) / 2, WINDOW_HEIGHT / 3 + 170, 20, COLOR_TEXT);
 }
 
 // --- Pipe Transition ---
@@ -559,6 +596,7 @@ void game_update(Game *game) {
         case STATE_LEVEL_COMPLETE:  update_level_complete(game);  break;
         case STATE_CASTLE_COMPLETE: update_castle_complete(game); break;
         case STATE_PIPE_TRANSITION: update_pipe_transition(game); break;
+        case STATE_WIN:             update_win(game);             break;
     }
 }
 
@@ -599,6 +637,9 @@ void game_draw(Game *game) {
         case STATE_PIPE_TRANSITION:
             draw_hud(game);
             draw_pipe_transition(game);
+            break;
+        case STATE_WIN:
+            draw_win(game);
             break;
     }
 

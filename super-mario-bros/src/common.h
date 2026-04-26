@@ -128,6 +128,14 @@
 // Spiny
 #define SPINY_SPEED          120.0f
 
+// Bullet Bill
+#define BULLET_BILL_SPEED    400.0f
+#define BLASTER_FIRE_INTERVAL 3.0f
+#define BLASTER_MARIO_DIST   (TILE_SIZE * 2)
+
+// Bowser hammer (worlds 6+)
+#define BOWSER_HAMMER_INTERVAL 1.8f
+
 // Buzzy Beetle
 #define BUZZY_SPEED          120.0f
 
@@ -283,6 +291,7 @@ typedef enum {
     STATE_LEVEL_COMPLETE,
     STATE_CASTLE_COMPLETE,
     STATE_PIPE_TRANSITION,
+    STATE_WIN,
 } GameState;
 
 // Mario power states

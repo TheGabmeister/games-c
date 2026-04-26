@@ -69,6 +69,7 @@ void level_activate_spawns(Level *level, Entity entities[MAX_ENTITIES], float ca
 void level_handle_head_bump(Level *level, Entity *e, int tx, int ty, Game *game);
 
 PipeWarp *level_get_warp(Level *level, int tx, int ty);
+void level_update_blasters(Level *level, Entity entities[MAX_ENTITIES], int mario_idx, float camera_x, float *timer);
 
 void level_collide_x(Level *level, Entity *e);
 void level_collide_y(Level *level, Entity *e, Game *game);

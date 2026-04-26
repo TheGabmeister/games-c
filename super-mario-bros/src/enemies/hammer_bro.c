@@ -38,7 +38,7 @@ static const EntityVtab hammer_vtab = {
     .draw   = hammer_draw,
 };
 
-static void spawn_hammer(Entity entities[MAX_ENTITIES], float x, float y, Direction dir) {
+void spawn_hammer_projectile(Entity entities[MAX_ENTITIES], float x, float y, Direction dir) {
     Entity *e = entity_alloc(entities);
     if (!e) return;
     e->type = ENT_HAMMER;
@@ -94,7 +94,7 @@ static void hammer_bro_update(Entity *self, Game *game) {
         self->anim_timer = 0;
         float hx = self->x + self->w / 2;
         float hy = self->y;
-        spawn_hammer(game->entities, hx, hy, self->facing);
+        spawn_hammer_projectile(game->entities, hx, hy, self->facing);
     }
 
     // Advance toward Mario if he's close

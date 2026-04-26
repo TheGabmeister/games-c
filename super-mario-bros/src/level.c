@@ -17,6 +17,7 @@
 #include "enemies/lakitu.h"
 #include "enemies/spiny.h"
 #include "enemies/buzzy_beetle.h"
+#include "enemies/bullet_bill.h"
 #include "enemies/vine.h"
 #include <stdlib.h>
 #include <stdio.h>
@@ -98,6 +99,7 @@ static const SpawnInfo spawn_registry[ENT_TYPE_COUNT] = {
     [ENT_LAKITU]       = { spawn_lakitu,        true,  true  },
     [ENT_SPINY]        = { spawn_spiny,         false, false },
     [ENT_BUZZY_BEETLE] = { spawn_buzzy_beetle,  false, false },
+    [ENT_BULLET_BILL]  = { spawn_bullet_bill,   false, false },
     [ENT_BALANCE_LIFT] = { spawn_balance_lift,   true,  false },
 };
 
@@ -135,6 +137,41 @@ void level_activate_spawns(Level *level, Entity entities[MAX_ENTITIES], float ca
                 spawn_registry[s->type].spawn(entities, spawn_x, spawn_y, s->extra);
         }
     }
+}
+
+void level_update_blasters(Level *level, Entity entities[MAX_ENTITIES], int mario_idx, float camera_x, float *timer) {
+    float dt = GetFrameTime();
+    *timer += dt;
+    if (*timer < BLASTER_FIRE_INTERVAL) return;
+    *timer -= BLASTER_FIRE_INTERVAL;
+
+    Entity *mario = &entities[mario_idx];
+    int start_tx = (int)(camera_x / TILE_SIZE);
+    int end_tx = start_tx + TILES_X + 1;
+    if (end_tx > level->width) end_tx = level->width;
+
+    int blasters[32];
+    int count = 0;
+    for (int ty = 0; ty < level->height && count < 32; ty++) {
+        for (int tx = start_tx; tx < end_tx && count < 32; tx++) {
+            if (level_get_tile(level, tx, ty) != TILE_BILL_BLASTER) continue;
+            float bx = (float)(tx * TILE_SIZE);
+            float by = (float)(ty * TILE_SIZE);
+            float dx = fabsf(mario->x - bx);
+            float dy = fabsf(mario->y - by);
+            if (dx < BLASTER_MARIO_DIST && dy < TILE_SIZE * 2) continue;
+            blasters[count++] = ty * level->width + tx;
+        }
+    }
+    if (count == 0) return;
+
+    int pick = GetRandomValue(0, count - 1);
+    int tx = blasters[pick] % level->width;
+    int ty = blasters[pick] / level->width;
+    float bx = (float)(tx * TILE_SIZE);
+    float by = (float)(ty * TILE_SIZE);
+    int dir = (mario->x < bx) ? -1 : 1;
+    spawn_bullet_bill(entities, bx, by, dir);
 }
 
 PipeWarp *level_get_warp(Level *level, int tx, int ty) {
@@ -252,6 +289,8 @@ static Color tile_color(int tile_type) {
         case TILE_BRIDGE:       return COLOR_BRIDGE;
         case TILE_AXE:          return COLOR_AXE;
         case TILE_LAVA:         return COLOR_LAVA;
+        case TILE_BILL_BLASTER: return (Color){40, 40, 40, 255};
+        case TILE_CORAL:        return (Color){255, 127, 80, 255};
         default:                return BLANK;
     }
 }
@@ -307,6 +346,10 @@ void level_draw(Level *level, float camera_x) {
                 DrawRectangle((int)draw_x, (int)draw_y, TILE_SIZE, TILE_SIZE, c);
                 Color highlight = {255, 200, 0, 80};
                 DrawRectangle((int)draw_x, (int)draw_y, TILE_SIZE, 8, highlight);
+            } else if (tile == TILE_BILL_BLASTER) {
+                DrawRectangle((int)(draw_x + 8), (int)draw_y, TILE_SIZE - 16, TILE_SIZE, c);
+                DrawRectangle((int)(draw_x + 4), (int)draw_y, TILE_SIZE - 8, 16, (Color){60, 60, 60, 255});
+                DrawCircle((int)(draw_x + TILE_SIZE / 2), (int)(draw_y + TILE_SIZE / 2), 8, (Color){20, 20, 20, 255});
             } else if (tile == TILE_AXE) {
                 float bob = sinf((float)GetTime() * 4.0f) * 4.0f;
                 DrawRectangle((int)(draw_x + 16), (int)(draw_y + 8 + bob), 32, 48, c);
@@ -486,6 +529,7 @@ static int parse_spawn_type(const char *name) {
     if (strcmp(name, "lakitu") == 0) return ENT_LAKITU;
     if (strcmp(name, "spiny") == 0) return ENT_SPINY;
     if (strcmp(name, "buzzy") == 0) return ENT_BUZZY_BEETLE;
+    if (strcmp(name, "bullet_bill") == 0) return ENT_BULLET_BILL;
     return ENT_NONE;
 }
 

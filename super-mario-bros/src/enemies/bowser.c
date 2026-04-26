@@ -1,4 +1,5 @@
 #include "bowser.h"
+#include "hammer_bro.h"
 #include "../game.h"
 #include "../sounds.h"
 
@@ -101,6 +102,15 @@ static void bowser_update(Entity *self, Game *game) {
         float fy = self->y + BOWSER_HEIGHT * 0.3f;
         spawn_bowser_fireball(game->entities, fx, fy, self->facing);
     }
+
+    // Hammer throwing (world 6+)
+    if (game->world >= 6) {
+        if ((int)(self->state_timer / BOWSER_HAMMER_INTERVAL) != (int)(prev / BOWSER_HAMMER_INTERVAL)) {
+            float hx = self->x + self->w / 2;
+            float hy = self->y;
+            spawn_hammer_projectile(game->entities, hx, hy, self->facing);
+        }
+    }
 }
 
 static void bowser_draw(Entity *self, float camera_x) {
@@ -139,9 +149,14 @@ static void bowser_hit_by_fire(Entity *self, Game *game) {
         self->vy = -400.0f;
         self->damages_mario = false;
         self->stompable = false;
-        self->type = ENT_GOOMBA; // visual: transforms into true enemy
-        self->state_val = 2;
-        self->dead_falling = true;
+        if (game->world >= 8) {
+            self->state_val = 2;
+            self->dead_falling = true;
+        } else {
+            self->type = ENT_GOOMBA;
+            self->state_val = 2;
+            self->dead_falling = true;
+        }
     }
 }
 

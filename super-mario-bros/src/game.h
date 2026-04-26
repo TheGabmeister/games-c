@@ -37,6 +37,9 @@ struct Game {
     // Castle complete bridge collapse tracking
     int bridge_collapse_tx;
 
+    // Bill Blaster timer
+    float blaster_timer;
+
     // Mario power to preserve across levels
     MarioPower saved_power;
 };
