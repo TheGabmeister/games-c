@@ -13,8 +13,15 @@ original art direction, original layouts, and original audio. The goal is not a 
 ## World Structure
 
 The overworld should be a grid of connected screens with hard edges, readable
-biomes, and one-screen combat spaces. Scrolling or transitions happen when the
-player exits a screen edge.
+biomes, and one-screen combat spaces. The grid should be approximately 16
+columns by 8 rows (128 screens). Not every cell needs unique content — some can
+be filler or blocked — but the playable area should feel large enough to
+explore and get lost in.
+
+When the player exits a screen edge, the view scrolls in the direction of
+travel to reveal the adjacent screen. The scroll should take roughly half a
+second and lock player input until complete. Caves, dungeon entrances, and
+stair passages use an instant fade-to-black transition instead.
 
 Required overworld regions:
 
@@ -64,9 +71,10 @@ Modern quality-of-life targets:
 
 ## Health, Damage, and Recovery
 
-- Player health is measured in heart containers.
-- The player starts with a small number of hearts.
-- Heart containers increase maximum health.
+- Player health is measured in heart containers. Each heart has two halves,
+  so damage and recovery can be half-heart granular.
+- The player starts with three hearts.
+- Heart containers increase maximum health by one heart.
 - Small hearts restore partial health.
 - Fairy encounters restore a large amount or full health.
 - Potions restore all health and can have one-use or two-use variants.
@@ -79,6 +87,8 @@ Death/defeat behavior:
   point with retained permanent progress.
 - Dungeon defeat returns the player to that dungeon entrance with retained
   permanent progress.
+- The player restarts with three hearts after defeat. Consumable quantities
+  (bombs, arrows) are retained. Keys collected and doors opened persist.
 - Consumable quantities and current health after continue should follow the
   classic feel: forgiving enough to keep exploring, not so generous that danger
   vanishes.
@@ -139,6 +149,30 @@ consumables, and quest relics.
 - Clock/time-freeze drop: temporarily freezes enemies on the current screen.
 - Bomb drops: replenish bombs.
 
+### Item Acquisition Summary
+
+Dungeon rewards are listed in each dungeon's progression entry above. Items
+not found in dungeons are acquired as follows:
+
+- Basic sword: found in the starting cave before any dungeon.
+- Strong sword: upgrade cave, requires five or more heart containers.
+- Master sword equivalent: upgrade cave, requires ten or more heart
+  containers.
+- Small shield: purchased from item shops.
+- Large shield: purchased from item shops at higher price, available after
+  mid-game.
+- Blue armor/ring: found in a hidden overworld cave.
+- Red armor/ring: found in Dungeon 9 (Death Mountain).
+- Strength bracelet: found in an overworld cave, gated behind bombs.
+- Candle/fire tool: purchased from item shops.
+- Food/bait: purchased from item shops.
+- Letter/prescription: found in an overworld cave or gifted by an NPC. Once
+  shown to the healer, it unlocks potion shops permanently and is consumed.
+- Bombs: available from the start (starting supply of eight). Additional
+  bombs from shops, drops, and caves.
+- Bow: found in Dungeon 1. Requires rupees to fire until an optional quiver
+  upgrade is found.
+
 ## Economy and Shops
 
 The overworld should contain merchants and cave NPCs.
@@ -154,10 +188,28 @@ Shop/service types:
 
 Economy expectations:
 
-- Currency cap should create spending decisions.
-- Arrows may cost currency per shot to preserve the classic economy pressure.
-- Bomb capacity upgrades should exist and be optional.
+- Currency cap of 255 rupees. Creates spending decisions without punishing
+  exploration.
+- Arrows cost one rupee per shot, preserving the classic economy pressure.
+  The bow is useless without currency or arrow drops.
+- The player starts with eight bombs. Bomb capacity upgrades (up to sixteen)
+  should exist and be optional, found in caves or purchased.
+- Arrow quiver starts unlimited (uses rupees). An optional quiver upgrade
+  allows carrying arrows as a separate resource.
 - Prices should make early purchases meaningful without requiring grinding.
+
+Drop system:
+
+- Defeated enemies have a chance to drop one item: rupees (common), hearts
+  (uncommon), bombs (rare), fairy (very rare), or clock/time-freeze (very
+  rare).
+- Drop rates should use a fixed table based on enemy type and a kill counter,
+  not pure randomness. This prevents streaks of no drops and guarantees
+  resource flow during combat-heavy rooms.
+- Destructible environment objects (shrubs, pots) always drop a fixed reward
+  or nothing — no random table.
+- Bosses always drop a heart container. Mini-bosses always drop a useful
+  reward (key, bombs, or large rupee).
 
 ## Combat Model
 
@@ -178,6 +230,16 @@ Enemy combat:
 - Projectiles should be clear, bright, and slower than unfair reaction speed.
 - Rooms can lock until all enemies are defeated.
 - Some enemies should split, multiply, teleport, hide, or steal equipment.
+
+Enemy spawning:
+
+- Overworld enemies respawn every time the player re-enters a screen.
+- Dungeon enemies respawn when the player re-enters a room, except for
+  mini-bosses and bosses which stay defeated.
+- Shutter rooms (doors lock until all enemies are dead) re-lock and respawn
+  enemies on re-entry. Rooms cleared by pushing a block to reveal stairs do
+  not respawn those enemies.
+- Boss rooms remain empty after the boss is defeated.
 
 ## Enemy Roster
 
@@ -230,11 +292,12 @@ Boss roster:
 - Armored beast: mostly immune to sword; bombs are the primary answer.
 - Four-headed plant: loses heads as damaged and moves faster as it weakens.
 - Multi-headed dragon: heads detach or continue attacking after being severed.
+  Appears in escalating variants: two-headed (D4 boss), three-headed (D6
+  mini-boss), and four-headed (D8 boss). More heads means faster attacks and
+  more chaotic projectile patterns.
 - Sound-sensitive urchin: must be weakened or split with the recorder/flute.
 - Eye crab: armored except when its eye opens; arrows are the intended answer.
 - Repeat guardian variant: harder version of an earlier boss with new hazards.
-- Late multi-boss gauntlet: combines several familiar bosses before the final
-  fragment.
 - Final boss: invisible or evasive dark lord; sword reveals/stuns, silver/light
   arrow finishes the fight.
 
@@ -272,9 +335,10 @@ can be mostly open, but item gates should create a soft intended route.
 ### Dungeon 3: Green Ruins
 
 - Role: first difficulty bump.
-- Theme: mossy ruins and patrolling knights.
+- Theme: mossy ruins, flooded chambers, and patrolling knights.
 - Main item: raft.
-- New concepts: shielded enemies, more locked-route choices.
+- New concepts: shielded enemies, water-blocked passages, more locked-route
+  choices.
 - Boss: four-headed plant.
 - Reward: fragment 3 and heart container.
 
@@ -353,6 +417,9 @@ The game should teach a small set of verbs and reuse them consistently:
 - Play recorder/flute at strange ponds, fountains, hills, or boss rooms.
 - Launch raft from docks only.
 - Cross narrow water/gap tiles with ladder.
+- Light dark rooms with the candle/fire tool. Dark rooms render only a small
+  radius around the player until lit. Lighting is permanent for the current
+  dungeon visit. Enemies still move and attack in the dark.
 - Defeat all enemies to open shutters.
 - Push a block after clearing a room to reveal stairs.
 - Use bait to satisfy or distract hungry gatekeepers.
@@ -419,10 +486,32 @@ Feedback:
 - Damage, block, stun, and invulnerability states should be visually clear.
 - Boss phase changes should be noticeable.
 
+HUD:
+
+- Top or side bar showing: current hearts, rupee count, bomb count, equipped
+  item icon, and current key count (in dungeons).
+- The HUD should not overlap the play area. Reserve a strip for it and size
+  the play area to fill the remainder.
+- Low-health indicator: flashing hearts or audio cue when at one heart or
+  below.
+- Dungeon map and compass indicator when those items have been collected for
+  the current dungeon.
+
+Inventory/pause screen:
+
+- One equipped-item slot. The player opens the inventory to swap which active
+  item is assigned to the use button.
+- Grid of collected items with clear icons. Items not yet found are blank or
+  silhouetted.
+- Current sword, shield, armor, and ring shown in an equipment section.
+- Dungeon map view when a map has been collected, with compass marker if the
+  compass has been collected.
+- Three save slots with file select at the title screen.
+
 Quality of life:
 
-- Save slots or at least persistent save/continue.
-- Inventory screen with clear item selection.
+- Save and continue support. Auto-save on dungeon entry, screen transition,
+  and item pickup.
 - Optional map viewing for discovered overworld screens.
 - Clear distinction between discovered, hinted, and unexplored dungeon areas.
 - No long unskippable text.
