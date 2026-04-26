@@ -118,6 +118,24 @@
 #define HAMMER_W                 24
 #define HAMMER_HEIGHT            24
 
+// Lakitu
+#define LAKITU_SPEED         200.0f
+#define LAKITU_FLY_Y         (TILE_SIZE * 2)
+#define LAKITU_THROW_INTERVAL 2.5f
+#define LAKITU_EGG_VY        -400.0f
+#define LAKITU_EGG_VX        100.0f
+
+// Spiny
+#define SPINY_SPEED          120.0f
+
+// Buzzy Beetle
+#define BUZZY_SPEED          120.0f
+
+// Vine
+#define VINE_GROW_SPEED      200.0f
+#define VINE_W               16
+#define VINE_MAX_HEIGHT      (TILE_SIZE * 12)
+
 // Balance lift
 #define LIFT_W              (TILE_SIZE * 3)
 #define LIFT_H              16
@@ -241,6 +259,12 @@
 #define COLOR_BG_WATER    (Color){16, 48, 120, 255}
 #define COLOR_HAMMER_BRO  (Color){0, 160, 0, 255}
 #define COLOR_HAMMER      (Color){140, 100, 60, 255}
+#define COLOR_LAKITU      (Color){220, 220, 240, 255}
+#define COLOR_LAKITU_CLOUD (Color){240, 240, 255, 255}
+#define COLOR_SPINY       (Color){200, 0, 0, 255}
+#define COLOR_SPINY_EGG   (Color){200, 200, 220, 255}
+#define COLOR_BUZZY       (Color){40, 40, 80, 255}
+#define COLOR_VINE        (Color){0, 180, 0, 255}
 
 // Direction
 typedef enum {
@@ -300,6 +324,7 @@ typedef enum {
     ENT_BALANCE_LIFT,
     ENT_SPRINGBOARD,
     ENT_HAMMER,
+    ENT_VINE,
     ENT_TYPE_COUNT,
 } EntityType;
 

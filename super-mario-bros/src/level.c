@@ -14,6 +14,10 @@
 #include "enemies/blooper.h"
 #include "enemies/cheep_cheep.h"
 #include "enemies/hammer_bro.h"
+#include "enemies/lakitu.h"
+#include "enemies/spiny.h"
+#include "enemies/buzzy_beetle.h"
+#include "enemies/vine.h"
 #include <stdlib.h>
 #include <stdio.h>
 
@@ -24,6 +28,7 @@ bool tile_is_solid(int tile_type) {
         case TILE_QUESTION:
         case TILE_USED:
         case TILE_HARD:
+        case TILE_VINE_BLOCK:
         case TILE_PIPE_TL:
         case TILE_PIPE_TR:
         case TILE_PIPE_BL:
@@ -85,7 +90,7 @@ void level_activate_spawns(Level *level, Entity entities[MAX_ENTITIES], float ca
         float sx = s->tile_x * TILE_SIZE;
         bool in_range = (sx <= activate_x && sx >= camera_x - TILE_SIZE * 2);
         bool preactivate = (s->type == ENT_BALANCE_LIFT || s->type == ENT_FIREBAR ||
-                           s->type == ENT_PODOBOO);
+                           s->type == ENT_PODOBOO || s->type == ENT_LAKITU);
         if (in_range || preactivate) {
             s->activated = true;
             float spawn_x = (float)(s->tile_x * TILE_SIZE);
@@ -123,6 +128,15 @@ void level_activate_spawns(Level *level, Entity entities[MAX_ENTITIES], float ca
                     break;
                 case ENT_HAMMER_BRO:
                     spawn_hammer_bro(entities, spawn_x, spawn_y);
+                    break;
+                case ENT_LAKITU:
+                    spawn_lakitu(entities, spawn_x, spawn_y);
+                    break;
+                case ENT_SPINY:
+                    spawn_spiny(entities, spawn_x, spawn_y);
+                    break;
+                case ENT_BUZZY_BEETLE:
+                    spawn_buzzy_beetle(entities, spawn_x, spawn_y);
                     break;
                 case ENT_BALANCE_LIFT: {
                     Entity *e = entity_alloc(entities);
@@ -221,7 +235,11 @@ static void kill_enemies_on_tile(Game *game, int tx, int ty) {
 void level_handle_head_bump(Level *level, Entity *e, int tx, int ty, Game *game) {
     int tile = level_get_tile(level, tx, ty);
 
-    if (tile == TILE_QUESTION) {
+    if (tile == TILE_VINE_BLOCK) {
+        level_set_tile(level, tx, ty, TILE_USED);
+        spawn_vine(game->entities, (float)(tx * TILE_SIZE), (float)(ty * TILE_SIZE));
+        sound_play(SND_POWERUP);
+    } else if (tile == TILE_QUESTION) {
         level_set_tile(level, tx, ty, TILE_USED);
         spawn_item_from_block(level, tx, ty, e, game);
         kill_enemies_on_tile(game, tx, ty);
@@ -487,6 +505,9 @@ static int parse_spawn_type(const char *name) {
     if (strcmp(name, "blooper") == 0) return ENT_BLOOPER;
     if (strcmp(name, "cheep") == 0) return ENT_CHEEP_CHEEP;
     if (strcmp(name, "hammer_bro") == 0) return ENT_HAMMER_BRO;
+    if (strcmp(name, "lakitu") == 0) return ENT_LAKITU;
+    if (strcmp(name, "spiny") == 0) return ENT_SPINY;
+    if (strcmp(name, "buzzy") == 0) return ENT_BUZZY_BEETLE;
     return ENT_NONE;
 }
 
