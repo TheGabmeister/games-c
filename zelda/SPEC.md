@@ -79,28 +79,29 @@ Screen and tile geometry:
 
 Movement:
 
-- The world is built on a tile grid. The player always occupies exactly one
-  tile and cannot stop between tiles.
-- Pressing a direction begins a smooth slide to the adjacent tile center.
-  The slide is purely visual — the player's logical tile changes at the start
-  of the move, and the sprite catches up over a short duration.
-- Movement speed is measured in tiles per second. See Tuning Defaults for
+- The world is built on a tile grid, but player movement is continuous in
+  pixel space rather than tile-stepped. The player can stop between tile
+  centers.
+- Movement speed is measured in pixels per second. See Tuning Defaults for
   concrete values.
-- Only one direction at a time. Pressing a new direction while sliding queues
-  it and executes when the current slide finishes.
-- Facing updates immediately on input, even if movement is blocked by a wall
-  or obstacle.
+- Movement is four-directional only. Diagonal input resolves to one direction
+  using the most recently pressed direction.
+- Facing updates immediately on directional input, even if movement is blocked
+  by a wall or obstacle.
+- The player should feel grid-aware when navigating narrow passages, but the
+  movement model should preserve the loose pixel-position feel of the original
+  game.
 
 Collision:
 
-- Tile collision (walls, water, pits) uses the logical tile grid. A tile is
-  passable or impassable. The player cannot enter impassable tiles. Logical
-  tile position is only used for terrain checks.
+- Tile collision (walls, water, pits) uses the tile grid, but checks the
+  player's pixel hitbox against impassable tile rectangles. The player cannot
+  overlap impassable tiles.
 - Combat collision (sword, projectiles, enemy contact) uses hitbox overlap on
   actual sprite positions, not tile occupancy. This applies to all damage
   sources including contact damage — an enemy and player moving toward each
-  other take contact damage when their sprites overlap, not when their
-  logical tiles match.
+  other take contact damage when their sprites overlap, not when they occupy
+  the same terrain tile.
 - The sword hitbox is a rectangle extending from the player's sprite in the
   facing direction. It is active for a fixed number of frames per swing.
 - Enemy hitboxes are rectangles matching their sprite bounds. Contact damage
@@ -125,8 +126,8 @@ Collision layers:
 - Bomb blast ↔ Bombable wall: reveal permanently.
 
 - Knockback from damage pushes the player or enemy a fixed distance in the
-  hit direction, ignoring the tile grid for the slide but snapping back to
-  the nearest valid tile center when the knockback ends.
+  hit direction while respecting impassable terrain. Knockback does not snap
+  the player to tile centers.
 
 ## Health, Damage, and Recovery
 
@@ -175,10 +176,11 @@ Pause screen:
 
 ### Active Items
 
-- Boomerang: stuns many enemies, retrieves drops, damages weak foes.
+- Boomerang: stuns many enemies and damages weak foes.
 - Long boomerang: faster or farther boomerang upgrade.
 - Bombs: damage enemies and reveal cracked or suspicious walls.
-- Bow: fires arrows when arrows or currency are available.
+- Bow: fires arrows only after the arrow item has been bought. Each shot costs
+  one rupee.
 - Silver/light arrow: required to finish the final boss.
 - Candle/fire tool: lights dark rooms, burns shrubs, damages enemies. Limited
   to one use per screen; resets on screen transition.
@@ -220,7 +222,7 @@ not found in dungeons are acquired as follows:
 
 - Basic sword: found in the starting cave before any dungeon.
 - Strong sword: upgrade cave, requires five or more heart containers.
-- Master sword equivalent: upgrade cave, requires ten or more heart
+- Master sword equivalent: upgrade cave, requires twelve or more heart
   containers.
 - Small shield: purchased from item shops.
 - Large shield: purchased from item shops at higher price, available after
@@ -232,10 +234,11 @@ not found in dungeons are acquired as follows:
 - Food/bait: purchased from item shops.
 - Letter/prescription: found in an overworld cave or gifted by an NPC. Once
   shown to the healer, it unlocks potion shops permanently and is consumed.
-- Bombs: available from the start (starting supply of eight). Additional
-  bombs from shops, drops, and caves.
-- Bow: found in Dungeon 1. Requires rupees to fire until an optional quiver
-  upgrade is found.
+- Bombs: acquired from shops, drops, or gifts. The player starts with zero
+  bombs.
+- Bow: found in Dungeon 1.
+- Arrow: purchased from item shops. Required to fire the bow; each shot costs
+  one rupee.
 
 ## Economy and Shops
 
@@ -255,11 +258,10 @@ Economy expectations:
 - Currency cap of 255 rupees. Creates spending decisions without punishing
   exploration.
 - Arrows cost one rupee per shot, preserving the classic economy pressure.
-  The bow is useless without currency or arrow drops.
+  The bow is useless without both the arrow item and currency.
 - Bomb capacity upgrades (up to sixteen) should exist and be optional, found
   in caves or purchased.
-- Arrow quiver starts unlimited (uses rupees). An optional quiver upgrade
-  allows carrying arrows as a separate resource.
+- Arrows use rupees directly rather than a separate arrow inventory.
 - Prices should make early purchases meaningful without requiring grinding.
 
 Drop system:
@@ -267,13 +269,13 @@ Drop system:
 - Defeated enemies have a chance to drop one item: rupees (common), hearts
   (uncommon), bombs (rare), fairy (very rare), or clock/time-freeze (very
   rare).
-- Drop rates should use a fixed table based on enemy type and a kill counter,
-  not pure randomness. This prevents streaks of no drops and guarantees
-  resource flow during combat-heavy rooms.
-- Destructible environment objects (shrubs, pots) always drop a fixed reward
-  or nothing — no random table.
-- Bosses always drop a heart container. Mini-bosses always drop a useful
-  reward (key, bombs, or large rupee).
+- Drops should use hidden drop groups and counters inspired by the original
+  game rather than a fully predictable public cycle. Different enemy groups
+  can favor different resources, but outcomes should still feel uncertain.
+- Destructible environment objects (shrubs, pots) use authored fixed rewards
+  or original-style drop chances, depending on the object type and screen.
+- Bosses always drop a heart container. Mini-bosses may guard a key, item,
+  room unlock, or useful drop depending on the room.
 
 ## Combat Model
 
@@ -296,11 +298,16 @@ Enemy combat:
 Enemy spawning:
 
 - Overworld enemies respawn every time the player re-enters a screen.
-- Dungeon enemies respawn when the player re-enters a room, except for
-  mini-bosses and bosses which stay defeated.
-- Shutter rooms (doors lock until all enemies are dead) re-lock and respawn
-  enemies on re-entry. Rooms cleared by pushing a block to reveal stairs do
-  not respawn those enemies.
+- Dungeon rooms remember cleared enemies during the current dungeon visit.
+  Cleared normal rooms generally remain empty until the player exits the
+  dungeon or reloads a save, then reset. Rooms that are designed as repeat
+  hazards may respawn explicitly.
+- Shutter rooms unlock when cleared and remain open for the current dungeon
+  visit. They reset after leaving the dungeon or loading a save unless the
+  room contains a permanent progression event.
+- Mini-bosses and bosses stay defeated permanently.
+- Rooms cleared by pushing a block to reveal stairs do not respawn those
+  enemies during the current dungeon visit.
 - Boss rooms remain empty after the boss is defeated.
 
 ## Tuning Defaults
@@ -309,16 +316,16 @@ All values are first-pass defaults at 60 FPS. Tune from playtesting.
 
 Timing (in frames at 60 FPS):
 
-- Input buffer window: 6 frames (100ms). A sword or item press within this
-  window before the previous action ends queues the next action.
+- Input buffer window: none for sword and item actions. Inputs are accepted
+  when the player is able to act, preserving the stricter original feel.
 - Sword swing active frames: 8 frames (~133ms). The hitbox is live during
   this window.
 - Invulnerability after damage: 60 frames (1 second). Player flashes and
   cannot take further damage.
 - Knockback duration: 8 frames. Player or enemy slides during this time.
 - Knockback distance: half a tile (8 logical pixels).
-- Boss attack tell: minimum 20 frames (~333ms) of visible windup before any
-  major attack.
+- Boss attack tells should be readable through simple sprite state, movement,
+  or positioning, but do not need modern explicit windup phases.
 
 Damage (in half-hearts):
 
@@ -341,23 +348,23 @@ Enemy health (in basic sword hits to kill):
 - Tier 1: 1 hit. Tier 2: 2 hits. Tier 3: 4 hits.
 - Mini-bosses: 8 hits. Bosses: 12-16 hits.
 
-Speeds (in tiles per second):
+Speeds (in logical pixels per second):
 
-- Player movement: 4.
-- Slow enemy (slime, mummy): 1-2.
-- Normal enemy (skeleton, snake): 2-3.
-- Fast enemy (charging snake, centipede): 5-6.
-- Player projectiles (arrow, sword beam, magic rod): 8.
-- Enemy projectiles (rocks, spears, magic): 3-4.
-- Boomerang: 6 outbound, 6 return.
+- Player movement: 64.
+- Slow enemy (slime, mummy): 16-32.
+- Normal enemy (skeleton, snake): 32-48.
+- Fast enemy (charging snake, centipede): 80-96.
+- Player projectiles (arrow, sword beam, magic rod): 128.
+- Enemy projectiles (rocks, spears, magic): 48-64.
+- Boomerang: 96 outbound, 96 return.
 
-Drop table (kill-counter cycle, repeats every 10 kills):
+Drop behavior:
 
-- Kill 1: rupee (1). Kill 2: nothing. Kill 3: rupee (1). Kill 4: heart.
-  Kill 5: rupee (1). Kill 6: nothing. Kill 7: bomb. Kill 8: heart.
-  Kill 9: rupee (5). Kill 10: nothing.
-- Every 40th kill: fairy instead of the normal drop.
-- Clock/time-freeze: replaces the rupee(5) drop once per 100 kills.
+- Use several hidden enemy drop groups, each with different odds for rupees,
+  hearts, bombs, fairies, clocks, or no drop.
+- Use an internal kill/drop counter to shape resource flow in the spirit of
+  the original game, but do not expose a simple guaranteed cycle to players.
+- Clock/time-freeze drops should remain rare and screen-local.
 
 ## Enemy Roster
 
@@ -421,11 +428,13 @@ Boss roster:
 
 Boss design requirements:
 
-- Every boss must have a readable tell before major attacks.
+- Boss behavior should be learnable from simple repeated patterns, sprite
+  states, movement, and positioning.
 - Every boss room must fit on one screen.
 - Boss weaknesses should be discoverable via NPC hints, dungeon item placement,
   or visual language.
-- Bosses should become more intense as health drops, but not random.
+- Bosses should rely on simple repeatable patterns rather than random phase
+  escalation.
 
 ## Dungeon Progression
 
@@ -536,9 +545,10 @@ The game should teach a small set of verbs and reuse them consistently:
 - Play recorder/flute at strange ponds, fountains, hills, or boss rooms.
 - Launch raft from docks only.
 - Cross narrow water/gap tiles with ladder.
-- Light dark rooms with the candle/fire tool. Dark rooms render only a small
-  radius around the player until lit. Lighting is permanent for the current
-  dungeon visit. Enemies still move and attack in the dark.
+- Light dark rooms with the candle/fire tool. Unlit rooms are globally dark,
+  obscuring the room until lit; they do not use a moving player light radius.
+  Lighting is permanent for the current dungeon visit. Enemies still move and
+  attack in the dark.
 - Defeat all enemies to open shutters.
 - Push a block after clearing a room to reveal stairs.
 - Use bait to satisfy or distract hungry gatekeepers.
@@ -597,10 +607,9 @@ Allowed sequence breaks:
   a dungeon (opened doors, collected items) persists.
 
 Softlock analysis: no softlocks are possible because dungeons can always be
-exited, bombs are available from the start (no bomb-gated dungeon entrance
-traps the player), and all boss-required items are either found within the
-same dungeon (D5 recorder, D9 silver arrow) or obtainable from shops/earlier
-dungeons.
+exited, no bomb-gated dungeon entrance traps the player, and all boss-required
+items are either found within the same dungeon (D5 recorder, D9 silver arrow)
+or obtainable from shops/earlier dungeons.
 
 ## Modernization Targets
 
