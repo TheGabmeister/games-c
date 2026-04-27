@@ -3,7 +3,9 @@
 High-level code architecture for the game described in SPEC.md.
 
 Window: 1024x960 pixels. Logical resolution: 1024x960 at 1:1 scale (no
-scaling). Tile size: 64x64 pixels.
+scaling). Tile size: 64x64 pixels (defined as `TILE_SIZE` in
+`game_config.h`). The screen is divided vertically: HUD (1024x224, 3.5
+tiles) at top, 32px divider, play area (1024x704, 11 tiles) below.
 
 ## Game Loop
 
@@ -343,8 +345,9 @@ floor, `~` = water, `D` = door, `P` = pushable block, `S` = stairs). Adding
 a new tile type means adding a character mapping and a row in the tile
 property table.
 
-Overworld screens are named by grid position: `overworld/03_05.txt` for
-column 3, row 5. Dungeon rooms similarly: `dungeons/1/02_03.txt`.
+Overworld screens are named by grid position: `assets/screens/03_05.txt`
+for column 3, row 5. Dungeon rooms: `assets/dungeons/1/02_03.txt`. Caves:
+`assets/caves/cave_12.txt`.
 
 ## Event System
 
@@ -485,8 +488,9 @@ executable (copied there by CMake at build time).
 - **Music**: loaded as raylib `Music` (streamed). One track per
   biome/dungeon/boss.
 - **Map data**: plain text screen files (see Screen file format above).
-  Stored in `assets/screens/` and `assets/dungeons/<n>/`. Loaded on demand
-  when entering a new screen.
+  Stored in `assets/screens/` (overworld), `assets/dungeons/<n>/` (per
+  dungeon), and `assets/caves/` (cave rooms). Loaded on demand when
+  entering a new screen.
 
 ## Memory Model
 
@@ -504,3 +508,119 @@ Fixed array sizes:
 - Event queue: 64 entries.
 - Max overworld screens: 128 (16x8).
 - Max dungeon rooms per dungeon: 64 (8x8).
+
+## Implementation Phases
+
+Each phase produces a playable build that can be tested before moving on.
+Later phases build on earlier ones — do not skip ahead.
+
+### Phase 1 — Player and Tiles
+
+Deliverable: player sprite moves on a single screen with tile collision.
+
+- Animation system (`Anim`/`AnimDef` structs, `anim_tick`).
+- Player sprite with walk animations (4 directions) and idle frames.
+- Tilemap loading from a single hardcoded screen file.
+- Tile animations (water, grass).
+- Tile collision (wall blocking, impassable tiles).
+- HUD layout (hearts, rupees, bombs, keys, equipped item, minimap area).
+- `game_config.h` constants for tile size, screen dimensions.
+
+### Phase 2 — World Navigation
+
+Deliverable: player walks between connected overworld screens.
+
+- Screen file parser (metadata + tilemap from plain text).
+- Overworld grid (load screens by grid coordinates).
+- Screen transitions (scroll animation, ~30 frames).
+- Cave/warp transitions (fade-to-black).
+- Camera module.
+- Impassable screen edges when no adjacent screen exists.
+- Overworld music (one track, switches on screen transition).
+
+### Phase 3 — Combat
+
+Deliverable: player can fight enemies, take damage, and die.
+
+- Sword attack (hitbox in facing direction, active frames, cooldown).
+- Enemy system (EnemyDef table, EnemyContext, spawn from screen metadata).
+- 3 starter enemies: slime, bat, charging snake.
+- Collision pipeline (sword vs enemy, player vs enemy contact).
+- Contact damage and knockback.
+- Invulnerability frames with flash.
+- Health system (half-heart granularity, heart display in HUD).
+- Death state and respawn at starting screen.
+- Event system (enemy killed, player damaged, player death).
+- Combat sounds (sword swing, hit, enemy death, player damage, low health).
+- Enemy attack animations and tells.
+
+### Phase 4 — Projectiles and Items
+
+Deliverable: ranged combat works, basic inventory functional.
+
+- Projectile system (player and enemy projectiles, lifetime, wall collision).
+- Enemy projectiles: rock spitter, spear thrower.
+- Player projectiles: boomerang (stun + return), bow/arrows (rupee cost).
+- Bombs (placement, timed blast, area damage, bombable wall reveal).
+- Pickup and drop system (rupees, hearts, bombs from defeated enemies).
+- Inventory struct and equipped item slot.
+- Shield blocking (projectile from facing direction).
+- Item icons in HUD and inventory.
+- Pause screen (equipment display, item grid, equipped item switching).
+- Projectile and pickup sounds (arrow, bomb, boomerang, rupee, heart).
+- Fire and magic animations.
+
+### Phase 5 — Dungeons
+
+Deliverable: one complete dungeon playable start to finish.
+
+- Dungeon room grid loading (separate from overworld).
+- Locked doors and key consumption.
+- Shutter rooms (clear all enemies to open doors).
+- Push blocks revealing stairs.
+- Dark rooms (candle/fire tool to light).
+- Boss AI (dragon guardian — first boss).
+- Heart container and relic fragment rewards.
+- Dungeon map and compass items.
+- Dungeon map view on pause screen.
+- `STATE_ITEM_GET` with jingle.
+- Dungeon and boss music.
+- Secret and door sounds.
+
+### Phase 6 — World Systems
+
+Deliverable: overworld is navigable with shops, NPCs, and saves.
+
+- Shop system (buy items, rupee transaction).
+- NPC dialogue (short text display, hint caves, gift caves).
+- Cave room loading (`assets/caves/`).
+- Item gates (raft, ladder, bracelet, fire, bombs — conditional tile
+  passability).
+- Sword upgrades (strong sword, master sword, health gate check).
+- Save/load (binary struct, 3 slots, atomic write).
+- Title screen with file select.
+- Continue-after-death flow (reset health, keep progress).
+- Shop and NPC sounds.
+
+### Phase 7 — Content
+
+Deliverable: full game content in place.
+
+- All enemy types and red/blue variants.
+- All 9 dungeons with bosses and mini-bosses.
+- Full overworld (128 screens, all biome regions).
+- All items and equipment upgrades.
+- All NPCs, shops, secrets (bombable walls, burnable shrubs, pushable
+  stones).
+- Drop tables and economy balancing.
+- Progression gate testing (no softlocks).
+- Per-biome overworld music tracks.
+- Per-dungeon music tracks.
+
+### Phase 8 — Polish
+
+Deliverable: game feels complete and ready for playtesting.
+
+- Screen transition polish (timing, easing).
+- Game balance tuning from playtesting.
+- Edge case and regression fixes.
