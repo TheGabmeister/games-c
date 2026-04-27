@@ -1070,3 +1070,16 @@ Optional completion:
 - Maximum bomb capacity.
 - All overworld secrets found.
 - All dungeon maps and compasses collected.
+
+## References
+
+Sources used for enemy behavior, HP/damage values, and AI patterns:
+
+- StrategyWiki — The Legend of Zelda enemies: structured enemy behavior and
+  mechanics reference.
+- Data Crystal (TCRF) — The Legend of Zelda RAM map: internal timer addresses,
+  enemy action cooldowns, and engine-level behavior data.
+- Zelda Dungeon Wiki — per-enemy gameplay pages with interaction details
+  (shield blocking, vulnerability windows, special mechanics).
+- RPG Classics (tartarus.rpgclassics.com) — The Legend of Zelda enemy tables:
+  HP and damage values across all sword tiers.
