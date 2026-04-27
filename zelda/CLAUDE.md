@@ -25,24 +25,24 @@ cmake --build build
 cmake --build build --config Release
 ```
 
-The executable lands in `build/zelda/Debug/zelda.exe` (or `Release/`). Assets from `src/assets/` are copied to the executable's directory at build time, so runtime paths are relative: `assets/coin.wav`.
-
-Generator: Visual Studio 18 2026, x64.
+Generator: Visual Studio 18 2026, x64. The executable lands in `build/zelda/Debug/zelda.exe` (or `Release/`). Assets from `src/assets/` are copied beside the executable at build time, so runtime paths are relative: `assets/coin.wav`. CMake generates `compile_commands.json` for clangd/LSP.
 
 ## Architecture
 
 Window: 1024x960. Logical resolution: 1024x960 (1:1, no scaling). Tile size: 64x64 pixels.
 
+Screen layout (top to bottom): HUD 1024x224 (3.5 tiles), 32px divider, play area 1024x704 (16x11 tiles).
+
 Single `Game` struct holds all state (defined in `game.h`). The main loop in `main.c` calls `game_init` → `game_update`/`game_draw` per frame → cleanup on exit.
 
 Current modules (header/source pairs):
 - **game_config.h** — canonical source for all compile-time constants (window size, logical resolution, tile size, FPS, lives, deadzone). Other headers include this instead of defining their own constants.
-- **game.c/.h** — Game struct definition, init/update/draw. Includes `game_config.h`.
-- **input.c/.h** — keyboard + gamepad abstraction (WASD, arrows, gamepad with deadzone)
-- **sounds.c/.h** — sound loading/playback (stub)
-- **textures.c/.h** — texture management (stub)
+- **game.c/.h** — Game struct definition, init/update/draw. Currently a placeholder: renders a circle with direct keyboard input. Does not yet use the `input` module or sprites.
+- **input.c/.h** — keyboard + gamepad abstraction (WASD, arrows, d-pad, analog stick with deadzone). Exists but not yet wired into `game.c`.
+- **sounds.c/.h** — sound loading/playback (stub — function bodies are empty).
+- **textures.c/.h** — texture management (stub — files are empty).
 
-See IMPLEMENTATION.md for the full planned module structure (enemy/, tilemap, collision, event system, etc.), data-driven enemy design with function pointers, screen file format, and other systems not yet implemented.
+See IMPLEMENTATION.md for the full planned module structure and the phased implementation plan. Follow the phases in order — each produces a testable build.
 
 ## Coding principles
 
