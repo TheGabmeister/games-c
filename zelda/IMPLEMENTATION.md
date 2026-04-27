@@ -2,8 +2,8 @@
 
 High-level code architecture for the game described in SPEC.md.
 
-Window: 1024x960 pixels. Logical resolution: 256x240 at 4x scale, no
-letterboxing.
+Window: 1024x960 pixels. Logical resolution: 1024x960 at 1:1 scale (no
+scaling). Tile size: 64x64 pixels.
 
 ## Game Loop
 
@@ -477,7 +477,7 @@ executable (copied there by CMake at build time).
 
 - **Sprites**: one spritesheet PNG per category (player, each enemy type,
   tiles, items, HUD, projectiles). Each sheet is drawn as a single SVG
-  with frames on a 20px grid, exported via Inkscape. Loaded as raylib
+  with frames on a 64px grid, exported via Inkscape. Loaded as raylib
   `Texture2D`. Individual frames are accessed by source rectangle using
   row/column indices. Stored in `assets/sprites/`.
 - **Sounds**: loaded as raylib `Sound`. One WAV per effect. Loaded at

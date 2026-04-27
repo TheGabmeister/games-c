@@ -31,7 +31,7 @@ Generator: Visual Studio 18 2026, x64.
 
 ## Architecture
 
-Window: 1024x960. Logical resolution: 256x240 (NES aspect ratio) at 4x scale.
+Window: 1024x960. Logical resolution: 1024x960 (1:1, no scaling). Tile size: 64x64 pixels.
 
 Single `Game` struct holds all state (defined in `game.h`). The main loop in `main.c` calls `game_init` → `game_update`/`game_draw` per frame → cleanup on exit.
 
@@ -57,7 +57,7 @@ When in doubt: for code one person owns and rarely changes, lean KISS. For inter
 
 ## Asset Pipeline
 
-- **Sprites**: spritesheets drawn as single SVGs with all frames on a 20px grid, exported as one PNG via Inkscape (`inkscape player.svg -o player.png -w 80 -h 80` for a 4x4 sheet). One sheet per category (player, enemy type, tiles, items, etc.). Code indexes frames by row/column source rectangle. Store SVG and PNG in `src/assets/sprites/`.
+- **Sprites**: spritesheets drawn as single SVGs with all frames on a 64px grid, exported as one PNG via Inkscape (`inkscape player.svg -o player.png -w 256 -h 256` for a 4x4 sheet). One sheet per category (player, enemy type, tiles, items, etc.). Code indexes frames by row/column source rectangle. Store SVG and PNG in `src/assets/sprites/`.
 - **Sounds**: generate with rfxgen (`"D:/rfxgen_v5.0_win_x64/rfxgen.exe" -g coin -o sound.wav`). Presets: coin, laser, explosion, powerup, hit, jump, blip. Store WAV in `src/assets/`.
 - **Screen data**: plain text files, one per screen/room. See IMPLEMENTATION.md for format.
 - Sound loading is resilient — missing files are skipped.

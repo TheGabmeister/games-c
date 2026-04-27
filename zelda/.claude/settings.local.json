@@ -7,7 +7,31 @@
       "Bash(cmake --build build --config Release)",
       "Bash(cmake -S . -B build)",
       "Bash(cmake -B build -G \"Visual Studio 18 2026\" -A x64 -Wno-dev)",
-      "Bash(cmake -S . -B build -G \"Visual Studio 18 2026\" -A x64 -Wno-dev)"
+      "Bash(cmake -S . -B build -G \"Visual Studio 18 2026\" -A x64 -Wno-dev)",
+      "Bash(curl -s \"https://www.zeldadungeon.net/wiki/The_Legend_of_Zelda_Enemies\")",
+      "Bash(curl -s \"https://zelda.fandom.com/wiki/Octorok\")",
+      "Bash(curl -s \"https://strategywiki.org/wiki/The_Legend_of_Zelda/Enemies\")",
+      "WebSearch",
+      "WebFetch(domain:strategywiki.org)",
+      "WebFetch(domain:gamefaqs.gamespot.com)",
+      "WebFetch(domain:redcandle.us)",
+      "WebFetch(domain:zelda.fandom.com)",
+      "WebFetch(domain:zeldacentral.com)",
+      "WebFetch(domain:zelda.neoseeker.com)",
+      "WebFetch(domain:tartarus.rpgclassics.com)",
+      "WebFetch(domain:datacrystal.tcrf.net)",
+      "WebFetch(domain:zeldawiki.wiki)",
+      "WebFetch(domain:z1r.fandom.com)",
+      "WebFetch(domain:forceforgood.co.uk)",
+      "WebFetch(domain:nintendoforever.free.fr)",
+      "WebFetch(domain:www.zeldadungeon.net)",
+      "WebFetch(domain:triforcewiki.com)",
+      "WebFetch(domain:github.com)",
+      "WebFetch(domain:dev.to)",
+      "WebFetch(domain:mikesrpgcenter.com)",
+      "WebFetch(domain:web.archive.org)",
+      "Bash(curl -s -L -A \"Mozilla/5.0 \\(Windows NT 10.0; Win64; x64\\)\" \"https://strategywiki.org/wiki/The_Legend_of_Zelda/Enemies\")",
+      "WebFetch(domain:legendsofz.com)"
     ]
   }
 }

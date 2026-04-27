@@ -7,8 +7,7 @@
 Build a modernized top-down 2D action-adventure inspired by the 1986 classic
 The Legend of Zelda.
 
-This project should preserve the feel of the original gameplay loop while using
-original art direction, original layouts, and original audio. The goal is not a pixel-perfect remake, it recreates the gameplay mechanics while modernizing the graphics.
+This project should preserve the feel of the original gameplay loop while using original art direction, original layouts, and original audio. The goal is not a pixel-perfect remake, it recreates the gameplay mechanics while modernizing the graphics.
 
 ## World Structure
 
@@ -61,18 +60,30 @@ Core actions:
 - Transition between screens, caves, stair passages, and dungeons.
 - Pause/open inventory to choose the equipped item.
 
+Control schemes (keyboard and gamepad supported simultaneously):
+
+- Movement: WASD or arrow keys; left stick or d-pad on gamepad.
+- Attack (sword): Space or left-click; gamepad face button south (A / Cross).
+- Use equipped item: Left Shift or right-click; gamepad face button west
+  (X / Square).
+- Pause/inventory: Escape or P; gamepad Start.
+- Confirm (menus): Enter or Space; gamepad face button south.
+- Cancel (menus): Escape; gamepad face button east (B / Circle).
+- Analog stick deadzone: 0.5. Input beyond the deadzone is treated as full
+  digital direction (no variable speed).
+
 ## Movement and Collision Model
 
 Screen and tile geometry:
 
-- Logical resolution: 256x240 pixels, matching the NES aspect ratio. The
-  renderer scales this uniformly to fill the window, letterboxing if needed.
-- Tile size: 16x16 logical pixels.
-- HUD: top strip, 256x56 pixels (16 tiles wide, 3.5 tiles tall). Displays
+- Window and logical resolution: 1024x960 pixels, rendered 1:1 with no
+  scaling. Sprites are authored at display size.
+- Tile size: 64x64 pixels.
+- HUD: top strip, 1024x224 pixels (16 tiles wide, 3.5 tiles tall). Displays
   hearts, rupees, bombs, keys, equipped item, and dungeon map indicator.
-- Play area: 256x176 pixels (16 tiles wide, 11 tiles tall). This is one
+- Play area: 1024x704 pixels (16 tiles wide, 11 tiles tall). This is one
   screen of the overworld or one room of a dungeon.
-- Player sprite: 16x16 pixels (one tile). The player's hitbox matches the
+- Player sprite: 64x64 pixels (one tile). The player's hitbox matches the
   sprite.
 - Dungeon rooms: same 16x11 tile dimensions as overworld screens. Dungeon
   layouts are grids of rooms (up to 8x8 rooms per dungeon).
@@ -323,7 +334,7 @@ Timing (in frames at 60 FPS):
 - Invulnerability after damage: 60 frames (1 second). Player flashes and
   cannot take further damage.
 - Knockback duration: 8 frames. Player or enemy slides during this time.
-- Knockback distance: half a tile (8 logical pixels).
+- Knockback distance: half a tile (32 pixels).
 - Boss attack tells should be readable through simple sprite state, movement,
   or positioning, but do not need modern explicit windup phases.
 
@@ -335,28 +346,27 @@ Damage (in half-hearts):
 - Boomerang: 0 (stun only). Long boomerang: 0 (longer stun).
 - Magic rod: 2. Magic rod with spell book: 2 + fire damage over time.
 
-Enemy damage tiers (contact / projectile):
+Enemy damage and health (per-enemy values in Enemy Roster are authoritative):
 
-- Tier 1 (slime, bat, hopper): 1 / 1.
-- Tier 2 (skeleton, snake, spear thrower): 2 / 2.
-- Tier 3 (knight, mage, mountain guard): 4 / 4.
-- Bosses: 2-4 depending on the attack.
+- Tier 1 (slime, bat, hopper, snake): 1 half-heart contact. 1 hit HP.
+- Tier 2 (skeleton, rock spitter, burrower, spear thrower, boomerang imp):
+  1–2 half-hearts contact/projectile. 2–3 hits HP.
+- Tier 3 (knight, mage, mountain guard, ghost, mummy, shield eater, ear
+  ghost): 2–4 half-hearts contact. 4–10 hits HP.
+- Blue/upgraded variants have higher HP and damage within their tier range.
+- Mini-bosses: 8 hits. Bosses: 12-16 hits.
+- Bosses deal 2-4 half-hearts depending on the attack.
 - Blue armor halves all incoming damage. Red armor quarters it.
 
-Enemy health (in basic sword hits to kill):
+Speeds (in pixels per second):
 
-- Tier 1: 1 hit. Tier 2: 2 hits. Tier 3: 4 hits.
-- Mini-bosses: 8 hits. Bosses: 12-16 hits.
-
-Speeds (in logical pixels per second):
-
-- Player movement: 64.
-- Slow enemy (slime, mummy): 16-32.
-- Normal enemy (skeleton, snake): 32-48.
-- Fast enemy (charging snake, centipede): 80-96.
-- Player projectiles (arrow, sword beam, magic rod): 128.
-- Enemy projectiles (rocks, spears, magic): 48-64.
-- Boomerang: 96 outbound, 96 return.
+- Player movement: 256.
+- Slow enemy (slime, mummy): 64-128.
+- Normal enemy (skeleton, snake): 128-192.
+- Fast enemy (charging snake, centipede): 320-384.
+- Player projectiles (arrow, sword beam, magic rod): 512.
+- Enemy projectiles (rocks, spears, magic): 192-256.
+- Boomerang: 384 outbound, 384 return.
 
 Drop behavior:
 
@@ -371,38 +381,385 @@ Drop behavior:
 Use original-inspired roles with modernized names and visuals. Names below are
 mechanical references, not a requirement for shipped presentation.
 
+Each entry specifies authoritative HP (basic sword hits) and damage
+(half-hearts, contact / projectile). Speed categories (slow, normal, fast)
+refer to the ranges in Tuning Defaults.
+
 ### Overworld Enemies
 
-- Rock spitter: stationary or wandering enemy that fires rocks.
-- Hopper: jumping enemy with red/blue speed variants.
-- Burrower: emerges from ground, chases briefly, then dives.
-- Spear thrower: forest enemy that throws linear projectiles.
-- Flying flower/seed: invulnerable while flying, vulnerable when landed.
-- Living statue: appears inert until touched or approached.
-- Ghost: graveyard enemy; touching graves may spawn extras.
-- Mountain guard: strong late-game ranged enemy.
-- River shooter: emerges from water and fires projectiles.
-- Rolling boulder: environmental hazard in mountains.
+#### Rock spitter
+
+- 1 tile. Red and blue variants.
+- Movement: wanders in cardinal directions, random direction changes. Stops
+  briefly to fire. Respects walls. Red: slow. Blue: normal speed.
+- AI states: Wander → Stop (random direction change or fire) → Wander.
+  Fires every 1–3 seconds in facing direction.
+- Attack: rock projectile, straight line. Blocked by any shield.
+- HP: red 1, blue 2.
+- Damage: red 1 / 1, blue 1 / 1.
+
+#### Hopper
+
+- 1 tile. Red and blue variants.
+- Movement: parabolic jumps to random positions. No walking. Ignores terrain
+  during jumps — can land on impassable tiles. Red: short rest between jumps.
+  Blue: longer rest between jumps.
+- AI states: Rest (stationary) → Jump (arc to random position) → Rest.
+  No player targeting.
+- Attack: contact only.
+- HP: 1 (both variants).
+- Damage: 1 / —.
+- Weakness: boomerang stuns mid-flight.
+
+#### Burrower
+
+- 1 tile. Red and blue variants.
+- Movement: spends most time underground (invisible, invulnerable). Emerges
+  near the player, moves briefly on surface for 2–3 seconds, then re-burrows.
+  Red: emerges near player, chases in a straight line, slow speed. Blue:
+  emerges at random positions, wanders randomly, normal speed.
+- AI states: Submerged (invisible, invulnerable) → Emerging (brief animation,
+  becoming vulnerable) → Active (moving on surface) → Submerging →
+  Submerged. Cycle repeats every 2–4 seconds.
+- Attack: contact only.
+- HP: red 2, blue 4.
+- Damage: red 1 / —, blue 2 / —.
+- Immunity: invulnerable while submerged.
+
+#### Spear thrower
+
+- 1 tile. Red and blue variants.
+- Movement: wanders cardinal directions. Random direction changes. Respects
+  walls. Red: slow. Blue: normal speed.
+- AI states: Patrol → Stop (fire spear in facing direction) → Patrol.
+  Fires periodically.
+- Attack: spear projectile, straight line. Blocked by any shield.
+- HP: red 2, blue 3.
+- Damage: red 1 / 1, blue 2 / 2.
+
+#### Flying flower/seed
+
+- 1 tile. No variants.
+- Movement: alternates between flying (spinning, erratic movement over any
+  terrain) and resting (stationary on ground). Flies for several seconds,
+  gradually decelerates, rests briefly, then flies again.
+- AI states: Rest (stationary, vulnerable) → Spinning Up (accelerating,
+  becoming invulnerable) → Flying (moving, invulnerable) → Slowing
+  (decelerating) → Rest.
+- Attack: contact only while flying.
+- HP: 2.
+- Damage: 1 / —.
+- Weakness: can only be damaged during Rest state.
+- Immunity: invulnerable to all attacks while flying. Boomerang has no
+  effect.
+
+#### Living statue
+
+- 1 tile. No variants.
+- Movement: starts completely stationary, appears as terrain decoration.
+  Activates permanently when the player touches or pushes against it. Once
+  active, moves erratically in cardinal directions at normal speed. Never
+  returns to inert state.
+- AI states: Inert (stationary, blocks movement like terrain, immune to all
+  damage) → Activated (touch triggers transition) → Active (erratic
+  movement, permanently).
+- Attack: contact only. Touching from front during activation guarantees
+  taking damage.
+- HP: 3. Bombs kill in 1 hit.
+- Damage: 1 / —.
+- Immunity: immune to all damage while inert. Some statues hide items or
+  stairs beneath them.
+
+#### Ghost
+
+- 1 tile. No variants.
+- Movement: one "main" ghost floats freely in cardinal directions at normal
+  speed, drifting semi-randomly. Additional copies spawn when the player
+  touches gravestones — copies also float randomly.
+- AI states: Wandering (drifting, changing direction periodically). Spawned
+  copies use the same behavior.
+- Attack: contact only.
+- HP: main ghost 9. Spawned copies: invulnerable.
+- Damage: 2 / —.
+- Weakness: killing the main ghost instantly destroys all spawned copies.
+- Immunity: spawned copies cannot be damaged by any means. All ghosts float
+  through walls and obstacles.
+
+#### Mountain guard
+
+- 1 tile. Red and blue variants.
+- Movement: wanders cardinal directions at normal speed. Random direction
+  changes. Respects walls. Found in mountain regions.
+- AI states: Wander → Stop (fire sword beam in facing direction) → Wander.
+  Fires frequently.
+- Attack: sword beam projectile, straight line. Blocked only by large shield
+  — small shield cannot block.
+- HP: red 4, blue 6.
+- Damage: red 2 / 2, blue 4 / 4.
+- Strongest standard overworld enemy. Blue variant is the most dangerous
+  non-boss enemy in the game.
+
+#### River shooter
+
+- 1 tile. No variants.
+- Movement: exists only in water tiles. Surfaces at semi-random water
+  position near the player, stays visible briefly, fires, then submerges and
+  resurfaces elsewhere. Cannot be lured onto land.
+- AI states: Submerged (invisible, invulnerable) → Surfacing (brief
+  animation) → Surfaced (visible, fires, vulnerable) → Submerging →
+  Submerged. HP resets to full on each submerge.
+- Attack: fireball projectile aimed at player's current position. Blocked
+  only by large shield.
+- HP: 2 (resets on each dive — must kill in one surface window).
+- Damage: 1 / 1.
+- Weakness: strong sword or better kills in one hit, bypassing the HP-reset
+  mechanic.
+- Immunity: invulnerable while submerged.
+
+#### Rolling boulder
+
+- 1 tile. Environmental hazard, not a true enemy.
+- Movement: falls from the top of the screen at random horizontal positions.
+  Multiple boulders fall simultaneously. Continuous spawning while the player
+  is on the screen.
+- AI states: none. Continuous spawn-and-fall.
+- Attack: contact only.
+- HP: invulnerable. Cannot be destroyed.
+- Damage: 1 / —.
+- Falls through all terrain. Purely avoidance obstacle.
 
 ### Dungeon Enemies
 
-- Slime: splits into smaller slimes when hit.
-- Bat: small erratic flyer.
-- Charging snake: waits, then rushes in a straight line.
-- Skeleton: simple melee enemy, some variants throw projectiles.
-- Boomerang imp: throws boomerangs and catches them.
-- Teleport mage: appears, fires magic, vanishes.
-- Shield knight: blocks frontal sword attacks; vulnerable from side/back.
-- Ear ghost: vulnerable to sound or arrows.
-- Mummy: slow, high-health pressure enemy.
-- Shield eater: grabs the player and can consume the large shield.
-- Wall hand: emerges from walls and returns player to dungeon entrance if it
-  grabs them.
-- Blade trap: darts along straight lines when the player aligns with it.
-- Statue turret: fires projectiles from fixed positions.
-- Bubble/jinx orb: disables sword use temporarily or until cleansed.
-- Segmented worm: body shrinks as segments are destroyed.
-- Centipede: fast segmented enemy; head may be armored.
+#### Slime
+
+- Large slime: 1 tile. Small slime: half tile (32x32 pixels).
+- Movement: both sizes move in cardinal directions in short bursts — slide a
+  short distance, pause, slide again. Random direction changes. Slow speed.
+  No player targeting. Respects walls.
+- AI states: Idle (brief pause) → Slide (short distance, random cardinal
+  direction) → Idle.
+- Attack: contact only.
+- HP: large 1, small 1.
+- Damage: large 1 / —, small 1 / —.
+- Special: large slime splits into 2 small slimes when hit with basic sword.
+  Strong sword and master sword kill outright without splitting. Weak weapons
+  multiply enemies.
+
+#### Bat
+
+- 1 tile. Red and blue variants (red is faster).
+- Movement: starts stationary when player enters room. Activates and flies in
+  erratic, unpredictable patterns with frequent direction changes. Periodically
+  slows and rests briefly before flying again. Flies through walls and all
+  obstacles.
+- AI states: Resting (stationary) → Flying (erratic movement) → Slowing →
+  Resting. Activates on room entry.
+- Attack: contact only.
+- HP: 1 (both variants).
+- Damage: 1 / —.
+- Weakness: boomerang stuns mid-flight.
+
+#### Charging snake
+
+- 1 tile. No variants (flashing variant in later dungeons: 4 hits).
+- Movement: wanders slowly in cardinal directions. When the player aligns on
+  the same row or column, charges at fast speed in a straight line toward the
+  player. Charge ends on wall contact. Respects walls.
+- AI states: Patrol (slow random cardinal movement) → Detect (player enters
+  same row or column — instant, no windup) → Charge (high-speed rush) →
+  Patrol (after hitting wall or passing player).
+- Attack: contact only via charge.
+- HP: 1.
+- Damage: 1 / —.
+- Detection is instant with no telegraph.
+
+#### Skeleton
+
+- 1 tile. No variants.
+- Movement: wanders cardinal directions at normal speed. Random direction
+  changes. Respects walls.
+- AI states: Wander → Direction change → Wander. Ranged variant adds:
+  Wander → Stop (fire sword beam in facing direction) → Wander.
+- Attack: contact only in standard form. Ranged variant fires sword beam
+  projectiles blocked by any shield.
+- HP: 2.
+- Damage: 1 / 1.
+
+#### Boomerang imp
+
+- 1 tile. Red and blue variants.
+- Movement: wanders cardinal directions at normal speed. Random direction
+  changes. Respects walls.
+- AI states: Wander → Stop (throw boomerang in facing direction) → Wait
+  for return (boomerang arcs back) → Wander. Cannot throw again until
+  boomerang returns.
+- Attack: boomerang projectile. Damages on both outward and return paths.
+  Blue variant's boomerang travels farther. Boomerang stopped by walls on
+  outbound path.
+- HP: red 3, blue 5.
+- Damage: red 1 / 1, blue 2 / 2.
+- Weakness: stunned by player's boomerang.
+
+#### Teleport mage
+
+- 1 tile. Red and blue variants with fundamentally different behavior.
+- Red variant — movement: teleports to random positions. Appears briefly
+  (~1–2 seconds), fires if player is in line of sight, then teleports away.
+  Invisible and invulnerable between appearances.
+- Red AI states: Invisible (invulnerable) → Appearing → Visible (fires if
+  player on same row/column) → Disappearing → Invisible.
+- Blue variant — movement: drifts continuously in erratic patterns. Passes
+  through walls and obstacles. Always visible and active. Does not teleport.
+- Blue AI states: Drifting (continuous erratic movement, fires repeatedly
+  whenever player crosses line of sight).
+- Attack: magic beam projectile, straight line. Blocked only by large shield.
+  Red fires once per appearance. Blue fires continuously on line of sight.
+- HP: red 4, blue 10.
+- Damage: 2 / 2 (both variants).
+- Immunity: red is invulnerable while invisible. Blue passes through walls.
+
+#### Shield knight
+
+- 1 tile. Red and blue variants.
+- Movement: cardinal directions at normal (red) or fast (blue) speed.
+  Frequent random direction changes. Respects walls. Continuous movement
+  with no idle state.
+- AI states: Patrol (move in cardinal direction) → Direction change → Patrol.
+  No ranged attack — purely contact-based.
+- Attack: contact only.
+- HP: red 4, blue 8.
+- Damage: red 2 / —, blue 4 / —.
+- Weakness: can only be damaged from the side or rear.
+- Immunity: frontal attacks blocked by shield. Immune to arrows, boomerang,
+  candle, and magic rod from any direction. Bombs damage from side/rear only.
+
+#### Ear ghost
+
+- 1 tile. No variants.
+- Movement: hops and bounces around the room in semi-random patterns, similar
+  to hopper. Moderate speed. Respects walls.
+- AI states: Idle (brief pause) → Jump (hop to random nearby position) →
+  Idle.
+- Attack: contact only.
+- HP: 10 with basic sword. Arrows kill instantly (1 hit).
+- Damage: 2 / —.
+- Weakness: arrows are an instant kill. Recorder/flute is also effective.
+  Extremely high HP makes sword combat impractical — arrows are the intended
+  counter.
+
+#### Mummy
+
+- 1 tile. No variants.
+- Movement: wanders cardinal directions at slow speed. Random direction
+  changes. Respects walls.
+- AI states: Wander → Direction change → Wander. Simplest AI.
+- Attack: contact only.
+- HP: 7.
+- Damage: 2 / —.
+- Pure HP sponge. No special mechanics.
+
+#### Shield eater
+
+- 1 tile. No variants.
+- Movement: wanders cardinal directions at slow speed. Random, erratic.
+  Respects walls.
+- AI states: Wander → Engulf (on player contact, swallows player) →
+  Consuming (2–3 second timer — if player does not kill it by attacking
+  rapidly during this window, eats large shield) → Release.
+- Attack: contact triggers engulf.
+- HP: 9.
+- Damage: 1 / —. Real threat is shield consumption.
+- Special: permanently consumes the player's large shield if not killed
+  during the engulf window. Only targets the large shield — small shield
+  is unaffected. Player must re-purchase the large shield after loss.
+  Often paired with teleport mages in later dungeons.
+
+#### Wall hand
+
+- 1 tile. No variants.
+- Movement: emerges from room walls. Stores the player's position at spawn
+  time and moves slowly in a straight line toward that stored position. Does
+  not continuously track the player. Retreats to wall if it misses.
+- AI states: Hidden (inside wall, invulnerable) → Emerging (slides out,
+  becomes visible) → Moving (slow approach toward stored position) → Grab
+  (if contact, teleports player to dungeon entrance) or Retreat (returns to
+  wall on miss).
+- Attack: grab teleports player to the first room of the current dungeon.
+  Does not deal heart damage.
+- HP: 2.
+- Damage: grab effect only (no heart damage).
+- Weakness: arrows effective at range. Killable before it reaches the player.
+- Immunity: invulnerable while inside walls.
+
+#### Blade trap
+
+- 1 tile. Environmental hazard.
+- Movement: sits at a fixed position (typically room corners). When the player
+  aligns horizontally or vertically, darts at high speed in a straight line
+  toward the player's axis. After reaching the far wall, retracts slowly
+  (~1/3 dart speed) to its original position.
+- AI states: Idle (fixed position) → Triggered (player aligns on same row or
+  column) → Dart (high-speed linear rush) → Retract (slow return to origin)
+  → Idle.
+- Attack: contact during dart or retract phase.
+- HP: invulnerable. Cannot be destroyed.
+- Damage: 2 / —.
+- Multiple traps can trigger simultaneously. Safe to cross during slow
+  retract phase.
+
+#### Statue turret
+
+- 1 tile. Environmental hazard.
+- Movement: completely stationary. Fixed position, typically flanking doorways
+  or along walls. Never moves.
+- AI states: Active (fires at regular intervals while room is occupied). No
+  idle state.
+- Attack: fireball projectile aimed at player or in statue's facing direction.
+  Straight line. Blocked by large shield. Fires continuously at fixed
+  intervals.
+- HP: invulnerable. Cannot be destroyed.
+- Damage: — / 1.
+- Creates crossfire pressure while player fights other enemies.
+
+#### Bubble/jinx orb
+
+- 1 tile. Standard, red, and blue variants.
+- Movement: bounces diagonally around the room, reflecting off walls. Constant
+  speed, perpetual motion. Predictable diagonal reflection pattern.
+- AI states: Bouncing (diagonal movement, wall reflection). No other states.
+- Attack: contact does not deal heart damage. Instead disables the player's
+  sword. Standard variant: disabled for ~4 seconds. Red variant: permanently
+  disabled until cured by blue bubble contact, fairy, or potion. Blue variant:
+  cures red bubble's curse on contact.
+- HP: invulnerable. Cannot be destroyed.
+- Damage: 0 half-hearts. Sword-disable curse on contact.
+- Often placed alongside other enemies to compound difficulty.
+
+#### Segmented worm
+
+- Multi-tile: head + 4 body segments (5 tiles total). No variants.
+- Movement: slithers in slow, winding random patterns. Body segments follow
+  the head's path (snake-game chain). Respects walls.
+- AI states: Slithering (continuous random winding movement). No other states.
+- Attack: contact from any segment.
+- HP: ~2 per segment (~10 total). Any segment can be hit — destroyed segments
+  are removed from the chain.
+- Damage: 1 / —.
+- Body shortens as segments are destroyed. Segments can be killed in any
+  order.
+
+#### Centipede
+
+- Multi-tile: head + 4 body segments (5 tiles total). Red and blue variants.
+- Movement: crawls in winding patterns, similar to segmented worm but faster.
+  Red: normal speed. Blue: fast speed. Respects walls.
+- AI states: Crawling (continuous winding movement). No other states.
+- Attack: contact from any segment.
+- HP: ~2 per segment. Head is armored — can only be damaged after all body
+  segments are destroyed. Must kill tail-to-head.
+- Damage: red 1 / —, blue 2 / —.
+- Immunity: head invulnerable until all body segments are destroyed.
+  Forced tail-to-head destruction order (unlike segmented worm).
 
 ## Bosses
 
@@ -713,15 +1070,3 @@ Optional completion:
 - Maximum bomb capacity.
 - All overworld secrets found.
 - All dungeon maps and compasses collected.
-
-## Out of Scope
-
-- Side-scrolling areas.
-- RPG leveling or experience points.
-- Procedural world generation.
-- Multiplayer.
-- Complex dialogue trees.
-- Crafting.
-- Physics-heavy puzzles.
-- Pixel-perfect recreation of the 1986 map, sprites, music, text, or exact room
-  layouts.

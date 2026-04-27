@@ -47,14 +47,14 @@ When in doubt, lean KISS over DRY.
 ## Sprite Generation
 
 Sprites are spritesheets — one SVG per entity or tile set, with all frames
-laid out on a grid. Cell size is 20px. Export the full sheet as one PNG.
+laid out on a grid. Cell size is 64px. Export the full sheet as one PNG.
 
 ```bash
 # single sprite (1x1 cell)
-inkscape item_heart.svg -o item_heart.png -w 20 -h 20
+inkscape item_heart.svg -o item_heart.png -w 64 -h 64
 
 # spritesheet (e.g., player: 4 columns x 4 rows)
-inkscape player.svg -o player.png -w 80 -h 80
+inkscape player.svg -o player.png -w 256 -h 256
 ```
 
 The code loads one `Texture2D` per sheet and indexes into it by row/column
