@@ -534,6 +534,23 @@ Deliverable: player sprite moves on a single screen with tile collision.
 - HUD layout (hearts, rupees, bombs, keys, equipped item, minimap area).
 - `game_config.h` constants for tile size, screen dimensions.
 
+**Test checklist:**
+
+- [ ] Window opens at 1024x960 without errors.
+- [ ] HUD renders in top 224px: hearts, rupees, keys, bombs, minimap area.
+- [ ] 32px divider visible between HUD and play area.
+- [ ] Tilemap loads and renders correctly (walls, floor, water, pushblocks).
+- [ ] Player sprite appears at starting position, facing south.
+- [ ] WASD and arrow keys move the player in 4 directions.
+- [ ] Walk animation plays while moving, idle frame on release.
+- [ ] Facing direction updates on input change.
+- [ ] Diagonal movement is normalized (not faster than cardinal).
+- [ ] Player cannot walk through walls or impassable tiles (water, pushblocks).
+- [ ] Player slides along walls (separate-axis collision, no corner sticking).
+- [ ] Player cannot leave the play area bounds.
+- [ ] Gamepad input works (d-pad and analog stick).
+- [ ] Game runs at 60 FPS without hitching.
+
 ### Phase 2 — World Navigation
 
 Deliverable: player walks between connected overworld screens.
@@ -545,6 +562,21 @@ Deliverable: player walks between connected overworld screens.
 - Camera module.
 - Impassable screen edges when no adjacent screen exists.
 - Overworld music (one track, switches on screen transition).
+
+**Test checklist:**
+
+- [ ] Walking to a screen edge triggers a scroll transition to the adjacent screen.
+- [ ] Scroll animation is smooth (~30 frames, ~0.5s).
+- [ ] Player position is correct after transition (opposite edge of new screen).
+- [ ] Input is locked during transitions (player cannot move mid-scroll).
+- [ ] Screens with no neighbor block the player at the edge (no transition).
+- [ ] Cave/warp tiles trigger fade-to-black transition.
+- [ ] Returning from a cave places the player at the correct overworld tile.
+- [ ] Multiple screens load correctly with different tile layouts.
+- [ ] Screen metadata lines (comments, enemy/item/door lines) are skipped by parser.
+- [ ] Overworld music plays and persists across screen transitions.
+- [ ] No visual glitches at screen seams during scroll.
+- [ ] Memory is stable (no leaks across many screen transitions).
 
 ### Phase 3 — Combat
 
@@ -562,6 +594,27 @@ Deliverable: player can fight enemies, take damage, and die.
 - Combat sounds (sword swing, hit, enemy death, player damage, low health).
 - Enemy attack animations and tells.
 
+**Test checklist:**
+
+- [ ] Sword swing plays attack animation in the facing direction.
+- [ ] Sword hitbox damages enemies during active frames only.
+- [ ] Sword has a cooldown — cannot spam attacks.
+- [ ] Slime moves and behaves per spec (random wandering).
+- [ ] Bat moves and behaves per spec (erratic flight).
+- [ ] Charging snake moves and behaves per spec (charges on line-of-sight).
+- [ ] Enemies spawn from screen metadata at correct tile positions.
+- [ ] Touching an enemy deals contact damage to the player.
+- [ ] Player is knocked back on hit (8 frames, 32px).
+- [ ] Invulnerability activates after damage (60 frames, player flashes).
+- [ ] Player cannot take damage during invulnerability.
+- [ ] HUD hearts update correctly on damage (half-heart granularity).
+- [ ] Player dies at 0 health — death state triggers.
+- [ ] Death respawns player at starting screen with reset health.
+- [ ] Sword swing, hit, enemy death, and player damage sounds all play.
+- [ ] Low health warning sound plays when at 1 heart or less.
+- [ ] Enemies display attack animations/tells before dealing damage.
+- [ ] Killed enemies are removed from the screen.
+
 ### Phase 4 — Projectiles and Items
 
 Deliverable: ranged combat works, basic inventory functional.
@@ -577,6 +630,28 @@ Deliverable: ranged combat works, basic inventory functional.
 - Pause screen (equipment display, item grid, equipped item switching).
 - Projectile and pickup sounds (arrow, bomb, boomerang, rupee, heart).
 - Fire and magic animations.
+
+**Test checklist:**
+
+- [ ] Boomerang flies in facing direction and returns to player.
+- [ ] Boomerang stuns enemies on hit.
+- [ ] Arrows fly in facing direction and stop on wall collision or max range.
+- [ ] Arrows cost rupees to fire; cannot fire with 0 rupees.
+- [ ] Bombs can be placed; they explode after timed delay.
+- [ ] Bomb blast damages nearby enemies and the player if in range.
+- [ ] Bombable walls are revealed by bomb explosions.
+- [ ] Rock spitter enemies fire projectiles at the player.
+- [ ] Spear thrower enemies fire projectiles at the player.
+- [ ] Enemy projectiles damage the player on contact.
+- [ ] Shield blocks projectiles coming from the player's facing direction.
+- [ ] Defeated enemies drop pickups (rupees, hearts, bombs).
+- [ ] Picking up rupees/hearts/bombs updates inventory and HUD.
+- [ ] Rupee counter caps at 255.
+- [ ] Equipped item slot shows in HUD.
+- [ ] Pause screen opens and shows inventory grid.
+- [ ] Player can switch equipped item on pause screen.
+- [ ] All projectile and pickup sounds play correctly.
+- [ ] Projectiles despawn at screen edges and on wall collision.
 
 ### Phase 5 — Dungeons
 
@@ -595,6 +670,27 @@ Deliverable: one complete dungeon playable start to finish.
 - Dungeon and boss music.
 - Secret and door sounds.
 
+**Test checklist:**
+
+- [ ] Dungeon entrance loads the dungeon room grid (separate from overworld).
+- [ ] Dungeon rooms connect correctly via doors.
+- [ ] Locked doors block passage; unlocking consumes a key.
+- [ ] Key count decrements in HUD after unlocking.
+- [ ] Shutter rooms lock doors on entry; doors open when all enemies defeated.
+- [ ] Push blocks can be pushed and reveal stairs underneath.
+- [ ] Stairs transition to the correct destination room.
+- [ ] Dark rooms are not visible until lit by candle/fire tool.
+- [ ] Dragon boss has correct AI pattern (movement, attacks, tells).
+- [ ] Boss takes correct number of hits to defeat.
+- [ ] Heart container drops on boss defeat; picking it up increases max health.
+- [ ] Relic fragment is awarded on dungeon completion.
+- [ ] `STATE_ITEM_GET` pauses gameplay and shows item with jingle.
+- [ ] Dungeon map item reveals room layout on pause screen.
+- [ ] Compass item shows boss and item locations on dungeon map.
+- [ ] Dungeon music plays on entry, boss music on boss room entry.
+- [ ] Exiting dungeon returns to correct overworld position.
+- [ ] Secret and door sounds play correctly.
+
 ### Phase 6 — World Systems
 
 Deliverable: overworld is navigable with shops, NPCs, and saves.
@@ -609,6 +705,27 @@ Deliverable: overworld is navigable with shops, NPCs, and saves.
 - Title screen with file select.
 - Continue-after-death flow (reset health, keep progress).
 - Shop and NPC sounds.
+
+**Test checklist:**
+
+- [ ] Shops display items with prices; buying deducts rupees.
+- [ ] Cannot buy items with insufficient rupees.
+- [ ] Purchased items appear in inventory.
+- [ ] NPC dialogue displays text correctly (hint caves, gift caves).
+- [ ] Gift cave NPCs give items once only.
+- [ ] Cave rooms load from `assets/caves/` and render correctly.
+- [ ] Raft allows crossing water tiles from dock tiles.
+- [ ] Ladder allows crossing gap tiles.
+- [ ] Bracelet allows pushing heavy rocks.
+- [ ] Bombs open bombable walls in the overworld.
+- [ ] Sword upgrades change sword tier and damage output.
+- [ ] Master sword has a health gate (requires full hearts to obtain).
+- [ ] Save writes to file; saved data persists across game restarts.
+- [ ] Load restores player position, inventory, progress, and health.
+- [ ] 3 save slots work independently.
+- [ ] Title screen shows file select with save slot status.
+- [ ] Death flow resets health but keeps inventory and progress.
+- [ ] Shop and NPC sounds play correctly.
 
 ### Phase 7 — Content
 
@@ -625,6 +742,24 @@ Deliverable: full game content in place.
 - Per-biome overworld music tracks.
 - Per-dungeon music tracks.
 
+**Test checklist:**
+
+- [ ] All enemy types spawn, animate, and behave per spec.
+- [ ] Red/blue enemy variants have correct stat differences.
+- [ ] All 9 dungeons are completable start to finish.
+- [ ] Every boss and mini-boss has correct AI and can be defeated.
+- [ ] Full overworld (128 screens) loads and connects correctly.
+- [ ] All biome regions have distinct tile sets and music.
+- [ ] All items and equipment upgrades are obtainable.
+- [ ] All NPCs give correct dialogue and rewards.
+- [ ] All shops have correct inventory and prices.
+- [ ] All secrets are discoverable (bombable walls, burnable shrubs, pushable stones).
+- [ ] Drop tables produce expected item distribution over many kills.
+- [ ] Economy balance: player can afford key items by mid-game.
+- [ ] Full playthrough possible with no softlocks or sequence breaks.
+- [ ] Per-biome overworld music switches on region transitions.
+- [ ] Per-dungeon music plays correctly in each dungeon.
+
 ### Phase 8 — Polish
 
 Deliverable: game feels complete and ready for playtesting.
@@ -632,3 +767,14 @@ Deliverable: game feels complete and ready for playtesting.
 - Screen transition polish (timing, easing).
 - Game balance tuning from playtesting.
 - Edge case and regression fixes.
+
+**Test checklist:**
+
+- [ ] Screen transitions feel smooth with correct easing curves.
+- [ ] Game difficulty ramps appropriately across dungeons.
+- [ ] No regressions from prior phases (run all previous checklists).
+- [ ] No visual glitches (sprite flicker, tile seams, HUD overlap).
+- [ ] No audio glitches (sound clipping, missing sounds, stuck loops).
+- [ ] Stable frame rate throughout (60 FPS, no drops).
+- [ ] Clean startup and shutdown (no crashes, no resource leaks).
+- [ ] Edge cases: rapid input, screen-edge collision, inventory full, max rupees.
