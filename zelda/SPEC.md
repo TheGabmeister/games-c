@@ -91,18 +91,20 @@ Screen and tile geometry:
 
 Movement:
 
-- The world is built on a tile grid, but player movement is continuous in
-  pixel space rather than tile-stepped. The player can stop between tile
-  centers.
+- The world is built on a tile grid. Player movement uses axis-aligned grid
+  assist: the player moves pixel-by-pixel in the pressed direction, but the
+  perpendicular axis snaps toward the nearest tile-grid line. This matches
+  the NES Zelda feel — movement is smooth but the player naturally aligns
+  with corridors and doorways.
 - Movement speed is measured in pixels per second. See Tuning Defaults for
   concrete values.
 - Movement is four-directional only. Diagonal input resolves to one direction
   using the most recently pressed direction.
 - Facing updates immediately on directional input, even if movement is blocked
   by a wall or obstacle.
-- The player should feel grid-aware when navigating narrow passages, but the
-  movement model should preserve the loose pixel-position feel of the original
-  game.
+- Perpendicular-axis grid snapping should use the same speed as the player's
+  movement speed, not instant teleportation. The player slides toward
+  alignment over a few frames rather than jumping.
 
 Collision:
 

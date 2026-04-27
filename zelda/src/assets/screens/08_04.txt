@@ -1,0 +1,12 @@
+# East of starting room - different wall layout
+WWWWWWWWWWWWWWWW
+W..............W
+W..WWWW........W
+W..............W
+W........WW....W
+................
+W..............W
+W......WW......W
+W......WW......W
+W..............W
+WWWWWWWWWWWWWWWW

@@ -3,6 +3,7 @@
 #include "textures.h"
 #include "game_config.h"
 #include "raymath.h"
+#include <math.h>
 #include <string.h>
 
 const AnimDef player_idle_anims[DIR_COUNT] = {
@@ -30,35 +31,71 @@ void player_init(Player *player) {
     anim_set(&player->anim, &player_idle_anims[DIR_S]);
 }
 
+static float snap_toward_grid(float pos, float base, float speed, float dt) {
+    float rel = pos - base;
+    float nearest = floorf(rel / TILE_SIZE + 0.5f) * TILE_SIZE;
+    float diff = (base + nearest) - pos;
+    if (fabsf(diff) < 0.5f) return pos;
+    float step = speed * dt;
+    if (fabsf(diff) <= step) return pos + diff;
+    return pos + (diff > 0 ? step : -step);
+}
+
 void player_update(Player *player, const Screen *screen, float dt) {
-    Vector2 move = { 0 };
+    bool left  = input_left();
+    bool right = input_right();
+    bool up    = input_up();
+    bool down  = input_down();
+
+    float move_x = 0, move_y = 0;
     Direction new_facing = player->facing;
 
-    if (input_left())  { move.x -= 1.0f; new_facing = DIR_W; }
-    if (input_right()) { move.x += 1.0f; new_facing = DIR_E; }
-    if (input_up())    { move.y -= 1.0f; new_facing = DIR_N; }
-    if (input_down())  { move.y += 1.0f; new_facing = DIR_S; }
+    if (left && !right)  { move_x = -1; new_facing = DIR_W; }
+    if (right && !left)  { move_x =  1; new_facing = DIR_E; }
+    if (up && !down)     { move_y = -1; new_facing = DIR_N; }
+    if (down && !up)     { move_y =  1; new_facing = DIR_S; }
 
-    bool moving = (move.x != 0.0f || move.y != 0.0f);
+    // Four-directional only: if both axes have input, keep only the most
+    // recent direction. Since we can't track press order with held-state
+    // input, vertical wins ties (matches NES Zelda behavior).
+    if (move_x != 0 && move_y != 0) {
+        move_x = 0;
+    }
+
+    bool moving = (move_x != 0 || move_y != 0);
 
     if (moving) {
         player->facing = new_facing;
-        move = Vector2Normalize(move);
-        move.x *= PLAYER_SPEED * dt;
-        move.y *= PLAYER_SPEED * dt;
+        float step = PLAYER_SPEED * dt;
 
-        float new_x = player->pos.x + move.x;
-        new_x = Clamp(new_x, 0, SCREEN_TILES_X * TILE_SIZE - TILE_SIZE);
-        Rectangle test = { new_x, player->pos.y, TILE_SIZE, TILE_SIZE };
-        if (!screen_tile_blocked(screen, test)) {
-            player->pos.x = new_x;
-        }
-
-        float new_y = player->pos.y + move.y;
-        new_y = Clamp(new_y, PLAY_AREA_Y, PLAY_AREA_Y + SCREEN_TILES_Y * TILE_SIZE - TILE_SIZE);
-        test = (Rectangle){ player->pos.x, new_y, TILE_SIZE, TILE_SIZE };
-        if (!screen_tile_blocked(screen, test)) {
-            player->pos.y = new_y;
+        if (move_x != 0) {
+            float new_x = player->pos.x + move_x * step;
+            new_x = Clamp(new_x, 0, SCREEN_TILES_X * TILE_SIZE - TILE_SIZE);
+            Rectangle test = { new_x, player->pos.y, TILE_SIZE, TILE_SIZE };
+            if (!screen_tile_blocked(screen, test)) {
+                player->pos.x = new_x;
+            }
+            // Grid assist: snap Y toward nearest tile row
+            float snapped_y = snap_toward_grid(player->pos.y, PLAY_AREA_Y, PLAYER_SPEED, dt);
+            snapped_y = Clamp(snapped_y, PLAY_AREA_Y, PLAY_AREA_Y + SCREEN_TILES_Y * TILE_SIZE - TILE_SIZE);
+            Rectangle snap_test = { player->pos.x, snapped_y, TILE_SIZE, TILE_SIZE };
+            if (!screen_tile_blocked(screen, snap_test)) {
+                player->pos.y = snapped_y;
+            }
+        } else {
+            float new_y = player->pos.y + move_y * step;
+            new_y = Clamp(new_y, PLAY_AREA_Y, PLAY_AREA_Y + SCREEN_TILES_Y * TILE_SIZE - TILE_SIZE);
+            Rectangle test = { player->pos.x, new_y, TILE_SIZE, TILE_SIZE };
+            if (!screen_tile_blocked(screen, test)) {
+                player->pos.y = new_y;
+            }
+            // Grid assist: snap X toward nearest tile column
+            float snapped_x = snap_toward_grid(player->pos.x, 0, PLAYER_SPEED, dt);
+            snapped_x = Clamp(snapped_x, 0, SCREEN_TILES_X * TILE_SIZE - TILE_SIZE);
+            Rectangle snap_test = { snapped_x, player->pos.y, TILE_SIZE, TILE_SIZE };
+            if (!screen_tile_blocked(screen, snap_test)) {
+                player->pos.x = snapped_x;
+            }
         }
 
         player->state = PSTATE_MOVING;

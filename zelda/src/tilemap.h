@@ -30,13 +30,25 @@ typedef struct TileDef {
 
 extern const TileDef tile_defs[TILE_TYPE_COUNT];
 
+typedef struct Warp {
+    int tile_col;
+    int tile_row;
+    char dest[WARP_DEST_MAX];
+    bool active;
+} Warp;
+
 typedef struct Screen {
     uint8_t tiles[SCREEN_TILES_Y][SCREEN_TILES_X];
+    Warp warps[MAX_WARPS_PER_SCREEN];
+    int warp_count;
 } Screen;
 
 bool screen_load(Screen *screen, const char *path);
 void screen_draw(const Screen *screen);
+void screen_draw_offset(const Screen *screen, int offset_x, int offset_y);
 bool screen_tile_blocked(const Screen *screen, Rectangle hitbox);
 const TileDef *screen_tile_at_pixel(const Screen *screen, int px, int py);
+bool screen_file_exists(int sx, int sy);
+const Warp *screen_warp_at(const Screen *screen, int col, int row);
 
 #endif

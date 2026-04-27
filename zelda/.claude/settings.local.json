@@ -48,7 +48,15 @@
       "Bash(cmd.exe /c \"start \"\" C:\\\\dev\\\\games-c\\\\zelda\\\\build\\\\zelda\\\\Debug\\\\zelda.exe\")",
       "Bash(cmd.exe /c \"tasklist /fi \\\\\"imagename eq zelda.exe\\\\\"\")",
       "Bash(./zelda.exe)",
-      "Bash(echo \"EXIT CODE: $?\")"
+      "Bash(echo \"EXIT CODE: $?\")",
+      "Bash(grep -E '\\\\.\\(h|c\\)$')",
+      "Bash(mv 07_07.txt 07_04.txt)",
+      "Bash(mv 07_06.txt 07_03.txt)",
+      "Bash(mv 07_08.txt 07_05.txt)",
+      "Bash(mv 06_07.txt 06_04.txt)",
+      "Bash(mv 08_07.txt 08_04.txt)",
+      "Bash(cmake -S /c/dev/games-c/zelda -B /c/dev/games-c/zelda/build)",
+      "Bash(cmake --build /c/dev/games-c/zelda/build)"
     ]
   }
 }

@@ -22,6 +22,22 @@
 #define SCREEN_TILES_X      16
 #define SCREEN_TILES_Y      11
 
+// Overworld grid
+#define OVERWORLD_COLS      16
+#define OVERWORLD_ROWS      8
+#define START_SCREEN_X      7
+#define START_SCREEN_Y      4
+#define SCREEN_PATH_MAX     64
+
+// Transitions
+#define SCROLL_FRAMES       30
+#define FADE_OUT_FRAMES     15
+#define FADE_IN_FRAMES      15
+
+// Warps
+#define MAX_WARPS_PER_SCREEN 4
+#define WARP_DEST_MAX        32
+
 // Player
 #define PLAYER_LIVES        3
 #define PLAYER_SPEED        256.0f

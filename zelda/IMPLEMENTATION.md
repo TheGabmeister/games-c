@@ -81,7 +81,8 @@ Contains or points to all game state:
 
 Struct with:
 
-- Pixel position (continuous, not tile-locked).
+- Pixel position with axis-aligned grid assist (perpendicular axis snaps to
+  tile grid).
 - Facing direction (N/S/E/W enum).
 - State machine: IDLE, MOVING, ATTACKING, USING_ITEM, KNOCKBACK, INVULNERABLE.
 - State timer (frames remaining in current state).
@@ -536,20 +537,22 @@ Deliverable: player sprite moves on a single screen with tile collision.
 
 **Test checklist:**
 
-- [ ] Window opens at 1024x960 without errors.
-- [ ] HUD renders in top 224px: hearts, rupees, keys, bombs, minimap area.
-- [ ] 32px divider visible between HUD and play area.
-- [ ] Tilemap loads and renders correctly (walls, floor, water, pushblocks).
-- [ ] Player sprite appears at starting position, facing south.
-- [ ] WASD and arrow keys move the player in 4 directions.
-- [ ] Walk animation plays while moving, idle frame on release.
-- [ ] Facing direction updates on input change.
-- [ ] Diagonal movement is normalized (not faster than cardinal).
-- [ ] Player cannot walk through walls or impassable tiles (water, pushblocks).
-- [ ] Player slides along walls (separate-axis collision, no corner sticking).
-- [ ] Player cannot leave the play area bounds.
-- [ ] Gamepad input works (d-pad and analog stick).
-- [ ] Game runs at 60 FPS without hitching.
+- [x] Window opens at 1024x960 without errors.
+- [x] HUD renders in top 224px: hearts, rupees, keys, bombs, minimap area.
+- [x] 32px divider visible between HUD and play area.
+- [x] Tilemap loads and renders correctly (walls, floor, water, pushblocks).
+- [x] Player sprite appears at starting position, facing south.
+- [x] WASD and arrow keys move the player in 4 directions.
+- [x] Walk animation plays while moving, idle frame on release.
+- [x] Facing direction updates on input change.
+- [x] Diagonal input resolves to one direction (no diagonal movement).
+- [x] Perpendicular axis snaps toward tile grid while moving (grid assist).
+- [x] Grid assist makes it easy to enter 1-tile-wide corridors.
+- [x] Player cannot walk through walls or impassable tiles (water, pushblocks).
+- [x] Player slides along walls (separate-axis collision, no corner sticking).
+- [x] Player cannot leave the play area bounds.
+- [x] Gamepad input works (d-pad and analog stick).
+- [x] Game runs at 60 FPS without hitching.
 
 ### Phase 2 — World Navigation
 

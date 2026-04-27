@@ -1,0 +1,12 @@
+# North of starting room - open field
+WWWWWWWWWWWWWWWW
+W..............W
+W..............W
+W..............W
+W..............W
+W..............W
+W..............W
+W..............W
+W..............W
+W..............W
+WWWWWWW..WWWWWWW

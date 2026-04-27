@@ -1,5 +1,6 @@
 #include "tilemap.h"
 #include "textures.h"
+#include <stdio.h>
 #include <string.h>
 
 const TileDef tile_defs[TILE_TYPE_COUNT] = {
@@ -48,7 +49,28 @@ bool screen_load(Screen *screen, const char *path) {
         for (int i = 0; i < line_len; i++) {
             if (line_start[i] == ':') { has_colon = true; break; }
         }
-        if (has_colon) continue;
+        if (has_colon) {
+            if (line_len > 5 && strncmp(line_start, "warp:", 5) == 0
+                && screen->warp_count < MAX_WARPS_PER_SCREEN) {
+                char type_buf[16];
+                int wc, wr;
+                char dest_buf[WARP_DEST_MAX];
+                char line_copy[256];
+                int copy_len = line_len < 255 ? line_len : 255;
+                memcpy(line_copy, line_start, copy_len);
+                line_copy[copy_len] = '\0';
+                if (sscanf(line_copy, "warp: %15s %d %d -> %31s",
+                           type_buf, &wc, &wr, dest_buf) == 4) {
+                    Warp *w = &screen->warps[screen->warp_count++];
+                    w->tile_col = wc;
+                    w->tile_row = wr;
+                    strncpy(w->dest, dest_buf, WARP_DEST_MAX - 1);
+                    w->dest[WARP_DEST_MAX - 1] = '\0';
+                    w->active = true;
+                }
+            }
+            continue;
+        }
 
         if (line_len < SCREEN_TILES_X) continue;
 
@@ -63,12 +85,19 @@ bool screen_load(Screen *screen, const char *path) {
 }
 
 void screen_draw(const Screen *screen) {
+    screen_draw_offset(screen, 0, 0);
+}
+
+void screen_draw_offset(const Screen *screen, int offset_x, int offset_y) {
     for (int row = 0; row < SCREEN_TILES_Y; row++) {
         for (int col = 0; col < SCREEN_TILES_X; col++) {
             TileType t = (TileType)screen->tiles[row][col];
             int sprite = tile_defs[t].sprite_index;
             Rectangle src = texture_frame_rect(4, sprite);
-            Vector2 pos = { (float)(col * TILE_SIZE), (float)(PLAY_AREA_Y + row * TILE_SIZE) };
+            Vector2 pos = {
+                (float)(col * TILE_SIZE + offset_x),
+                (float)(PLAY_AREA_Y + row * TILE_SIZE + offset_y)
+            };
             DrawTextureRec(textures[TEX_TILES], src, pos, WHITE);
         }
     }
@@ -102,4 +131,21 @@ const TileDef *screen_tile_at_pixel(const Screen *screen, int px, int py) {
         return &tile_defs[TILE_WALL];
     }
     return &tile_defs[screen->tiles[row][col]];
+}
+
+bool screen_file_exists(int sx, int sy) {
+    char path[SCREEN_PATH_MAX];
+    snprintf(path, sizeof(path), "assets/screens/%02d_%02d.txt", sx, sy);
+    return FileExists(path);
+}
+
+const Warp *screen_warp_at(const Screen *screen, int col, int row) {
+    for (int i = 0; i < screen->warp_count; i++) {
+        if (screen->warps[i].active &&
+            screen->warps[i].tile_col == col &&
+            screen->warps[i].tile_row == row) {
+            return &screen->warps[i];
+        }
+    }
+    return NULL;
 }

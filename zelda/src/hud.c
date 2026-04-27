@@ -1,7 +1,7 @@
 #include "hud.h"
 #include "game_config.h"
 
-void hud_draw(const Player *player) {
+void hud_draw(const Player *player, int screen_x, int screen_y) {
     DrawRectangle(0, 0, WINDOW_WIDTH, HUD_HEIGHT, BLACK);
     DrawRectangle(0, HUD_HEIGHT, WINDOW_WIDTH, HUD_DIVIDER, (Color){ 80, 80, 80, 255 });
 
@@ -22,6 +22,14 @@ void hud_draw(const Player *player) {
         DrawRectangle(x, y, 28, 28, c);
     }
 
-    DrawRectangleLines(800, 48, 160, 128, GRAY);
-    DrawText("MAP", 860, 100, 20, GRAY);
+    int map_x = 800, map_y = 48;
+    int map_w = 160, map_h = 128;
+    DrawRectangle(map_x, map_y, map_w, map_h, (Color){ 20, 20, 20, 255 });
+    DrawRectangleLines(map_x, map_y, map_w, map_h, GRAY);
+
+    int cell_w = map_w / OVERWORLD_COLS;
+    int cell_h = map_h / OVERWORLD_ROWS;
+    int cx = map_x + screen_x * cell_w;
+    int cy = map_y + screen_y * cell_h;
+    DrawRectangle(cx, cy, cell_w, cell_h, GREEN);
 }
