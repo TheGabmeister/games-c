@@ -1,5 +1,6 @@
 #include "game.h"
 #include "sounds.h"
+#include "textures.h"
 
 int main(void) {
     InitWindow(WINDOW_WIDTH, WINDOW_HEIGHT, "The Legend of Zelda");
@@ -8,6 +9,7 @@ int main(void) {
 
     Game game;
     game_init(&game);
+    textures_load();
     sounds_load(&game);
 
     while (!WindowShouldClose()) {
@@ -16,6 +18,7 @@ int main(void) {
     }
 
     sounds_unload(&game);
+    textures_unload();
     CloseAudioDevice();
     CloseWindow();
     return 0;

@@ -3,9 +3,16 @@
 
 #include "raylib.h"
 #include "game_config.h"
+#include "player.h"
+#include "tilemap.h"
 #include <stdbool.h>
 #include <stdlib.h>
 #include <string.h>
+
+typedef enum GameState {
+    STATE_PLAY = 0,
+    STATE_COUNT
+} GameState;
 
 typedef enum SoundID {
     SOUND_COIN = 0,
@@ -13,10 +20,9 @@ typedef enum SoundID {
 } SoundID;
 
 typedef struct Game {
-    Vector2 player_position;
-    float player_speed;
-    float player_radius;
-    Color player_color;
+    GameState state;
+    Player player;
+    Screen current_screen;
 
     Sound sounds[SOUND_COUNT];
     bool sounds_loaded;

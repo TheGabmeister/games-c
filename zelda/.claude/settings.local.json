@@ -31,7 +31,24 @@
       "WebFetch(domain:mikesrpgcenter.com)",
       "WebFetch(domain:web.archive.org)",
       "Bash(curl -s -L -A \"Mozilla/5.0 \\(Windows NT 10.0; Win64; x64\\)\" \"https://strategywiki.org/wiki/The_Legend_of_Zelda/Enemies\")",
-      "WebFetch(domain:legendsofz.com)"
+      "WebFetch(domain:legendsofz.com)",
+      "Bash(git -C /c/dev/games-c/zelda log --oneline -15)",
+      "Bash(where inkscape *)",
+      "Read(//c/Program Files/**)",
+      "Read(//d//**)",
+      "Bash(inkscape /c/dev/games-c/zelda/src/assets/sprites/player.svg -o /c/dev/games-c/zelda/src/assets/sprites/player.png -w 256 -h 256)",
+      "Bash(python -c \"from PIL import Image; print\\('PIL available'\\)\")",
+      "Bash(\"C:/Program Files/Inkscape/bin/inkscape.exe\" \"C:/dev/games-c/zelda/src/assets/sprites/player.svg\" -o \"C:/dev/games-c/zelda/src/assets/sprites/player.png\" -w 256 -h 256)",
+      "Bash(\"C:/Program Files/Inkscape/bin/inkscape.exe\" \"C:/dev/games-c/zelda/src/assets/sprites/tiles.svg\" -o \"C:/dev/games-c/zelda/src/assets/sprites/tiles.png\" -w 256 -h 128)",
+      "Bash(/c/dev/games-c/zelda/build/zelda/Debug/zelda.exe)",
+      "Bash(kill %1)",
+      "Bash(cmd.exe /c \"start /D C:\\\\\\\\dev\\\\\\\\games-c\\\\\\\\zelda\\\\\\\\build\\\\\\\\zelda\\\\\\\\Debug C:\\\\\\\\dev\\\\\\\\games-c\\\\\\\\zelda\\\\\\\\build\\\\\\\\zelda\\\\\\\\Debug\\\\\\\\zelda.exe\")",
+      "Bash(cmd.exe /c zelda.exe)",
+      "Bash(cmd.exe /c \"zelda.exe\")",
+      "Bash(cmd.exe /c \"start \"\" C:\\\\dev\\\\games-c\\\\zelda\\\\build\\\\zelda\\\\Debug\\\\zelda.exe\")",
+      "Bash(cmd.exe /c \"tasklist /fi \\\\\"imagename eq zelda.exe\\\\\"\")",
+      "Bash(./zelda.exe)",
+      "Bash(echo \"EXIT CODE: $?\")"
     ]
   }
 }
