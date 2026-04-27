@@ -81,6 +81,7 @@ Screen and tile geometry:
 - Tile size: 64x64 pixels.
 - HUD: top strip, 1024x224 pixels (16 tiles wide, 3.5 tiles tall). Displays
   hearts, rupees, bombs, keys, equipped item, and dungeon map indicator.
+- Divider: 32px (half tile) between HUD and play area.
 - Play area: 1024x704 pixels (16 tiles wide, 11 tiles tall). This is one
   screen of the overworld or one room of a dungeon.
 - Player sprite: 64x64 pixels (one tile). The player's hitbox matches the
@@ -228,7 +229,7 @@ Persistence:
 
 ### Item Acquisition Summary
 
-Dungeon rewards are listed in each dungeon's progression entry above. Items
+Dungeon rewards are listed in each dungeon's progression entry below. Items
 not found in dungeons are acquired as follows:
 
 - Basic sword: found in the starting cave before any dungeon.
@@ -367,6 +368,7 @@ Speeds (in pixels per second):
 - Player projectiles (arrow, sword beam, magic rod): 512.
 - Enemy projectiles (rocks, spears, magic): 192-256.
 - Boomerang: 384 outbound, 384 return.
+- Rolling boulder fall: 192.
 
 Drop behavior:
 

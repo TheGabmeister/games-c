@@ -36,7 +36,7 @@ Window: 1024x960. Logical resolution: 1024x960 (1:1, no scaling). Tile size: 64x
 Single `Game` struct holds all state (defined in `game.h`). The main loop in `main.c` calls `game_init` → `game_update`/`game_draw` per frame → cleanup on exit.
 
 Current modules (header/source pairs):
-- **game_config.h** — canonical source for all compile-time constants (window size, logical resolution, scale, FPS, lives, deadzone). Other headers include this instead of defining their own constants.
+- **game_config.h** — canonical source for all compile-time constants (window size, logical resolution, tile size, FPS, lives, deadzone). Other headers include this instead of defining their own constants.
 - **game.c/.h** — Game struct definition, init/update/draw. Includes `game_config.h`.
 - **input.c/.h** — keyboard + gamepad abstraction (WASD, arrows, gamepad with deadzone)
 - **sounds.c/.h** — sound loading/playback (stub)

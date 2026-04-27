@@ -198,6 +198,12 @@ Runtime enemy instances hold a pointer to their def plus per-instance state:
 - AI state and timer (meaning varies per enemy type).
 - Active/inactive flag.
 
+Multi-segment enemies (segmented worm, centipede) use a linked chain of
+Enemy instances. The head is the primary enemy; body segments are separate
+Enemy instances that follow the head's path with a position delay buffer.
+Destroying a segment removes it from the chain. The head's update function
+drives all segments.
+
 Enemy movement:
 
 - Enemies move in continuous pixel space, same as the player.
@@ -398,9 +404,9 @@ The queue is a fixed-size ring buffer. Events that overflow are dropped
 
 Runs once per frame during update, after all positions have been advanced:
 
-1. **Tile collision**: for each moving entity, check the player's pixel
-   hitbox against impassable tile rectangles. Block if overlapping. The
-   player moves in pixel space but the tile grid determines passability.
+1. **Tile collision**: for each moving entity, check that entity's pixel
+   hitbox against impassable tile rectangles. Block if overlapping.
+   Entities move in pixel space but the tile grid determines passability.
 
 2. **Hitbox collision**: build hitboxes from visual positions for all active
    entities, the sword (if swinging), and all projectiles. Check overlaps
@@ -415,7 +421,9 @@ Runs once per frame during update, after all positions have been advanced:
 3. **Response**: on hit, push the appropriate event, apply damage, start
    knockback, consume projectile. Shield check: if player is idle
    (not attacking) and the enemy projectile comes from the facing direction,
-   block instead of damage.
+   block instead of damage. The shield tier determines which projectiles
+   can be blocked — small shield blocks rocks and spears, large shield
+   also blocks magic beams and fireballs (see per-enemy entries in SPEC.md).
 
 Collision layers are implicit in the check order above — there is no
 general-purpose layer mask. Player-side and enemy-side never need to check
