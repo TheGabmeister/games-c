@@ -3,6 +3,7 @@
 #include "hud.h"
 #include "textures.h"
 #include "debug.h"
+#include "raymath.h"
 #include <stdio.h>
 #include <math.h>
 #include <stdlib.h>
@@ -266,23 +267,23 @@ void game_update(Game *game) {
                         }
                     }
                     if (rw) {
-                        game->player.pos.x = rw->tile_col * TILE_SIZE;
-                        game->player.pos.y = PLAY_AREA_Y + (rw->tile_row - 1) * TILE_SIZE;
+                        game->player.pos.x = (float)(rw->tile_col * TILE_SIZE);
+                        game->player.pos.y = (float)(PLAY_AREA_Y + (rw->tile_row - 1) * TILE_SIZE);
                     } else {
-                        game->player.pos.x = 7 * TILE_SIZE;
-                        game->player.pos.y = PLAY_AREA_Y + 5 * TILE_SIZE;
+                        game->player.pos.x = 7.0f * TILE_SIZE;
+                        game->player.pos.y = PLAY_AREA_Y + 5.0f * TILE_SIZE;
                     }
                 } else if (game->in_cave) {
                     // Returning from cave to overworld
                     load_screen_at(game, game->warp_dest_x, game->warp_dest_y);
                     game->in_cave = false;
-                    game->player.pos.x = game->return_tile_col * TILE_SIZE;
-                    game->player.pos.y = PLAY_AREA_Y + (game->return_tile_row - 1) * TILE_SIZE;
+                    game->player.pos.x = (float)(game->return_tile_col * TILE_SIZE);
+                    game->player.pos.y = (float)(PLAY_AREA_Y + (game->return_tile_row - 1) * TILE_SIZE);
                 } else {
                     // Overworld-to-overworld warp
                     load_screen_at(game, game->warp_dest_x, game->warp_dest_y);
-                    game->player.pos.x = 7 * TILE_SIZE;
-                    game->player.pos.y = PLAY_AREA_Y + 5 * TILE_SIZE;
+                    game->player.pos.x = 7.0f * TILE_SIZE;
+                    game->player.pos.y = PLAY_AREA_Y + 5.0f * TILE_SIZE;
                 }
             }
 

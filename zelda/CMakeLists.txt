@@ -33,6 +33,24 @@ else()
     #DEPENDS ${PROJECT_NAME}
 endif()
 
+# Strict warnings for our code only (not vendor)
+if (MSVC)
+    target_compile_definitions(${PROJECT_NAME} PRIVATE _CRT_SECURE_NO_WARNINGS)
+    target_compile_options(${PROJECT_NAME} PRIVATE
+        /W4             # High warning level
+        /we4013         # Error: implicit function declaration (missing #include)
+        /we4133         # Error: incompatible pointer types
+        /we4715         # Error: not all paths return a value
+    )
+else()
+    target_compile_options(${PROJECT_NAME} PRIVATE
+        -Wall -Wextra
+        -Werror=implicit-function-declaration
+        -Werror=return-type
+        -Werror=incompatible-pointer-types
+    )
+endif()
+
 #set(raylib_VERBOSE 1)
 target_link_libraries(${PROJECT_NAME} raylib)
 

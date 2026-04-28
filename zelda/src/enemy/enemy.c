@@ -15,8 +15,8 @@ void enemies_spawn(Enemy enemies[], int *count, const Screen *screen) {
         Enemy *e = &enemies[(*count)++];
         *e = (Enemy){0};
         e->type = (EnemyType)es->type;
-        e->pos.x = es->tile_col * TILE_SIZE;
-        e->pos.y = PLAY_AREA_Y + es->tile_row * TILE_SIZE;
+        e->pos.x = (float)(es->tile_col * TILE_SIZE);
+        e->pos.y = (float)(PLAY_AREA_Y + es->tile_row * TILE_SIZE);
         e->facing = DIR_S;
         e->state = ESTATE_IDLE;
         e->health = enemy_defs[e->type].health;

@@ -29,5 +29,5 @@ void textures_unload(void) {
 Rectangle texture_frame_rect(int sheet_cols, int frame) {
     int col = frame % sheet_cols;
     int row = frame / sheet_cols;
-    return (Rectangle){ col * TILE_SIZE, row * TILE_SIZE, TILE_SIZE, TILE_SIZE };
+    return (Rectangle){ (float)(col * TILE_SIZE), (float)(row * TILE_SIZE), (float)TILE_SIZE, (float)TILE_SIZE };
 }
