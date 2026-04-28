@@ -46,4 +46,19 @@
 
 #define GAMEPAD_DEADZONE    0.5f
 
+// Direction (shared by player, camera, enemies, projectiles)
+typedef enum Direction {
+    DIR_S = 0,
+    DIR_N,
+    DIR_E,
+    DIR_W,
+    DIR_COUNT
+} Direction;
+
+// Sound identifiers
+typedef enum SoundID {
+    SOUND_COIN = 0,
+    SOUND_COUNT
+} SoundID;
+
 #endif

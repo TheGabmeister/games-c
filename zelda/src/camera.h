@@ -2,7 +2,6 @@
 #define CAMERA_H
 
 #include "game_config.h"
-#include "player.h"
 #include <stdbool.h>
 
 typedef enum TransitionType {

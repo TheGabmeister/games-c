@@ -16,11 +16,6 @@ typedef enum GameState {
     STATE_COUNT
 } GameState;
 
-typedef enum SoundID {
-    SOUND_COIN = 0,
-    SOUND_COUNT
-} SoundID;
-
 typedef struct Game {
     GameState state;
     Player player;
@@ -48,7 +43,7 @@ typedef struct Game {
     bool music_loaded;
 
     Sound sounds[SOUND_COUNT];
-    bool sounds_loaded;
+    bool sound_loaded[SOUND_COUNT];
 } Game;
 
 void game_init(Game *game);

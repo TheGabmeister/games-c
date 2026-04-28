@@ -1,7 +1,9 @@
 #ifndef SOUNDS_H
 #define SOUNDS_H
 
-#include "game.h"
+#include "game_config.h"
+
+typedef struct Game Game;
 
 void sounds_load(Game *game);
 void sounds_unload(Game *game);

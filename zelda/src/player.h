@@ -2,17 +2,10 @@
 #define PLAYER_H
 
 #include "raylib.h"
+#include "game_config.h"
 #include "anim.h"
 #include "tilemap.h"
 #include <stdint.h>
-
-typedef enum Direction {
-    DIR_S = 0,
-    DIR_N,
-    DIR_E,
-    DIR_W,
-    DIR_COUNT
-} Direction;
 
 typedef enum PlayerState {
     PSTATE_IDLE,
