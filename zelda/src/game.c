@@ -14,6 +14,14 @@ static void load_screen_at(Game *game, int sx, int sy) {
     game->screen_y = sy;
 }
 
+static void load_cave_screen(Game *game, const char *cave_name) {
+    char path[SCREEN_PATH_MAX];
+    snprintf(path, sizeof(path), "assets/caves/%s.txt", cave_name);
+    if (!screen_load(&game->current_screen, path)) {
+        memset(&game->current_screen, TILE_FLOOR, sizeof(game->current_screen));
+    }
+}
+
 static bool can_transition(int screen_x, int screen_y, Direction dir) {
     int nx = screen_x, ny = screen_y;
     switch (dir) {
@@ -56,11 +64,14 @@ static void start_scroll_transition(Game *game, Direction dir) {
     game->warp_dest_x = nx;
     game->warp_dest_y = ny;
 
+    game->trans_type = TRANS_SCROLL;
     camera_start_scroll(&game->cam, dir);
     game->state = STATE_TRANSITION;
 }
 
 static void check_edge_transition(Game *game) {
+    if (game->in_cave) return;
+
     Player *p = &game->player;
     Direction dir = (Direction)-1;
 
@@ -91,11 +102,26 @@ static void check_warp(Game *game) {
     const Warp *w = screen_warp_at(&game->current_screen, col, row);
     if (!w) return;
 
-    int dx, dy;
-    if (sscanf(w->dest, "%d_%d", &dx, &dy) != 2) return;
+    if (strcmp(w->dest, "return") == 0) {
+        game->warp_dest_x = game->return_screen_x;
+        game->warp_dest_y = game->return_screen_y;
+        game->warp_dest_name[0] = '\0';
+    } else if (strncmp(w->dest, "cave_", 5) == 0) {
+        game->return_screen_x = game->screen_x;
+        game->return_screen_y = game->screen_y;
+        game->return_tile_col = col;
+        game->return_tile_row = row;
+        strncpy(game->warp_dest_name, w->dest, WARP_DEST_MAX - 1);
+        game->warp_dest_name[WARP_DEST_MAX - 1] = '\0';
+    } else {
+        int dx, dy;
+        if (sscanf(w->dest, "%d_%d", &dx, &dy) != 2) return;
+        game->warp_dest_x = dx;
+        game->warp_dest_y = dy;
+        game->warp_dest_name[0] = '\0';
+    }
 
-    game->warp_dest_x = dx;
-    game->warp_dest_y = dy;
+    game->trans_type = TRANS_FADE;
     camera_start_fade(&game->cam);
     game->state = STATE_TRANSITION;
 }
@@ -128,14 +154,42 @@ void game_update(Game *game) {
             camera_update(&game->cam);
 
             if (camera_at_midpoint(&game->cam)) {
-                load_screen_at(game, game->warp_dest_x, game->warp_dest_y);
-                game->player.pos.x = 7 * TILE_SIZE;
-                game->player.pos.y = PLAY_AREA_Y + 5 * TILE_SIZE;
+                if (game->warp_dest_name[0] != '\0') {
+                    // Entering a cave
+                    load_cave_screen(game, game->warp_dest_name);
+                    game->in_cave = true;
+                    // Land on the cave's return warp tile (or center as fallback)
+                    const Warp *rw = NULL;
+                    for (int i = 0; i < game->current_screen.warp_count; i++) {
+                        if (game->current_screen.warps[i].active &&
+                            strcmp(game->current_screen.warps[i].dest, "return") == 0) {
+                            rw = &game->current_screen.warps[i];
+                            break;
+                        }
+                    }
+                    if (rw) {
+                        game->player.pos.x = rw->tile_col * TILE_SIZE;
+                        game->player.pos.y = PLAY_AREA_Y + (rw->tile_row - 1) * TILE_SIZE;
+                    } else {
+                        game->player.pos.x = 7 * TILE_SIZE;
+                        game->player.pos.y = PLAY_AREA_Y + 5 * TILE_SIZE;
+                    }
+                } else if (game->in_cave) {
+                    // Returning from cave to overworld
+                    load_screen_at(game, game->warp_dest_x, game->warp_dest_y);
+                    game->in_cave = false;
+                    game->player.pos.x = game->return_tile_col * TILE_SIZE;
+                    game->player.pos.y = PLAY_AREA_Y + (game->return_tile_row - 1) * TILE_SIZE;
+                } else {
+                    // Overworld-to-overworld warp
+                    load_screen_at(game, game->warp_dest_x, game->warp_dest_y);
+                    game->player.pos.x = 7 * TILE_SIZE;
+                    game->player.pos.y = PLAY_AREA_Y + 5 * TILE_SIZE;
+                }
             }
 
             if (!camera_is_active(&game->cam)) {
-                if (game->cam.type == TRANS_NONE && game->state == STATE_TRANSITION) {
-                    // Scroll transition finished
+                if (game->trans_type == TRANS_SCROLL) {
                     game->current_screen = game->next_screen;
                     game->screen_x = game->warp_dest_x;
                     game->screen_y = game->warp_dest_y;

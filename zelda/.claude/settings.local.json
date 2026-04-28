@@ -85,7 +85,8 @@
       "Bash(\"D:/fluidsynth-v2.5.4-win10-x64-cpp11/bin/fluidsynth.exe\" -ni -a file -F /dev/null \"D:/8bitsf.SF2\")",
       "Bash(\"C:/Users/Admin/AppData/Local/Programs/Python/Python314/python.exe\" c:/dev/games-c/zelda/tools/music/sampler.py)",
       "Bash(\"D:/fluidsynth-v2.5.4-win10-x64-cpp11/bin/fluidsynth.exe\" -ni -g 0.5 -F \"c:/dev/games-c/zelda/tools/music/sampler.wav\" -r 44100 \"D:/8bitsf.SF2\" \"c:/dev/games-c/zelda/tools/music/sampler.mid\")",
-      "Bash(\"D:/ffmpeg-8.1-essentials_build/bin/ffmpeg.exe\" -i \"c:/dev/games-c/zelda/tools/music/sampler.wav\" -c:a libvorbis -q:a 5 \"c:/dev/games-c/zelda/tools/music/sampler.ogg\" -y)"
+      "Bash(\"D:/ffmpeg-8.1-essentials_build/bin/ffmpeg.exe\" -i \"c:/dev/games-c/zelda/tools/music/sampler.wav\" -c:a libvorbis -q:a 5 \"c:/dev/games-c/zelda/tools/music/sampler.ogg\" -y)",
+      "Bash(cmake --build c:/dev/games-c/zelda/build)"
     ]
   }
 }

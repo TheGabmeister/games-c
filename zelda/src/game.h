@@ -30,11 +30,19 @@ typedef struct Game {
     int screen_y;
 
     TransitionCamera cam;
+    TransitionType trans_type;
     Vector2 trans_player_start;
     Vector2 trans_player_end;
 
     int warp_dest_x;
     int warp_dest_y;
+    char warp_dest_name[WARP_DEST_MAX];
+
+    bool in_cave;
+    int return_screen_x;
+    int return_screen_y;
+    int return_tile_col;
+    int return_tile_row;
 
     Music overworld_music;
     bool music_loaded;
