@@ -37,7 +37,7 @@ Single `Game` struct holds all state (defined in `game.h`). The main loop in `ma
 
 Implemented modules:
 - **game_config.h** — canonical source for all compile-time constants. Other headers include this instead of defining their own.
-- **game.c/.h** — Game struct, state machine, screen loading by grid coordinates, edge detection, scroll/fade transition orchestration, music update.
+- **game.c/.h** — Game struct, state machine, screen loading by grid coordinates and cave names, edge detection, scroll/fade transition orchestration, cave enter/exit with return-stack (saves origin screen + tile on entry, restores on exit), music update. `trans_type` in Game struct tracks what kind of transition was started (scroll vs fade) because `camera.type` is reset to `TRANS_NONE` when the camera finishes — completion logic needs the original type to decide whether to swap `next_screen` (scroll) or not (fade, which loads directly into `current_screen` at midpoint).
 - **player.c/.h** — Player struct (pos, facing, state, health, inventory, animation), 4-directional movement with axis-aligned grid assist (perpendicular axis snaps to tile grid), separate-axis tile collision. Direction/PlayerState/Inventory types defined here.
 - **tilemap.c/.h** — TileDef table, Screen struct (11x16 tile grid + warps), screen file parser (plain text with metadata), tile drawing with offset support, tile collision, warp lookup. TileType/ItemID/Warp types defined here.
 - **anim.c/.h** — AnimDef (static definition: first_frame, count, duration, loops) and Anim (runtime: timer, current_frame, finished). Used by player and future enemies/tiles.
@@ -47,7 +47,7 @@ Implemented modules:
 - **hud.c/.h** — HUD rendering: hearts (half-heart granularity), rupees, keys, bombs, minimap grid showing current overworld position.
 - **sounds.c/.h** — sound loading/playback + music streaming. Resilient to missing files.
 
-Overworld grid: 16x8 screens, files named `assets/screens/XX_YY.txt`. Currently 5 test screens exist around position (7,4).
+Overworld grid: 16x8 screens, files named `assets/screens/XX_YY.txt`. Currently 5 test screens exist around position (7,4). Cave screens are in `assets/caves/` and are loaded by name (e.g., `cave_01`). Caves use a return-stack: the Game struct stores the origin overworld screen and tile position when entering a cave. A `warp: stairs X Y -> return` in the cave file sends the player back. Multiple overworld screens can share one cave file. Edge transitions are disabled while `in_cave` is true.
 
 See IMPLEMENTATION.md for the full planned module structure and phased implementation plan. Follow the phases in order — each produces a testable build.
 
@@ -66,6 +66,6 @@ When in doubt: for code one person owns and rarely changes, lean KISS. For inter
 
 - **Sprites**: spritesheets drawn as single SVGs with all frames on a 64px grid, exported as one PNG via Inkscape (`"C:/Program Files/Inkscape/bin/inkscape.exe" player.svg -o player.png -w 256 -h 256` for a 4x4 sheet). One sheet per category (player, enemy type, tiles, items, etc.). Code indexes frames by row/column source rectangle. Store SVG and PNG in `src/assets/sprites/`.
 - **Sounds**: generate with rfxgen (`"D:/rfxgen_v5.0_win_x64/rfxgen.exe" -g coin -o sound.wav`). Presets: coin, laser, explosion, powerup, hit, jump, blip. Store WAV in `src/assets/`.
-- **Music**: OGG files in `src/assets/music/`. Loaded via `LoadMusicStream`, updated every frame.
-- **Screen data**: plain text files in `src/assets/screens/` (overworld), `src/assets/dungeons/<n>/` (dungeons), `src/assets/caves/` (caves). Format: optional metadata lines (`warp:`, `enemy:`, `item:`, `#` comments), then 11 rows of 16 tile characters (W=wall, .=floor, ~=water, D=door, P=pushblock, S=stairs). See IMPLEMENTATION.md for full format.
+- **Music**: OGG files in `src/assets/music/`. Loaded via `LoadMusicStream`, updated every frame. Composition pipeline: Python scripts in `tools/music/` use `midiutil` to generate MIDI → FluidSynth renders with a soundfont to WAV → ffmpeg converts to OGG. See `tools/music/compose_overworld.py` for the pattern. `tools/music/sampler.py` generates an audio file cycling through all soundfont instruments for auditioning.
+- **Screen data**: plain text files in `src/assets/screens/` (overworld), `src/assets/dungeons/<n>/` (dungeons), `src/assets/caves/` (caves). Format: optional metadata lines (`warp:`, `enemy:`, `item:`, `#` comments), then 11 rows of 16 tile characters (W=wall, .=floor, ~=water, D=door, P=pushblock, S=stairs). Warp destination formats: `XX_YY` (overworld screen), `cave_XX` (enter cave, file `assets/caves/cave_XX.txt`), `return` (exit cave to saved overworld position). See IMPLEMENTATION.md for full format.
 - Sound and music loading is resilient — missing files are skipped.
