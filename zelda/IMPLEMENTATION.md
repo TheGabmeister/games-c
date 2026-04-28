@@ -568,11 +568,11 @@ Deliverable: player walks between connected overworld screens.
 
 **Test checklist:**
 
-- [ ] Walking to a screen edge triggers a scroll transition to the adjacent screen.
-- [ ] Scroll animation is smooth (~30 frames, ~0.5s).
+- [x] Walking to a screen edge triggers a scroll transition to the adjacent screen.
+- [x] Scroll animation is smooth (~30 frames, ~0.5s).
 - [ ] Player position is correct after transition (opposite edge of new screen).
-- [ ] Input is locked during transitions (player cannot move mid-scroll).
-- [ ] Screens with no neighbor block the player at the edge (no transition).
+- [x] Input is locked during transitions (player cannot move mid-scroll).
+- [x] Screens with no neighbor block the player at the edge (no transition).
 - [ ] Cave/warp tiles trigger fade-to-black transition.
 - [ ] Returning from a cave places the player at the correct overworld tile.
 - [ ] Multiple screens load correctly with different tile layouts.
