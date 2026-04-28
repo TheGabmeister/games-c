@@ -5,7 +5,8 @@ Texture2D textures[TEX_COUNT];
 
 static const char *texture_paths[TEX_COUNT] = {
     [TEX_PLAYER] = "assets/sprites/player.png",
-    [TEX_TILES]  = "assets/sprites/tiles.png",
+    [TEX_TILES]   = "assets/sprites/tiles.png",
+    [TEX_ENEMIES] = "assets/sprites/enemies.png",
 };
 
 void textures_load(void) {

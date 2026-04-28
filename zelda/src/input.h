@@ -8,6 +8,7 @@ bool input_right(void);
 bool input_up(void);
 bool input_down(void);
 
+bool input_attack(void);
 bool input_dig_left(void);
 bool input_dig_right(void);
 bool input_confirm(void);

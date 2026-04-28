@@ -50,15 +50,16 @@ bool screen_load(Screen *screen, const char *path) {
             if (line_start[i] == ':') { has_colon = true; break; }
         }
         if (has_colon) {
+            char line_copy[256];
+            int copy_len = line_len < 255 ? line_len : 255;
+            memcpy(line_copy, line_start, copy_len);
+            line_copy[copy_len] = '\0';
+
             if (line_len > 5 && strncmp(line_start, "warp:", 5) == 0
                 && screen->warp_count < MAX_WARPS_PER_SCREEN) {
                 char type_buf[16];
                 int wc, wr;
                 char dest_buf[WARP_DEST_MAX];
-                char line_copy[256];
-                int copy_len = line_len < 255 ? line_len : 255;
-                memcpy(line_copy, line_start, copy_len);
-                line_copy[copy_len] = '\0';
                 if (sscanf(line_copy, "warp: %15s %d %d -> %31s",
                            type_buf, &wc, &wr, dest_buf) == 4) {
                     Warp *w = &screen->warps[screen->warp_count++];
@@ -67,6 +68,22 @@ bool screen_load(Screen *screen, const char *path) {
                     strncpy(w->dest, dest_buf, WARP_DEST_MAX - 1);
                     w->dest[WARP_DEST_MAX - 1] = '\0';
                     w->active = true;
+                }
+            } else if (line_len > 6 && strncmp(line_start, "enemy:", 6) == 0
+                       && screen->enemy_spawn_count < MAX_ENEMIES_PER_SCREEN) {
+                char type_buf[16];
+                int ec, er;
+                if (sscanf(line_copy, "enemy: %15s %d %d", type_buf, &ec, &er) == 3) {
+                    int etype = -1;
+                    if (strcmp(type_buf, "slime") == 0)      etype = 0;
+                    else if (strcmp(type_buf, "bat") == 0)    etype = 1;
+                    else if (strcmp(type_buf, "snake") == 0)  etype = 2;
+                    if (etype >= 0) {
+                        EnemySpawn *es = &screen->enemy_spawns[screen->enemy_spawn_count++];
+                        es->type = etype;
+                        es->tile_col = ec;
+                        es->tile_row = er;
+                    }
                 }
             }
             continue;

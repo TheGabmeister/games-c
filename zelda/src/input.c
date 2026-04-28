@@ -26,6 +26,14 @@ bool input_down(void) {
            GetGamepadAxisMovement(0, GAMEPAD_AXIS_LEFT_Y) > GAMEPAD_DEADZONE;
 }
 
+bool input_attack(void) {
+    return IsKeyPressed(KEY_SPACE) ||
+           IsGamepadButtonPressed(0, GAMEPAD_BUTTON_RIGHT_FACE_LEFT);
+}
+
+bool input_dig_left(void) { return false; }
+bool input_dig_right(void) { return false; }
+
 bool input_confirm(void) {
     return IsKeyPressed(KEY_ENTER) ||
            IsGamepadButtonPressed(0, GAMEPAD_BUTTON_RIGHT_FACE_DOWN);

@@ -2,7 +2,10 @@
 #include "sounds.h"
 #include "hud.h"
 #include "textures.h"
+#include "debug.h"
 #include <stdio.h>
+#include <math.h>
+#include <stdlib.h>
 
 static void load_screen_at(Game *game, int sx, int sy) {
     char path[SCREEN_PATH_MAX];
@@ -12,6 +15,7 @@ static void load_screen_at(Game *game, int sx, int sy) {
     }
     game->screen_x = sx;
     game->screen_y = sy;
+    enemies_spawn(game->enemies, &game->enemy_count, &game->current_screen);
 }
 
 static void load_cave_screen(Game *game, const char *cave_name) {
@@ -20,6 +24,7 @@ static void load_cave_screen(Game *game, const char *cave_name) {
     if (!screen_load(&game->current_screen, path)) {
         memset(&game->current_screen, TILE_FLOOR, sizeof(game->current_screen));
     }
+    enemies_spawn(game->enemies, &game->enemy_count, &game->current_screen);
 }
 
 static bool can_transition(int screen_x, int screen_y, Direction dir) {
@@ -126,6 +131,74 @@ static void check_warp(Game *game) {
     game->state = STATE_TRANSITION;
 }
 
+static void spawn_small_slimes(Game *game, Vector2 pos) {
+    for (int s = 0; s < 2 && game->enemy_count < MAX_ENEMIES_PER_SCREEN; s++) {
+        Enemy *e = &game->enemies[game->enemy_count++];
+        *e = (Enemy){0};
+        e->type = ENEMY_SLIME;
+        e->subtype = 1;
+        e->pos.x = pos.x + (s == 0 ? -16.0f : 16.0f);
+        e->pos.y = pos.y;
+        e->pos.x = Clamp(e->pos.x, 0, SCREEN_TILES_X * TILE_SIZE - TILE_SIZE);
+        e->facing = DIR_S;
+        e->state = ESTATE_IDLE;
+        e->state_timer = 20 + rand() % 40;
+        e->health = 1;
+        e->active = true;
+    }
+}
+
+static void check_combat(Game *game) {
+    Player *p = &game->player;
+
+    if (p->state == PSTATE_ATTACKING) {
+        Rectangle sword = player_sword_hitbox(p);
+        if (sword.width > 0) {
+            for (int i = 0; i < game->enemy_count; i++) {
+                Enemy *e = &game->enemies[i];
+                if (!e->active || e->invuln_timer > 0) continue;
+                if (CheckCollisionRecs(sword, enemy_hitbox(e))) {
+                    e->invuln_timer = SWORD_ACTIVE_FRAMES;
+                    sound_play(game, SOUND_SWORD_HIT);
+                    if (e->type == ENEMY_SLIME && e->subtype == 0 &&
+                        p->inventory.sword_tier <= 1) {
+                        Vector2 split_pos = e->pos;
+                        e->active = false;
+                        e->state = ESTATE_DEAD;
+                        sound_play(game, SOUND_ENEMY_DEATH);
+                        spawn_small_slimes(game, split_pos);
+                    } else {
+                        enemy_take_damage(e, SWORD_DAMAGE);
+                        if (!e->active) {
+                            sound_play(game, SOUND_ENEMY_DEATH);
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    if (p->invuln_timer <= 0 && p->state != PSTATE_KNOCKBACK) {
+        Rectangle player_rect = player_hitbox(p);
+        for (int i = 0; i < game->enemy_count; i++) {
+            Enemy *e = &game->enemies[i];
+            if (!e->active) continue;
+            if (CheckCollisionRecs(player_rect, enemy_hitbox(e))) {
+                float dx = p->pos.x - e->pos.x;
+                float dy = p->pos.y - e->pos.y;
+                Direction kb_dir;
+                if (fabsf(dx) > fabsf(dy))
+                    kb_dir = (dx > 0) ? DIR_E : DIR_W;
+                else
+                    kb_dir = (dy > 0) ? DIR_S : DIR_N;
+                player_take_damage(p, enemy_defs[e->type].contact_damage, kb_dir);
+                sound_play(game, SOUND_PLAYER_DAMAGE);
+                break;
+            }
+        }
+    }
+}
+
 void game_init(Game *game) {
     memset(game, 0, sizeof(*game));
     game->state = STATE_PLAY;
@@ -135,6 +208,8 @@ void game_init(Game *game) {
 }
 
 void game_update(Game *game) {
+    if (IsKeyPressed(KEY_F3)) debug_toggle();
+
     float dt = GetFrameTime();
 
     if (game->music_loaded) {
@@ -142,13 +217,36 @@ void game_update(Game *game) {
     }
 
     switch (game->state) {
-        case STATE_PLAY:
+        case STATE_PLAY: {
+            PlayerState prev_state = game->player.state;
             player_update(&game->player, &game->current_screen, dt);
+            if (game->player.state == PSTATE_ATTACKING && prev_state != PSTATE_ATTACKING) {
+                sound_play(game, SOUND_SWORD_SWING);
+            }
+            enemies_update(game->enemies, game->enemy_count,
+                           game->player.pos, &game->current_screen, dt);
+            check_combat(game);
+            if (game->player.health <= 0) {
+                game->state = STATE_DEATH;
+                game->death_timer = 90;
+                break;
+            }
+            if (game->player.health > 0 &&
+                game->player.health <= LOW_HEALTH_THRESHOLD) {
+                game->low_health_counter++;
+                if (game->low_health_counter >= LOW_HEALTH_BEEP_FRAMES) {
+                    sound_play(game, SOUND_LOW_HEALTH);
+                    game->low_health_counter = 0;
+                }
+            } else {
+                game->low_health_counter = 0;
+            }
             check_warp(game);
             if (game->state == STATE_PLAY) {
                 check_edge_transition(game);
             }
             break;
+        }
 
         case STATE_TRANSITION:
             camera_update(&game->cam);
@@ -194,7 +292,19 @@ void game_update(Game *game) {
                     game->screen_x = game->warp_dest_x;
                     game->screen_y = game->warp_dest_y;
                     game->player.pos = game->trans_player_end;
+                    enemies_spawn(game->enemies, &game->enemy_count,
+                                  &game->current_screen);
                 }
+                game->state = STATE_PLAY;
+            }
+            break;
+
+        case STATE_DEATH:
+            game->death_timer--;
+            if (game->death_timer <= 0) {
+                player_init(&game->player);
+                game->in_cave = false;
+                load_screen_at(game, START_SCREEN_X, START_SCREEN_Y);
                 game->state = STATE_PLAY;
             }
             break;
@@ -230,16 +340,30 @@ void game_draw(Game *game) {
         EndScissorMode();
     } else if (game->state == STATE_TRANSITION && game->cam.type == TRANS_FADE) {
         screen_draw(&game->current_screen);
+        enemies_draw(game->enemies, game->enemy_count);
         player_draw(&game->player);
         unsigned char alpha = camera_fade_alpha(&game->cam);
         DrawRectangle(0, PLAY_AREA_Y, WINDOW_WIDTH, PLAY_AREA_HEIGHT,
                       (Color){ 0, 0, 0, alpha });
+    } else if (game->state == STATE_DEATH) {
+        screen_draw(&game->current_screen);
+        enemies_draw(game->enemies, game->enemy_count);
+        player_draw(&game->player);
+        int half = 45;
+        if (game->death_timer < half) {
+            unsigned char alpha = (unsigned char)(255 * (half - game->death_timer) / half);
+            DrawRectangle(0, PLAY_AREA_Y, WINDOW_WIDTH, PLAY_AREA_HEIGHT,
+                          (Color){ 0, 0, 0, alpha });
+        }
     } else {
         screen_draw(&game->current_screen);
+        enemies_draw(game->enemies, game->enemy_count);
         player_draw(&game->player);
     }
 
     hud_draw(&game->player, game->screen_x, game->screen_y);
+    debug_draw_game(game);
+    debug_draw_overlay();
 
     EndDrawing();
 }

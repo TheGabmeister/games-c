@@ -1,4 +1,7 @@
 # East of starting room - different wall layout
+enemy: snake 6 2
+enemy: snake 12 7
+enemy: bat 3 5
 WWWWWWWWWWWWWWWW
 W..............W
 W..WWWW........W

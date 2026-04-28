@@ -46,6 +46,18 @@
 
 #define GAMEPAD_DEADZONE    0.5f
 
+// Combat
+#define SWORD_ACTIVE_FRAMES     8
+#define SWORD_COOLDOWN_FRAMES   12
+#define SWORD_DAMAGE            1
+#define KNOCKBACK_FRAMES        8
+#define KNOCKBACK_DISTANCE      32
+#define KNOCKBACK_SPEED         (KNOCKBACK_DISTANCE * TARGET_FPS / KNOCKBACK_FRAMES)
+#define INVULN_FRAMES           60
+#define MAX_ENEMIES_PER_SCREEN  16
+#define LOW_HEALTH_THRESHOLD    2
+#define LOW_HEALTH_BEEP_FRAMES  30
+
 // Direction (shared by player, camera, enemies, projectiles)
 typedef enum Direction {
     DIR_S = 0,
@@ -58,6 +70,11 @@ typedef enum Direction {
 // Sound identifiers
 typedef enum SoundID {
     SOUND_COIN = 0,
+    SOUND_SWORD_SWING,
+    SOUND_SWORD_HIT,
+    SOUND_ENEMY_DEATH,
+    SOUND_PLAYER_DAMAGE,
+    SOUND_LOW_HEALTH,
     SOUND_COUNT
 } SoundID;
 

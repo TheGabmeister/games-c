@@ -20,6 +20,13 @@ const AnimDef player_walk_anims[DIR_COUNT] = {
     [DIR_W] = { 12, 4, PLAYER_ANIM_FRAMES, true },
 };
 
+static const AnimDef player_attack_anims[DIR_COUNT] = {
+    [DIR_S] = { 16, 2, 4, false },
+    [DIR_N] = { 18, 2, 4, false },
+    [DIR_E] = { 20, 2, 4, false },
+    [DIR_W] = { 22, 2, 4, false },
+};
+
 void player_init(Player *player) {
     memset(player, 0, sizeof(*player));
     player->pos = (Vector2){ 7 * TILE_SIZE, PLAY_AREA_Y + 5 * TILE_SIZE };
@@ -42,6 +49,53 @@ static float snap_toward_grid(float pos, float base, float speed, float dt) {
 }
 
 void player_update(Player *player, const Screen *screen, float dt) {
+    if (player->attack_cooldown > 0) player->attack_cooldown--;
+    if (player->invuln_timer > 0) player->invuln_timer--;
+
+    if (player->state == PSTATE_KNOCKBACK) {
+        player->knockback_timer--;
+        float step = (float)KNOCKBACK_SPEED * dt;
+        float nx = player->pos.x;
+        float ny = player->pos.y;
+        switch (player->knockback_dir) {
+            case DIR_N: ny -= step; break;
+            case DIR_S: ny += step; break;
+            case DIR_W: nx -= step; break;
+            case DIR_E: nx += step; break;
+            default: break;
+        }
+        nx = Clamp(nx, 0, SCREEN_TILES_X * TILE_SIZE - TILE_SIZE);
+        ny = Clamp(ny, PLAY_AREA_Y, PLAY_AREA_Y + SCREEN_TILES_Y * TILE_SIZE - TILE_SIZE);
+        Rectangle test = { nx, ny, TILE_SIZE, TILE_SIZE };
+        if (!screen_tile_blocked(screen, test)) {
+            player->pos.x = nx;
+            player->pos.y = ny;
+        }
+        if (player->knockback_timer <= 0) {
+            player->state = PSTATE_IDLE;
+        }
+        anim_tick(&player->anim);
+        return;
+    }
+
+    if (player->state == PSTATE_ATTACKING) {
+        player->attack_timer--;
+        if (player->attack_timer <= 0) {
+            player->state = PSTATE_IDLE;
+        }
+        anim_tick(&player->anim);
+        return;
+    }
+
+    if ((player->state == PSTATE_IDLE || player->state == PSTATE_MOVING) &&
+        input_attack() && player->attack_cooldown == 0) {
+        player->state = PSTATE_ATTACKING;
+        player->attack_timer = SWORD_ACTIVE_FRAMES;
+        player->attack_cooldown = SWORD_ACTIVE_FRAMES + SWORD_COOLDOWN_FRAMES;
+        anim_set(&player->anim, &player_attack_anims[player->facing]);
+        return;
+    }
+
     bool left  = input_left();
     bool right = input_right();
     bool up    = input_up();
@@ -55,9 +109,6 @@ void player_update(Player *player, const Screen *screen, float dt) {
     if (up && !down)     { move_y = -1; new_facing = DIR_N; }
     if (down && !up)     { move_y =  1; new_facing = DIR_S; }
 
-    // Four-directional only: if both axes have input, keep only the most
-    // recent direction. Since we can't track press order with held-state
-    // input, vertical wins ties (matches NES Zelda behavior).
     if (move_x != 0 && move_y != 0) {
         move_x = 0;
     }
@@ -75,7 +126,6 @@ void player_update(Player *player, const Screen *screen, float dt) {
             if (!screen_tile_blocked(screen, test)) {
                 player->pos.x = new_x;
             }
-            // Grid assist: snap Y toward nearest tile row
             float snapped_y = snap_toward_grid(player->pos.y, PLAY_AREA_Y, PLAYER_SPEED, dt);
             snapped_y = Clamp(snapped_y, PLAY_AREA_Y, PLAY_AREA_Y + SCREEN_TILES_Y * TILE_SIZE - TILE_SIZE);
             Rectangle snap_test = { player->pos.x, snapped_y, TILE_SIZE, TILE_SIZE };
@@ -89,7 +139,6 @@ void player_update(Player *player, const Screen *screen, float dt) {
             if (!screen_tile_blocked(screen, test)) {
                 player->pos.y = new_y;
             }
-            // Grid assist: snap X toward nearest tile column
             float snapped_x = snap_toward_grid(player->pos.x, 0, PLAYER_SPEED, dt);
             snapped_x = Clamp(snapped_x, 0, SCREEN_TILES_X * TILE_SIZE - TILE_SIZE);
             Rectangle snap_test = { snapped_x, player->pos.y, TILE_SIZE, TILE_SIZE };
@@ -114,6 +163,10 @@ void player_update(Player *player, const Screen *screen, float dt) {
 }
 
 void player_draw(const Player *player) {
+    if (player->invuln_timer > 0 && (player->invuln_timer / 4) % 2 == 0) {
+        return;
+    }
+
     int frame = anim_frame_index(&player->anim);
     if (IsTextureValid(textures[TEX_PLAYER])) {
         Rectangle src = texture_frame_rect(4, frame);
@@ -121,8 +174,42 @@ void player_draw(const Player *player) {
     } else {
         DrawRectangle((int)player->pos.x, (int)player->pos.y, TILE_SIZE, TILE_SIZE, GREEN);
     }
+
+    if (player->state == PSTATE_ATTACKING) {
+        Rectangle sword = player_sword_hitbox(player);
+        if (sword.width > 0) {
+            DrawRectangle((int)sword.x, (int)sword.y,
+                          (int)sword.width, (int)sword.height,
+                          (Color){ 200, 200, 255, 160 });
+        }
+    }
 }
 
 Rectangle player_hitbox(const Player *player) {
     return (Rectangle){ player->pos.x, player->pos.y, TILE_SIZE, TILE_SIZE };
+}
+
+Rectangle player_sword_hitbox(const Player *player) {
+    if (player->state != PSTATE_ATTACKING || player->attack_timer <= 0)
+        return (Rectangle){ 0, 0, 0, 0 };
+    float x = player->pos.x;
+    float y = player->pos.y;
+    switch (player->facing) {
+        case DIR_N: y -= TILE_SIZE; break;
+        case DIR_S: y += TILE_SIZE; break;
+        case DIR_W: x -= TILE_SIZE; break;
+        case DIR_E: x += TILE_SIZE; break;
+        default: break;
+    }
+    return (Rectangle){ x, y, TILE_SIZE, TILE_SIZE };
+}
+
+void player_take_damage(Player *player, int damage, Direction kb_dir) {
+    if (player->invuln_timer > 0) return;
+    player->health -= damage;
+    if (player->health < 0) player->health = 0;
+    player->state = PSTATE_KNOCKBACK;
+    player->knockback_timer = KNOCKBACK_FRAMES;
+    player->knockback_dir = kb_dir;
+    player->invuln_timer = INVULN_FRAMES;
 }

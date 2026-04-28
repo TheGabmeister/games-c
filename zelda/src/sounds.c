@@ -2,7 +2,12 @@
 #include "game.h"
 
 static const char *sound_files[SOUND_COUNT] = {
-    [SOUND_COIN] = "assets/coin.wav",
+    [SOUND_COIN]          = "assets/coin.wav",
+    [SOUND_SWORD_SWING]   = "assets/sword_swing.wav",
+    [SOUND_SWORD_HIT]     = "assets/sword_hit.wav",
+    [SOUND_ENEMY_DEATH]   = "assets/enemy_death.wav",
+    [SOUND_PLAYER_DAMAGE] = "assets/player_damage.wav",
+    [SOUND_LOW_HEALTH]    = "assets/low_health.wav",
 };
 
 void sounds_load(Game *game) {

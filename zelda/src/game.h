@@ -6,6 +6,7 @@
 #include "player.h"
 #include "tilemap.h"
 #include "camera.h"
+#include "enemy/enemy.h"
 #include <stdbool.h>
 #include <stdlib.h>
 #include <string.h>
@@ -13,6 +14,7 @@
 typedef enum GameState {
     STATE_PLAY = 0,
     STATE_TRANSITION,
+    STATE_DEATH,
     STATE_COUNT
 } GameState;
 
@@ -41,6 +43,12 @@ typedef struct Game {
 
     Music overworld_music;
     bool music_loaded;
+
+    Enemy enemies[MAX_ENEMIES_PER_SCREEN];
+    int enemy_count;
+
+    int death_timer;
+    int low_health_counter;
 
     Sound sounds[SOUND_COUNT];
     bool sound_loaded[SOUND_COUNT];

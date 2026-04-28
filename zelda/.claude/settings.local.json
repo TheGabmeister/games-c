@@ -87,7 +87,17 @@
       "Bash(\"D:/fluidsynth-v2.5.4-win10-x64-cpp11/bin/fluidsynth.exe\" -ni -g 0.5 -F \"c:/dev/games-c/zelda/tools/music/sampler.wav\" -r 44100 \"D:/8bitsf.SF2\" \"c:/dev/games-c/zelda/tools/music/sampler.mid\")",
       "Bash(\"D:/ffmpeg-8.1-essentials_build/bin/ffmpeg.exe\" -i \"c:/dev/games-c/zelda/tools/music/sampler.wav\" -c:a libvorbis -q:a 5 \"c:/dev/games-c/zelda/tools/music/sampler.ogg\" -y)",
       "Bash(cmake --build c:/dev/games-c/zelda/build)",
-      "Bash(xargs grep *)"
+      "Bash(xargs grep *)",
+      "Bash(\"D:/rfxgen_v5.0_win_x64/rfxgen.exe\" -g laser -o src/assets/sword_swing.wav)",
+      "Bash(\"D:/rfxgen_v5.0_win_x64/rfxgen.exe\" -g hit -o src/assets/sword_hit.wav)",
+      "Bash(\"D:/rfxgen_v5.0_win_x64/rfxgen.exe\" -g explosion -o src/assets/enemy_death.wav)",
+      "Bash(\"D:/rfxgen_v5.0_win_x64/rfxgen.exe\" -g hit -o src/assets/player_damage.wav)",
+      "Bash(\"D:/rfxgen_v5.0_win_x64/rfxgen.exe\" -g blip -o src/assets/low_health.wav)",
+      "Bash(\"C:/Program Files/Inkscape/bin/inkscape.exe\" src/assets/sprites/enemies.svg -o src/assets/sprites/enemies.png -w 256 -h 384)",
+      "Bash(\"C:/Program Files/Inkscape/bin/inkscape.exe\" src/assets/sprites/player.svg -o src/assets/sprites/player.png -w 256 -h 384)",
+      "Bash(./build/zelda/Debug/zelda.exe)",
+      "Bash(cmake --build build --target zelda -- /p:ForceRebuild=true)",
+      "Bash(cmake --build build --clean-first)"
     ]
   }
 }

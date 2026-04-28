@@ -37,10 +37,18 @@ typedef struct Warp {
     bool active;
 } Warp;
 
+typedef struct EnemySpawn {
+    int type;
+    int tile_col;
+    int tile_row;
+} EnemySpawn;
+
 typedef struct Screen {
     uint8_t tiles[SCREEN_TILES_Y][SCREEN_TILES_X];
     Warp warps[MAX_WARPS_PER_SCREEN];
     int warp_count;
+    EnemySpawn enemy_spawns[MAX_ENEMIES_PER_SCREEN];
+    int enemy_spawn_count;
 } Screen;
 
 bool screen_load(Screen *screen, const char *path);

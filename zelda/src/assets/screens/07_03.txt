@@ -1,4 +1,7 @@
 # North of starting room - open field
+enemy: bat 4 3
+enemy: bat 10 5
+enemy: bat 7 7
 WWWWWWWWWWWWWWWW
 W..............W
 W..............W
