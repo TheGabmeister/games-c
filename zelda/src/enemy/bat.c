@@ -1,6 +1,7 @@
 #include "enemy.h"
 #include "../tilemap.h"
 #include "../textures.h"
+#include "raymath.h"
 #include <stdlib.h>
 #include <math.h>
 

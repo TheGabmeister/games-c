@@ -1,4 +1,6 @@
-enemy: slime 8 5
+enemy: slime 4 3
+enemy: bat 12 2
+enemy: snake 10 8
 WWWWWWW..WWWWWWW
 W..............W
 W..............W
