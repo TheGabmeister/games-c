@@ -100,16 +100,16 @@ void bat_draw(const Enemy *self) {
 
     int frame;
     if (self->state == ESTATE_IDLE) {
-        frame = 8;
+        frame = 0;
     } else if (self->state == ESTATE_MOVING) {
-        frame = 9 + (self->ai_timer % 3);
+        frame = 1 + (self->ai_timer % 3);
     } else {
-        frame = 13;
+        frame = 5;
     }
 
-    if (IsTextureValid(textures[TEX_ENEMIES])) {
+    if (IsTextureValid(textures[TEX_BAT])) {
         Rectangle src = texture_frame_rect(4, frame);
-        DrawTextureRec(textures[TEX_ENEMIES], src, self->pos, tint);
+        DrawTextureRec(textures[TEX_BAT], src, self->pos, tint);
     } else {
         Color c = (Color){ 160, 50, 200, 255 };
         if (self->invuln_timer > 0 && (self->invuln_timer / 3) % 2 == 0) c = WHITE;

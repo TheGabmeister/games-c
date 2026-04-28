@@ -6,7 +6,9 @@
 typedef enum TextureID {
     TEX_PLAYER = 0,
     TEX_TILES,
-    TEX_ENEMIES,
+    TEX_SLIME,
+    TEX_BAT,
+    TEX_SNAKE,
     TEX_COUNT
 } TextureID;
 

@@ -81,9 +81,9 @@ void slime_draw(const Enemy *self) {
     int row = (self->subtype == 1) ? 1 : 0;
     int frame_index = row * 4 + frame;
 
-    if (IsTextureValid(textures[TEX_ENEMIES])) {
+    if (IsTextureValid(textures[TEX_SLIME])) {
         Rectangle src = texture_frame_rect(4, frame_index);
-        DrawTextureRec(textures[TEX_ENEMIES], src, self->pos, tint);
+        DrawTextureRec(textures[TEX_SLIME], src, self->pos, tint);
     } else {
         const EnemyDef *def = &enemy_defs[self->type];
         Color c = (self->subtype == 1) ? (Color){ 100, 220, 100, 255 }

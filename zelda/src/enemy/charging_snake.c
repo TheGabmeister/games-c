@@ -124,12 +124,12 @@ void snake_draw(const Enemy *self) {
         case DIR_W: dir_index = 3; break;
         default:    dir_index = 0; break;
     }
-    int row = (self->state == ESTATE_CHARGING) ? 5 : 4;
+    int row = (self->state == ESTATE_CHARGING) ? 1 : 0;
     int frame = row * 4 + dir_index;
 
-    if (IsTextureValid(textures[TEX_ENEMIES])) {
+    if (IsTextureValid(textures[TEX_SNAKE])) {
         Rectangle src = texture_frame_rect(4, frame);
-        DrawTextureRec(textures[TEX_ENEMIES], src, self->pos, tint);
+        DrawTextureRec(textures[TEX_SNAKE], src, self->pos, tint);
     } else {
         Color c = (self->state == ESTATE_CHARGING)
             ? (Color){ 255, 80, 80, 255 }

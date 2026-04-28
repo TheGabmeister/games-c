@@ -1,0 +1,56 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" width="256" height="128" viewBox="0 0 256 128">
+  <!-- Bat spritesheet: 4 cols x 2 rows, 64px grid -->
+
+  <!-- Row 0: Bat (rest, fly1, fly2, fly3) -->
+  <!-- Rest -->
+  <ellipse cx="32" cy="32" rx="8" ry="10" fill="#8844bb"/>
+  <circle cx="28" cy="28" r="2" fill="#ff3333"/>
+  <circle cx="36" cy="28" r="2" fill="#ff3333"/>
+  <path d="M24 30 L12 20 L20 28 Z" fill="#6633aa"/>
+  <path d="M40 30 L52 20 L44 28 Z" fill="#6633aa"/>
+  <!-- Fly1 - wings up -->
+  <ellipse cx="96" cy="34" rx="8" ry="8" fill="#8844bb"/>
+  <circle cx="92" cy="30" r="2" fill="#ff3333"/>
+  <circle cx="100" cy="30" r="2" fill="#ff3333"/>
+  <path d="M88 32 L72 12 L84 28 Z" fill="#6633aa"/>
+  <path d="M104 32 L120 12 L108 28 Z" fill="#6633aa"/>
+  <!-- Fly2 - wings mid -->
+  <ellipse cx="160" cy="34" rx="8" ry="8" fill="#8844bb"/>
+  <circle cx="156" cy="30" r="2" fill="#ff3333"/>
+  <circle cx="164" cy="30" r="2" fill="#ff3333"/>
+  <path d="M152 32 L136 28 L148 34 Z" fill="#6633aa"/>
+  <path d="M168 32 L184 28 L172 34 Z" fill="#6633aa"/>
+  <!-- Fly3 - wings down -->
+  <ellipse cx="224" cy="32" rx="8" ry="8" fill="#8844bb"/>
+  <circle cx="220" cy="28" r="2" fill="#ff3333"/>
+  <circle cx="228" cy="28" r="2" fill="#ff3333"/>
+  <path d="M216 32 L204 44 L214 36 Z" fill="#6633aa"/>
+  <path d="M232 32 L244 44 L234 36 Z" fill="#6633aa"/>
+
+  <!-- Row 1: Bat continued (fly4, slow1, slow2, hit) -->
+  <!-- Fly4 - wings far up -->
+  <ellipse cx="32" cy="98" rx="8" ry="8" fill="#8844bb"/>
+  <circle cx="28" cy="94" r="2" fill="#ff3333"/>
+  <circle cx="36" cy="94" r="2" fill="#ff3333"/>
+  <path d="M24 96 L10 80 L20 92 Z" fill="#6633aa"/>
+  <path d="M40 96 L54 80 L44 92 Z" fill="#6633aa"/>
+  <!-- Slow1 -->
+  <ellipse cx="96" cy="100" rx="8" ry="9" fill="#8844bb"/>
+  <circle cx="92" cy="96" r="2" fill="#ff3333"/>
+  <circle cx="100" cy="96" r="2" fill="#ff3333"/>
+  <path d="M88 98 L78 92 L86 98 Z" fill="#6633aa"/>
+  <path d="M104 98 L114 92 L106 98 Z" fill="#6633aa"/>
+  <!-- Slow2 -->
+  <ellipse cx="160" cy="100" rx="8" ry="10" fill="#8844bb"/>
+  <circle cx="156" cy="96" r="2" fill="#ff3333"/>
+  <circle cx="164" cy="96" r="2" fill="#ff3333"/>
+  <path d="M152 98 L144 96 L150 100 Z" fill="#6633aa"/>
+  <path d="M168 98 L176 96 L170 100 Z" fill="#6633aa"/>
+  <!-- Hit -->
+  <ellipse cx="224" cy="98" rx="8" ry="8" fill="#ffffff"/>
+  <circle cx="220" cy="94" r="2" fill="#ff0000"/>
+  <circle cx="228" cy="94" r="2" fill="#ff0000"/>
+  <path d="M216 96 L204 88 L214 94 Z" fill="#dddddd"/>
+  <path d="M232 96 L244 88 L234 94 Z" fill="#dddddd"/>
+</svg>

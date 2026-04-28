@@ -1,0 +1,48 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" width="256" height="128" viewBox="0 0 256 128">
+  <!-- Slime spritesheet: 4 cols x 2 rows, 64px grid -->
+
+  <!-- Row 0: Large Slime (idle, slide1, slide2, hit) -->
+  <!-- Idle -->
+  <ellipse cx="32" cy="44" rx="24" ry="18" fill="#2ecc40"/>
+  <ellipse cx="32" cy="46" rx="26" ry="14" fill="#27ae36"/>
+  <circle cx="24" cy="40" r="3" fill="#1a1a1a"/>
+  <circle cx="40" cy="40" r="3" fill="#1a1a1a"/>
+  <!-- Slide1 -->
+  <ellipse cx="96" cy="42" rx="26" ry="20" fill="#2ecc40"/>
+  <ellipse cx="96" cy="46" rx="28" ry="14" fill="#27ae36"/>
+  <circle cx="86" cy="38" r="3" fill="#1a1a1a"/>
+  <circle cx="106" cy="38" r="3" fill="#1a1a1a"/>
+  <!-- Slide2 -->
+  <ellipse cx="160" cy="46" rx="22" ry="16" fill="#2ecc40"/>
+  <ellipse cx="160" cy="48" rx="24" ry="12" fill="#27ae36"/>
+  <circle cx="152" cy="42" r="3" fill="#1a1a1a"/>
+  <circle cx="168" cy="42" r="3" fill="#1a1a1a"/>
+  <!-- Hit -->
+  <ellipse cx="224" cy="44" rx="24" ry="18" fill="#ffffff"/>
+  <ellipse cx="224" cy="46" rx="26" ry="14" fill="#dddddd"/>
+  <circle cx="216" cy="40" r="3" fill="#ff0000"/>
+  <circle cx="232" cy="40" r="3" fill="#ff0000"/>
+
+  <!-- Row 1: Small Slime (32x32 centered in 64x64 cells) -->
+  <!-- Idle -->
+  <ellipse cx="32" cy="108" rx="12" ry="10" fill="#55dd66"/>
+  <ellipse cx="32" cy="110" rx="14" ry="8" fill="#44cc55"/>
+  <circle cx="28" cy="106" r="2" fill="#1a1a1a"/>
+  <circle cx="36" cy="106" r="2" fill="#1a1a1a"/>
+  <!-- Slide1 -->
+  <ellipse cx="96" cy="106" rx="14" ry="12" fill="#55dd66"/>
+  <ellipse cx="96" cy="110" rx="15" ry="8" fill="#44cc55"/>
+  <circle cx="91" cy="104" r="2" fill="#1a1a1a"/>
+  <circle cx="101" cy="104" r="2" fill="#1a1a1a"/>
+  <!-- Slide2 -->
+  <ellipse cx="160" cy="110" rx="11" ry="9" fill="#55dd66"/>
+  <ellipse cx="160" cy="112" rx="13" ry="7" fill="#44cc55"/>
+  <circle cx="156" cy="108" r="2" fill="#1a1a1a"/>
+  <circle cx="164" cy="108" r="2" fill="#1a1a1a"/>
+  <!-- Hit -->
+  <ellipse cx="224" cy="108" rx="12" ry="10" fill="#ffffff"/>
+  <ellipse cx="224" cy="110" rx="14" ry="8" fill="#dddddd"/>
+  <circle cx="220" cy="106" r="2" fill="#ff0000"/>
+  <circle cx="228" cy="106" r="2" fill="#ff0000"/>
+</svg>
