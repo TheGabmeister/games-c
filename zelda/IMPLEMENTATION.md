@@ -599,24 +599,24 @@ Deliverable: player can fight enemies, take damage, and die.
 
 **Test checklist:**
 
-- [ ] Sword swing plays attack animation in the facing direction.
-- [ ] Sword hitbox damages enemies during active frames only.
-- [ ] Sword has a cooldown — cannot spam attacks.
-- [ ] Slime moves and behaves per spec (random wandering).
-- [ ] Bat moves and behaves per spec (erratic flight).
-- [ ] Charging snake moves and behaves per spec (charges on line-of-sight).
-- [ ] Enemies spawn from screen metadata at correct tile positions.
-- [ ] Touching an enemy deals contact damage to the player.
-- [ ] Player is knocked back on hit (8 frames, 32px).
-- [ ] Invulnerability activates after damage (60 frames, player flashes).
-- [ ] Player cannot take damage during invulnerability.
-- [ ] HUD hearts update correctly on damage (half-heart granularity).
-- [ ] Player dies at 0 health — death state triggers.
-- [ ] Death respawns player at starting screen with reset health.
-- [ ] Sword swing, hit, enemy death, and player damage sounds all play.
-- [ ] Low health warning sound plays when at 1 heart or less.
-- [ ] Enemies display attack animations/tells before dealing damage.
-- [ ] Killed enemies are removed from the screen.
+- [x] Sword swing plays attack animation in the facing direction.
+- [x] Sword hitbox damages enemies during active frames only.
+- [x] Sword has a cooldown — cannot spam attacks.
+- [x] Slime moves and behaves per spec (random wandering).
+- [x] Bat moves and behaves per spec (erratic flight).
+- [x] Charging snake moves and behaves per spec (charges on line-of-sight).
+- [x] Enemies spawn from screen metadata at correct tile positions.
+- [x] Touching an enemy deals contact damage to the player.
+- [x] Player is knocked back on hit (8 frames, 32px).
+- [x] Invulnerability activates after damage (60 frames, player flashes).
+- [x] Player cannot take damage during invulnerability.
+- [x] HUD hearts update correctly on damage (half-heart granularity).
+- [x] Player dies at 0 health — death state triggers.
+- [x] Death respawns player at starting screen with reset health.
+- [x] Sword swing, hit, enemy death, and player damage sounds all play.
+- [x] Low health warning sound plays when at 1 heart or less.
+- [x] Enemies display attack animations/tells before dealing damage.
+- [x] Killed enemies are removed from the screen.
 
 ### Phase 4 — Projectiles and Items
 
