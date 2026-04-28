@@ -1,8 +1,12 @@
 #include "debug.h"
 #include "game.h"
+#include "enemy/enemy.h"
 #include "raylib.h"
 
 bool debug_enabled = false;
+
+static const char *enemy_type_names[] = { "slime", "bat", "snake" };
+static const char *enemy_state_names[] = { "idle", "move", "charge", "dead" };
 
 void debug_toggle(void) {
     debug_enabled = !debug_enabled;
@@ -25,9 +29,21 @@ void debug_draw_game(const Game *game) {
     }
     DrawText(TextFormat("enemies: %d/%d", alive, game->enemy_count), 32, y, 20, YELLOW);
     y += 24;
-    DrawText(TextFormat("player state: %d", game->player.state), 32, y, 20, YELLOW);
+    DrawText(TextFormat("player state: %d  hp: %d/%d",
+             game->player.state, game->player.health, game->player.max_health),
+             32, y, 20, YELLOW);
     y += 24;
-    DrawText(TextFormat("pos: %.0f, %.0f", game->player.pos.x, game->player.pos.y), 32, y, 20, YELLOW);
-    y += 24;
-    DrawText(TextFormat("hp: %d/%d", game->player.health, game->player.max_health), 32, y, 20, YELLOW);
+
+    for (int i = 0; i < game->enemy_count; i++) {
+        const Enemy *e = &game->enemies[i];
+        if (!e->active) continue;
+
+        DrawRectangleLines((int)e->pos.x, (int)e->pos.y, TILE_SIZE, TILE_SIZE, YELLOW);
+
+        const char *tname = (e->type < ENEMY_TYPE_COUNT) ? enemy_type_names[e->type] : "?";
+        const char *sname = (e->state <= ESTATE_DEAD) ? enemy_state_names[e->state] : "?";
+        DrawText(TextFormat("%s %s (%.0f,%.0f)", tname, sname, e->pos.x, e->pos.y),
+                 32, y, 16, YELLOW);
+        y += 18;
+    }
 }
