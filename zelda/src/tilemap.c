@@ -1,5 +1,6 @@
 #include "tilemap.h"
 #include "textures.h"
+#include "enemy/enemy.h"
 #include <stdio.h>
 #include <string.h>
 
@@ -78,12 +79,12 @@ bool screen_load(Screen *screen, const char *path) {
                 int ec, er;
                 if (sscanf(line_copy, "enemy: %15s %d %d", type_buf, &ec, &er) == 3) {
                     int etype = -1;
-                    if (strcmp(type_buf, "slime") == 0)            etype = 0;
-                    else if (strcmp(type_buf, "bat") == 0)          etype = 1;
-                    else if (strcmp(type_buf, "snake") == 0)        etype = 2;
-                    else if (strcmp(type_buf, "rock_spitter") == 0) etype = 3;
-                    else if (strcmp(type_buf, "spear_thrower") == 0) etype = 4;
-                    else if (strcmp(type_buf, "dragon") == 0)       etype = 5;
+                    if (strcmp(type_buf, "slime") == 0)            etype = ENEMY_SLIME;
+                    else if (strcmp(type_buf, "bat") == 0)          etype = ENEMY_BAT;
+                    else if (strcmp(type_buf, "snake") == 0)        etype = ENEMY_SNAKE;
+                    else if (strcmp(type_buf, "rock_spitter") == 0) etype = ENEMY_ROCK_SPITTER;
+                    else if (strcmp(type_buf, "spear_thrower") == 0) etype = ENEMY_SPEAR_THROWER;
+                    else if (strcmp(type_buf, "dragon") == 0)       etype = ENEMY_DRAGON;
                     if (etype >= 0) {
                         EnemySpawn *es = &screen->enemy_spawns[screen->enemy_spawn_count++];
                         es->type = etype;
