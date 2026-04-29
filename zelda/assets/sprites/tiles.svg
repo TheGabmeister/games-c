@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<svg xmlns="http://www.w3.org/2000/svg" width="256" height="128" viewBox="0 0 256 128">
-  <!-- Tile spritesheet: 4 columns x 2 rows, 64px per tile -->
+<svg xmlns="http://www.w3.org/2000/svg" width="256" height="192" viewBox="0 0 256 192">
+  <!-- Tile spritesheet: 4 columns x 3 rows, 64px per tile -->
 
   <!-- Index 0: Floor (tan/beige) -->
   <g transform="translate(0,0)">
@@ -70,9 +70,23 @@
     <rect x="4" y="52" width="56" height="10" fill="#101010"/>
   </g>
 
-  <!-- Index 7: Spare/border tile -->
+  <!-- Index 7: Bombable wall -->
   <g transform="translate(192,64)">
     <rect width="64" height="64" fill="#2a2a2a"/>
     <rect x="2" y="2" width="60" height="60" fill="#333333" rx="1"/>
+  </g>
+
+  <!-- Index 8: Closed door (locked/shuttered - brown door with iron bars) -->
+  <g transform="translate(0,128)">
+    <rect width="64" height="64" fill="#3a3a3a"/>
+    <rect x="8" y="4" width="48" height="56" fill="#4a2a12" rx="3"/>
+    <rect x="12" y="8" width="40" height="48" fill="#5a3a20" rx="2"/>
+    <line x1="32" y1="8" x2="32" y2="56" stroke="#4a2a12" stroke-width="2"/>
+    <rect x="10" y="18" width="44" height="5" fill="#666666" rx="1"/>
+    <rect x="10" y="38" width="44" height="5" fill="#666666" rx="1"/>
+    <circle cx="16" cy="20.5" r="2" fill="#888888"/>
+    <circle cx="48" cy="20.5" r="2" fill="#888888"/>
+    <circle cx="16" cy="40.5" r="2" fill="#888888"/>
+    <circle cx="48" cy="40.5" r="2" fill="#888888"/>
   </g>
 </svg>

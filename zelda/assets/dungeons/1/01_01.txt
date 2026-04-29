@@ -1,6 +1,6 @@
 # Dungeon 1 shutter room - kill all enemies to open doors
 shutter: true
-door: west 5 open
+door: west 5 shutter
 enemy: slime 5 3
 enemy: slime 10 3
 enemy: bat 7 6

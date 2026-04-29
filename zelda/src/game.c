@@ -52,17 +52,17 @@ static void load_dungeon_room(Game *game, int rx, int ry) {
 
         if (should_block) {
             if (d->side == DIR_N) {
-                game->current_screen.tiles[0][d->position] = TILE_WALL;
-                game->current_screen.tiles[0][d->position + 1] = TILE_WALL;
+                game->current_screen.tiles[0][d->position] = TILE_DOOR_CLOSED;
+                game->current_screen.tiles[0][d->position + 1] = TILE_DOOR_CLOSED;
             } else if (d->side == DIR_S) {
-                game->current_screen.tiles[SCREEN_TILES_Y - 1][d->position] = TILE_WALL;
-                game->current_screen.tiles[SCREEN_TILES_Y - 1][d->position + 1] = TILE_WALL;
+                game->current_screen.tiles[SCREEN_TILES_Y - 1][d->position] = TILE_DOOR_CLOSED;
+                game->current_screen.tiles[SCREEN_TILES_Y - 1][d->position + 1] = TILE_DOOR_CLOSED;
             } else if (d->side == DIR_W) {
-                game->current_screen.tiles[d->position][0] = TILE_WALL;
-                game->current_screen.tiles[d->position + 1][0] = TILE_WALL;
+                game->current_screen.tiles[d->position][0] = TILE_DOOR_CLOSED;
+                game->current_screen.tiles[d->position + 1][0] = TILE_DOOR_CLOSED;
             } else if (d->side == DIR_E) {
-                game->current_screen.tiles[d->position][SCREEN_TILES_X - 1] = TILE_WALL;
-                game->current_screen.tiles[d->position + 1][SCREEN_TILES_X - 1] = TILE_WALL;
+                game->current_screen.tiles[d->position][SCREEN_TILES_X - 1] = TILE_DOOR_CLOSED;
+                game->current_screen.tiles[d->position + 1][SCREEN_TILES_X - 1] = TILE_DOOR_CLOSED;
             }
         }
     }
@@ -334,7 +334,7 @@ static void check_locked_door(Game *game) {
         facing_row < 0 || facing_row >= SCREEN_TILES_Y) return;
 
     TileType t = (TileType)game->current_screen.tiles[facing_row][facing_col];
-    if (t != TILE_WALL) return;
+    if (t != TILE_WALL && t != TILE_DOOR_CLOSED) return;
 
     for (int i = 0; i < game->current_screen.door_count; i++) {
         DoorMeta *d = &game->current_screen.doors[i];
@@ -989,6 +989,17 @@ void game_update(Game *game) {
                         } else if (!is_boss && was_boss) {
                             if (game->boss_music_loaded) StopMusicStream(game->boss_music);
                             if (game->dungeon_music_loaded) PlayMusicStream(game->dungeon_music);
+                        }
+                        Rectangle ph = player_hitbox(&game->player);
+                        if (screen_tile_blocked(&game->current_screen, ph)) {
+                            if (game->player.pos.x <= 0)
+                                game->player.pos.x = (float)TILE_SIZE;
+                            else if (game->player.pos.x >= (SCREEN_TILES_X - 1) * TILE_SIZE)
+                                game->player.pos.x = (float)((SCREEN_TILES_X - 2) * TILE_SIZE);
+                            if (game->player.pos.y <= PLAY_AREA_Y)
+                                game->player.pos.y = PLAY_AREA_Y + (float)TILE_SIZE;
+                            else if (game->player.pos.y >= PLAY_AREA_Y + (SCREEN_TILES_Y - 1) * TILE_SIZE)
+                                game->player.pos.y = PLAY_AREA_Y + (float)((SCREEN_TILES_Y - 2) * TILE_SIZE);
                         }
                     } else {
                         game->current_screen = game->next_screen;

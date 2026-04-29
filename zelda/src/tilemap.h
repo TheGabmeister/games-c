@@ -15,6 +15,7 @@ typedef enum TileType {
     TILE_PUSHBLOCK,
     TILE_STAIRS,
     TILE_BOMBABLE_WALL,
+    TILE_DOOR_CLOSED,
     TILE_TYPE_COUNT
 } TileType;
 

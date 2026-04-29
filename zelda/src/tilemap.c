@@ -11,6 +11,7 @@ const TileDef tile_defs[TILE_TYPE_COUNT] = {
     [TILE_PUSHBLOCK] = { TILE_PUSHBLOCK, 5, false, ITEM_NONE },
     [TILE_STAIRS]        = { TILE_STAIRS,        6, true,  ITEM_NONE },
     [TILE_BOMBABLE_WALL] = { TILE_BOMBABLE_WALL, 7, false, ITEM_NONE },
+    [TILE_DOOR_CLOSED]   = { TILE_DOOR_CLOSED,   8, false, ITEM_NONE },
 };
 
 static TileType char_to_tile(char c) {
