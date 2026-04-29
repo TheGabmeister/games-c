@@ -649,14 +649,14 @@ Deliverable: ranged combat works, basic inventory functional.
 - [ ] Spear thrower enemies fire projectiles at the player.
 - [ ] Enemy projectiles damage the player on contact.
 - [ ] Shield blocks projectiles coming from the player's facing direction.
-- [ ] Defeated enemies drop pickups (rupees, hearts, bombs).
-- [ ] Picking up rupees/hearts/bombs updates inventory and HUD.
-- [ ] Rupee counter caps at 255.
-- [ ] Equipped item slot shows in HUD.
-- [ ] Pause screen opens and shows inventory grid.
-- [ ] Player can switch equipped item on pause screen.
-- [ ] All projectile and pickup sounds play correctly.
-- [ ] Projectiles despawn at screen edges and on wall collision.
+- [x] Defeated enemies drop pickups (rupees, hearts, bombs).
+- [x] Picking up rupees/hearts/bombs updates inventory and HUD.
+- [x] Rupee counter caps at 255.
+- [x] Equipped item slot shows in HUD.
+- [x] Pause screen opens and shows inventory grid.
+- [x] Player can switch equipped item on pause screen.
+- [x] All projectile and pickup sounds play correctly.
+- [x] Projectiles despawn at screen edges and on wall collision.
 
 ### Phase 5 — Dungeons
 

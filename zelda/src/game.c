@@ -4,6 +4,7 @@
 #include "textures.h"
 #include "debug.h"
 #include "input.h"
+#include "vfx.h"
 #include "raymath.h"
 #include <stdio.h>
 #include <math.h>
@@ -20,6 +21,7 @@ static void load_screen_at(Game *game, int sx, int sy) {
     enemies_spawn(game->enemies, &game->enemy_count, &game->current_screen);
     projectiles_clear(game->projectiles, &game->projectile_count);
     pickups_clear(game->pickups, &game->pickup_count);
+    vfx_clear();
 }
 
 static void load_cave_screen(Game *game, const char *cave_name) {
@@ -31,6 +33,7 @@ static void load_cave_screen(Game *game, const char *cave_name) {
     enemies_spawn(game->enemies, &game->enemy_count, &game->current_screen);
     projectiles_clear(game->projectiles, &game->projectile_count);
     pickups_clear(game->pickups, &game->pickup_count);
+    vfx_clear();
 }
 
 static bool can_transition(int screen_x, int screen_y, Direction dir) {
@@ -251,40 +254,8 @@ static void check_bomb_explosions(Game *game) {
             }
         }
 
-        if (game->explosion_count < MAX_EXPLOSIONS) {
-            int ei = game->explosion_count++;
-            game->explosion_pos[ei] = (Vector2){ cx, cy };
-            game->explosion_timer[ei] = BOMB_EXPLOSION_FRAMES;
-        }
-
+        vfx_spawn(VFX_EXPLOSION, (Vector2){ cx, cy }, BOMB_BLAST_RADIUS);
         proj->active = false;
-    }
-}
-
-static void explosions_update(Game *game) {
-    for (int i = 0; i < game->explosion_count; i++) {
-        game->explosion_timer[i]--;
-        if (game->explosion_timer[i] <= 0) {
-            game->explosion_pos[i] = game->explosion_pos[game->explosion_count - 1];
-            game->explosion_timer[i] = game->explosion_timer[game->explosion_count - 1];
-            game->explosion_count--;
-            i--;
-        }
-    }
-}
-
-static void explosions_draw(const Game *game) {
-    for (int i = 0; i < game->explosion_count; i++) {
-        float t = 1.0f - (float)game->explosion_timer[i] / BOMB_EXPLOSION_FRAMES;
-        float radius = BOMB_BLAST_RADIUS * (0.3f + 0.7f * t);
-        unsigned char alpha = (unsigned char)(255 * (1.0f - t));
-
-        DrawCircle((int)game->explosion_pos[i].x, (int)game->explosion_pos[i].y,
-                   radius, (Color){ 255, 200, 50, alpha });
-        DrawCircle((int)game->explosion_pos[i].x, (int)game->explosion_pos[i].y,
-                   radius * 0.6f, (Color){ 255, 100, 30, alpha });
-        DrawCircle((int)game->explosion_pos[i].x, (int)game->explosion_pos[i].y,
-                   radius * 0.25f, (Color){ 255, 255, 200, alpha });
     }
 }
 
@@ -445,7 +416,7 @@ void game_update(Game *game) {
             projectiles_update(game->projectiles, &game->projectile_count,
                                &game->current_screen, game->player.pos, dt);
             check_bomb_explosions(game);
-            explosions_update(game);
+            vfx_update();
             check_combat(game);
             pickups_update(game->pickups, game->pickup_count);
             check_pickups(game);
@@ -519,6 +490,7 @@ void game_update(Game *game) {
                                   &game->current_screen);
                     projectiles_clear(game->projectiles, &game->projectile_count);
                     pickups_clear(game->pickups, &game->pickup_count);
+                    vfx_clear();
                 }
                 game->state = STATE_PLAY;
             }
@@ -602,7 +574,7 @@ void game_draw(Game *game) {
         pickups_draw(game->pickups, game->pickup_count);
         projectiles_draw(game->projectiles, game->projectile_count);
         player_draw(&game->player);
-        explosions_draw(game);
+        vfx_draw();
     }
 
     hud_draw(&game->player, game->screen_x, game->screen_y);
