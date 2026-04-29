@@ -36,6 +36,7 @@ void player_init(Player *player) {
     player->health = PLAYER_MAX_HEALTH;
     player->max_health = PLAYER_MAX_HEALTH;
     player->inventory.sword_tier = 1;
+    player->inventory.shield_tier = 1;
     player->inventory.bomb_capacity = 8;
     player->inventory.bombs = 8;
     player->inventory.arrow_capacity = 30;

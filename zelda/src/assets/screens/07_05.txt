@@ -1,4 +1,6 @@
 # South of starting room
+enemy: rock_spitter 4 4
+enemy: spear_thrower 8 3
 WWWWWWW..WWWWWWW
 W..............W
 W..............W

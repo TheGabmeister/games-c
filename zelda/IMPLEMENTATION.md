@@ -641,14 +641,14 @@ Deliverable: ranged combat works, basic inventory functional.
 - [x] Boomerang flies in facing direction and returns to player.
 - [x] Boomerang stuns enemies on hit.
 - [x] Arrows fly in facing direction and stop on wall collision or max range.
-- [ ] Arrows cost one arrow to fire; cannot fire with 0 arrows.
-- [ ] Bombs can be placed; they explode after timed delay.
-- [ ] Bomb blast damages nearby enemies and the player if in range.
-- [ ] Bombable walls are revealed by bomb explosions.
-- [ ] Rock spitter enemies fire projectiles at the player.
-- [ ] Spear thrower enemies fire projectiles at the player.
-- [ ] Enemy projectiles damage the player on contact.
-- [ ] Shield blocks projectiles coming from the player's facing direction.
+- [x] Arrows cost one arrow to fire; cannot fire with 0 arrows.
+- [x] Bombs can be placed; they explode after timed delay.
+- [x] Bomb blast damages nearby enemies and the player if in range.
+- [x] Bombable walls are revealed by bomb explosions.
+- [x] Rock spitter enemies fire projectiles at the player.
+- [x] Spear thrower enemies fire projectiles at the player.
+- [x] Enemy projectiles damage the player on contact.
+- [x] Shield blocks projectiles coming from the player's facing direction.
 - [x] Defeated enemies drop pickups (rupees, hearts, bombs).
 - [x] Picking up rupees/hearts/bombs updates inventory and HUD.
 - [x] Rupee counter caps at 255.

@@ -27,10 +27,10 @@ void spear_thrower_update(Enemy *self, Vector2 player_pos, const Screen *screen,
         case ESTATE_IDLE:
             self->state_timer--;
             if (self->state_timer <= 0) {
-                if (rand() % 3 == 0) {
+                if (rand() % 2 == 0) {
                     face_toward_player(self, player_pos);
                     self->state = ESTATE_CHARGING;
-                    self->state_timer = 20;
+                    self->state_timer = 15;
                 } else {
                     self->facing = random_dir();
                     self->state = ESTATE_MOVING;
@@ -73,7 +73,7 @@ void spear_thrower_update(Enemy *self, Vector2 player_pos, const Screen *screen,
                 projectile_spawn(projectiles, projectile_count,
                                  PROJ_SPEAR, OWNER_ENEMY, self->pos, self->facing);
                 self->state = ESTATE_IDLE;
-                self->state_timer = 90 + rand() % 90;
+                self->state_timer = 40 + rand() % 40;
             }
             break;
 
