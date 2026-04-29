@@ -396,8 +396,13 @@ static void check_shutter_room(Game *game) {
     }
 }
 
+static bool boss_room_items_hidden(const Game *game) {
+    return game->current_screen.is_boss_room && !game->dungeon.boss_defeated;
+}
+
 static void check_dungeon_items(Game *game) {
     if (!game->in_dungeon) return;
+    if (boss_room_items_hidden(game)) return;
 
     int col = (int)(game->player.pos.x / TILE_SIZE);
     int row = (int)((game->player.pos.y - PLAY_AREA_Y) / TILE_SIZE);
@@ -1085,6 +1090,7 @@ static Color dungeon_item_fallback_color(DungeonItemType type) {
 
 static void draw_dungeon_items(const Game *game) {
     if (!game->in_dungeon) return;
+    if (boss_room_items_hidden(game)) return;
     for (int i = 0; i < game->current_screen.item_count; i++) {
         const ItemPlacement *ip = &game->current_screen.items[i];
         if (!ip->active) continue;
