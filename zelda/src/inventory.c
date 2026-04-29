@@ -3,7 +3,7 @@
 #include "input.h"
 #include "raylib.h"
 
-static const char *item_names[ITEM_COUNT] = {
+static const char *item_names[ITEM_TYPE_COUNT] = {
     [ITEM_NONE]      = "---",
     [ITEM_BOOMERANG] = "BOOMERANG",
     [ITEM_BOW]       = "BOW",
@@ -11,7 +11,7 @@ static const char *item_names[ITEM_COUNT] = {
     [ITEM_CANDLE]    = "CANDLE",
 };
 
-static const Color item_colors[ITEM_COUNT] = {
+static const Color item_colors[ITEM_TYPE_COUNT] = {
     [ITEM_NONE]      = { 40, 40, 40, 255 },
     [ITEM_BOOMERANG] = { 60, 160, 220, 255 },
     [ITEM_BOW]       = { 180, 120, 60, 255 },
@@ -26,7 +26,7 @@ static const Color item_colors[ITEM_COUNT] = {
 #define GRID_X      ((WINDOW_WIDTH - (GRID_COLS * (CELL_SIZE + CELL_PAD) - CELL_PAD)) / 2)
 #define GRID_Y      (PLAY_AREA_Y + 200)
 
-static const ItemID grid_items[GRID_ROWS][GRID_COLS] = {
+static const ItemType grid_items[GRID_ROWS][GRID_COLS] = {
     { ITEM_BOOMERANG, ITEM_BOW, ITEM_BOMB, ITEM_CANDLE, ITEM_NONE },
 };
 
@@ -41,7 +41,7 @@ void pause_screen_update(PauseState *state, Inventory *inventory) {
     }
 
     if (input_confirm() || input_attack()) {
-        ItemID item = grid_items[state->cursor_y][state->cursor_x];
+        ItemType item = grid_items[state->cursor_y][state->cursor_x];
         if (item == ITEM_NONE) return;
 
         bool has_item = false;
@@ -73,7 +73,7 @@ void pause_screen_draw(const PauseState *state, const Game *game) {
             int x = GRID_X + col * (CELL_SIZE + CELL_PAD);
             int y = GRID_Y + row * (CELL_SIZE + CELL_PAD);
 
-            ItemID item = grid_items[row][col];
+            ItemType item = grid_items[row][col];
             bool has_item = false;
             if (item == ITEM_BOMB) {
                 has_item = inventory->bomb_capacity > 0;
@@ -101,7 +101,7 @@ void pause_screen_draw(const PauseState *state, const Game *game) {
         }
     }
 
-    ItemID sel = grid_items[state->cursor_y][state->cursor_x];
+    ItemType sel = grid_items[state->cursor_y][state->cursor_x];
     if (sel != ITEM_NONE) {
         DrawText(item_names[sel], GRID_X, GRID_Y + GRID_ROWS * (CELL_SIZE + CELL_PAD) + 20,
                  24, WHITE);

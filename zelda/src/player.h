@@ -28,7 +28,7 @@ typedef struct Inventory {
     int arrow_capacity;
     int keys;
     int relic_fragments;
-    ItemID equipped;
+    ItemType equipped;
 } Inventory;
 
 typedef struct Player {

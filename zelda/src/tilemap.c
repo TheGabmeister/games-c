@@ -115,15 +115,15 @@ bool screen_load(Screen *screen, const char *path) {
                 char type_buf[24];
                 int ic, ir;
                 if (sscanf(line_copy, "item: %23s %d %d", type_buf, &ic, &ir) == 3) {
-                    DungeonItemType itype = DITEM_NONE;
-                    if (strcmp(type_buf, "key") == 0)              itype = DITEM_KEY;
-                    else if (strcmp(type_buf, "map") == 0)         itype = DITEM_MAP;
-                    else if (strcmp(type_buf, "compass") == 0)     itype = DITEM_COMPASS;
-                    else if (strcmp(type_buf, "heart_container") == 0) itype = DITEM_HEART_CONTAINER;
-                    else if (strcmp(type_buf, "fragment") == 0)    itype = DITEM_FRAGMENT;
-                    else if (strcmp(type_buf, "boomerang") == 0)   itype = DITEM_BOOMERANG;
-                    else if (strcmp(type_buf, "bow") == 0)         itype = DITEM_BOW;
-                    if (itype != DITEM_NONE) {
+                    ItemType itype = ITEM_NONE;
+                    if (strcmp(type_buf, "key") == 0)              itype = ITEM_KEY;
+                    else if (strcmp(type_buf, "map") == 0)         itype = ITEM_MAP;
+                    else if (strcmp(type_buf, "compass") == 0)     itype = ITEM_COMPASS;
+                    else if (strcmp(type_buf, "heart_container") == 0) itype = ITEM_HEART_CONTAINER;
+                    else if (strcmp(type_buf, "fragment") == 0)    itype = ITEM_FRAGMENT;
+                    else if (strcmp(type_buf, "boomerang") == 0)   itype = ITEM_BOOMERANG;
+                    else if (strcmp(type_buf, "bow") == 0)         itype = ITEM_BOW;
+                    if (itype != ITEM_NONE) {
                         ItemPlacement *ip = &screen->items[screen->item_count++];
                         ip->type = itype;
                         ip->tile_col = ic;

@@ -319,13 +319,13 @@ void game_draw(Game *game) {
         const char *item_name = "ITEM";
         Color item_color = GOLD;
         switch (game->item_get_type) {
-            case DITEM_KEY:             item_name = "KEY";             item_color = YELLOW; break;
-            case DITEM_MAP:             item_name = "DUNGEON MAP";     item_color = BLUE; break;
-            case DITEM_COMPASS:         item_name = "COMPASS";         item_color = RED; break;
-            case DITEM_HEART_CONTAINER: item_name = "HEART CONTAINER"; item_color = RED; break;
-            case DITEM_FRAGMENT:        item_name = "RELIC FRAGMENT";  item_color = GOLD; break;
-            case DITEM_BOOMERANG:       item_name = "BOOMERANG";       item_color = SKYBLUE; break;
-            case DITEM_BOW:             item_name = "BOW";             item_color = BROWN; break;
+            case ITEM_KEY:             item_name = "KEY";             item_color = YELLOW; break;
+            case ITEM_MAP:             item_name = "DUNGEON MAP";     item_color = BLUE; break;
+            case ITEM_COMPASS:         item_name = "COMPASS";         item_color = RED; break;
+            case ITEM_HEART_CONTAINER: item_name = "HEART CONTAINER"; item_color = RED; break;
+            case ITEM_FRAGMENT:        item_name = "RELIC FRAGMENT";  item_color = GOLD; break;
+            case ITEM_BOOMERANG:       item_name = "BOOMERANG";       item_color = SKYBLUE; break;
+            case ITEM_BOW:             item_name = "BOW";             item_color = BROWN; break;
             default: break;
         }
 

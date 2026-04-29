@@ -63,7 +63,7 @@ typedef struct Game {
     bool boss_music_loaded;
 
     int item_get_timer;
-    DungeonItemType item_get_type;
+    ItemType item_get_type;
 
     int push_timer;
 

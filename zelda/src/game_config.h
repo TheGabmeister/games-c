@@ -76,6 +76,21 @@
 #define DRAGON_BEAM_SPEED       300.0f
 #define DRAGON_BEAM_DAMAGE      2
 
+// Items (shared by inventory, dungeons, shops, HUD)
+typedef enum ItemType {
+    ITEM_NONE = 0,
+    ITEM_BOOMERANG,
+    ITEM_BOW,
+    ITEM_BOMB,
+    ITEM_CANDLE,
+    ITEM_KEY,
+    ITEM_MAP,
+    ITEM_COMPASS,
+    ITEM_HEART_CONTAINER,
+    ITEM_FRAGMENT,
+    ITEM_TYPE_COUNT
+} ItemType;
+
 // Direction (shared by player, camera, enemies, projectiles)
 typedef enum Direction {
     DIR_S = 0,

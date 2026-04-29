@@ -198,44 +198,44 @@ void dungeon_check_items(Game *game) {
         if (ip->tile_col != col || ip->tile_row != row) continue;
 
         switch (ip->type) {
-            case DITEM_KEY:
+            case ITEM_KEY:
                 game->player.inventory.keys++;
                 break;
-            case DITEM_MAP:
+            case ITEM_MAP:
                 game->dungeon.has_map = true;
-                game->item_get_type = DITEM_MAP;
+                game->item_get_type = ITEM_MAP;
                 game->item_get_timer = 120;
                 game->state = STATE_ITEM_GET;
                 break;
-            case DITEM_COMPASS:
+            case ITEM_COMPASS:
                 game->dungeon.has_compass = true;
-                game->item_get_type = DITEM_COMPASS;
+                game->item_get_type = ITEM_COMPASS;
                 game->item_get_timer = 120;
                 game->state = STATE_ITEM_GET;
                 break;
-            case DITEM_HEART_CONTAINER:
+            case ITEM_HEART_CONTAINER:
                 game->player.max_health += 2;
                 game->player.health = game->player.max_health;
-                game->item_get_type = DITEM_HEART_CONTAINER;
+                game->item_get_type = ITEM_HEART_CONTAINER;
                 game->item_get_timer = 120;
                 game->state = STATE_ITEM_GET;
                 break;
-            case DITEM_FRAGMENT:
+            case ITEM_FRAGMENT:
                 game->player.inventory.relic_fragments++;
                 game->dungeon.fragment_collected = true;
-                game->item_get_type = DITEM_FRAGMENT;
+                game->item_get_type = ITEM_FRAGMENT;
                 game->item_get_timer = 120;
                 game->state = STATE_ITEM_GET;
                 break;
-            case DITEM_BOOMERANG:
+            case ITEM_BOOMERANG:
                 game->player.inventory.items |= (1 << ITEM_BOOMERANG);
-                game->item_get_type = DITEM_BOOMERANG;
+                game->item_get_type = ITEM_BOOMERANG;
                 game->item_get_timer = 120;
                 game->state = STATE_ITEM_GET;
                 break;
-            case DITEM_BOW:
+            case ITEM_BOW:
                 game->player.inventory.items |= (1 << ITEM_BOW);
-                game->item_get_type = DITEM_BOW;
+                game->item_get_type = ITEM_BOW;
                 game->item_get_timer = 120;
                 game->state = STATE_ITEM_GET;
                 break;
@@ -248,15 +248,15 @@ void dungeon_check_items(Game *game) {
     }
 }
 
-TextureID dungeon_item_texture(DungeonItemType type) {
+TextureID dungeon_item_texture(ItemType type) {
     switch (type) {
-        case DITEM_KEY:             return TEX_ITEM_KEY;
-        case DITEM_MAP:             return TEX_ITEM_MAP;
-        case DITEM_COMPASS:         return TEX_ITEM_COMPASS;
-        case DITEM_HEART_CONTAINER: return TEX_ITEM_HEART_CONTAINER;
-        case DITEM_FRAGMENT:        return TEX_ITEM_FRAGMENT;
-        case DITEM_BOOMERANG:       return TEX_BOOMERANG;
-        case DITEM_BOW:             return TEX_ITEM_KEY;
+        case ITEM_KEY:             return TEX_ITEM_KEY;
+        case ITEM_MAP:             return TEX_ITEM_MAP;
+        case ITEM_COMPASS:         return TEX_ITEM_COMPASS;
+        case ITEM_HEART_CONTAINER: return TEX_ITEM_HEART_CONTAINER;
+        case ITEM_FRAGMENT:        return TEX_ITEM_FRAGMENT;
+        case ITEM_BOOMERANG:       return TEX_BOOMERANG;
+        case ITEM_BOW:             return TEX_ITEM_KEY;
         default:                    return TEX_COUNT;
     }
 }

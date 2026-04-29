@@ -19,20 +19,11 @@ typedef enum TileType {
     TILE_TYPE_COUNT
 } TileType;
 
-typedef enum ItemID {
-    ITEM_NONE = 0,
-    ITEM_BOOMERANG,
-    ITEM_BOW,
-    ITEM_BOMB,
-    ITEM_CANDLE,
-    ITEM_COUNT
-} ItemID;
-
 typedef struct TileDef {
     TileType type;
     int sprite_index;
     bool passable;
-    ItemID pass_requires;
+    ItemType pass_requires;
 } TileDef;
 
 extern const TileDef tile_defs[TILE_TYPE_COUNT];

@@ -8,18 +8,6 @@
 #define DUNGEON_MAX_COLS 8
 #define DUNGEON_MAX_ROWS 8
 
-typedef enum DungeonItemType {
-    DITEM_NONE = 0,
-    DITEM_KEY,
-    DITEM_MAP,
-    DITEM_COMPASS,
-    DITEM_HEART_CONTAINER,
-    DITEM_FRAGMENT,
-    DITEM_BOOMERANG,
-    DITEM_BOW,
-    DITEM_TYPE_COUNT
-} DungeonItemType;
-
 typedef enum DoorType {
     DOOR_OPEN = 0,
     DOOR_LOCKED,
@@ -36,7 +24,7 @@ typedef struct DoorMeta {
 #define MAX_DOORS_PER_ROOM 4
 
 typedef struct ItemPlacement {
-    DungeonItemType type;
+    ItemType type;
     int tile_col;
     int tile_row;
     bool active;

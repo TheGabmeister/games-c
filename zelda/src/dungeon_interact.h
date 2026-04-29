@@ -1,7 +1,7 @@
 #ifndef DUNGEON_INTERACT_H
 #define DUNGEON_INTERACT_H
 
-#include "dungeon.h"
+#include "game_config.h"
 #include "textures.h"
 
 struct Game;
@@ -11,6 +11,6 @@ void dungeon_check_shutter_room(struct Game *game);
 void dungeon_check_push_block(struct Game *game);
 void dungeon_check_items(struct Game *game);
 void dungeon_draw_items(const struct Game *game);
-TextureID dungeon_item_texture(DungeonItemType type);
+TextureID dungeon_item_texture(ItemType type);
 
 #endif
