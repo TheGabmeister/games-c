@@ -2,6 +2,7 @@
 #define TILEMAP_H
 
 #include "game_config.h"
+#include "items.h"
 #include "dungeon.h"
 #include "raylib.h"
 #include <stdbool.h>

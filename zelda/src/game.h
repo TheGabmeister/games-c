@@ -10,6 +10,7 @@
 #include "enemy/enemy.h"
 #include "projectile.h"
 #include "pickup.h"
+#include "sounds.h"
 #include "inventory.h"
 #include <stdbool.h>
 #include <stdlib.h>

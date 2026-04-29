@@ -2,6 +2,7 @@
 #define DUNGEON_H
 
 #include "game_config.h"
+#include "items.h"
 #include <stdbool.h>
 #include <stdint.h>
 

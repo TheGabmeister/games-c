@@ -76,33 +76,6 @@
 #define DRAGON_BEAM_SPEED       300.0f
 #define DRAGON_BEAM_DAMAGE      2
 
-// Items (shared by inventory, dungeons, shops, HUD)
-typedef enum ItemType {
-    ITEM_NONE = 0,
-    ITEM_BOOMERANG,
-    ITEM_BOW,
-    ITEM_BOMB,
-    ITEM_CANDLE,
-    ITEM_KEY,
-    ITEM_MAP,
-    ITEM_COMPASS,
-    ITEM_HEART_CONTAINER,
-    ITEM_FRAGMENT,
-    ITEM_TYPE_COUNT
-} ItemType;
-
-static const char *const item_type_names[ITEM_TYPE_COUNT] = {
-    [ITEM_BOOMERANG]        = "boomerang",
-    [ITEM_BOW]              = "bow",
-    [ITEM_BOMB]             = "bomb",
-    [ITEM_CANDLE]           = "candle",
-    [ITEM_KEY]              = "key",
-    [ITEM_MAP]              = "map",
-    [ITEM_COMPASS]          = "compass",
-    [ITEM_HEART_CONTAINER]  = "heart_container",
-    [ITEM_FRAGMENT]         = "fragment",
-};
-
 // Direction (shared by player, camera, enemies, projectiles)
 typedef enum Direction {
     DIR_S = 0,
@@ -111,31 +84,6 @@ typedef enum Direction {
     DIR_W,
     DIR_COUNT
 } Direction;
-
-// Sound identifiers
-typedef enum SoundID {
-    SOUND_COIN = 0,
-    SOUND_SWORD_SWING,
-    SOUND_SWORD_HIT,
-    SOUND_ENEMY_DEATH,
-    SOUND_PLAYER_DAMAGE,
-    SOUND_LOW_HEALTH,
-    SOUND_ARROW_FIRE,
-    SOUND_BOMB_PLACE,
-    SOUND_BOMB_EXPLODE,
-    SOUND_SHIELD_BLOCK,
-    SOUND_PICKUP_RUPEE,
-    SOUND_PICKUP_HEART,
-    SOUND_PICKUP_BOMB,
-    SOUND_DOOR_OPEN,
-    SOUND_KEY_USE,
-    SOUND_SHUTTER_OPEN,
-    SOUND_SECRET,
-    SOUND_ITEM_GET,
-    SOUND_BOSS_ROAR,
-    SOUND_BOSS_DEFEAT,
-    SOUND_COUNT
-} SoundID;
 
 static inline Direction opposite_dir(Direction d) {
     switch (d) {

@@ -1,7 +1,7 @@
 #ifndef DUNGEON_INTERACT_H
 #define DUNGEON_INTERACT_H
 
-#include "game_config.h"
+#include "items.h"
 #include "textures.h"
 
 struct Game;

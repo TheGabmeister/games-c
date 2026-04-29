@@ -3,6 +3,7 @@
 
 #include "raylib.h"
 #include "game_config.h"
+#include "items.h"
 #include "anim.h"
 #include "tilemap.h"
 #include <stdint.h>
