@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" width="64" height="64" viewBox="0 0 64 64">
+  <!-- Heart pickup: red heart shape -->
+  <path d="M32 48 C16 36 10 24 16 18 C22 12 28 14 32 22 C36 14 42 12 48 18 C54 24 48 36 32 48 Z"
+        fill="#ee2222"/>
+  <path d="M32 44 C20 34 16 26 20 22 C24 18 28 20 32 26"
+        fill="#ff5555" fill-opacity="0.6"/>
+</svg>

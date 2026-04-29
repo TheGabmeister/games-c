@@ -1,4 +1,5 @@
 #include "pickup.h"
+#include "textures.h"
 
 void pickup_spawn(Pickup pickups[], int *count, PickupType type, Vector2 pos) {
     if (*count >= MAX_PICKUPS) return;
@@ -35,26 +36,30 @@ void pickups_draw(const Pickup pickups[], int count) {
         // Flash when about to despawn
         if (p->lifetime < 120 && (p->lifetime / 6) % 2 == 0) continue;
 
-        int size = 24;
-        int ox = (TILE_SIZE - size) / 2;
-        int oy = (TILE_SIZE - size) / 2;
-        Color c;
+        TextureID tex_id = TEX_COUNT;
         switch (p->type) {
-            case PICKUP_RUPEE: c = (Color){ 0, 200, 50, 255 }; break;
-            case PICKUP_HEART: c = RED; break;
-            case PICKUP_BOMB:  c = DARKGRAY; break;
-            case PICKUP_ARROW: c = (Color){ 180, 160, 120, 255 }; break;
-            default:           c = WHITE; break;
+            case PICKUP_RUPEE: tex_id = TEX_PICKUP_RUPEE; break;
+            case PICKUP_HEART: tex_id = TEX_PICKUP_HEART; break;
+            case PICKUP_BOMB:  tex_id = TEX_PICKUP_BOMB;  break;
+            case PICKUP_ARROW: tex_id = TEX_PICKUP_ARROW; break;
+            default: break;
         }
-        DrawRectangle((int)p->pos.x + ox, (int)p->pos.y + oy, size, size, c);
 
-        // Small inner detail
-        if (p->type == PICKUP_RUPEE) {
-            DrawRectangle((int)p->pos.x + ox + 4, (int)p->pos.y + oy + 4, size - 8, size - 8,
-                          (Color){ 50, 255, 100, 255 });
-        } else if (p->type == PICKUP_HEART) {
-            DrawRectangle((int)p->pos.x + ox + 4, (int)p->pos.y + oy + 4, size - 8, size - 8,
-                          (Color){ 255, 100, 100, 255 });
+        if (tex_id < TEX_COUNT && IsTextureValid(textures[tex_id])) {
+            DrawTextureV(textures[tex_id], p->pos, WHITE);
+        } else {
+            int size = 24;
+            int ox = (TILE_SIZE - size) / 2;
+            int oy = (TILE_SIZE - size) / 2;
+            Color c;
+            switch (p->type) {
+                case PICKUP_RUPEE: c = (Color){ 0, 200, 50, 255 }; break;
+                case PICKUP_HEART: c = RED; break;
+                case PICKUP_BOMB:  c = DARKGRAY; break;
+                case PICKUP_ARROW: c = (Color){ 180, 160, 120, 255 }; break;
+                default:           c = WHITE; break;
+            }
+            DrawRectangle((int)p->pos.x + ox, (int)p->pos.y + oy, size, size, c);
         }
     }
 }

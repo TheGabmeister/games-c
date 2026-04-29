@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" width="64" height="64" viewBox="0 0 64 64">
+  <!-- Bomb pickup: small bomb icon -->
+  <circle cx="32" cy="38" r="12" fill="#444444"/>
+  <circle cx="32" cy="38" r="10" fill="#555555"/>
+  <rect x="30" y="24" width="4" height="8" rx="1" fill="#777777"/>
+  <path d="M32 24 Q35 18 38 20" fill="none" stroke="#ff8800" stroke-width="1.5"/>
+  <circle cx="38" cy="20" r="2" fill="#ffcc00"/>
+</svg>

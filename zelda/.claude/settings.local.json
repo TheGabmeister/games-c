@@ -107,7 +107,16 @@
       "Bash(\"D:/rfxgen_v5.0_win_x64/rfxgen.exe\" -g explosion -o \"c:/dev/games-c/zelda/src/assets/bomb_explode.wav\")",
       "Bash(\"D:/rfxgen_v5.0_win_x64/rfxgen.exe\" -g hit -o \"c:/dev/games-c/zelda/src/assets/shield_block.wav\")",
       "Bash(\"D:/rfxgen_v5.0_win_x64/rfxgen.exe\" -g coin -o \"c:/dev/games-c/zelda/src/assets/pickup_rupee.wav\")",
-      "Bash(timeout 3 build/zelda/Debug/zelda.exe)"
+      "Bash(timeout 3 build/zelda/Debug/zelda.exe)",
+      "Bash(\"C:/Program Files/Inkscape/bin/inkscape.exe\" \"c:/dev/games-c/zelda/src/assets/sprites/arrow.svg\" -o \"c:/dev/games-c/zelda/src/assets/sprites/arrow.png\" -w 256 -h 64)",
+      "Bash(\"C:/Program Files/Inkscape/bin/inkscape.exe\" \"c:/dev/games-c/zelda/src/assets/sprites/spear.svg\" -o \"c:/dev/games-c/zelda/src/assets/sprites/spear.png\" -w 256 -h 64)",
+      "Bash(\"C:/Program Files/Inkscape/bin/inkscape.exe\" \"c:/dev/games-c/zelda/src/assets/sprites/boomerang.svg\" -o \"c:/dev/games-c/zelda/src/assets/sprites/boomerang.png\" -w 64 -h 64)",
+      "Bash(\"C:/Program Files/Inkscape/bin/inkscape.exe\" \"c:/dev/games-c/zelda/src/assets/sprites/bomb.svg\" -o \"c:/dev/games-c/zelda/src/assets/sprites/bomb.png\" -w 64 -h 64)",
+      "Bash(\"C:/Program Files/Inkscape/bin/inkscape.exe\" \"c:/dev/games-c/zelda/src/assets/sprites/rock.svg\" -o \"c:/dev/games-c/zelda/src/assets/sprites/rock.png\" -w 64 -h 64)",
+      "Bash(\"C:/Program Files/Inkscape/bin/inkscape.exe\" \"c:/dev/games-c/zelda/src/assets/sprites/pickup_rupee.svg\" -o \"c:/dev/games-c/zelda/src/assets/sprites/pickup_rupee.png\" -w 64 -h 64)",
+      "Bash(\"C:/Program Files/Inkscape/bin/inkscape.exe\" \"c:/dev/games-c/zelda/src/assets/sprites/pickup_heart.svg\" -o \"c:/dev/games-c/zelda/src/assets/sprites/pickup_heart.png\" -w 64 -h 64)",
+      "Bash(\"C:/Program Files/Inkscape/bin/inkscape.exe\" \"c:/dev/games-c/zelda/src/assets/sprites/pickup_bomb.svg\" -o \"c:/dev/games-c/zelda/src/assets/sprites/pickup_bomb.png\" -w 64 -h 64)",
+      "Bash(\"C:/Program Files/Inkscape/bin/inkscape.exe\" \"c:/dev/games-c/zelda/src/assets/sprites/pickup_arrow.svg\" -o \"c:/dev/games-c/zelda/src/assets/sprites/pickup_arrow.png\" -w 64 -h 64)"
     ]
   }
 }

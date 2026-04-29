@@ -9,7 +9,15 @@ static const char *texture_paths[TEX_COUNT] = {
     [TEX_SLIME] = "assets/sprites/slime.png",
     [TEX_BAT]   = "assets/sprites/bat.png",
     [TEX_SNAKE]       = "assets/sprites/snake.png",
-    [TEX_PROJECTILES] = "assets/sprites/projectiles.png",
+    [TEX_ARROW]        = "assets/sprites/arrow.png",
+    [TEX_BOOMERANG]    = "assets/sprites/boomerang.png",
+    [TEX_BOMB]         = "assets/sprites/bomb.png",
+    [TEX_ROCK]         = "assets/sprites/rock.png",
+    [TEX_SPEAR]        = "assets/sprites/spear.png",
+    [TEX_PICKUP_RUPEE] = "assets/sprites/pickup_rupee.png",
+    [TEX_PICKUP_HEART] = "assets/sprites/pickup_heart.png",
+    [TEX_PICKUP_BOMB]  = "assets/sprites/pickup_bomb.png",
+    [TEX_PICKUP_ARROW] = "assets/sprites/pickup_arrow.png",
 };
 
 void textures_load(void) {

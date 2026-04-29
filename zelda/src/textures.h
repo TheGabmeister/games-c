@@ -9,7 +9,15 @@ typedef enum TextureID {
     TEX_SLIME,
     TEX_BAT,
     TEX_SNAKE,
-    TEX_PROJECTILES,
+    TEX_ARROW,
+    TEX_BOOMERANG,
+    TEX_BOMB,
+    TEX_ROCK,
+    TEX_SPEAR,
+    TEX_PICKUP_RUPEE,
+    TEX_PICKUP_HEART,
+    TEX_PICKUP_BOMB,
+    TEX_PICKUP_ARROW,
     TEX_COUNT
 } TextureID;
 

@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" width="64" height="64" viewBox="0 0 64 64">
+  <!-- Rock projectile: single 64x64 sprite -->
+  <ellipse cx="32" cy="34" rx="14" ry="12" fill="#888877"/>
+  <ellipse cx="32" cy="32" rx="13" ry="11" fill="#999988"/>
+  <ellipse cx="28" cy="30" rx="4" ry="3" fill="#aaaaaa"/>
+</svg>

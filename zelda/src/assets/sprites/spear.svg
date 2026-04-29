@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" width="256" height="64" viewBox="0 0 256 64">
+  <!-- Spear spritesheet: 4 frames (S, N, E, W), 64px grid -->
+
+  <!-- South -->
+  <rect x="30" y="8" width="4" height="44" fill="#8B6914"/>
+  <polygon points="26,44 32,58 38,44" fill="#b0b0b0"/>
+
+  <!-- North -->
+  <rect x="94" y="12" width="4" height="44" fill="#8B6914"/>
+  <polygon points="90,20 96,6 102,20" fill="#b0b0b0"/>
+
+  <!-- East -->
+  <rect x="136" y="30" width="44" height="4" fill="#8B6914"/>
+  <polygon points="172,26 186,32 172,38" fill="#b0b0b0"/>
+
+  <!-- West -->
+  <rect x="204" y="30" width="44" height="4" fill="#8B6914"/>
+  <polygon points="212,26 198,32 212,38" fill="#b0b0b0"/>
+</svg>

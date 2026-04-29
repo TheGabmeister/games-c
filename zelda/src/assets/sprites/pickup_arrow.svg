@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" width="64" height="64" viewBox="0 0 64 64">
+  <!-- Arrow pickup: bundle of arrows -->
+  <rect x="26" y="16" width="3" height="32" fill="#c8b070"/>
+  <rect x="31" y="18" width="3" height="30" fill="#c8b070"/>
+  <rect x="36" y="16" width="3" height="32" fill="#c8b070"/>
+  <polygon points="24,20 27.5,12 31,20" fill="#dddddd"/>
+  <polygon points="29,22 32.5,14 36,22" fill="#dddddd"/>
+  <polygon points="34,20 37.5,12 41,20" fill="#dddddd"/>
+</svg>

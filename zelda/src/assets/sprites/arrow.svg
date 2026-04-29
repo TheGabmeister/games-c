@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" width="256" height="64" viewBox="0 0 256 64">
+  <!-- Arrow spritesheet: 4 frames (S, N, E, W), 64px grid -->
+
+  <!-- South -->
+  <rect x="30" y="10" width="4" height="40" fill="#c8b070"/>
+  <polygon points="26,42 32,56 38,42" fill="#e0e0e0"/>
+
+  <!-- North -->
+  <rect x="94" y="14" width="4" height="40" fill="#c8b070"/>
+  <polygon points="90,22 96,8 102,22" fill="#e0e0e0"/>
+
+  <!-- East -->
+  <rect x="138" y="30" width="40" height="4" fill="#c8b070"/>
+  <polygon points="170,26 184,32 170,38" fill="#e0e0e0"/>
+
+  <!-- West -->
+  <rect x="206" y="30" width="40" height="4" fill="#c8b070"/>
+  <polygon points="214,26 200,32 214,38" fill="#e0e0e0"/>
+</svg>

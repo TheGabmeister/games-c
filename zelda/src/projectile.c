@@ -42,19 +42,39 @@ static void linear_update(Projectile *self, const Screen *screen,
 }
 
 static void linear_draw(const Projectile *self) {
-    Color c;
-    int w = 16, h = 16;
+    TextureID tex_id = TEX_COUNT;
+    int frame = (int)self->facing;
+    bool directional = false;
+
     switch (self->type) {
-        case PROJ_ARROW: c = WHITE;  w = (self->facing == DIR_E || self->facing == DIR_W) ? 32 : 8;
-                                     h = (self->facing == DIR_N || self->facing == DIR_S) ? 32 : 8; break;
-        case PROJ_ROCK:  c = GRAY;   w = 16; h = 16; break;
-        case PROJ_SPEAR: c = BROWN;  w = (self->facing == DIR_E || self->facing == DIR_W) ? 32 : 8;
-                                     h = (self->facing == DIR_N || self->facing == DIR_S) ? 32 : 8; break;
-        default:         c = WHITE;  break;
+        case PROJ_ARROW: tex_id = TEX_ARROW; directional = true; break;
+        case PROJ_SPEAR: tex_id = TEX_SPEAR; directional = true; break;
+        case PROJ_ROCK:  tex_id = TEX_ROCK;  break;
+        default: break;
     }
-    int ox = (TILE_SIZE - w) / 2;
-    int oy = (TILE_SIZE - h) / 2;
-    DrawRectangle((int)self->pos.x + ox, (int)self->pos.y + oy, w, h, c);
+
+    if (tex_id < TEX_COUNT && IsTextureValid(textures[tex_id])) {
+        if (directional) {
+            Rectangle src = texture_frame_rect(4, frame);
+            DrawTextureRec(textures[tex_id], src, self->pos, WHITE);
+        } else {
+            DrawTextureV(textures[tex_id], self->pos, WHITE);
+        }
+    } else {
+        Color c;
+        int w = 16, h = 16;
+        switch (self->type) {
+            case PROJ_ARROW: c = WHITE;  w = (self->facing == DIR_E || self->facing == DIR_W) ? 32 : 8;
+                                         h = (self->facing == DIR_N || self->facing == DIR_S) ? 32 : 8; break;
+            case PROJ_ROCK:  c = GRAY;   w = 16; h = 16; break;
+            case PROJ_SPEAR: c = BROWN;  w = (self->facing == DIR_E || self->facing == DIR_W) ? 32 : 8;
+                                         h = (self->facing == DIR_N || self->facing == DIR_S) ? 32 : 8; break;
+            default:         c = WHITE;  break;
+        }
+        int ox = (TILE_SIZE - w) / 2;
+        int oy = (TILE_SIZE - h) / 2;
+        DrawRectangle((int)self->pos.x + ox, (int)self->pos.y + oy, w, h, c);
+    }
 }
 
 // --- Boomerang ---
@@ -90,11 +110,16 @@ static void boomerang_update(Projectile *self, const Screen *screen,
 }
 
 static void boomerang_draw(const Projectile *self) {
-    int size = 20;
-    int ox = (TILE_SIZE - size) / 2;
-    int oy = (TILE_SIZE - size) / 2;
-    Color c = self->returning ? BLUE : SKYBLUE;
-    DrawRectangle((int)self->pos.x + ox, (int)self->pos.y + oy, size, size, c);
+    if (IsTextureValid(textures[TEX_BOOMERANG])) {
+        Color tint = self->returning ? (Color){ 150, 180, 255, 255 } : WHITE;
+        DrawTextureV(textures[TEX_BOOMERANG], self->pos, tint);
+    } else {
+        int size = 20;
+        int ox = (TILE_SIZE - size) / 2;
+        int oy = (TILE_SIZE - size) / 2;
+        Color c = self->returning ? BLUE : SKYBLUE;
+        DrawRectangle((int)self->pos.x + ox, (int)self->pos.y + oy, size, size, c);
+    }
 }
 
 // --- Bomb ---
@@ -110,13 +135,18 @@ static void bomb_update(Projectile *self, const Screen *screen,
 }
 
 static void bomb_draw(const Projectile *self) {
-    int size = 24;
-    int ox = (TILE_SIZE - size) / 2;
-    int oy = (TILE_SIZE - size) / 2;
     bool flash = self->timer < 60 && (self->timer / 4) % 2 == 0;
-    Color c = flash ? WHITE : DARKGRAY;
-    DrawRectangle((int)self->pos.x + ox, (int)self->pos.y + oy, size, size, c);
-    DrawRectangleLines((int)self->pos.x + ox, (int)self->pos.y + oy, size, size, BLACK);
+    if (IsTextureValid(textures[TEX_BOMB])) {
+        Color tint = flash ? (Color){ 255, 200, 200, 255 } : WHITE;
+        DrawTextureV(textures[TEX_BOMB], self->pos, tint);
+    } else {
+        int size = 24;
+        int ox = (TILE_SIZE - size) / 2;
+        int oy = (TILE_SIZE - size) / 2;
+        Color c = flash ? WHITE : DARKGRAY;
+        DrawRectangle((int)self->pos.x + ox, (int)self->pos.y + oy, size, size, c);
+        DrawRectangleLines((int)self->pos.x + ox, (int)self->pos.y + oy, size, size, BLACK);
+    }
 }
 
 // --- Def table ---
