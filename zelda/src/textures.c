@@ -18,6 +18,11 @@ static const char *texture_paths[TEX_COUNT] = {
     [TEX_PICKUP_HEART] = "assets/sprites/pickup_heart.png",
     [TEX_PICKUP_BOMB]  = "assets/sprites/pickup_bomb.png",
     [TEX_PICKUP_ARROW] = "assets/sprites/pickup_arrow.png",
+    [TEX_ITEM_KEY]             = "assets/sprites/item_key.png",
+    [TEX_ITEM_MAP]             = "assets/sprites/item_map.png",
+    [TEX_ITEM_COMPASS]         = "assets/sprites/item_compass.png",
+    [TEX_ITEM_HEART_CONTAINER] = "assets/sprites/item_heart_container.png",
+    [TEX_ITEM_FRAGMENT]        = "assets/sprites/item_fragment.png",
 };
 
 void textures_load(void) {

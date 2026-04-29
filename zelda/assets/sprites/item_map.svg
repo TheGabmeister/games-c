@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" width="64" height="64" viewBox="0 0 64 64">
+  <!-- Map: rolled parchment -->
+  <rect x="16" y="14" width="32" height="36" rx="2" fill="#ddc488"/>
+  <rect x="18" y="16" width="28" height="32" fill="#eedd99"/>
+  <line x1="22" y1="22" x2="42" y2="22" stroke="#aa8844" stroke-width="1.5"/>
+  <line x1="22" y1="28" x2="42" y2="28" stroke="#aa8844" stroke-width="1.5"/>
+  <line x1="22" y1="34" x2="36" y2="34" stroke="#aa8844" stroke-width="1.5"/>
+  <rect x="34" y="32" width="8" height="8" fill="none" stroke="#cc4444" stroke-width="1.5"/>
+  <circle cx="38" cy="36" r="1.5" fill="#cc4444"/>
+</svg>

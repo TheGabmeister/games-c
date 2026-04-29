@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" width="64" height="64" viewBox="0 0 64 64">
+  <!-- Compass: circle with directional needle -->
+  <circle cx="32" cy="32" r="16" fill="#334466" stroke="#8899bb" stroke-width="2"/>
+  <circle cx="32" cy="32" r="13" fill="#223355"/>
+  <polygon points="32,18 35,32 32,34 29,32" fill="#cc2222"/>
+  <polygon points="32,46 35,32 32,30 29,32" fill="#dddddd"/>
+  <circle cx="32" cy="32" r="2" fill="#888888"/>
+</svg>

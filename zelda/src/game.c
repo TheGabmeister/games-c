@@ -1057,6 +1057,49 @@ void game_update(Game *game) {
     }
 }
 
+static TextureID dungeon_item_texture(DungeonItemType type) {
+    switch (type) {
+        case DITEM_KEY:             return TEX_ITEM_KEY;
+        case DITEM_MAP:             return TEX_ITEM_MAP;
+        case DITEM_COMPASS:         return TEX_ITEM_COMPASS;
+        case DITEM_HEART_CONTAINER: return TEX_ITEM_HEART_CONTAINER;
+        case DITEM_FRAGMENT:        return TEX_ITEM_FRAGMENT;
+        case DITEM_BOOMERANG:       return TEX_BOOMERANG;
+        case DITEM_BOW:             return TEX_ITEM_KEY;
+        default:                    return TEX_COUNT;
+    }
+}
+
+static Color dungeon_item_fallback_color(DungeonItemType type) {
+    switch (type) {
+        case DITEM_KEY:             return YELLOW;
+        case DITEM_MAP:             return BLUE;
+        case DITEM_COMPASS:         return RED;
+        case DITEM_HEART_CONTAINER: return RED;
+        case DITEM_FRAGMENT:        return GOLD;
+        case DITEM_BOOMERANG:       return SKYBLUE;
+        case DITEM_BOW:             return BROWN;
+        default:                    return WHITE;
+    }
+}
+
+static void draw_dungeon_items(const Game *game) {
+    if (!game->in_dungeon) return;
+    for (int i = 0; i < game->current_screen.item_count; i++) {
+        const ItemPlacement *ip = &game->current_screen.items[i];
+        if (!ip->active) continue;
+        int px = ip->tile_col * TILE_SIZE;
+        int py = PLAY_AREA_Y + ip->tile_row * TILE_SIZE;
+        TextureID tex_id = dungeon_item_texture(ip->type);
+        if (tex_id < TEX_COUNT && IsTextureValid(textures[tex_id])) {
+            DrawTexture(textures[tex_id], px, py, WHITE);
+        } else {
+            DrawRectangle(px + TILE_SIZE / 4, py + TILE_SIZE / 4,
+                          TILE_SIZE / 2, TILE_SIZE / 2, dungeon_item_fallback_color(ip->type));
+        }
+    }
+}
+
 void game_draw(Game *game) {
     BeginDrawing();
     ClearBackground((Color){ 20, 24, 32, 255 });
@@ -1127,13 +1170,19 @@ void game_draw(Game *game) {
 
         int item_x = (int)game->player.pos.x + TILE_SIZE / 2 - 20;
         int item_y = (int)game->player.pos.y - TILE_SIZE;
-        DrawRectangle(item_x, item_y, 40, 40, item_color);
+        TextureID get_tex = dungeon_item_texture(game->item_get_type);
+        if (get_tex < TEX_COUNT && IsTextureValid(textures[get_tex])) {
+            DrawTexture(textures[get_tex], item_x - 12, item_y - 12, WHITE);
+        } else {
+            DrawRectangle(item_x, item_y, 40, 40, item_color);
+        }
 
         int text_w = MeasureText(item_name, 30);
         DrawText(item_name, WINDOW_WIDTH / 2 - text_w / 2,
                  PLAY_AREA_Y + PLAY_AREA_HEIGHT / 2 + 60, 30, WHITE);
     } else {
         screen_draw(&game->current_screen);
+        draw_dungeon_items(game);
         enemies_draw(game->enemies, game->enemy_count);
         pickups_draw(game->pickups, game->pickup_count);
         projectiles_draw(game->projectiles, game->projectile_count);
