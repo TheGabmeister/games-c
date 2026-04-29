@@ -27,4 +27,16 @@ static const char *const item_type_names[ITEM_TYPE_COUNT] = {
     [ITEM_FRAGMENT]         = "fragment",
 };
 
+static const char *const item_display_names[ITEM_TYPE_COUNT] = {
+    [ITEM_BOOMERANG]        = "BOOMERANG",
+    [ITEM_BOW]              = "BOW",
+    [ITEM_BOMB]             = "BOMB",
+    [ITEM_CANDLE]           = "CANDLE",
+    [ITEM_KEY]              = "KEY",
+    [ITEM_MAP]              = "DUNGEON MAP",
+    [ITEM_COMPASS]          = "COMPASS",
+    [ITEM_HEART_CONTAINER]  = "HEART CONTAINER",
+    [ITEM_FRAGMENT]         = "RELIC FRAGMENT",
+};
+
 #endif

@@ -316,18 +316,8 @@ void game_draw(Game *game) {
         DrawRectangle(0, PLAY_AREA_Y, WINDOW_WIDTH, PLAY_AREA_HEIGHT,
                       (Color){ 0, 0, 0, 160 });
 
-        const char *item_name = "ITEM";
-        Color item_color = GOLD;
-        switch (game->item_get_type) {
-            case ITEM_KEY:             item_name = "KEY";             item_color = YELLOW; break;
-            case ITEM_MAP:             item_name = "DUNGEON MAP";     item_color = BLUE; break;
-            case ITEM_COMPASS:         item_name = "COMPASS";         item_color = RED; break;
-            case ITEM_HEART_CONTAINER: item_name = "HEART CONTAINER"; item_color = RED; break;
-            case ITEM_FRAGMENT:        item_name = "RELIC FRAGMENT";  item_color = GOLD; break;
-            case ITEM_BOOMERANG:       item_name = "BOOMERANG";       item_color = SKYBLUE; break;
-            case ITEM_BOW:             item_name = "BOW";             item_color = BROWN; break;
-            default: break;
-        }
+        const char *item_name = item_display_names[game->item_get_type];
+        if (!item_name) item_name = "ITEM";
 
         int item_x = (int)game->player.pos.x + TILE_SIZE / 2 - 20;
         int item_y = (int)game->player.pos.y - TILE_SIZE;
