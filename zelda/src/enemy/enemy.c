@@ -4,12 +4,12 @@
 #include <stdlib.h>
 
 const EnemyDef enemy_defs[ENEMY_TYPE_COUNT] = {
-    [ENEMY_SLIME]         = { 1, 1,  96.0f, false, TILE_SIZE, TILE_SIZE, slime_update,         slime_draw },
-    [ENEMY_BAT]           = { 1, 1, 160.0f, true,  TILE_SIZE, TILE_SIZE, bat_update,           bat_draw },
-    [ENEMY_SNAKE]         = { 1, 1, 128.0f, false, TILE_SIZE, TILE_SIZE, snake_update,         snake_draw },
-    [ENEMY_ROCK_SPITTER]  = { 2, 1,  64.0f, false, TILE_SIZE, TILE_SIZE, rock_spitter_update,  rock_spitter_draw },
-    [ENEMY_SPEAR_THROWER] = { 2, 1,  80.0f, false, TILE_SIZE, TILE_SIZE, spear_thrower_update, spear_thrower_draw },
-    [ENEMY_DRAGON]        = { 12, 2, 64.0f, false, TILE_SIZE * 2, TILE_SIZE * 2, dragon_update, dragon_draw, dragon_on_death },
+    [ENEMY_SLIME]         = { "slime",         1, 1,  96.0f, false, TILE_SIZE, TILE_SIZE, slime_update,         slime_draw },
+    [ENEMY_BAT]           = { "bat",           1, 1, 160.0f, true,  TILE_SIZE, TILE_SIZE, bat_update,           bat_draw },
+    [ENEMY_SNAKE]         = { "snake",         1, 1, 128.0f, false, TILE_SIZE, TILE_SIZE, snake_update,         snake_draw },
+    [ENEMY_ROCK_SPITTER]  = { "rock_spitter",  2, 1,  64.0f, false, TILE_SIZE, TILE_SIZE, rock_spitter_update,  rock_spitter_draw },
+    [ENEMY_SPEAR_THROWER] = { "spear_thrower", 2, 1,  80.0f, false, TILE_SIZE, TILE_SIZE, spear_thrower_update, spear_thrower_draw },
+    [ENEMY_DRAGON]        = { "dragon",        12, 2, 64.0f, false, TILE_SIZE * 2, TILE_SIZE * 2, dragon_update, dragon_draw, dragon_on_death },
 };
 
 void enemies_spawn(Enemy enemies[], int *count, const Screen *screen) {

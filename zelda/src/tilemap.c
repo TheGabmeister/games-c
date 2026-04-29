@@ -79,12 +79,12 @@ bool screen_load(Screen *screen, const char *path) {
                 int ec, er;
                 if (sscanf(line_copy, "enemy: %15s %d %d", type_buf, &ec, &er) == 3) {
                     int etype = -1;
-                    if (strcmp(type_buf, "slime") == 0)            etype = ENEMY_SLIME;
-                    else if (strcmp(type_buf, "bat") == 0)          etype = ENEMY_BAT;
-                    else if (strcmp(type_buf, "snake") == 0)        etype = ENEMY_SNAKE;
-                    else if (strcmp(type_buf, "rock_spitter") == 0) etype = ENEMY_ROCK_SPITTER;
-                    else if (strcmp(type_buf, "spear_thrower") == 0) etype = ENEMY_SPEAR_THROWER;
-                    else if (strcmp(type_buf, "dragon") == 0)       etype = ENEMY_DRAGON;
+                    for (int t = 0; t < ENEMY_TYPE_COUNT; t++) {
+                        if (enemy_defs[t].name && strcmp(type_buf, enemy_defs[t].name) == 0) {
+                            etype = t;
+                            break;
+                        }
+                    }
                     if (etype >= 0) {
                         EnemySpawn *es = &screen->enemy_spawns[screen->enemy_spawn_count++];
                         es->type = etype;
@@ -117,13 +117,12 @@ bool screen_load(Screen *screen, const char *path) {
                 int ic, ir;
                 if (sscanf(line_copy, "item: %23s %d %d", type_buf, &ic, &ir) == 3) {
                     ItemType itype = ITEM_NONE;
-                    if (strcmp(type_buf, "key") == 0)              itype = ITEM_KEY;
-                    else if (strcmp(type_buf, "map") == 0)         itype = ITEM_MAP;
-                    else if (strcmp(type_buf, "compass") == 0)     itype = ITEM_COMPASS;
-                    else if (strcmp(type_buf, "heart_container") == 0) itype = ITEM_HEART_CONTAINER;
-                    else if (strcmp(type_buf, "fragment") == 0)    itype = ITEM_FRAGMENT;
-                    else if (strcmp(type_buf, "boomerang") == 0)   itype = ITEM_BOOMERANG;
-                    else if (strcmp(type_buf, "bow") == 0)         itype = ITEM_BOW;
+                    for (int t = 1; t < ITEM_TYPE_COUNT; t++) {
+                        if (item_type_names[t] && strcmp(type_buf, item_type_names[t]) == 0) {
+                            itype = (ItemType)t;
+                            break;
+                        }
+                    }
                     if (itype != ITEM_NONE) {
                         ItemPlacement *ip = &screen->items[screen->item_count++];
                         ip->type = itype;

@@ -44,6 +44,7 @@ typedef struct Enemy {
 } Enemy;
 
 typedef struct EnemyDef {
+    const char *name;
     int health;
     int contact_damage;
     float speed;
