@@ -137,5 +137,5 @@ void dragon_on_death(Enemy *self, Game *game) {
     if (!game->in_dungeon || !game->current_screen.is_boss_room) return;
     if (game->dungeon.boss_defeated) return;
     game->dungeon.boss_defeated = true;
-    sound_play(game, SOUND_BOSS_DEFEAT);
+    sound_play(SOUND_BOSS_DEFEAT);
 }

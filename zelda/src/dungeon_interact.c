@@ -92,8 +92,8 @@ void dungeon_check_locked_door(Game *game) {
             }
             dungeon_door_set_unlocked(&game->dungeon, adj_rx, adj_ry, opposite_dir(d->side));
             d->type = DOOR_OPEN;
-            sound_play(game, SOUND_KEY_USE);
-            sound_play(game, SOUND_DOOR_OPEN);
+            sound_play(SOUND_KEY_USE);
+            sound_play(SOUND_DOOR_OPEN);
             break;
         }
     }
@@ -115,7 +115,7 @@ void dungeon_check_shutter_room(Game *game) {
                 open_door_tiles(&game->current_screen, d);
             }
         }
-        sound_play(game, SOUND_SHUTTER_OPEN);
+        sound_play(SOUND_SHUTTER_OPEN);
     }
 }
 
@@ -181,7 +181,7 @@ void dungeon_check_push_block(Game *game) {
         }
 
         game->push_timer = 0;
-        sound_play(game, SOUND_SECRET);
+        sound_play(SOUND_SECRET);
     }
 }
 
@@ -244,7 +244,7 @@ void dungeon_check_items(Game *game) {
         }
         ip->active = false;
         mark_item_collected(game, i);
-        sound_play(game, SOUND_ITEM_GET);
+        sound_play(SOUND_ITEM_GET);
     }
 }
 

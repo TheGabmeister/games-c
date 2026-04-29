@@ -81,9 +81,6 @@ typedef struct Game {
 
     int death_timer;
     int low_health_counter;
-
-    Sound sounds[SOUND_COUNT];
-    bool sound_loaded[SOUND_COUNT];
 } Game;
 
 void game_init(Game *game);

@@ -10,14 +10,14 @@ int main(void) {
     Game game;
     game_init(&game);
     textures_load();
-    sounds_load(&game);
+    sounds_load();
 
     while (!WindowShouldClose()) {
         game_update(&game);
         game_draw(&game);
     }
 
-    sounds_unload(&game);
+    sounds_unload();
     textures_unload();
     CloseAudioDevice();
     CloseWindow();

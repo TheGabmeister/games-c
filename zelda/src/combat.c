@@ -50,24 +50,24 @@ void combat_check_pickups(Game *game) {
             case PICKUP_RUPEE:
                 p->inventory.rupees += pk->value;
                 if (p->inventory.rupees > 255) p->inventory.rupees = 255;
-                sound_play(game, SOUND_PICKUP_RUPEE);
+                sound_play(SOUND_PICKUP_RUPEE);
                 break;
             case PICKUP_HEART:
                 p->health += pk->value;
                 if (p->health > p->max_health) p->health = p->max_health;
-                sound_play(game, SOUND_PICKUP_HEART);
+                sound_play(SOUND_PICKUP_HEART);
                 break;
             case PICKUP_BOMB:
                 p->inventory.bombs += pk->value;
                 if (p->inventory.bombs > p->inventory.bomb_capacity)
                     p->inventory.bombs = p->inventory.bomb_capacity;
-                sound_play(game, SOUND_PICKUP_BOMB);
+                sound_play(SOUND_PICKUP_BOMB);
                 break;
             case PICKUP_ARROW:
                 p->inventory.arrows += pk->value;
                 if (p->inventory.arrows > p->inventory.arrow_capacity)
                     p->inventory.arrows = p->inventory.arrow_capacity;
-                sound_play(game, SOUND_PICKUP_BOMB);
+                sound_play(SOUND_PICKUP_BOMB);
                 break;
             default: break;
         }
@@ -80,7 +80,7 @@ void combat_check_bombs(Game *game) {
         Projectile *proj = &game->projectiles[pi];
         if (!proj->active || proj->type != PROJ_BOMB || proj->timer > 0) continue;
 
-        sound_play(game, SOUND_BOMB_EXPLODE);
+        sound_play(SOUND_BOMB_EXPLODE);
         float cx = proj->pos.x + TILE_SIZE / 2.0f;
         float cy = proj->pos.y + TILE_SIZE / 2.0f;
         float r2 = BOMB_BLAST_RADIUS * BOMB_BLAST_RADIUS;
@@ -93,7 +93,7 @@ void combat_check_bombs(Game *game) {
             if (dx * dx + dy * dy <= r2) {
                 enemy_take_damage(e, BOMB_DAMAGE);
                 if (!e->active) {
-                    sound_play(game, SOUND_ENEMY_DEATH);
+                    sound_play(SOUND_ENEMY_DEATH);
                     on_enemy_death(game, e);
                 }
             }
@@ -109,7 +109,7 @@ void combat_check_bombs(Game *game) {
             else
                 kb_dir = (pdy > 0) ? DIR_S : DIR_N;
             player_take_damage(p, BOMB_DAMAGE, kb_dir);
-            sound_play(game, SOUND_PLAYER_DAMAGE);
+            sound_play(SOUND_PLAYER_DAMAGE);
         }
 
         int tc = (int)(cx / TILE_SIZE);
@@ -140,18 +140,18 @@ void combat_check(Game *game) {
                 if (!e->active || e->invuln_timer > 0) continue;
                 if (CheckCollisionRecs(sword, enemy_hitbox(e))) {
                     e->invuln_timer = SWORD_ACTIVE_FRAMES;
-                    sound_play(game, SOUND_SWORD_HIT);
+                    sound_play(SOUND_SWORD_HIT);
                     if (e->type == ENEMY_SLIME && e->subtype == 0 &&
                         p->inventory.sword_tier <= 1) {
                         Vector2 split_pos = e->pos;
                         e->active = false;
                         e->state = ESTATE_DEAD;
-                        sound_play(game, SOUND_ENEMY_DEATH);
+                        sound_play(SOUND_ENEMY_DEATH);
                         spawn_small_slimes(game, split_pos);
                     } else {
                         enemy_take_damage(e, SWORD_DAMAGE);
                         if (!e->active) {
-                            sound_play(game, SOUND_ENEMY_DEATH);
+                            sound_play(SOUND_ENEMY_DEATH);
                             on_enemy_death(game, e);
                         }
                     }
@@ -174,16 +174,16 @@ void combat_check(Game *game) {
                 Vector2 split_pos = e->pos;
                 e->active = false;
                 e->state = ESTATE_DEAD;
-                sound_play(game, SOUND_ENEMY_DEATH);
+                sound_play(SOUND_ENEMY_DEATH);
                 spawn_small_slimes(game, split_pos);
             } else {
                 enemy_take_damage(e, proj->damage);
                 e->invuln_timer = SWORD_ACTIVE_FRAMES;
                 if (!e->active) {
-                    sound_play(game, SOUND_ENEMY_DEATH);
+                    sound_play(SOUND_ENEMY_DEATH);
                     on_enemy_death(game, e);
                 } else {
-                    sound_play(game, SOUND_SWORD_HIT);
+                    sound_play(SOUND_SWORD_HIT);
                 }
             }
 
@@ -211,7 +211,7 @@ void combat_check(Game *game) {
                 else
                     kb_dir = (dy > 0) ? DIR_S : DIR_N;
                 player_take_damage(p, enemy_defs[e->type].contact_damage, kb_dir);
-                sound_play(game, SOUND_PLAYER_DAMAGE);
+                sound_play(SOUND_PLAYER_DAMAGE);
                 break;
             }
         }
@@ -238,10 +238,10 @@ void combat_check(Game *game) {
 
             if (blocked) {
                 proj->active = false;
-                sound_play(game, SOUND_SHIELD_BLOCK);
+                sound_play(SOUND_SHIELD_BLOCK);
             } else {
                 player_take_damage(p, proj->damage, proj->facing);
-                sound_play(game, SOUND_PLAYER_DAMAGE);
+                sound_play(SOUND_PLAYER_DAMAGE);
                 proj->active = false;
             }
             break;

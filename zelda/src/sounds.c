@@ -1,5 +1,8 @@
 #include "sounds.h"
-#include "game.h"
+#include "raylib.h"
+
+static Sound sounds[SOUND_COUNT];
+static bool sound_loaded[SOUND_COUNT];
 
 static const char *sound_files[SOUND_COUNT] = {
     [SOUND_COIN]          = "assets/coin.wav",
@@ -24,33 +27,23 @@ static const char *sound_files[SOUND_COUNT] = {
     [SOUND_BOSS_DEFEAT]   = "assets/boss_defeat.wav",
 };
 
-void sounds_load(Game *game) {
+void sounds_load(void) {
     for (int i = 0; i < SOUND_COUNT; i++) {
         if (FileExists(sound_files[i])) {
-            game->sounds[i] = LoadSound(sound_files[i]);
-            game->sound_loaded[i] = IsSoundValid(game->sounds[i]);
+            sounds[i] = LoadSound(sound_files[i]);
+            sound_loaded[i] = IsSoundValid(sounds[i]);
         }
     }
-
-    const char *music_path = "assets/music/overworld.ogg";
-    if (FileExists(music_path)) {
-        game->overworld_music = LoadMusicStream(music_path);
-        game->music_loaded = IsMusicValid(game->overworld_music);
-        if (game->music_loaded) PlayMusicStream(game->overworld_music);
-    }
 }
 
-void sounds_unload(Game *game) {
+void sounds_unload(void) {
     for (int i = 0; i < SOUND_COUNT; i++) {
-        if (game->sound_loaded[i]) UnloadSound(game->sounds[i]);
-    }
-    if (game->music_loaded) {
-        UnloadMusicStream(game->overworld_music);
+        if (sound_loaded[i]) UnloadSound(sounds[i]);
     }
 }
 
-void sound_play(Game *game, SoundID id) {
-    if (game->sound_loaded[id]) {
-        PlaySound(game->sounds[id]);
+void sound_play(SoundID id) {
+    if (sound_loaded[id]) {
+        PlaySound(sounds[id]);
     }
 }

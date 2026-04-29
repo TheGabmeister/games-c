@@ -25,10 +25,8 @@ typedef enum SoundID {
     SOUND_COUNT
 } SoundID;
 
-typedef struct Game Game;
-
-void sounds_load(Game *game);
-void sounds_unload(Game *game);
-void sound_play(Game *game, SoundID id);
+void sounds_load(void);
+void sounds_unload(void);
+void sound_play(SoundID id);
 
 #endif
