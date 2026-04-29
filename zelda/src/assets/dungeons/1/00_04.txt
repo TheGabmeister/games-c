@@ -1,0 +1,17 @@
+# Dungeon 1 boss room - Dragon Guardian
+boss: true
+door: south 7 open
+enemy: dragon 6 2
+item: heart_container 7 6
+item: fragment 7 8
+WWWWWWWWWWWWWWWW
+W..............W
+W..............W
+W..............W
+W..............W
+W..............W
+W..............W
+W..............W
+W..............W
+W..............W
+WWWWWWWDDWWWWWWW

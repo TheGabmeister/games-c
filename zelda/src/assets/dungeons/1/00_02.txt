@@ -1,0 +1,18 @@
+# Dungeon 1 map room
+door: south 7 open
+door: north 7 open
+door: east 5 locked
+enemy: bat 4 3
+enemy: bat 11 7
+item: map 8 5
+WWWWWWWDDWWWWWWW
+W..............W
+W....~~........W
+W....~~........W
+W..............W
+W..............D
+W..............D
+W....~~........W
+W....~~........W
+W..............W
+WWWWWWWDDWWWWWWW

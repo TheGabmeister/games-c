@@ -15,6 +15,13 @@ static const char *sound_files[SOUND_COUNT] = {
     [SOUND_PICKUP_RUPEE]  = "assets/pickup_rupee.wav",
     [SOUND_PICKUP_HEART]  = "assets/pickup_heart.wav",
     [SOUND_PICKUP_BOMB]   = "assets/pickup_bomb.wav",
+    [SOUND_DOOR_OPEN]     = "assets/door_open.wav",
+    [SOUND_KEY_USE]       = "assets/key_use.wav",
+    [SOUND_SHUTTER_OPEN]  = "assets/shutter_open.wav",
+    [SOUND_SECRET]        = "assets/secret.wav",
+    [SOUND_ITEM_GET]      = "assets/item_get.wav",
+    [SOUND_BOSS_ROAR]     = "assets/boss_roar.wav",
+    [SOUND_BOSS_DEFEAT]   = "assets/boss_defeat.wav",
 };
 
 void sounds_load(Game *game) {

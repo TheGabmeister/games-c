@@ -1,6 +1,6 @@
 #include "inventory.h"
+#include "game.h"
 #include "input.h"
-#include "game_config.h"
 #include "raylib.h"
 
 static const char *item_names[ITEM_COUNT] = {
@@ -8,6 +8,7 @@ static const char *item_names[ITEM_COUNT] = {
     [ITEM_BOOMERANG] = "BOOMERANG",
     [ITEM_BOW]       = "BOW",
     [ITEM_BOMB]      = "BOMB",
+    [ITEM_CANDLE]    = "CANDLE",
 };
 
 static const Color item_colors[ITEM_COUNT] = {
@@ -15,9 +16,10 @@ static const Color item_colors[ITEM_COUNT] = {
     [ITEM_BOOMERANG] = { 60, 160, 220, 255 },
     [ITEM_BOW]       = { 180, 120, 60, 255 },
     [ITEM_BOMB]      = { 80, 80, 80, 255 },
+    [ITEM_CANDLE]    = { 220, 160, 40, 255 },
 };
 
-#define GRID_COLS   4
+#define GRID_COLS   5
 #define GRID_ROWS   1
 #define CELL_SIZE   80
 #define CELL_PAD    12
@@ -25,7 +27,7 @@ static const Color item_colors[ITEM_COUNT] = {
 #define GRID_Y      (PLAY_AREA_Y + 200)
 
 static const ItemID grid_items[GRID_ROWS][GRID_COLS] = {
-    { ITEM_BOOMERANG, ITEM_BOW, ITEM_BOMB, ITEM_NONE },
+    { ITEM_BOOMERANG, ITEM_BOW, ITEM_BOMB, ITEM_CANDLE, ITEM_NONE },
 };
 
 void pause_screen_update(PauseState *state, Inventory *inventory) {
@@ -54,8 +56,9 @@ void pause_screen_update(PauseState *state, Inventory *inventory) {
     }
 }
 
-void pause_screen_draw(const PauseState *state, const Inventory *inventory,
-                       int sword_tier) {
+void pause_screen_draw(const PauseState *state, const Game *game) {
+    const Inventory *inventory = &game->player.inventory;
+    int sword_tier = inventory->sword_tier;
     DrawRectangle(0, PLAY_AREA_Y, WINDOW_WIDTH, PLAY_AREA_HEIGHT,
                   (Color){ 0, 0, 0, 200 });
 
@@ -106,4 +109,38 @@ void pause_screen_draw(const PauseState *state, const Inventory *inventory,
 
     DrawText("ARROWS/ENTER to equip  |  P to resume",
              GRID_X, GRID_Y + GRID_ROWS * (CELL_SIZE + CELL_PAD) + 60, 16, LIGHTGRAY);
+
+    if (game->in_dungeon) {
+        const DungeonState *ds = &game->dungeon;
+        int dmap_x = 640, dmap_y = GRID_Y;
+        int dmap_w = 320, dmap_h = 160;
+        int dcell_w = dmap_w / DUNGEON_MAX_COLS;
+        int dcell_h = dmap_h / DUNGEON_MAX_ROWS;
+
+        DrawRectangle(dmap_x, dmap_y, dmap_w, dmap_h, (Color){ 10, 10, 10, 255 });
+        DrawRectangleLines(dmap_x, dmap_y, dmap_w, dmap_h, GRAY);
+        DrawText("DUNGEON MAP", dmap_x, dmap_y - 24, 18, WHITE);
+
+        for (int ry = 0; ry < DUNGEON_MAX_ROWS; ry++) {
+            for (int rx = 0; rx < DUNGEON_MAX_COLS; rx++) {
+                uint64_t bit = dungeon_room_bit(rx, ry);
+                bool show = false;
+                if (ds->has_map && (ds->rooms_exist & bit)) show = true;
+                else if (ds->rooms_visited & bit) show = true;
+                if (show) {
+                    DrawRectangle(dmap_x + rx * dcell_w + 1, dmap_y + ry * dcell_h + 1,
+                                  dcell_w - 2, dcell_h - 2, (Color){ 60, 60, 100, 255 });
+                }
+            }
+        }
+
+        if (ds->has_compass && ds->boss_room_x >= 0) {
+            DrawRectangle(dmap_x + ds->boss_room_x * dcell_w + 3,
+                          dmap_y + ds->boss_room_y * dcell_h + 3,
+                          dcell_w - 6, dcell_h - 6, (Color){ 200, 40, 40, 255 });
+        }
+
+        DrawRectangle(dmap_x + ds->room_x * dcell_w, dmap_y + ds->room_y * dcell_h,
+                      dcell_w, dcell_h, GREEN);
+    }
 }

@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project
 
-A 2D top-down action-adventure game inspired by The Legend of Zelda (1986), built in C with raylib. Phases 1 (Player and Tiles), 2 (World Navigation), 3 (Combat), and 4 (Projectiles and Items) are complete. Phase 5 (Dungeons) is next.
+A 2D top-down action-adventure game inspired by The Legend of Zelda (1986), built in C with raylib. Phases 1 (Player and Tiles), 2 (World Navigation), 3 (Combat), 4 (Projectiles and Items), and 5 (Dungeons) are complete. Phase 6 (World Systems) is next.
 
 Key documents:
 - **SPEC.md** — complete game design specification (mechanics, items, enemies, dungeons, tuning values). Source of truth for game behavior.
@@ -35,7 +35,7 @@ Window: 1024x960. Logical resolution: 1024x960 (1:1, no scaling). Tile size: 64x
 
 Screen layout (top to bottom): HUD 1024x224 (3.5 tiles), 32px divider, play area 1024x704 (16x11 tiles). Play area starts at y=256 (`PLAY_AREA_Y`).
 
-Single `Game` struct holds all state (defined in `game.h`). The main loop in `main.c` calls `game_init` -> `game_update`/`game_draw` per frame -> cleanup on exit. Game state machine: `STATE_PLAY` (normal gameplay), `STATE_TRANSITION` (scroll/fade between screens), `STATE_DEATH` (death pause + fade, then respawn), `STATE_PAUSE` (inventory/pause screen, game logic frozen).
+Single `Game` struct holds all state (defined in `game.h`). The main loop in `main.c` calls `game_init` -> `game_update`/`game_draw` per frame -> cleanup on exit. Game state machine: `STATE_PLAY` (normal gameplay), `STATE_TRANSITION` (scroll/fade between screens), `STATE_DEATH` (death pause + fade, then respawn), `STATE_PAUSE` (inventory/pause screen, game logic frozen), `STATE_ITEM_GET` (dungeon item pickup ceremony, 2-second hold with jingle).
 
 ### Shared types in game_config.h
 
@@ -51,15 +51,15 @@ Combat collision (`check_combat` in game.c) handles sword-vs-enemy, player-proje
 
 Enemies use **vtable-style dispatch**: `EnemyDef` holds function pointers for `update` and `draw`, indexed by `EnemyType`. Adding a new enemy means writing its update/draw functions and adding one row to `enemy_defs[]` in `enemy.c`. No changes to the game loop needed.
 
-Enemy files live in `src/enemy/`. Each enemy type is a separate .c file (slime.c, bat.c, charging_snake.c, rock_spitter.c, spear_thrower.c) with its AI implemented as a state machine using `EnemyState` and `state_timer`. The shared `Enemy` struct has a `velocity` field and `ai_timer` for type-specific scratch state.
+Enemy files live in `src/enemy/`. Each enemy type is a separate .c file (slime.c, bat.c, charging_snake.c, rock_spitter.c, spear_thrower.c, dragon.c) with its AI implemented as a state machine using `EnemyState` and `state_timer`. The shared `Enemy` struct has a `velocity` field and `ai_timer` for type-specific scratch state. Dragon boss uses `subtype` for its own AI states (patrol/windup/fire/cooldown) to avoid extending the shared `EnemyState` enum.
 
 The enemy `update` function signature includes projectile array access (`Projectile *projectiles, int *projectile_count`) so ranged enemies (rock_spitter, spear_thrower) can spawn projectiles. Non-ranged enemies ignore these params.
 
-Spawn data is parsed from screen metadata (`enemy: type col row` lines in .txt files) into `EnemySpawn` array in the `Screen` struct. Runtime `Enemy` instances live in `Game.enemies[]` and are re-spawned fresh on each screen load. Supported enemy type names in screen files: `slime`, `bat`, `snake`, `rock_spitter`, `spear_thrower`.
+Spawn data is parsed from screen metadata (`enemy: type col row` lines in .txt files) into `EnemySpawn` array in the `Screen` struct. Runtime `Enemy` instances live in `Game.enemies[]` and are re-spawned fresh on each screen load. Supported enemy type names in screen files: `slime`, `bat`, `snake`, `rock_spitter`, `spear_thrower`, `dragon`.
 
 ### Projectile system
 
-Projectiles use the same **vtable-style dispatch** as enemies: `ProjectileDef` holds function pointers for `update` and `draw`, indexed by `ProjectileType`. Types: `PROJ_ARROW`, `PROJ_BOOMERANG`, `PROJ_BOMB`, `PROJ_ROCK`, `PROJ_SPEAR`.
+Projectiles use the same **vtable-style dispatch** as enemies: `ProjectileDef` holds function pointers for `update` and `draw`, indexed by `ProjectileType`. Types: `PROJ_ARROW`, `PROJ_BOOMERANG`, `PROJ_BOMB`, `PROJ_ROCK`, `PROJ_SPEAR`, `PROJ_DRAGON_BEAM`.
 
 Arrow, rock, and spear share a generic `linear_update`/`linear_draw` in `projectile.c`. Boomerang has unique return-to-player homing. Bomb is stationary with a fuse timer — explosion damage is handled by `check_bomb_explosions` in game.c.
 
@@ -86,6 +86,26 @@ Each projectile has an `owner` field (`OWNER_PLAYER` or `OWNER_ENEMY`) that dete
 ### Transitions and screen loading
 
 `trans_type` in Game struct tracks what kind of transition was started (scroll vs fade) because `camera.type` is reset to `TRANS_NONE` when the camera finishes — completion logic needs the original type to decide whether to swap `next_screen` (scroll) or not (fade, which loads directly into `current_screen` at midpoint). Cave enter/exit uses a return-stack that saves origin screen + tile position. Enemies, projectiles, pickups, and VFX are all cleared on every screen load.
+
+### Dungeon system
+
+`dungeon.h/c` manages dungeon state. `DungeonState` struct holds per-dungeon data: current room position, visited/cleared/lit room bitfields, permanently-unlocked door bitfields, map/compass/boss-defeated/fragment-collected flags. Bitfield helpers use `dungeon_room_bit(rx, ry)` for 64-room addressing.
+
+Dungeon rooms are `.txt` files in `src/assets/dungeons/<n>/` using the same format as overworld screens plus new metadata: `door:` (direction, position, type: open/locked/shutter), `shutter:` (true), `dark:` (true), `boss:` (true), `item:` (type, col, row for dungeon-specific items like keys, map, compass, heart_container, fragment).
+
+Three location modes are mutually exclusive: overworld (`!in_cave && !in_dungeon`), cave (`in_cave`), dungeon (`in_dungeon`). Dungeon room transitions use scroll (same as overworld) triggered at screen edges where open door tiles exist. Warps: `dungeon_<n>` enters a dungeon from overworld, `droom_XX_YY` warps between dungeon rooms (push block stairs), `return` exits to saved overworld position.
+
+Door mechanics: locked doors have D tiles replaced with W on load; key consumption opens them permanently (both sides). Shutter rooms close all doors on entry; doors reopen when all enemies are defeated. Push blocks reveal stairs after sustained player contact (12 frames) when all enemies are dead.
+
+Dark rooms draw a black overlay hiding everything; candle item use lights the room for the current dungeon visit. `STATE_ITEM_GET` freezes gameplay for 2 seconds to display collected dungeon items (map, compass, heart container, fragment) with a jingle.
+
+**Dragon guardian boss** (`src/enemy/dragon.c`): 2x2 tile enemy using `subtype` field for AI states (patrol/windup/fire/cooldown). 12 HP, fires `PROJ_DRAGON_BEAM` projectiles at player. On death, marks `boss_defeated` in DungeonState.
+
+Death in dungeon respawns at the dungeon entrance room with 3 hearts. Visit-scoped state (cleared rooms, opened shutters, lit rooms) resets; permanent state (unlocked doors, collected items, boss defeated) persists.
+
+HUD and pause screen show dungeon room minimap when `in_dungeon`. Map item reveals all rooms; compass marks the boss room.
+
+Dungeon 1 (Forest Shrine): 8 rooms at `src/assets/dungeons/1/`. Layout: entrance(0,0) → key room(0,1) → shutter room(1,1), map room(0,2) → compass room(1,2) → dark room(1,3), push block room(0,3) → boss room(0,4).
 
 ### Debug overlay
 
@@ -115,5 +135,5 @@ Files in `src/enemy/` use relative paths for project headers (`../tilemap.h`, `.
   - All draw functions have colored-rectangle fallbacks when textures are missing.
 - **Sounds**: generate with rfxgen (`"D:/rfxgen_v5.0_win_x64/rfxgen.exe" -g coin -o sound.wav`). Presets: coin, laser, explosion, powerup, hit, jump, blip. Store WAV in `src/assets/`.
 - **Music**: OGG files in `src/assets/music/`. Loaded via `LoadMusicStream`, updated every frame. Composition pipeline: Python scripts in `tools/music/` use `midiutil` to generate MIDI -> FluidSynth renders with a soundfont to WAV -> ffmpeg converts to OGG. See `tools/music/compose_overworld.py` for the pattern.
-- **Screen data**: plain text files in `src/assets/screens/` (overworld), `src/assets/dungeons/<n>/` (dungeons), `src/assets/caves/` (caves). Format: optional metadata lines (`warp:`, `enemy:`, `item:`, `#` comments), then 11 rows of 16 tile characters (W=wall, .=floor, ~=water, D=door, P=pushblock, S=stairs, B=bombable wall). Enemy spawn format: `enemy: type col row`.
+- **Screen data**: plain text files in `src/assets/screens/` (overworld), `src/assets/dungeons/<n>/` (dungeons), `src/assets/caves/` (caves). Format: optional metadata lines (`warp:`, `enemy:`, `door:`, `item:`, `shutter:`, `dark:`, `boss:`, `#` comments), then 11 rows of 16 tile characters (W=wall, .=floor, ~=water, D=door, P=pushblock, S=stairs, B=bombable wall). Enemy spawn format: `enemy: type col row`. Door format: `door: direction position type`. Item format: `item: type col row`.
 - Sound and music loading is resilient — missing files are skipped.

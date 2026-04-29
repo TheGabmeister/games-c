@@ -1,0 +1,16 @@
+# Dungeon 1 push block room - push to reveal stairs to boss
+door: south 7 open
+warp: stairs 7 3 -> droom_00_04
+enemy: slime 3 5
+enemy: slime 12 5
+WWWWWWWWWWWWWWWW
+W..............W
+W..............W
+W......P.......W
+W..............W
+W..............W
+W..............W
+W..............W
+W..............W
+W..............W
+WWWWWWWDDWWWWWWW

@@ -1,0 +1,19 @@
+# Dungeon 1 key room - first combat room
+door: south 7 open
+door: north 7 open
+door: east 5 open
+enemy: slime 4 3
+enemy: slime 11 5
+enemy: bat 7 7
+item: key 8 5
+WWWWWWWDDWWWWWWW
+W..............W
+W..WWW....WWW..W
+W..W........W..W
+W..............W
+W..............W
+W..W........W..W
+W..WWW....WWW..W
+W..............W
+W..............W
+WWWWWWWDDWWWWWWW

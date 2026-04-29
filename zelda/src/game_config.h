@@ -73,6 +73,8 @@
 #define ENEMY_ROCK_SPEED        224.0f
 #define ENEMY_SPEAR_SPEED       256.0f
 #define ITEM_USE_FRAMES         12
+#define DRAGON_BEAM_SPEED       300.0f
+#define DRAGON_BEAM_DAMAGE      2
 
 // Direction (shared by player, camera, enemies, projectiles)
 typedef enum Direction {
@@ -98,6 +100,13 @@ typedef enum SoundID {
     SOUND_PICKUP_RUPEE,
     SOUND_PICKUP_HEART,
     SOUND_PICKUP_BOMB,
+    SOUND_DOOR_OPEN,
+    SOUND_KEY_USE,
+    SOUND_SHUTTER_OPEN,
+    SOUND_SECRET,
+    SOUND_ITEM_GET,
+    SOUND_BOSS_ROAR,
+    SOUND_BOSS_DEFEAT,
     SOUND_COUNT
 } SoundID;
 

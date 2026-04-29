@@ -82,12 +82,68 @@ bool screen_load(Screen *screen, const char *path) {
                     else if (strcmp(type_buf, "snake") == 0)        etype = 2;
                     else if (strcmp(type_buf, "rock_spitter") == 0) etype = 3;
                     else if (strcmp(type_buf, "spear_thrower") == 0) etype = 4;
+                    else if (strcmp(type_buf, "dragon") == 0)       etype = 5;
                     if (etype >= 0) {
                         EnemySpawn *es = &screen->enemy_spawns[screen->enemy_spawn_count++];
                         es->type = etype;
                         es->tile_col = ec;
                         es->tile_row = er;
                     }
+                }
+            } else if (line_len > 5 && strncmp(line_start, "door:", 5) == 0
+                       && screen->door_count < MAX_DOORS_PER_ROOM) {
+                char dir_buf[16], type_buf[16];
+                int pos;
+                if (sscanf(line_copy, "door: %15s %d %15s", dir_buf, &pos, type_buf) == 3) {
+                    DoorMeta *d = &screen->doors[screen->door_count++];
+                    d->active = true;
+                    d->position = pos;
+                    if (strcmp(dir_buf, "north") == 0)      d->side = DIR_N;
+                    else if (strcmp(dir_buf, "south") == 0) d->side = DIR_S;
+                    else if (strcmp(dir_buf, "east") == 0)  d->side = DIR_E;
+                    else if (strcmp(dir_buf, "west") == 0)  d->side = DIR_W;
+                    else { screen->door_count--; }
+                    if (d->active) {
+                        if (strcmp(type_buf, "locked") == 0)       d->type = DOOR_LOCKED;
+                        else if (strcmp(type_buf, "shutter") == 0) d->type = DOOR_SHUTTER;
+                        else                                      d->type = DOOR_OPEN;
+                    }
+                }
+            } else if (line_len > 5 && strncmp(line_start, "item:", 5) == 0
+                       && screen->item_count < MAX_ITEMS_PER_ROOM) {
+                char type_buf[24];
+                int ic, ir;
+                if (sscanf(line_copy, "item: %23s %d %d", type_buf, &ic, &ir) == 3) {
+                    DungeonItemType itype = DITEM_NONE;
+                    if (strcmp(type_buf, "key") == 0)              itype = DITEM_KEY;
+                    else if (strcmp(type_buf, "map") == 0)         itype = DITEM_MAP;
+                    else if (strcmp(type_buf, "compass") == 0)     itype = DITEM_COMPASS;
+                    else if (strcmp(type_buf, "heart_container") == 0) itype = DITEM_HEART_CONTAINER;
+                    else if (strcmp(type_buf, "fragment") == 0)    itype = DITEM_FRAGMENT;
+                    else if (strcmp(type_buf, "boomerang") == 0)   itype = DITEM_BOOMERANG;
+                    else if (strcmp(type_buf, "bow") == 0)         itype = DITEM_BOW;
+                    if (itype != DITEM_NONE) {
+                        ItemPlacement *ip = &screen->items[screen->item_count++];
+                        ip->type = itype;
+                        ip->tile_col = ic;
+                        ip->tile_row = ir;
+                        ip->active = true;
+                    }
+                }
+            } else if (strncmp(line_copy, "shutter:", 8) == 0) {
+                char val[8];
+                if (sscanf(line_copy, "shutter: %7s", val) == 1 && strcmp(val, "true") == 0) {
+                    screen->is_shutter = true;
+                }
+            } else if (strncmp(line_copy, "dark:", 5) == 0) {
+                char val[8];
+                if (sscanf(line_copy, "dark: %7s", val) == 1 && strcmp(val, "true") == 0) {
+                    screen->is_dark = true;
+                }
+            } else if (strncmp(line_copy, "boss:", 5) == 0) {
+                char val[8];
+                if (sscanf(line_copy, "boss: %7s", val) == 1 && strcmp(val, "true") == 0) {
+                    screen->is_boss_room = true;
                 }
             }
             continue;

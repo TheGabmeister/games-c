@@ -6,7 +6,7 @@
 
 bool debug_enabled = false;
 
-static const char *enemy_type_names[] = { "slime", "bat", "snake", "rock_spit", "spear_thr" };
+static const char *enemy_type_names[] = { "slime", "bat", "snake", "rock_spit", "spear_thr", "dragon" };
 static const char *enemy_state_names[] = { "idle", "move", "charge", "dead" };
 
 void debug_toggle(void) {

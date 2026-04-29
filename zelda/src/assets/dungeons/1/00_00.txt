@@ -1,0 +1,14 @@
+# Dungeon 1 entrance room
+warp: stairs 7 9 -> return
+door: north 7 open
+WWWWWWWDDWWWWWWW
+W..............W
+W..............W
+W..............W
+W..............W
+W..............W
+W..............W
+W..............W
+W..............W
+W......S.......W
+WWWWWWWWWWWWWWWW

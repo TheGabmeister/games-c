@@ -9,6 +9,7 @@ const EnemyDef enemy_defs[ENEMY_TYPE_COUNT] = {
     [ENEMY_SNAKE]         = { 1, 1, 128.0f, false, TILE_SIZE, TILE_SIZE, snake_update,         snake_draw },
     [ENEMY_ROCK_SPITTER]  = { 2, 1,  64.0f, false, TILE_SIZE, TILE_SIZE, rock_spitter_update,  rock_spitter_draw },
     [ENEMY_SPEAR_THROWER] = { 2, 1,  80.0f, false, TILE_SIZE, TILE_SIZE, spear_thrower_update, spear_thrower_draw },
+    [ENEMY_DRAGON]        = { 12, 2, 64.0f, false, TILE_SIZE * 2, TILE_SIZE * 2, dragon_update, dragon_draw },
 };
 
 void enemies_spawn(Enemy enemies[], int *count, const Screen *screen) {
@@ -25,6 +26,10 @@ void enemies_spawn(Enemy enemies[], int *count, const Screen *screen) {
         e->health = enemy_defs[e->type].health;
         e->active = true;
         e->state_timer = 30 + rand() % 60;
+        if (e->type == ENEMY_DRAGON) {
+            e->velocity.x = (rand() % 2 == 0) ? 64.0f : -64.0f;
+            e->ai_timer = 90 + rand() % 60;
+        }
     }
 }
 

@@ -1,7 +1,9 @@
 #include "hud.h"
-#include "game_config.h"
+#include "game.h"
 
-void hud_draw(const Player *player, int screen_x, int screen_y) {
+void hud_draw(const Game *game) {
+    const Player *player = &game->player;
+
     DrawRectangle(0, 0, WINDOW_WIDTH, HUD_HEIGHT, BLACK);
     DrawRectangle(0, HUD_HEIGHT, WINDOW_WIDTH, HUD_DIVIDER, (Color){ 80, 80, 80, 255 });
 
@@ -15,6 +17,7 @@ void hud_draw(const Player *player, int screen_x, int screen_y) {
         case ITEM_BOOMERANG: equip_name = "BOOMERANG"; break;
         case ITEM_BOW:       equip_name = "BOW"; break;
         case ITEM_BOMB:      equip_name = "BOMB"; break;
+        case ITEM_CANDLE:    equip_name = "CANDLE"; break;
         default: break;
     }
     DrawText(TextFormat("B: %s", equip_name), 32, 160, 20, YELLOW);
@@ -37,9 +40,38 @@ void hud_draw(const Player *player, int screen_x, int screen_y) {
     DrawRectangle(map_x, map_y, map_w, map_h, (Color){ 20, 20, 20, 255 });
     DrawRectangleLines(map_x, map_y, map_w, map_h, GRAY);
 
-    int cell_w = map_w / OVERWORLD_COLS;
-    int cell_h = map_h / OVERWORLD_ROWS;
-    int cx = map_x + screen_x * cell_w;
-    int cy = map_y + screen_y * cell_h;
-    DrawRectangle(cx, cy, cell_w, cell_h, GREEN);
+    if (game->in_dungeon) {
+        int cell_w = map_w / DUNGEON_MAX_COLS;
+        int cell_h = map_h / DUNGEON_MAX_ROWS;
+        const DungeonState *ds = &game->dungeon;
+
+        for (int ry = 0; ry < DUNGEON_MAX_ROWS; ry++) {
+            for (int rx = 0; rx < DUNGEON_MAX_COLS; rx++) {
+                uint64_t bit = dungeon_room_bit(rx, ry);
+                bool show = false;
+                if (ds->has_map && (ds->rooms_exist & bit)) show = true;
+                else if (ds->rooms_visited & bit) show = true;
+
+                if (show) {
+                    DrawRectangle(map_x + rx * cell_w + 1, map_y + ry * cell_h + 1,
+                                  cell_w - 2, cell_h - 2, (Color){ 60, 60, 80, 255 });
+                }
+            }
+        }
+
+        if (ds->has_compass && ds->boss_room_x >= 0) {
+            DrawRectangle(map_x + ds->boss_room_x * cell_w + 2,
+                          map_y + ds->boss_room_y * cell_h + 2,
+                          cell_w - 4, cell_h - 4, (Color){ 200, 40, 40, 255 });
+        }
+
+        DrawRectangle(map_x + ds->room_x * cell_w, map_y + ds->room_y * cell_h,
+                      cell_w, cell_h, GREEN);
+    } else {
+        int cell_w = map_w / OVERWORLD_COLS;
+        int cell_h = map_h / OVERWORLD_ROWS;
+        int cx = map_x + game->screen_x * cell_w;
+        int cy = map_y + game->screen_y * cell_h;
+        DrawRectangle(cx, cy, cell_w, cell_h, GREEN);
+    }
 }

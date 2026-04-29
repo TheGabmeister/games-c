@@ -8,8 +8,9 @@ typedef struct PauseState {
     int cursor_y;
 } PauseState;
 
+struct Game;
+
 void pause_screen_update(PauseState *state, Inventory *inventory);
-void pause_screen_draw(const PauseState *state, const Inventory *inventory,
-                       int sword_tier);
+void pause_screen_draw(const PauseState *state, const struct Game *game);
 
 #endif

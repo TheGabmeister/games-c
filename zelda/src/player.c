@@ -43,7 +43,7 @@ void player_init(Player *player) {
     player->inventory.arrows = 30;
     player->inventory.rupees = 50;
     player->inventory.equipped = ITEM_BOW;
-    player->inventory.items = (1 << ITEM_BOOMERANG) | (1 << ITEM_BOW);
+    player->inventory.items = (1 << ITEM_BOOMERANG) | (1 << ITEM_BOW) | (1 << ITEM_CANDLE);
     anim_set(&player->anim, &player_idle_anims[DIR_S]);
 }
 
@@ -82,6 +82,8 @@ static void try_use_item(Player *player, Projectile *projectiles, int *projectil
             player->inventory.bombs--;
             projectile_spawn(projectiles, projectile_count,
                              PROJ_BOMB, OWNER_PLAYER, player->pos, player->facing);
+            break;
+        case ITEM_CANDLE:
             break;
         default:
             return;

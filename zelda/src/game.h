@@ -5,6 +5,7 @@
 #include "game_config.h"
 #include "player.h"
 #include "tilemap.h"
+#include "dungeon.h"
 #include "camera.h"
 #include "enemy/enemy.h"
 #include "projectile.h"
@@ -19,6 +20,7 @@ typedef enum GameState {
     STATE_TRANSITION,
     STATE_DEATH,
     STATE_PAUSE,
+    STATE_ITEM_GET,
     STATE_COUNT
 } GameState;
 
@@ -45,8 +47,25 @@ typedef struct Game {
     int return_tile_col;
     int return_tile_row;
 
+    bool in_dungeon;
+    DungeonState dungeon;
+    int dungeon_return_screen_x;
+    int dungeon_return_screen_y;
+    int dungeon_return_tile_col;
+    int dungeon_return_tile_row;
+
     Music overworld_music;
     bool music_loaded;
+
+    Music dungeon_music;
+    bool dungeon_music_loaded;
+    Music boss_music;
+    bool boss_music_loaded;
+
+    int item_get_timer;
+    DungeonItemType item_get_type;
+
+    int push_timer;
 
     Enemy enemies[MAX_ENEMIES_PER_SCREEN];
     int enemy_count;

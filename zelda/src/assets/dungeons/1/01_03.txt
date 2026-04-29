@@ -1,0 +1,18 @@
+# Dungeon 1 dark room
+dark: true
+door: north 5 open
+enemy: slime 4 4
+enemy: slime 10 4
+enemy: bat 7 7
+item: key 8 8
+WWWWWDDWWWWWWWWW
+W..............W
+W..............W
+W..............W
+W..............W
+W..............W
+W..............W
+W..............W
+W..............W
+W..............W
+WWWWWWWWWWWWWWWW

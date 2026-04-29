@@ -27,6 +27,7 @@ typedef struct Inventory {
     int arrows;
     int arrow_capacity;
     int keys;
+    int relic_fragments;
     ItemID equipped;
 } Inventory;
 

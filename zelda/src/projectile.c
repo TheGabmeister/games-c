@@ -49,7 +49,8 @@ static void linear_draw(const Projectile *self) {
     switch (self->type) {
         case PROJ_ARROW: tex_id = TEX_ARROW; directional = true; break;
         case PROJ_SPEAR: tex_id = TEX_SPEAR; directional = true; break;
-        case PROJ_ROCK:  tex_id = TEX_ROCK;  break;
+        case PROJ_ROCK:         tex_id = TEX_ROCK;  break;
+        case PROJ_DRAGON_BEAM: break;
         default: break;
     }
 
@@ -69,6 +70,8 @@ static void linear_draw(const Projectile *self) {
             case PROJ_ROCK:  c = GRAY;   w = 16; h = 16; break;
             case PROJ_SPEAR: c = BROWN;  w = (self->facing == DIR_E || self->facing == DIR_W) ? 32 : 8;
                                          h = (self->facing == DIR_N || self->facing == DIR_S) ? 32 : 8; break;
+            case PROJ_DRAGON_BEAM: c = ORANGE; w = (self->facing == DIR_E || self->facing == DIR_W) ? 40 : 12;
+                                               h = (self->facing == DIR_N || self->facing == DIR_S) ? 40 : 12; break;
             default:         c = WHITE;  break;
         }
         int ox = (TILE_SIZE - w) / 2;
@@ -177,6 +180,11 @@ const ProjectileDef projectile_defs[PROJ_TYPE_COUNT] = {
         true, true, false,
         linear_update, linear_draw
     },
+    [PROJ_DRAGON_BEAM] = {
+        DRAGON_BEAM_SPEED, DRAGON_BEAM_DAMAGE, ARROW_MAX_RANGE,
+        true, false, true,
+        linear_update, linear_draw
+    },
 };
 
 // --- API ---
@@ -243,7 +251,11 @@ Rectangle projectile_hitbox(const Projectile *proj) {
             break;
         case PROJ_BOOMERANG: w = 20; h = 20; break;
         case PROJ_BOMB:      w = 24; h = 24; break;
-        case PROJ_ROCK:      w = 16; h = 16; break;
+        case PROJ_ROCK:        w = 16; h = 16; break;
+        case PROJ_DRAGON_BEAM:
+            if (proj->facing == DIR_E || proj->facing == DIR_W) { w = 40; h = 12; }
+            else { w = 12; h = 40; }
+            break;
         default:             w = 16; h = 16; break;
     }
     int ox = (TILE_SIZE - w) / 2;

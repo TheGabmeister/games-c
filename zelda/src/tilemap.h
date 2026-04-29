@@ -2,6 +2,7 @@
 #define TILEMAP_H
 
 #include "game_config.h"
+#include "dungeon.h"
 #include "raylib.h"
 #include <stdbool.h>
 #include <stdint.h>
@@ -22,6 +23,7 @@ typedef enum ItemID {
     ITEM_BOOMERANG,
     ITEM_BOW,
     ITEM_BOMB,
+    ITEM_CANDLE,
     ITEM_COUNT
 } ItemID;
 
@@ -53,6 +55,13 @@ typedef struct Screen {
     int warp_count;
     EnemySpawn enemy_spawns[MAX_ENEMIES_PER_SCREEN];
     int enemy_spawn_count;
+    DoorMeta doors[MAX_DOORS_PER_ROOM];
+    int door_count;
+    ItemPlacement items[MAX_ITEMS_PER_ROOM];
+    int item_count;
+    bool is_shutter;
+    bool is_dark;
+    bool is_boss_room;
 } Screen;
 
 bool screen_load(Screen *screen, const char *path);

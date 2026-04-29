@@ -1,0 +1,17 @@
+# Dungeon 1 compass room
+door: west 5 locked
+door: south 5 open
+enemy: snake 7 3
+enemy: snake 10 7
+item: compass 8 5
+WWWWWWWWWWWWWWWW
+W..............W
+W..............W
+W..............W
+W..............W
+D..............W
+D..............W
+W..............W
+W..............W
+W..............W
+WWWWWDDWWWWWWWW

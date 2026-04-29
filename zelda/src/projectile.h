@@ -13,6 +13,7 @@ typedef enum ProjectileType {
     PROJ_BOMB,
     PROJ_ROCK,
     PROJ_SPEAR,
+    PROJ_DRAGON_BEAM,
     PROJ_TYPE_COUNT
 } ProjectileType;
 

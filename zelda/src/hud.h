@@ -3,6 +3,7 @@
 
 #include "player.h"
 
-void hud_draw(const Player *player, int screen_x, int screen_y);
+struct Game;
+void hud_draw(const struct Game *game);
 
 #endif
