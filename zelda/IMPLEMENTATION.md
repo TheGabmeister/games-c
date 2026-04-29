@@ -636,9 +636,9 @@ Deliverable: ranged combat works, basic inventory functional.
 
 **Test checklist:**
 
-- [ ] Boomerang flies in facing direction and returns to player.
-- [ ] Boomerang stuns enemies on hit.
-- [ ] Arrows fly in facing direction and stop on wall collision or max range.
+- [x] Boomerang flies in facing direction and returns to player.
+- [x] Boomerang stuns enemies on hit.
+- [x] Arrows fly in facing direction and stop on wall collision or max range.
 - [ ] Arrows cost rupees to fire; cannot fire with 0 rupees.
 - [ ] Bombs can be placed; they explode after timed delay.
 - [ ] Bomb blast damages nearby enemies and the player if in range.

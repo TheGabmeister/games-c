@@ -1,6 +1,7 @@
 #include "player.h"
 #include "input.h"
 #include "textures.h"
+#include "projectile.h"
 #include "game_config.h"
 #include "raymath.h"
 #include <math.h>
@@ -34,7 +35,12 @@ void player_init(Player *player) {
     player->state = PSTATE_IDLE;
     player->health = PLAYER_MAX_HEALTH;
     player->max_health = PLAYER_MAX_HEALTH;
+    player->inventory.sword_tier = 1;
     player->inventory.bomb_capacity = 8;
+    player->inventory.bombs = 8;
+    player->inventory.rupees = 50;
+    player->inventory.equipped = ITEM_BOW;
+    player->inventory.items = (1 << ITEM_BOOMERANG) | (1 << ITEM_BOW);
     anim_set(&player->anim, &player_idle_anims[DIR_S]);
 }
 
@@ -48,7 +54,41 @@ static float snap_toward_grid(float pos, float base, float speed, float dt) {
     return pos + (diff > 0 ? step : -step);
 }
 
-void player_update(Player *player, const Screen *screen, float dt) {
+static void try_use_item(Player *player, Projectile *projectiles, int *projectile_count) {
+    switch (player->inventory.equipped) {
+        case ITEM_BOW:
+            if (player->inventory.rupees <= 0) return;
+            player->inventory.rupees--;
+            projectile_spawn(projectiles, projectile_count,
+                             PROJ_ARROW, OWNER_PLAYER, player->pos, player->facing);
+            break;
+        case ITEM_BOOMERANG:
+            for (int i = 0; i < *projectile_count; i++) {
+                if (projectiles[i].active && projectiles[i].type == PROJ_BOOMERANG &&
+                    projectiles[i].owner == OWNER_PLAYER) return;
+            }
+            projectile_spawn(projectiles, projectile_count,
+                             PROJ_BOOMERANG, OWNER_PLAYER, player->pos, player->facing);
+            break;
+        case ITEM_BOMB:
+            if (player->inventory.bombs <= 0) return;
+            for (int i = 0; i < *projectile_count; i++) {
+                if (projectiles[i].active && projectiles[i].type == PROJ_BOMB &&
+                    projectiles[i].owner == OWNER_PLAYER) return;
+            }
+            player->inventory.bombs--;
+            projectile_spawn(projectiles, projectile_count,
+                             PROJ_BOMB, OWNER_PLAYER, player->pos, player->facing);
+            break;
+        default:
+            return;
+    }
+    player->state = PSTATE_USING_ITEM;
+    player->state_timer = ITEM_USE_FRAMES;
+}
+
+void player_update(Player *player, const Screen *screen,
+                   Projectile *projectiles, int *projectile_count, float dt) {
     if (player->attack_cooldown > 0) player->attack_cooldown--;
     if (player->invuln_timer > 0) player->invuln_timer--;
 
@@ -85,6 +125,24 @@ void player_update(Player *player, const Screen *screen, float dt) {
         }
         anim_tick(&player->anim);
         return;
+    }
+
+    if (player->state == PSTATE_USING_ITEM) {
+        player->state_timer--;
+        if (player->state_timer <= 0) {
+            player->state = PSTATE_IDLE;
+        }
+        anim_tick(&player->anim);
+        return;
+    }
+
+    if ((player->state == PSTATE_IDLE || player->state == PSTATE_MOVING) &&
+        input_use_item() && player->attack_cooldown == 0) {
+        try_use_item(player, projectiles, projectile_count);
+        if (player->state == PSTATE_USING_ITEM) {
+            player->attack_cooldown = ITEM_USE_FRAMES + SWORD_COOLDOWN_FRAMES;
+            return;
+        }
     }
 
     if ((player->state == PSTATE_IDLE || player->state == PSTATE_MOVING) &&

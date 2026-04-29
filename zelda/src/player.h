@@ -12,6 +12,7 @@ typedef enum PlayerState {
     PSTATE_MOVING,
     PSTATE_ATTACKING,
     PSTATE_KNOCKBACK,
+    PSTATE_USING_ITEM,
     PSTATE_COUNT
 } PlayerState;
 
@@ -46,8 +47,11 @@ typedef struct Player {
 extern const AnimDef player_idle_anims[DIR_COUNT];
 extern const AnimDef player_walk_anims[DIR_COUNT];
 
+struct Projectile;
+
 void player_init(Player *player);
-void player_update(Player *player, const Screen *screen, float dt);
+void player_update(Player *player, const Screen *screen,
+                   struct Projectile *projectiles, int *projectile_count, float dt);
 void player_draw(const Player *player);
 Rectangle player_hitbox(const Player *player);
 Rectangle player_sword_hitbox(const Player *player);

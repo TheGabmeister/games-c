@@ -3,6 +3,7 @@
 #include "hud.h"
 #include "textures.h"
 #include "debug.h"
+#include "input.h"
 #include "raymath.h"
 #include <stdio.h>
 #include <math.h>
@@ -17,6 +18,8 @@ static void load_screen_at(Game *game, int sx, int sy) {
     game->screen_x = sx;
     game->screen_y = sy;
     enemies_spawn(game->enemies, &game->enemy_count, &game->current_screen);
+    projectiles_clear(game->projectiles, &game->projectile_count);
+    pickups_clear(game->pickups, &game->pickup_count);
 }
 
 static void load_cave_screen(Game *game, const char *cave_name) {
@@ -26,6 +29,8 @@ static void load_cave_screen(Game *game, const char *cave_name) {
         memset(&game->current_screen, TILE_FLOOR, sizeof(game->current_screen));
     }
     enemies_spawn(game->enemies, &game->enemy_count, &game->current_screen);
+    projectiles_clear(game->projectiles, &game->projectile_count);
+    pickups_clear(game->pickups, &game->pickup_count);
 }
 
 static bool can_transition(int screen_x, int screen_y, Direction dir) {
@@ -149,6 +154,100 @@ static void spawn_small_slimes(Game *game, Vector2 pos) {
     }
 }
 
+static void try_spawn_drop(Game *game, Vector2 pos) {
+    int roll = rand() % 100;
+    if (roll < 40) return;
+    PickupType type;
+    if (roll < 70)      type = PICKUP_RUPEE;
+    else if (roll < 90) type = PICKUP_HEART;
+    else                type = PICKUP_BOMB;
+    pickup_spawn(game->pickups, &game->pickup_count, type, pos);
+}
+
+static void check_pickups(Game *game) {
+    Player *p = &game->player;
+    Rectangle player_rect = player_hitbox(p);
+    for (int i = 0; i < game->pickup_count; i++) {
+        Pickup *pk = &game->pickups[i];
+        if (!pk->active) continue;
+        if (!CheckCollisionRecs(player_rect, pickup_hitbox(pk))) continue;
+
+        switch (pk->type) {
+            case PICKUP_RUPEE:
+                p->inventory.rupees += pk->value;
+                if (p->inventory.rupees > 255) p->inventory.rupees = 255;
+                sound_play(game, SOUND_PICKUP_RUPEE);
+                break;
+            case PICKUP_HEART:
+                p->health += pk->value;
+                if (p->health > p->max_health) p->health = p->max_health;
+                sound_play(game, SOUND_PICKUP_HEART);
+                break;
+            case PICKUP_BOMB:
+                p->inventory.bombs += pk->value;
+                if (p->inventory.bombs > p->inventory.bomb_capacity)
+                    p->inventory.bombs = p->inventory.bomb_capacity;
+                sound_play(game, SOUND_PICKUP_BOMB);
+                break;
+            default: break;
+        }
+        pk->active = false;
+    }
+}
+
+static void check_bomb_explosions(Game *game) {
+    for (int pi = 0; pi < game->projectile_count; pi++) {
+        Projectile *proj = &game->projectiles[pi];
+        if (!proj->active || proj->type != PROJ_BOMB || proj->timer > 0) continue;
+
+        sound_play(game, SOUND_BOMB_EXPLODE);
+        float cx = proj->pos.x + TILE_SIZE / 2.0f;
+        float cy = proj->pos.y + TILE_SIZE / 2.0f;
+        float r2 = BOMB_BLAST_RADIUS * BOMB_BLAST_RADIUS;
+
+        for (int i = 0; i < game->enemy_count; i++) {
+            Enemy *e = &game->enemies[i];
+            if (!e->active) continue;
+            float dx = (e->pos.x + TILE_SIZE / 2.0f) - cx;
+            float dy = (e->pos.y + TILE_SIZE / 2.0f) - cy;
+            if (dx * dx + dy * dy <= r2) {
+                enemy_take_damage(e, BOMB_DAMAGE);
+                if (!e->active) {
+                    sound_play(game, SOUND_ENEMY_DEATH);
+                    try_spawn_drop(game, e->pos);
+                }
+            }
+        }
+
+        Player *p = &game->player;
+        float pdx = (p->pos.x + TILE_SIZE / 2.0f) - cx;
+        float pdy = (p->pos.y + TILE_SIZE / 2.0f) - cy;
+        if (pdx * pdx + pdy * pdy <= r2) {
+            Direction kb_dir;
+            if (fabsf(pdx) > fabsf(pdy))
+                kb_dir = (pdx > 0) ? DIR_E : DIR_W;
+            else
+                kb_dir = (pdy > 0) ? DIR_S : DIR_N;
+            player_take_damage(p, BOMB_DAMAGE, kb_dir);
+            sound_play(game, SOUND_PLAYER_DAMAGE);
+        }
+
+        int tc = (int)(cx / TILE_SIZE);
+        int tr = (int)((cy - PLAY_AREA_Y) / TILE_SIZE);
+        for (int dr = -2; dr <= 2; dr++) {
+            for (int dc = -2; dc <= 2; dc++) {
+                int r = tr + dr, c = tc + dc;
+                if (r < 0 || r >= SCREEN_TILES_Y || c < 0 || c >= SCREEN_TILES_X) continue;
+                if (game->current_screen.tiles[r][c] == TILE_BOMBABLE_WALL) {
+                    game->current_screen.tiles[r][c] = TILE_FLOOR;
+                }
+            }
+        }
+
+        proj->active = false;
+    }
+}
+
 static void check_combat(Game *game) {
     Player *p = &game->player;
 
@@ -172,10 +271,49 @@ static void check_combat(Game *game) {
                         enemy_take_damage(e, SWORD_DAMAGE);
                         if (!e->active) {
                             sound_play(game, SOUND_ENEMY_DEATH);
+                            try_spawn_drop(game, e->pos);
                         }
                     }
                 }
             }
+        }
+    }
+
+    // Player projectiles vs enemies
+    for (int pi = 0; pi < game->projectile_count; pi++) {
+        Projectile *proj = &game->projectiles[pi];
+        if (!proj->active || proj->owner != OWNER_PLAYER) continue;
+        Rectangle proj_rect = projectile_hitbox(proj);
+        for (int i = 0; i < game->enemy_count; i++) {
+            Enemy *e = &game->enemies[i];
+            if (!e->active || e->invuln_timer > 0) continue;
+            if (!CheckCollisionRecs(proj_rect, enemy_hitbox(e))) continue;
+
+            if (e->type == ENEMY_SLIME && e->subtype == 0 &&
+                p->inventory.sword_tier <= 1 && proj->type == PROJ_ARROW) {
+                Vector2 split_pos = e->pos;
+                e->active = false;
+                e->state = ESTATE_DEAD;
+                sound_play(game, SOUND_ENEMY_DEATH);
+                spawn_small_slimes(game, split_pos);
+            } else {
+                enemy_take_damage(e, proj->damage);
+                e->invuln_timer = SWORD_ACTIVE_FRAMES;
+                if (!e->active) {
+                    sound_play(game, SOUND_ENEMY_DEATH);
+                    try_spawn_drop(game, e->pos);
+                } else {
+                    sound_play(game, SOUND_SWORD_HIT);
+                }
+            }
+
+            if (proj->stun_frames > 0 && e->active) {
+                e->state = ESTATE_IDLE;
+                e->state_timer = proj->stun_frames;
+                e->velocity = (Vector2){0, 0};
+            }
+            if (proj->type != PROJ_BOOMERANG) proj->active = false;
+            break;
         }
     }
 
@@ -196,6 +334,38 @@ static void check_combat(Game *game) {
                 sound_play(game, SOUND_PLAYER_DAMAGE);
                 break;
             }
+        }
+    }
+
+    // Enemy projectiles vs player
+    if (p->invuln_timer <= 0 && p->state != PSTATE_KNOCKBACK) {
+        Rectangle player_rect = player_hitbox(p);
+        for (int pi = 0; pi < game->projectile_count; pi++) {
+            Projectile *proj = &game->projectiles[pi];
+            if (!proj->active || proj->owner != OWNER_ENEMY) continue;
+            if (!CheckCollisionRecs(player_rect, projectile_hitbox(proj))) continue;
+
+            bool blocked = false;
+            if (p->state != PSTATE_ATTACKING && p->inventory.shield_tier >= 1) {
+                Direction proj_from = opposite_dir(proj->facing);
+                if (proj_from == p->facing) {
+                    const ProjectileDef *pdef = &projectile_defs[proj->type];
+                    if (pdef->blocked_by_shield_small ||
+                        (p->inventory.shield_tier >= 2 && pdef->blocked_by_shield_large)) {
+                        blocked = true;
+                    }
+                }
+            }
+
+            if (blocked) {
+                proj->active = false;
+                sound_play(game, SOUND_SHIELD_BLOCK);
+            } else {
+                player_take_damage(p, proj->damage, proj->facing);
+                sound_play(game, SOUND_PLAYER_DAMAGE);
+                proj->active = false;
+            }
+            break;
         }
     }
 }
@@ -219,14 +389,25 @@ void game_update(Game *game) {
 
     switch (game->state) {
         case STATE_PLAY: {
+            if (input_pause()) {
+                game->state = STATE_PAUSE;
+                break;
+            }
             PlayerState prev_state = game->player.state;
-            player_update(&game->player, &game->current_screen, dt);
+            player_update(&game->player, &game->current_screen,
+                          game->projectiles, &game->projectile_count, dt);
             if (game->player.state == PSTATE_ATTACKING && prev_state != PSTATE_ATTACKING) {
                 sound_play(game, SOUND_SWORD_SWING);
             }
             enemies_update(game->enemies, game->enemy_count,
-                           game->player.pos, &game->current_screen, dt);
+                           game->player.pos, &game->current_screen,
+                           game->projectiles, &game->projectile_count, dt);
+            projectiles_update(game->projectiles, &game->projectile_count,
+                               &game->current_screen, game->player.pos, dt);
+            check_bomb_explosions(game);
             check_combat(game);
+            pickups_update(game->pickups, game->pickup_count);
+            check_pickups(game);
             if (game->player.health <= 0) {
                 game->state = STATE_DEATH;
                 game->death_timer = 90;
@@ -295,6 +476,8 @@ void game_update(Game *game) {
                     game->player.pos = game->trans_player_end;
                     enemies_spawn(game->enemies, &game->enemy_count,
                                   &game->current_screen);
+                    projectiles_clear(game->projectiles, &game->projectile_count);
+                    pickups_clear(game->pickups, &game->pickup_count);
                 }
                 game->state = STATE_PLAY;
             }
@@ -307,6 +490,14 @@ void game_update(Game *game) {
                 game->in_cave = false;
                 load_screen_at(game, START_SCREEN_X, START_SCREEN_Y);
                 game->state = STATE_PLAY;
+            }
+            break;
+
+        case STATE_PAUSE:
+            if (input_pause() || input_back()) {
+                game->state = STATE_PLAY;
+            } else {
+                pause_screen_update(&game->pause_state, &game->player.inventory);
             }
             break;
 
@@ -356,9 +547,19 @@ void game_draw(Game *game) {
             DrawRectangle(0, PLAY_AREA_Y, WINDOW_WIDTH, PLAY_AREA_HEIGHT,
                           (Color){ 0, 0, 0, alpha });
         }
+    } else if (game->state == STATE_PAUSE) {
+        screen_draw(&game->current_screen);
+        enemies_draw(game->enemies, game->enemy_count);
+        pickups_draw(game->pickups, game->pickup_count);
+        projectiles_draw(game->projectiles, game->projectile_count);
+        player_draw(&game->player);
+        pause_screen_draw(&game->pause_state, &game->player.inventory,
+                          game->player.inventory.sword_tier);
     } else {
         screen_draw(&game->current_screen);
         enemies_draw(game->enemies, game->enemy_count);
+        pickups_draw(game->pickups, game->pickup_count);
+        projectiles_draw(game->projectiles, game->projectile_count);
         player_draw(&game->player);
     }
 

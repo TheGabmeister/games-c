@@ -9,7 +9,8 @@ const TileDef tile_defs[TILE_TYPE_COUNT] = {
     [TILE_WATER]     = { TILE_WATER,     2, false, ITEM_NONE },
     [TILE_DOOR]      = { TILE_DOOR,      4, true,  ITEM_NONE },
     [TILE_PUSHBLOCK] = { TILE_PUSHBLOCK, 5, false, ITEM_NONE },
-    [TILE_STAIRS]    = { TILE_STAIRS,    6, true,  ITEM_NONE },
+    [TILE_STAIRS]        = { TILE_STAIRS,        6, true,  ITEM_NONE },
+    [TILE_BOMBABLE_WALL] = { TILE_BOMBABLE_WALL, 7, false, ITEM_NONE },
 };
 
 static TileType char_to_tile(char c) {
@@ -20,6 +21,7 @@ static TileType char_to_tile(char c) {
         case 'D': return TILE_DOOR;
         case 'P': return TILE_PUSHBLOCK;
         case 'S': return TILE_STAIRS;
+        case 'B': return TILE_BOMBABLE_WALL;
         default:  return TILE_FLOOR;
     }
 }
@@ -75,9 +77,11 @@ bool screen_load(Screen *screen, const char *path) {
                 int ec, er;
                 if (sscanf(line_copy, "enemy: %15s %d %d", type_buf, &ec, &er) == 3) {
                     int etype = -1;
-                    if (strcmp(type_buf, "slime") == 0)      etype = 0;
-                    else if (strcmp(type_buf, "bat") == 0)    etype = 1;
-                    else if (strcmp(type_buf, "snake") == 0)  etype = 2;
+                    if (strcmp(type_buf, "slime") == 0)            etype = 0;
+                    else if (strcmp(type_buf, "bat") == 0)          etype = 1;
+                    else if (strcmp(type_buf, "snake") == 0)        etype = 2;
+                    else if (strcmp(type_buf, "rock_spitter") == 0) etype = 3;
+                    else if (strcmp(type_buf, "spear_thrower") == 0) etype = 4;
                     if (etype >= 0) {
                         EnemySpawn *es = &screen->enemy_spawns[screen->enemy_spawn_count++];
                         es->type = etype;

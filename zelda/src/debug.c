@@ -1,11 +1,12 @@
 #include "debug.h"
 #include "game.h"
 #include "enemy/enemy.h"
+#include "projectile.h"
 #include "raylib.h"
 
 bool debug_enabled = false;
 
-static const char *enemy_type_names[] = { "slime", "bat", "snake" };
+static const char *enemy_type_names[] = { "slime", "bat", "snake", "rock_spit", "spear_thr" };
 static const char *enemy_state_names[] = { "idle", "move", "charge", "dead" };
 
 void debug_toggle(void) {
@@ -45,5 +46,14 @@ void debug_draw_game(const Game *game) {
         DrawText(TextFormat("%s %s (%.0f,%.0f)", tname, sname, e->pos.x, e->pos.y),
                  32, y, 16, YELLOW);
         y += 18;
+    }
+
+    int proj_alive = 0;
+    for (int i = 0; i < game->projectile_count; i++) {
+        if (game->projectiles[i].active) proj_alive++;
+    }
+    if (proj_alive > 0) {
+        DrawText(TextFormat("projectiles: %d", proj_alive), 32, y, 20, YELLOW);
+        y += 24;
     }
 }

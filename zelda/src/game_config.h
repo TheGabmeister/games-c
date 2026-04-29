@@ -58,6 +58,21 @@
 #define LOW_HEALTH_THRESHOLD    2
 #define LOW_HEALTH_BEEP_FRAMES  30
 
+// Projectiles
+#define MAX_PROJECTILES         32
+#define ARROW_SPEED             512.0f
+#define ARROW_DAMAGE            2
+#define ARROW_MAX_RANGE         (SCREEN_TILES_X * TILE_SIZE)
+#define BOOMERANG_SPEED         384.0f
+#define BOOMERANG_MAX_RANGE     (6 * TILE_SIZE)
+#define BOOMERANG_STUN_FRAMES   60
+#define BOMB_FUSE_FRAMES        120
+#define BOMB_BLAST_RADIUS       96.0f
+#define BOMB_DAMAGE             4
+#define ENEMY_ROCK_SPEED        224.0f
+#define ENEMY_SPEAR_SPEED       256.0f
+#define ITEM_USE_FRAMES         12
+
 // Direction (shared by player, camera, enemies, projectiles)
 typedef enum Direction {
     DIR_S = 0,
@@ -75,7 +90,24 @@ typedef enum SoundID {
     SOUND_ENEMY_DEATH,
     SOUND_PLAYER_DAMAGE,
     SOUND_LOW_HEALTH,
+    SOUND_ARROW_FIRE,
+    SOUND_BOMB_PLACE,
+    SOUND_BOMB_EXPLODE,
+    SOUND_SHIELD_BLOCK,
+    SOUND_PICKUP_RUPEE,
+    SOUND_PICKUP_HEART,
+    SOUND_PICKUP_BOMB,
     SOUND_COUNT
 } SoundID;
+
+static inline Direction opposite_dir(Direction d) {
+    switch (d) {
+        case DIR_N: return DIR_S;
+        case DIR_S: return DIR_N;
+        case DIR_E: return DIR_W;
+        case DIR_W: return DIR_E;
+        default: return d;
+    }
+}
 
 #endif

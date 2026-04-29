@@ -9,6 +9,15 @@ void hud_draw(const Player *player, int screen_x, int screen_y) {
     DrawText(TextFormat("KEYS: %d", player->inventory.keys), 32, 64, 20, WHITE);
     DrawText(TextFormat("BOMBS: %d/%d", player->inventory.bombs, player->inventory.bomb_capacity), 32, 96, 20, WHITE);
 
+    const char *equip_name = "---";
+    switch (player->inventory.equipped) {
+        case ITEM_BOOMERANG: equip_name = "BOOMERANG"; break;
+        case ITEM_BOW:       equip_name = "BOW"; break;
+        case ITEM_BOMB:      equip_name = "BOMB"; break;
+        default: break;
+    }
+    DrawText(TextFormat("B: %s", equip_name), 32, 128, 20, YELLOW);
+
     int hearts = player->max_health / 2;
     int filled = player->health;
     for (int i = 0; i < hearts; i++) {

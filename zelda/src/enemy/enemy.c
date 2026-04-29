@@ -1,11 +1,14 @@
 #include "enemy.h"
 #include "../tilemap.h"
+#include "../projectile.h"
 #include <stdlib.h>
 
 const EnemyDef enemy_defs[ENEMY_TYPE_COUNT] = {
-    [ENEMY_SLIME] = { 1, 1, 96.0f,  false, TILE_SIZE, TILE_SIZE, slime_update, slime_draw },
-    [ENEMY_BAT]   = { 1, 1, 160.0f, true,  TILE_SIZE, TILE_SIZE, bat_update,   bat_draw },
-    [ENEMY_SNAKE] = { 1, 1, 128.0f, false, TILE_SIZE, TILE_SIZE, snake_update, snake_draw },
+    [ENEMY_SLIME]         = { 1, 1,  96.0f, false, TILE_SIZE, TILE_SIZE, slime_update,         slime_draw },
+    [ENEMY_BAT]           = { 1, 1, 160.0f, true,  TILE_SIZE, TILE_SIZE, bat_update,           bat_draw },
+    [ENEMY_SNAKE]         = { 1, 1, 128.0f, false, TILE_SIZE, TILE_SIZE, snake_update,         snake_draw },
+    [ENEMY_ROCK_SPITTER]  = { 2, 1,  64.0f, false, TILE_SIZE, TILE_SIZE, rock_spitter_update,  rock_spitter_draw },
+    [ENEMY_SPEAR_THROWER] = { 2, 1,  80.0f, false, TILE_SIZE, TILE_SIZE, spear_thrower_update, spear_thrower_draw },
 };
 
 void enemies_spawn(Enemy enemies[], int *count, const Screen *screen) {
@@ -25,12 +28,13 @@ void enemies_spawn(Enemy enemies[], int *count, const Screen *screen) {
     }
 }
 
-void enemies_update(Enemy enemies[], int count, Vector2 player_pos, const Screen *screen, float dt) {
+void enemies_update(Enemy enemies[], int count, Vector2 player_pos, const Screen *screen,
+                    Projectile *projectiles, int *projectile_count, float dt) {
     for (int i = 0; i < count; i++) {
         Enemy *e = &enemies[i];
         if (!e->active) continue;
         if (e->invuln_timer > 0) e->invuln_timer--;
-        enemy_defs[e->type].update(e, player_pos, screen, dt);
+        enemy_defs[e->type].update(e, player_pos, screen, projectiles, projectile_count, dt);
     }
 }
 

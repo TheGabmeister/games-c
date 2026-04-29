@@ -1,6 +1,7 @@
 #include "enemy.h"
 #include "../tilemap.h"
 #include "../textures.h"
+#include "../projectile.h"
 #include "raymath.h"
 #include <stdlib.h>
 #include <math.h>
@@ -15,7 +16,9 @@ static void pick_random_velocity(Enemy *self, float speed) {
     self->velocity.y = sinf(angle) * speed;
 }
 
-void bat_update(Enemy *self, Vector2 player_pos, const Screen *screen, float dt) {
+void bat_update(Enemy *self, Vector2 player_pos, const Screen *screen,
+                Projectile *projectiles, int *projectile_count, float dt) {
+    (void)projectiles; (void)projectile_count;
     (void)player_pos;
     (void)screen;
     const EnemyDef *def = &enemy_defs[self->type];

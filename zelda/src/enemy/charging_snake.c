@@ -1,6 +1,7 @@
 #include "enemy.h"
 #include "../tilemap.h"
 #include "../textures.h"
+#include "../projectile.h"
 #include "raymath.h"
 #include <stdlib.h>
 #include <math.h>
@@ -26,7 +27,9 @@ static void set_velocity_from_dir(Enemy *self, float speed) {
     }
 }
 
-void snake_update(Enemy *self, Vector2 player_pos, const Screen *screen, float dt) {
+void snake_update(Enemy *self, Vector2 player_pos, const Screen *screen,
+                  Projectile *projectiles, int *projectile_count, float dt) {
+    (void)projectiles; (void)projectile_count;
     const EnemyDef *def = &enemy_defs[self->type];
 
     switch (self->state) {

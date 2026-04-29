@@ -1,6 +1,7 @@
 #include "enemy.h"
 #include "../tilemap.h"
 #include "../textures.h"
+#include "../projectile.h"
 #include "raymath.h"
 #include <stdlib.h>
 
@@ -12,7 +13,9 @@ static int random_range(int min, int max) {
     return min + rand() % (max - min + 1);
 }
 
-void slime_update(Enemy *self, Vector2 player_pos, const Screen *screen, float dt) {
+void slime_update(Enemy *self, Vector2 player_pos, const Screen *screen,
+                  Projectile *projectiles, int *projectile_count, float dt) {
+    (void)projectiles; (void)projectile_count;
     (void)player_pos;
     const EnemyDef *def = &enemy_defs[self->type];
 

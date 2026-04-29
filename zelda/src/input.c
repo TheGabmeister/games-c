@@ -31,8 +31,10 @@ bool input_attack(void) {
            IsGamepadButtonPressed(0, GAMEPAD_BUTTON_RIGHT_FACE_LEFT);
 }
 
-bool input_dig_left(void) { return false; }
-bool input_dig_right(void) { return false; }
+bool input_use_item(void) {
+    return IsKeyPressed(KEY_LEFT_SHIFT) ||
+           IsGamepadButtonPressed(0, GAMEPAD_BUTTON_RIGHT_FACE_UP);
+}
 
 bool input_confirm(void) {
     return IsKeyPressed(KEY_ENTER) ||

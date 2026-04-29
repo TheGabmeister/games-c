@@ -8,7 +8,8 @@ static const char *texture_paths[TEX_COUNT] = {
     [TEX_TILES]   = "assets/sprites/tiles.png",
     [TEX_SLIME] = "assets/sprites/slime.png",
     [TEX_BAT]   = "assets/sprites/bat.png",
-    [TEX_SNAKE] = "assets/sprites/snake.png",
+    [TEX_SNAKE]       = "assets/sprites/snake.png",
+    [TEX_PROJECTILES] = "assets/sprites/projectiles.png",
 };
 
 void textures_load(void) {

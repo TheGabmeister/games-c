@@ -9,8 +9,7 @@ bool input_up(void);
 bool input_down(void);
 
 bool input_attack(void);
-bool input_dig_left(void);
-bool input_dig_right(void);
+bool input_use_item(void);
 bool input_confirm(void);
 bool input_back(void);
 bool input_pause(void);

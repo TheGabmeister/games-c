@@ -8,6 +8,13 @@ static const char *sound_files[SOUND_COUNT] = {
     [SOUND_ENEMY_DEATH]   = "assets/enemy_death.wav",
     [SOUND_PLAYER_DAMAGE] = "assets/player_damage.wav",
     [SOUND_LOW_HEALTH]    = "assets/low_health.wav",
+    [SOUND_ARROW_FIRE]    = "assets/arrow_fire.wav",
+    [SOUND_BOMB_PLACE]    = "assets/bomb_place.wav",
+    [SOUND_BOMB_EXPLODE]  = "assets/bomb_explode.wav",
+    [SOUND_SHIELD_BLOCK]  = "assets/shield_block.wav",
+    [SOUND_PICKUP_RUPEE]  = "assets/pickup_rupee.wav",
+    [SOUND_PICKUP_HEART]  = "assets/pickup_heart.wav",
+    [SOUND_PICKUP_BOMB]   = "assets/pickup_bomb.wav",
 };
 
 void sounds_load(Game *game) {

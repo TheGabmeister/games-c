@@ -13,11 +13,15 @@ typedef enum TileType {
     TILE_DOOR,
     TILE_PUSHBLOCK,
     TILE_STAIRS,
+    TILE_BOMBABLE_WALL,
     TILE_TYPE_COUNT
 } TileType;
 
 typedef enum ItemID {
     ITEM_NONE = 0,
+    ITEM_BOOMERANG,
+    ITEM_BOW,
+    ITEM_BOMB,
     ITEM_COUNT
 } ItemID;
 

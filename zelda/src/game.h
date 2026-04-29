@@ -7,6 +7,9 @@
 #include "tilemap.h"
 #include "camera.h"
 #include "enemy/enemy.h"
+#include "projectile.h"
+#include "pickup.h"
+#include "inventory.h"
 #include <stdbool.h>
 #include <stdlib.h>
 #include <string.h>
@@ -15,6 +18,7 @@ typedef enum GameState {
     STATE_PLAY = 0,
     STATE_TRANSITION,
     STATE_DEATH,
+    STATE_PAUSE,
     STATE_COUNT
 } GameState;
 
@@ -46,6 +50,14 @@ typedef struct Game {
 
     Enemy enemies[MAX_ENEMIES_PER_SCREEN];
     int enemy_count;
+
+    Projectile projectiles[MAX_PROJECTILES];
+    int projectile_count;
+
+    Pickup pickups[MAX_PICKUPS];
+    int pickup_count;
+
+    PauseState pause_state;
 
     int death_timer;
     int low_health_counter;

@@ -9,6 +9,7 @@ typedef enum TextureID {
     TEX_SLIME,
     TEX_BAT,
     TEX_SNAKE,
+    TEX_PROJECTILES,
     TEX_COUNT
 } TextureID;
 

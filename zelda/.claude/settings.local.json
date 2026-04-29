@@ -100,7 +100,14 @@
       "Bash(cmake --build build --clean-first)",
       "Bash(\"C:/Program Files/Inkscape/bin/inkscape.exe\" \"c:/dev/games-c/zelda/src/assets/sprites/slime.svg\" -o \"c:/dev/games-c/zelda/src/assets/sprites/slime.png\" -w 256 -h 128)",
       "Bash(\"C:/Program Files/Inkscape/bin/inkscape.exe\" \"c:/dev/games-c/zelda/src/assets/sprites/bat.svg\" -o \"c:/dev/games-c/zelda/src/assets/sprites/bat.png\" -w 256 -h 128)",
-      "Bash(\"C:/Program Files/Inkscape/bin/inkscape.exe\" \"c:/dev/games-c/zelda/src/assets/sprites/snake.svg\" -o \"c:/dev/games-c/zelda/src/assets/sprites/snake.png\" -w 256 -h 128)"
+      "Bash(\"C:/Program Files/Inkscape/bin/inkscape.exe\" \"c:/dev/games-c/zelda/src/assets/sprites/snake.svg\" -o \"c:/dev/games-c/zelda/src/assets/sprites/snake.png\" -w 256 -h 128)",
+      "Read(//d/rfxgen_v5.0_win_x64/**)",
+      "Bash(\"D:/rfxgen_v5.0_win_x64/rfxgen.exe\" -g laser -o \"c:/dev/games-c/zelda/src/assets/arrow_fire.wav\")",
+      "Bash(\"D:/rfxgen_v5.0_win_x64/rfxgen.exe\" -g blip -o \"c:/dev/games-c/zelda/src/assets/bomb_place.wav\")",
+      "Bash(\"D:/rfxgen_v5.0_win_x64/rfxgen.exe\" -g explosion -o \"c:/dev/games-c/zelda/src/assets/bomb_explode.wav\")",
+      "Bash(\"D:/rfxgen_v5.0_win_x64/rfxgen.exe\" -g hit -o \"c:/dev/games-c/zelda/src/assets/shield_block.wav\")",
+      "Bash(\"D:/rfxgen_v5.0_win_x64/rfxgen.exe\" -g coin -o \"c:/dev/games-c/zelda/src/assets/pickup_rupee.wav\")",
+      "Bash(timeout 3 build/zelda/Debug/zelda.exe)"
     ]
   }
 }
