@@ -99,7 +99,7 @@ Player inventory is split by data shape:
 ```c
 typedef struct Inventory {
     // Collected items — one bit each, never lost
-    uint32_t items;           // bitfield indexed by ItemID enum
+    uint32_t items;           // bitfield indexed by ItemType enum
 
     // Equipment tiers — higher value = better
     int sword_tier;           // 0=none, 1=basic, 2=strong, 3=master
@@ -115,7 +115,7 @@ typedef struct Inventory {
     int keys;
 
     // Active item slot
-    ItemID equipped;          // which item the use button activates
+    ItemType equipped;          // which item the use button activates
 } Inventory;
 ```
 
@@ -123,7 +123,7 @@ Checking if the player has an item: `inventory.items & (1 << ITEM_RAFT)`.
 The conditional tile passability system uses the same check.
 
 Equipping: the pause screen sets `inventory.equipped` to the selected
-`ItemID`. Only items flagged as active (boomerang, bombs, bow, candle,
+`ItemType`. Only items flagged as active (boomerang, bombs, bow, candle,
 recorder, food, magic rod, potion) can be equipped. Passive items (raft,
 ladder, bracelet) take effect automatically and are never equipped.
 
@@ -162,39 +162,38 @@ Data-driven design with function pointers. Each enemy type has a static
 definition table:
 
 ```c
-typedef struct EnemyContext {
-    Vector2 player_pos;
-    const TileMap *tilemap;
-    EventQueue *events;
-    ProjectileList *projectiles;
-} EnemyContext;
-
 typedef struct EnemyDef {
+    const char *name;
     int health;
     int contact_damage;
-    int projectile_damage;
-    int speed;
-    int tier;
+    float speed;
     bool ignores_walls;
-    void (*update)(Enemy *self, const EnemyContext *ctx);
+    int hitbox_w;
+    int hitbox_h;
+    void (*update)(Enemy *self, Vector2 player_pos, const Screen *screen,
+                   Projectile *projectiles, int *projectile_count, float dt);
     void (*draw)(const Enemy *self);
+    void (*on_death)(Enemy *self, Game *game);
 } EnemyDef;
 ```
 
-`EnemyContext` is built once per frame from the current game state and
-passed to all enemy updates. It exposes only what enemies need: where the
-player is, what tiles block movement, where to push events, and where to
-spawn projectiles. Enemies cannot reach the full game state.
+The `name` field is used by the screen file parser to map strings to enemy
+types — no hardcoded string-to-enum mapping. The `on_death` callback
+dispatches type-specific death behavior (e.g., dragon marks boss defeated);
+NULL means default drop logic (random loot).
+
+Enemy update functions receive individual parameters (player position,
+screen, projectile array) rather than a context struct. Ranged enemies use
+the projectile params to spawn projectiles; non-ranged enemies ignore them.
 
 `draw` takes only the enemy itself — rendering should not have side effects
 or need game-wide access.
 
 The `EnemyDef` table is a const array indexed by `EnemyType` enum. Adding a
-new enemy means writing its update/draw functions and adding a row to the
-table. The orchestrator calls `enemy->def->update(enemy, &ctx)` — no switch
-on enemy type.
+new enemy means writing its .c file and adding a row to the table (name
+included). The game loop and screen parser need no changes.
 
-Runtime enemy instances hold a pointer to their def plus per-instance state:
+Runtime enemy instances are indexed by type into the def table:
 
 - Pixel position and facing direction.
 - Current health.
@@ -211,8 +210,8 @@ Enemy movement:
 
 - Enemies move in continuous pixel space, same as the player.
 - Enemies that respect walls (most ground enemies) check their pixel hitbox
-  against impassable tiles the same way the player does, via the tilemap
-  passed in `EnemyContext`.
+  against impassable tiles the same way the player does, via the `Screen`
+  pointer passed to the update function.
 - Enemies with `ignores_walls = true` (bats, ghosts, flying enemies) skip
   tile collision entirely.
 - Enemy speed is in pixels per second. Each enemy's update function advances
@@ -298,7 +297,7 @@ typedef struct TileDef {
     TileType type;        // FLOOR, WALL, WATER, PIT, DOCK, GAP, etc.
     int sprite_index;
     bool passable;        // default passability
-    ItemID pass_requires; // ITEM_NONE, ITEM_RAFT, ITEM_LADDER, etc.
+    ItemType pass_requires; // ITEM_NONE, ITEM_RAFT, ITEM_LADDER, etc.
 } TileDef;
 ```
 
@@ -588,7 +587,7 @@ Deliverable: player walks between connected overworld screens.
 Deliverable: player can fight enemies, take damage, and die.
 
 - Sword attack (hitbox in facing direction, active frames, cooldown).
-- Enemy system (EnemyDef table, EnemyContext, spawn from screen metadata).
+- Enemy system (EnemyDef table, spawn from screen metadata).
 - 3 starter enemies: slime, bat, charging snake.
 - Collision pipeline (sword vs enemy, player vs enemy contact).
 - Contact damage and knockback.

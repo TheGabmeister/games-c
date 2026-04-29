@@ -35,39 +35,41 @@ Window: 1024x960. Logical resolution: 1024x960 (1:1, no scaling). Tile size: 64x
 
 Screen layout (top to bottom): HUD 1024x224 (3.5 tiles), 32px divider, play area 1024x704 (16x11 tiles). Play area starts at y=256 (`PLAY_AREA_Y`).
 
-Single `Game` struct holds all state (defined in `game.h`). The main loop in `main.c` calls `game_init` -> `game_update`/`game_draw` per frame -> cleanup on exit. Game state machine: `STATE_PLAY` (normal gameplay), `STATE_TRANSITION` (scroll/fade between screens), `STATE_DEATH` (death pause + fade, then respawn), `STATE_PAUSE` (inventory/pause screen, game logic frozen), `STATE_ITEM_GET` (dungeon item pickup ceremony, 2-second hold with jingle).
+`Game` struct holds gameplay state (defined in `game.h`). Self-contained modules own their own static state: sounds (`sounds.c`), VFX (`vfx.c`), textures (`textures.c`). The main loop in `main.c` calls `game_init` -> `game_update`/`game_draw` per frame -> cleanup on exit. Game state machine: `STATE_PLAY` (normal gameplay), `STATE_TRANSITION` (scroll/fade between screens), `STATE_DEATH` (death pause + fade, then respawn), `STATE_PAUSE` (inventory/pause screen, game logic frozen), `STATE_ITEM_GET` (dungeon item pickup ceremony, 2-second hold with jingle).
 
-### Shared types in game_config.h
+### Shared types
 
-`game_config.h` is the canonical source for compile-time constants (window size, tile size, combat tuning, projectile tuning) and shared enums/utilities (`Direction`, `SoundID`, `opposite_dir()`). These were moved out of individual headers to break coupling — `Direction` is used by player, camera, enemies, and projectiles; `SoundID` is used by game and sounds.
+`game_config.h` is the canonical source for compile-time constants (window size, tile size, combat tuning, projectile tuning) and the `Direction` enum/`opposite_dir()` utility — used by player, camera, enemies, and projectiles. Other shared enums live in their own headers: `ItemType` and `item_type_names`/`item_display_names` tables in `items.h`, `SoundID` in `sounds.h`.
 
 ### Update loop order (STATE_PLAY)
 
-`player_update` -> `enemies_update` -> `projectiles_update` -> `check_bomb_explosions` -> `vfx_update` -> `check_combat` -> `pickups_update` -> `check_pickups` -> `check_locked_door` -> `check_shutter_room` -> `check_push_block` -> `check_dungeon_items` -> death check -> low health beep -> `check_warp` -> `check_edge_transition`.
+`player_update` -> `enemies_update` -> `projectiles_update` -> `combat_check_bombs` -> `vfx_update` -> `combat_check` -> `pickups_update` -> `combat_check_pickups` -> `dungeon_check_locked_door` -> `dungeon_check_shutter_room` -> `dungeon_check_push_block` -> `dungeon_check_items` -> death check -> low health beep -> `nav_check_warp` -> `nav_check_edge_transition`.
 
-Combat collision (`check_combat` in game.c) handles sword-vs-enemy, player-projectile-vs-enemy (with slime splitting and boomerang stun), enemy-contact-vs-player, and enemy-projectile-vs-player (with shield blocking).
+Game logic is split across focused modules: `combat.c` (collision, bombs, pickups, enemy death/drops), `navigation.c` (screen loading, transitions, warps), `dungeon_interact.c` (doors, shutters, push blocks, dungeon items). `game.c` retains `game_init`, the state machine in `game_update`, and `game_draw`.
+
+Combat collision (`combat_check` in combat.c) handles sword-vs-enemy, player-projectile-vs-enemy (with slime splitting and boomerang stun), enemy-contact-vs-player, and enemy-projectile-vs-player (with shield blocking).
 
 ### Enemy system
 
-Enemies use **vtable-style dispatch**: `EnemyDef` holds function pointers for `update` and `draw`, indexed by `EnemyType`. Adding a new enemy means writing its update/draw functions and adding one row to `enemy_defs[]` in `enemy.c`. No changes to the game loop needed.
+Enemies use **vtable-style dispatch**: `EnemyDef` holds a `name` string, stat fields, and function pointers for `update`, `draw`, and `on_death`, indexed by `EnemyType`. Adding a new enemy means writing its .c file in `src/enemy/` and adding one row to `enemy_defs[]` in `enemy.c` (including the name used in screen files). The screen file parser and game loop need no changes — the parser looks up enemy names from the def table automatically.
 
 Enemy files live in `src/enemy/`. Each enemy type is a separate .c file (slime.c, bat.c, charging_snake.c, rock_spitter.c, spear_thrower.c, dragon.c) with its AI implemented as a state machine using `EnemyState` and `state_timer`. The shared `Enemy` struct has a `velocity` field and `ai_timer` for type-specific scratch state. Dragon boss uses `subtype` for its own AI states (patrol/windup/fire/cooldown) to avoid extending the shared `EnemyState` enum.
 
 The enemy `update` function signature includes projectile array access (`Projectile *projectiles, int *projectile_count`) so ranged enemies (rock_spitter, spear_thrower) can spawn projectiles. Non-ranged enemies ignore these params.
 
-Spawn data is parsed from screen metadata (`enemy: type col row` lines in .txt files) into `EnemySpawn` array in the `Screen` struct. Runtime `Enemy` instances live in `Game.enemies[]` and are re-spawned fresh on each screen load. Supported enemy type names in screen files: `slime`, `bat`, `snake`, `rock_spitter`, `spear_thrower`, `dragon`.
+Spawn data is parsed from screen metadata (`enemy: type col row` lines in .txt files) into `EnemySpawn` array in the `Screen` struct. Enemy type names are looked up from the `name` field in `enemy_defs[]` — no hardcoded string mapping in the parser. Runtime `Enemy` instances live in `Game.enemies[]` and are re-spawned fresh on each screen load.
 
 ### Projectile system
 
 Projectiles use the same **vtable-style dispatch** as enemies: `ProjectileDef` holds function pointers for `update` and `draw`, indexed by `ProjectileType`. Types: `PROJ_ARROW`, `PROJ_BOOMERANG`, `PROJ_BOMB`, `PROJ_ROCK`, `PROJ_SPEAR`, `PROJ_DRAGON_BEAM`.
 
-Arrow, rock, and spear share a generic `linear_update`/`linear_draw` in `projectile.c`. Boomerang has unique return-to-player homing. Bomb is stationary with a fuse timer — explosion damage is handled by `check_bomb_explosions` in game.c.
+Arrow, rock, and spear share a generic `linear_update`/`linear_draw` in `projectile.c`. Boomerang has unique return-to-player homing. Bomb is stationary with a fuse timer — explosion damage is handled by `combat_check_bombs` in combat.c.
 
 Each projectile has an `owner` field (`OWNER_PLAYER` or `OWNER_ENEMY`) that determines collision layers. Player projectiles hit enemies; enemy projectiles hit the player (with shield blocking based on facing direction and shield tier).
 
 ### Pickup and drop system
 
-`pickup.h/c` manages a fixed array of pickups (max 16 per screen). Types: `PICKUP_RUPEE`, `PICKUP_HEART`, `PICKUP_BOMB`, `PICKUP_ARROW`. When enemies die, `on_enemy_death()` in game.c handles drops (random loot for normal enemies, boss-specific logic for dragon). The player collects pickups by walking over them. Pickups flash and despawn after 10 seconds. Cleared on screen transition.
+`pickup.h/c` manages a fixed array of pickups (max 16 per screen). Types: `PICKUP_RUPEE`, `PICKUP_HEART`, `PICKUP_BOMB`, `PICKUP_ARROW`. When enemies die, the `on_death` vtable callback dispatches per-type behavior (e.g., `dragon_on_death` marks boss defeated). Enemies without an `on_death` callback get default drop logic in `combat.c` (35% nothing, 20% rupee, 15% each heart/arrow/bomb). The player collects pickups by walking over them. Pickups flash and despawn after 10 seconds. Cleared on screen transition.
 
 ### VFX system
 
@@ -97,7 +99,7 @@ Three location modes are mutually exclusive: overworld (`!in_cave && !in_dungeon
 
 Door mechanics: locked and shutter doors have D tiles replaced with `TILE_DOOR_CLOSED` on load (impassable, distinct barred-door sprite). Key consumption opens locked doors permanently (both sides). Shutter rooms close all doors on entry; doors reopen when all enemies are defeated. Push blocks reveal stairs after sustained player contact (12 frames) when all enemies are dead. After scroll transitions into dungeon rooms, the player position is nudged inward if it overlaps a blocked tile (prevents spawning inside walled-off shutter doors).
 
-Dark rooms draw a black overlay hiding everything; candle item use lights the room for the current dungeon visit. `STATE_ITEM_GET` freezes gameplay for 2 seconds to display collected dungeon items (map, compass, heart container, fragment) with a jingle. Dungeon items render on the floor using dedicated sprites (`item_key.png`, `item_map.png`, `item_compass.png`, `item_heart_container.png`, `item_fragment.png`) with colored-rectangle fallbacks. Boss room items (heart container, fragment) are hidden until `boss_defeated` is set.
+Dark rooms draw a black overlay hiding everything; candle item use lights the room for the current dungeon visit. `STATE_ITEM_GET` freezes gameplay for 2 seconds to display collected dungeon items (map, compass, heart container, fragment) with a jingle — display names come from the `item_display_names` table in `items.h`. Dungeon items render on the floor using dedicated sprites (`item_key.png`, `item_map.png`, `item_compass.png`, `item_heart_container.png`, `item_fragment.png`); missing sprites trigger an assert (no silent fallbacks). Boss room items (heart container, fragment) are hidden until `boss_defeated` is set.
 
 **Dragon guardian boss** (`src/enemy/dragon.c`): 2x2 tile enemy using `subtype` field for AI states (patrol/windup/fire/cooldown). 12 HP, fires `PROJ_DRAGON_BEAM` projectiles at player. On death, marks `boss_defeated` in DungeonState; does not drop loot (rewards are floor items revealed after boss death).
 
@@ -134,7 +136,7 @@ Files in `src/enemy/` use relative paths for project headers (`../tilemap.h`, `.
   - Pickups: `pickup_rupee.png`, `pickup_heart.png`, `pickup_bomb.png`, `pickup_arrow.png`
   - Dungeon items: `item_key.png`, `item_map.png`, `item_compass.png`, `item_heart_container.png`, `item_fragment.png`
   - Tiles: `tiles.png` is a 256x192 spritesheet (4 columns x 3 rows). Indices: 0=floor, 1=wall, 2=water1, 3=water2, 4=door, 5=pushblock, 6=stairs, 7=bombable wall, 8=closed door.
-  - All draw functions have colored-rectangle fallbacks when textures are missing.
+  - Dungeon item draw functions assert on missing textures. Other draw functions (enemies, projectiles, pickups) have colored-rectangle fallbacks.
   - Inkscape path: `"/c/Program Files/Inkscape/bin/inkscape.exe"`. Export: `inkscape input.svg --export-type=png --export-filename=output.png -w 64 -h 64`.
 - **Sounds**: generate with rfxgen (`"D:/rfxgen_v5.0_win_x64/rfxgen.exe" -g coin -o sound.wav`). Presets: coin, laser, explosion, powerup, hit, jump, blip. Store WAV in `assets/`.
 - **Music**: OGG files in `assets/music/`. Loaded via `LoadMusicStream`, updated every frame. Composition pipeline: Python scripts in `tools/music/` use `midiutil` to generate MIDI -> FluidSynth renders with a soundfont to WAV -> ffmpeg converts to OGG. See `tools/music/compose_overworld.py` for the pattern. Tool paths: `D:/fluidsynth-v2.5.4-win10-x64-cpp11/bin/fluidsynth.exe`, `D:/ffmpeg-8.1-essentials_build/bin/ffmpeg.exe`, soundfont `D:/8bitsf.SF2`. Render command: `fluidsynth -ni -F out.wav soundfont.sf2 input.mid`.
