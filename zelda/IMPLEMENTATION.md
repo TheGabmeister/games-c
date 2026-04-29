@@ -685,15 +685,15 @@ Deliverable: one complete dungeon playable start to finish.
 - [ ] Push blocks can be pushed and reveal stairs underneath.
 - [ ] Stairs transition to the correct destination room.
 - [ ] Dark rooms are not visible until lit by candle/fire tool.
-- [ ] Dragon boss has correct AI pattern (movement, attacks, tells).
-- [ ] Boss takes correct number of hits to defeat.
+- [x] Dragon boss has correct AI pattern (movement, attacks, tells).
+- [x] Boss takes correct number of hits to defeat.
 - [x] Heart container drops on boss defeat; picking it up increases max health.
 - [x] Relic fragment is awarded on dungeon completion.
-- [ ] `STATE_ITEM_GET` pauses gameplay and shows item with jingle.
-- [ ] Dungeon map item reveals room layout on pause screen.
+- [x] `STATE_ITEM_GET` pauses gameplay and shows item with jingle.
+- [x] Dungeon map item reveals room layout on pause screen.
 - [ ] Compass item shows boss and item locations on dungeon map.
-- [ ] Dungeon music plays on entry, boss music on boss room entry.
-- [ ] Exiting dungeon returns to correct overworld position.
+- [x] Dungeon music plays on entry, boss music on boss room entry.
+- [x] Exiting dungeon returns to correct overworld position.
 - [ ] Secret and door sounds play correctly.
 
 ### Phase 6 — World Systems

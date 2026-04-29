@@ -133,7 +133,8 @@
       "Bash(D:/rfxgen_v5.0_win_x64/rfxgen.exe -g powerup -o src/assets/shutter_open.wav)",
       "Bash(D:/rfxgen_v5.0_win_x64/rfxgen.exe -g powerup -o src/assets/secret.wav)",
       "Bash(D:/rfxgen_v5.0_win_x64/rfxgen.exe -g powerup -o src/assets/item_get.wav)",
-      "Read(//d/Inkscape/bin/**)"
+      "Read(//d/Inkscape/bin/**)",
+      "Bash(awk '{ printf \"%3d %s\\\\n\", length\\($0\\), $0 }' c:/dev/games-c/zelda/assets/dungeons/1/01_02.txt)"
     ]
   }
 }
