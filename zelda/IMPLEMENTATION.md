@@ -682,9 +682,9 @@ Deliverable: one complete dungeon playable start to finish.
 - [x] Locked doors block passage; unlocking consumes a key.
 - [x] Key count decrements in HUD after unlocking.
 - [x] Shutter rooms lock doors on entry; doors open when all enemies defeated.
-- [ ] Push blocks can be pushed and reveal stairs underneath.
-- [ ] Stairs transition to the correct destination room.
-- [ ] Dark rooms are not visible until lit by candle/fire tool.
+- [x] Push blocks can be pushed and reveal stairs underneath.
+- [x] Stairs transition to the correct destination room.
+- [x] Dark rooms are not visible until lit by candle/fire tool.
 - [x] Dragon boss has correct AI pattern (movement, attacks, tells).
 - [x] Boss takes correct number of hits to defeat.
 - [x] Heart container drops on boss defeat; picking it up increases max health.
@@ -694,7 +694,7 @@ Deliverable: one complete dungeon playable start to finish.
 - [x] Compass item shows boss and item locations on dungeon map.
 - [x] Dungeon music plays on entry, boss music on boss room entry.
 - [x] Exiting dungeon returns to correct overworld position.
-- [ ] Secret and door sounds play correctly.
+- [x] Secret and door sounds play correctly.
 
 ### Phase 6 — World Systems
 

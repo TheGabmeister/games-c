@@ -7,6 +7,7 @@
 #include <stdbool.h>
 
 struct Projectile;
+struct Game;
 
 typedef enum EnemyType {
     ENEMY_SLIME = 0,
@@ -52,6 +53,7 @@ typedef struct EnemyDef {
     void (*update)(Enemy *self, Vector2 player_pos, const struct Screen *screen,
                    struct Projectile *projectiles, int *projectile_count, float dt);
     void (*draw)(const Enemy *self);
+    void (*on_death)(Enemy *self, struct Game *game);
 } EnemyDef;
 
 extern const EnemyDef enemy_defs[ENEMY_TYPE_COUNT];
@@ -81,5 +83,6 @@ void spear_thrower_draw(const Enemy *self);
 void dragon_update(Enemy *self, Vector2 player_pos, const struct Screen *screen,
                    struct Projectile *projectiles, int *projectile_count, float dt);
 void dragon_draw(const Enemy *self);
+void dragon_on_death(Enemy *self, struct Game *game);
 
 #endif

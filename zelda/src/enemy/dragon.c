@@ -1,4 +1,6 @@
 #include "enemy.h"
+#include "../game.h"
+#include "../sounds.h"
 #include "../tilemap.h"
 #include "../textures.h"
 #include "../projectile.h"
@@ -128,4 +130,12 @@ void dragon_draw(const Enemy *self) {
     if (self->subtype == DSUB_FIRE) {
         DrawCircle((int)self->pos.x + TILE_SIZE, (int)self->pos.y + TILE_SIZE, 8.0f, ORANGE);
     }
+}
+
+void dragon_on_death(Enemy *self, Game *game) {
+    (void)self;
+    if (!game->in_dungeon || !game->current_screen.is_boss_room) return;
+    if (game->dungeon.boss_defeated) return;
+    game->dungeon.boss_defeated = true;
+    sound_play(game, SOUND_BOSS_DEFEAT);
 }
