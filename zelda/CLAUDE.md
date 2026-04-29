@@ -43,7 +43,7 @@ Single `Game` struct holds all state (defined in `game.h`). The main loop in `ma
 
 ### Update loop order (STATE_PLAY)
 
-`player_update` -> `enemies_update` -> `projectiles_update` -> `check_bomb_explosions` -> `vfx_update` -> `check_combat` -> `pickups_update` -> `check_pickups` -> death check -> low health beep -> `check_warp` -> `check_edge_transition`.
+`player_update` -> `enemies_update` -> `projectiles_update` -> `check_bomb_explosions` -> `vfx_update` -> `check_combat` -> `pickups_update` -> `check_pickups` -> `check_locked_door` -> `check_shutter_room` -> `check_push_block` -> `check_dungeon_items` -> death check -> low health beep -> `check_warp` -> `check_edge_transition`.
 
 Combat collision (`check_combat` in game.c) handles sword-vs-enemy, player-projectile-vs-enemy (with slime splitting and boomerang stun), enemy-contact-vs-player, and enemy-projectile-vs-player (with shield blocking).
 
@@ -67,7 +67,7 @@ Each projectile has an `owner` field (`OWNER_PLAYER` or `OWNER_ENEMY`) that dete
 
 ### Pickup and drop system
 
-`pickup.h/c` manages a fixed array of pickups (max 16 per screen). Types: `PICKUP_RUPEE`, `PICKUP_HEART`, `PICKUP_BOMB`, `PICKUP_ARROW`. When enemies die, `try_spawn_drop()` in game.c rolls a random drop at the death position. The player collects pickups by walking over them. Pickups flash and despawn after 10 seconds. Cleared on screen transition.
+`pickup.h/c` manages a fixed array of pickups (max 16 per screen). Types: `PICKUP_RUPEE`, `PICKUP_HEART`, `PICKUP_BOMB`, `PICKUP_ARROW`. When enemies die, `on_enemy_death()` in game.c handles drops (random loot for normal enemies, boss-specific logic for dragon). The player collects pickups by walking over them. Pickups flash and despawn after 10 seconds. Cleared on screen transition.
 
 ### VFX system
 
@@ -81,7 +81,7 @@ Each projectile has an `owner` field (`OWNER_PLAYER` or `OWNER_ENEMY`) that dete
 
 ### Inventory and pause screen
 
-`inventory.h/c` owns the pause screen. `STATE_PAUSE` freezes game logic and draws a dimmed overlay with a 4x1 item grid (boomerang, bow, bomb, + empty slot). Cursor navigation + confirm equips an item. The `Inventory` struct in `player.h` tracks: `items` bitfield, `sword_tier`, `shield_tier`, `armor_tier`, `rupees`, `bombs`/`bomb_capacity`, `arrows`/`arrow_capacity`, `keys`, `equipped` item.
+`inventory.h/c` owns the pause screen. `STATE_PAUSE` freezes game logic and draws a dimmed overlay with a 5x1 item grid (boomerang, bow, bomb, candle, + empty slot). Cursor navigation + confirm equips an item. The `Inventory` struct in `player.h` tracks: `items` bitfield, `sword_tier`, `shield_tier`, `armor_tier`, `rupees`, `bombs`/`bomb_capacity`, `arrows`/`arrow_capacity`, `keys`, `relic_fragments`, `equipped` item. When `in_dungeon`, the pause screen also renders a dungeon map view.
 
 ### Transitions and screen loading
 
@@ -134,6 +134,6 @@ Files in `src/enemy/` use relative paths for project headers (`../tilemap.h`, `.
   - Pickups: `pickup_rupee.png`, `pickup_heart.png`, `pickup_bomb.png`, `pickup_arrow.png`
   - All draw functions have colored-rectangle fallbacks when textures are missing.
 - **Sounds**: generate with rfxgen (`"D:/rfxgen_v5.0_win_x64/rfxgen.exe" -g coin -o sound.wav`). Presets: coin, laser, explosion, powerup, hit, jump, blip. Store WAV in `assets/`.
-- **Music**: OGG files in `assets/music/`. Loaded via `LoadMusicStream`, updated every frame. Composition pipeline: Python scripts in `tools/music/` use `midiutil` to generate MIDI -> FluidSynth renders with a soundfont to WAV -> ffmpeg converts to OGG. See `tools/music/compose_overworld.py` for the pattern.
+- **Music**: OGG files in `assets/music/`. Loaded via `LoadMusicStream`, updated every frame. Composition pipeline: Python scripts in `tools/music/` use `midiutil` to generate MIDI -> FluidSynth renders with a soundfont to WAV -> ffmpeg converts to OGG. See `tools/music/compose_overworld.py` for the pattern. Tool paths: `D:/fluidsynth-v2.5.4-win10-x64-cpp11/bin/fluidsynth.exe`, `D:/ffmpeg-8.1-essentials_build/bin/ffmpeg.exe`, soundfont `D:/8bitsf.SF2`. Render command: `fluidsynth -ni -F out.wav soundfont.sf2 input.mid`.
 - **Screen data**: plain text files in `assets/screens/` (overworld), `assets/dungeons/<n>/` (dungeons), `assets/caves/` (caves). Format: optional metadata lines (`warp:`, `enemy:`, `door:`, `item:`, `shutter:`, `dark:`, `boss:`, `#` comments), then 11 rows of 16 tile characters (W=wall, .=floor, ~=water, D=door, P=pushblock, S=stairs, B=bombable wall). Enemy spawn format: `enemy: type col row`. Door format: `door: direction position type`. Item format: `item: type col row`.
 - Sound and music loading is resilient — missing files are skipped.
