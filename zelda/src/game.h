@@ -59,6 +59,10 @@ typedef struct Game {
 
     PauseState pause_state;
 
+    Vector2 explosion_pos[MAX_EXPLOSIONS];
+    int explosion_timer[MAX_EXPLOSIONS];
+    int explosion_count;
+
     int death_timer;
     int low_health_counter;
 

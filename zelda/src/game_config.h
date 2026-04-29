@@ -69,6 +69,8 @@
 #define BOMB_FUSE_FRAMES        120
 #define BOMB_BLAST_RADIUS       96.0f
 #define BOMB_DAMAGE             4
+#define BOMB_EXPLOSION_FRAMES   20
+#define MAX_EXPLOSIONS          4
 #define ENEMY_ROCK_SPEED        224.0f
 #define ENEMY_SPEAR_SPEED       256.0f
 #define ITEM_USE_FRAMES         12
