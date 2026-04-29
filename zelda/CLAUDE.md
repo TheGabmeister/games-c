@@ -25,7 +25,7 @@ cmake --build build
 cmake --build build --config Release
 ```
 
-Generator: Visual Studio 18 2026, x64. Executable: `build/zelda/Debug/zelda.exe`. Assets from `src/assets/` are copied beside the executable at build time — runtime paths are relative (e.g., `assets/sprites/player.png`). CMake uses `GLOB_RECURSE` with `CONFIGURE_DEPENDS` to discover source files, but adding new files may require a reconfigure.
+Generator: Visual Studio 18 2026, x64. Executable: `build/zelda/Debug/zelda.exe`. Assets from `assets/` are copied beside the executable at build time — runtime paths are relative (e.g., `assets/sprites/player.png`). CMake uses `GLOB_RECURSE` with `CONFIGURE_DEPENDS` to discover source files, but adding new files may require a reconfigure.
 
 Strict compiler warnings are enabled (`/W4` on MSVC, `-Wall -Wextra` on GCC/Clang). Implicit function declarations, incompatible pointer types, and missing return values are promoted to errors. This is critical in C — a missing `#include` for a function like `Clamp` silently breaks float argument passing on x64 rather than failing to compile.
 
@@ -91,7 +91,7 @@ Each projectile has an `owner` field (`OWNER_PLAYER` or `OWNER_ENEMY`) that dete
 
 `dungeon.h/c` manages dungeon state. `DungeonState` struct holds per-dungeon data: current room position, visited/cleared/lit room bitfields, permanently-unlocked door bitfields, map/compass/boss-defeated/fragment-collected flags. Bitfield helpers use `dungeon_room_bit(rx, ry)` for 64-room addressing.
 
-Dungeon rooms are `.txt` files in `src/assets/dungeons/<n>/` using the same format as overworld screens plus new metadata: `door:` (direction, position, type: open/locked/shutter), `shutter:` (true), `dark:` (true), `boss:` (true), `item:` (type, col, row for dungeon-specific items like keys, map, compass, heart_container, fragment).
+Dungeon rooms are `.txt` files in `assets/dungeons/<n>/` using the same format as overworld screens plus new metadata: `door:` (direction, position, type: open/locked/shutter), `shutter:` (true), `dark:` (true), `boss:` (true), `item:` (type, col, row for dungeon-specific items like keys, map, compass, heart_container, fragment).
 
 Three location modes are mutually exclusive: overworld (`!in_cave && !in_dungeon`), cave (`in_cave`), dungeon (`in_dungeon`). Dungeon room transitions use scroll (same as overworld) triggered at screen edges where open door tiles exist. Warps: `dungeon_<n>` enters a dungeon from overworld, `droom_XX_YY` warps between dungeon rooms (push block stairs), `return` exits to saved overworld position.
 
@@ -105,7 +105,7 @@ Death in dungeon respawns at the dungeon entrance room with 3 hearts. Visit-scop
 
 HUD and pause screen show dungeon room minimap when `in_dungeon`. Map item reveals all rooms; compass marks the boss room.
 
-Dungeon 1 (Forest Shrine): 8 rooms at `src/assets/dungeons/1/`. Layout: entrance(0,0) → key room(0,1) → shutter room(1,1), map room(0,2) → compass room(1,2) → dark room(1,3), push block room(0,3) → boss room(0,4).
+Dungeon 1 (Forest Shrine): 8 rooms at `assets/dungeons/1/`. Layout: entrance(0,0) → key room(0,1) → shutter room(1,1), map room(0,2) → compass room(1,2) → dark room(1,3), push block room(0,3) → boss room(0,4).
 
 ### Debug overlay
 
@@ -128,12 +128,12 @@ Files in `src/enemy/` use relative paths for project headers (`../tilemap.h`, `.
 
 ## Asset Pipeline
 
-- **Sprites**: each entity/item gets its own SVG and PNG file on a 64px grid, exported via Inkscape. Single-frame sprites are 64x64; directional sprites (arrow, spear) are 256x64 (4 frames: S, N, E, W). Store SVG and PNG in `src/assets/sprites/`.
+- **Sprites**: each entity/item gets its own SVG and PNG file on a 64px grid, exported via Inkscape. Single-frame sprites are 64x64; directional sprites (arrow, spear) are 256x64 (4 frames: S, N, E, W). Store SVG and PNG in `assets/sprites/`.
   - Enemies: `slime.png`, `bat.png`, `snake.png`, `rock_spitter.png` (placeholder), `spear_thrower.png` (placeholder)
   - Projectiles: `arrow.png` (4-dir), `boomerang.png`, `bomb.png`, `rock.png`, `spear.png` (4-dir)
   - Pickups: `pickup_rupee.png`, `pickup_heart.png`, `pickup_bomb.png`, `pickup_arrow.png`
   - All draw functions have colored-rectangle fallbacks when textures are missing.
-- **Sounds**: generate with rfxgen (`"D:/rfxgen_v5.0_win_x64/rfxgen.exe" -g coin -o sound.wav`). Presets: coin, laser, explosion, powerup, hit, jump, blip. Store WAV in `src/assets/`.
-- **Music**: OGG files in `src/assets/music/`. Loaded via `LoadMusicStream`, updated every frame. Composition pipeline: Python scripts in `tools/music/` use `midiutil` to generate MIDI -> FluidSynth renders with a soundfont to WAV -> ffmpeg converts to OGG. See `tools/music/compose_overworld.py` for the pattern.
-- **Screen data**: plain text files in `src/assets/screens/` (overworld), `src/assets/dungeons/<n>/` (dungeons), `src/assets/caves/` (caves). Format: optional metadata lines (`warp:`, `enemy:`, `door:`, `item:`, `shutter:`, `dark:`, `boss:`, `#` comments), then 11 rows of 16 tile characters (W=wall, .=floor, ~=water, D=door, P=pushblock, S=stairs, B=bombable wall). Enemy spawn format: `enemy: type col row`. Door format: `door: direction position type`. Item format: `item: type col row`.
+- **Sounds**: generate with rfxgen (`"D:/rfxgen_v5.0_win_x64/rfxgen.exe" -g coin -o sound.wav`). Presets: coin, laser, explosion, powerup, hit, jump, blip. Store WAV in `assets/`.
+- **Music**: OGG files in `assets/music/`. Loaded via `LoadMusicStream`, updated every frame. Composition pipeline: Python scripts in `tools/music/` use `midiutil` to generate MIDI -> FluidSynth renders with a soundfont to WAV -> ffmpeg converts to OGG. See `tools/music/compose_overworld.py` for the pattern.
+- **Screen data**: plain text files in `assets/screens/` (overworld), `assets/dungeons/<n>/` (dungeons), `assets/caves/` (caves). Format: optional metadata lines (`warp:`, `enemy:`, `door:`, `item:`, `shutter:`, `dark:`, `boss:`, `#` comments), then 11 rows of 16 tile characters (W=wall, .=floor, ~=water, D=door, P=pushblock, S=stairs, B=bombable wall). Enemy spawn format: `enemy: type col row`. Door format: `door: direction position type`. Item format: `item: type col row`.
 - Sound and music loading is resilient — missing files are skipped.

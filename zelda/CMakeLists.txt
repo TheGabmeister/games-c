@@ -7,7 +7,7 @@ set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 # Dependencies
 add_subdirectory(vendor/raylib)
 
-set(ASSET_SOURCE_DIR ${CMAKE_SOURCE_DIR}/src/assets)
+set(ASSET_SOURCE_DIR ${CMAKE_SOURCE_DIR}/assets)
 
 # Our Project
 file(GLOB_RECURSE SOURCE_FILES CONFIGURE_DEPENDS src/*.c)

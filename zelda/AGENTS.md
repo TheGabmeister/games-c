@@ -52,8 +52,8 @@ cmake --build build --config Release
 
 The default generator is Visual Studio 18 2026, x64. The executable is emitted
 under `build/zelda/Debug/zelda.exe` or `build/zelda/Release/zelda.exe`.
-Assets under `src/assets/` are copied beside the executable by
-`CMakeLists.txt`, so runtime asset paths should be relative to that output
+Assets under `assets/` (at the project root) are copied beside the executable
+by `CMakeLists.txt`, so runtime asset paths should be relative to that output
 directory, for example `assets/sprites/player.png`.
 
 `CMakeLists.txt` uses `GLOB_RECURSE` with `CONFIGURE_DEPENDS` to discover
@@ -109,7 +109,7 @@ states, is documented in `IMPLEMENTATION.md`.
   equipped item area, and overworld minimap position.
 - `src/sounds.h` / `src/sounds.c` load optional sounds and music, skip missing
   files, play sound effects, and update streamed music.
-- `src/assets/` contains runtime assets copied into the executable output
+- `assets/` contains runtime assets copied into the executable output
   directory.
 
 Planned systems such as enemies, projectiles, combat collision, event queues,
@@ -122,16 +122,16 @@ pairs rather than growing unrelated modules.
 The overworld is a 16x8 grid. Screen files are named by grid coordinate:
 
 ```text
-src/assets/screens/XX_YY.txt
+assets/screens/XX_YY.txt
 ```
 
-For example, screen column 7, row 4 is `src/assets/screens/07_04.txt`.
+For example, screen column 7, row 4 is `assets/screens/07_04.txt`.
 Current test screens exist around position `(7, 4)`.
 
 Cave screens live in:
 
 ```text
-src/assets/caves/
+assets/caves/
 ```
 
 Caves are loaded by name, for example `cave_01`. Edge transitions are disabled
@@ -226,7 +226,7 @@ items, HUD, and projectiles.
 Store both SVGs and PNGs in:
 
 ```text
-src/assets/sprites/
+assets/sprites/
 ```
 
 Generate game sounds with rfxgen:
@@ -236,13 +236,13 @@ Generate game sounds with rfxgen:
 "D:/rfxgen_v5.0_win_x64/rfxgen.exe" -g coin -o sound.wav
 ```
 
-Store WAV files in `src/assets/`. Sound loading is resilient: missing files are
+Store WAV files in `assets/`. Sound loading is resilient: missing files are
 skipped, and present files play normally.
 
 Music lives in:
 
 ```text
-src/assets/music/
+assets/music/
 ```
 
 Music files are OGG streams loaded through raylib `LoadMusicStream` and updated
@@ -255,9 +255,9 @@ instruments.
 Screen and room data should use the plain text formats described in
 `IMPLEMENTATION.md`, stored under:
 
-- `src/assets/screens/`
-- `src/assets/dungeons/<n>/`
-- `src/assets/caves/`
+- `assets/screens/`
+- `assets/dungeons/<n>/`
+- `assets/caves/`
 
 ## Implementation Order
 
