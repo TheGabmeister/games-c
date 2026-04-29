@@ -677,8 +677,8 @@ Deliverable: one complete dungeon playable start to finish.
 
 **Test checklist:**
 
-- [ ] Dungeon entrance loads the dungeon room grid (separate from overworld).
-- [ ] Dungeon rooms connect correctly via doors.
+- [x] Dungeon entrance loads the dungeon room grid (separate from overworld).
+- [x] Dungeon rooms connect correctly via doors.
 - [ ] Locked doors block passage; unlocking consumes a key.
 - [ ] Key count decrements in HUD after unlocking.
 - [ ] Shutter rooms lock doors on entry; doors open when all enemies defeated.

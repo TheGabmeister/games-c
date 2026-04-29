@@ -53,19 +53,22 @@ void hud_draw(const Game *game) {
                 else if (ds->rooms_visited & bit) show = true;
 
                 if (show) {
-                    DrawRectangle(map_x + rx * cell_w + 1, map_y + ry * cell_h + 1,
+                    int draw_ry = DUNGEON_MAX_ROWS - 1 - ry;
+                    DrawRectangle(map_x + rx * cell_w + 1, map_y + draw_ry * cell_h + 1,
                                   cell_w - 2, cell_h - 2, (Color){ 60, 60, 80, 255 });
                 }
             }
         }
 
         if (ds->has_compass && ds->boss_room_x >= 0) {
+            int boss_draw_ry = DUNGEON_MAX_ROWS - 1 - ds->boss_room_y;
             DrawRectangle(map_x + ds->boss_room_x * cell_w + 2,
-                          map_y + ds->boss_room_y * cell_h + 2,
+                          map_y + boss_draw_ry * cell_h + 2,
                           cell_w - 4, cell_h - 4, (Color){ 200, 40, 40, 255 });
         }
 
-        DrawRectangle(map_x + ds->room_x * cell_w, map_y + ds->room_y * cell_h,
+        int cur_draw_ry = DUNGEON_MAX_ROWS - 1 - ds->room_y;
+        DrawRectangle(map_x + ds->room_x * cell_w, map_y + cur_draw_ry * cell_h,
                       cell_w, cell_h, GREEN);
     } else {
         int cell_w = map_w / OVERWORLD_COLS;

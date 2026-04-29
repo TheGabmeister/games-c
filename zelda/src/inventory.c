@@ -128,19 +128,22 @@ void pause_screen_draw(const PauseState *state, const Game *game) {
                 if (ds->has_map && (ds->rooms_exist & bit)) show = true;
                 else if (ds->rooms_visited & bit) show = true;
                 if (show) {
-                    DrawRectangle(dmap_x + rx * dcell_w + 1, dmap_y + ry * dcell_h + 1,
+                    int draw_ry = DUNGEON_MAX_ROWS - 1 - ry;
+                    DrawRectangle(dmap_x + rx * dcell_w + 1, dmap_y + draw_ry * dcell_h + 1,
                                   dcell_w - 2, dcell_h - 2, (Color){ 60, 60, 100, 255 });
                 }
             }
         }
 
         if (ds->has_compass && ds->boss_room_x >= 0) {
+            int boss_draw_ry = DUNGEON_MAX_ROWS - 1 - ds->boss_room_y;
             DrawRectangle(dmap_x + ds->boss_room_x * dcell_w + 3,
-                          dmap_y + ds->boss_room_y * dcell_h + 3,
+                          dmap_y + boss_draw_ry * dcell_h + 3,
                           dcell_w - 6, dcell_h - 6, (Color){ 200, 40, 40, 255 });
         }
 
-        DrawRectangle(dmap_x + ds->room_x * dcell_w, dmap_y + ds->room_y * dcell_h,
+        int cur_draw_ry = DUNGEON_MAX_ROWS - 1 - ds->room_y;
+        DrawRectangle(dmap_x + ds->room_x * dcell_w, dmap_y + cur_draw_ry * dcell_h,
                       dcell_w, dcell_h, GREEN);
     }
 }

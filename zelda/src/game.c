@@ -126,8 +126,8 @@ static bool can_transition_overworld(int screen_x, int screen_y, Direction dir) 
 static bool can_transition_dungeon(const Game *game, Direction dir) {
     int nx = game->dungeon.room_x, ny = game->dungeon.room_y;
     switch (dir) {
-        case DIR_N: ny--; break;
-        case DIR_S: ny++; break;
+        case DIR_N: ny++; break;
+        case DIR_S: ny--; break;
         case DIR_W: nx--; break;
         case DIR_E: nx++; break;
         default: return false;
@@ -146,12 +146,22 @@ static void start_scroll_transition(Game *game, Direction dir) {
         nx = game->screen_x;
         ny = game->screen_y;
     }
-    switch (dir) {
-        case DIR_N: ny--; break;
-        case DIR_S: ny++; break;
-        case DIR_W: nx--; break;
-        case DIR_E: nx++; break;
-        default: return;
+    if (game->in_dungeon) {
+        switch (dir) {
+            case DIR_N: ny++; break;
+            case DIR_S: ny--; break;
+            case DIR_W: nx--; break;
+            case DIR_E: nx++; break;
+            default: return;
+        }
+    } else {
+        switch (dir) {
+            case DIR_N: ny--; break;
+            case DIR_S: ny++; break;
+            case DIR_W: nx--; break;
+            case DIR_E: nx++; break;
+            default: return;
+        }
     }
 
     char path[SCREEN_PATH_MAX];
@@ -351,8 +361,8 @@ static void check_locked_door(Game *game) {
                 game->dungeon.room_x, game->dungeon.room_y, d->side);
             int adj_rx = game->dungeon.room_x, adj_ry = game->dungeon.room_y;
             switch (d->side) {
-                case DIR_N: adj_ry--; break;
-                case DIR_S: adj_ry++; break;
+                case DIR_N: adj_ry++; break;
+                case DIR_S: adj_ry--; break;
                 case DIR_W: adj_rx--; break;
                 case DIR_E: adj_rx++; break;
                 default: break;
