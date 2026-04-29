@@ -12,6 +12,7 @@ void pickup_spawn(Pickup pickups[], int *count, PickupType type, Vector2 pos) {
         case PICKUP_RUPEE: p->value = 1; break;
         case PICKUP_HEART: p->value = 2; break;
         case PICKUP_BOMB:  p->value = 1; break;
+        case PICKUP_ARROW: p->value = 5; break;
         default: p->value = 1; break;
     }
 }
@@ -42,6 +43,7 @@ void pickups_draw(const Pickup pickups[], int count) {
             case PICKUP_RUPEE: c = (Color){ 0, 200, 50, 255 }; break;
             case PICKUP_HEART: c = RED; break;
             case PICKUP_BOMB:  c = DARKGRAY; break;
+            case PICKUP_ARROW: c = (Color){ 180, 160, 120, 255 }; break;
             default:           c = WHITE; break;
         }
         DrawRectangle((int)p->pos.x + ox, (int)p->pos.y + oy, size, size, c);

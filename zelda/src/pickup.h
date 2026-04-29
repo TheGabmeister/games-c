@@ -12,6 +12,7 @@ typedef enum PickupType {
     PICKUP_RUPEE = 0,
     PICKUP_HEART,
     PICKUP_BOMB,
+    PICKUP_ARROW,
     PICKUP_TYPE_COUNT
 } PickupType;
 

@@ -193,8 +193,7 @@ Pause screen:
 - Boomerang: stuns many enemies and damages weak foes.
 - Long boomerang: faster or farther boomerang upgrade.
 - Bombs: damage enemies and reveal cracked or suspicious walls.
-- Bow: fires arrows only after the arrow item has been bought. Each shot costs
-  one rupee.
+- Bow: fires arrows. Each shot consumes one arrow from inventory.
 - Silver/light arrow: required to finish the final boss.
 - Candle/fire tool: lights dark rooms, burns shrubs, damages enemies. Limited
   to one use per screen; resets on screen transition.
@@ -251,8 +250,8 @@ not found in dungeons are acquired as follows:
 - Bombs: acquired from shops, drops, or gifts. The player starts with zero
   bombs.
 - Bow: found in Dungeon 1.
-- Arrow: purchased from item shops. Required to fire the bow; each shot costs
-  one rupee.
+- Arrows: purchased from item shops or found as drops. Each bow shot consumes
+  one arrow.
 
 ## Economy and Shops
 
@@ -271,11 +270,10 @@ Economy expectations:
 
 - Currency cap of 255 rupees. Creates spending decisions without punishing
   exploration.
-- Arrows cost one rupee per shot, preserving the classic economy pressure.
-  The bow is useless without both the arrow item and currency.
+- Arrows are a separate consumable with a capacity cap (default 30). Each bow
+  shot consumes one arrow. Cannot fire with zero arrows.
 - Bomb capacity upgrades (up to sixteen) should exist and be optional, found
   in caves or purchased.
-- Arrows use rupees directly rather than a separate arrow inventory.
 - Prices should make early purchases meaningful without requiring grinding.
 
 Drop system:

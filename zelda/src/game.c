@@ -156,10 +156,11 @@ static void spawn_small_slimes(Game *game, Vector2 pos) {
 
 static void try_spawn_drop(Game *game, Vector2 pos) {
     int roll = rand() % 100;
-    if (roll < 40) return;
+    if (roll < 35) return;
     PickupType type;
-    if (roll < 70)      type = PICKUP_RUPEE;
-    else if (roll < 90) type = PICKUP_HEART;
+    if (roll < 55)      type = PICKUP_RUPEE;
+    else if (roll < 70) type = PICKUP_HEART;
+    else if (roll < 85) type = PICKUP_ARROW;
     else                type = PICKUP_BOMB;
     pickup_spawn(game->pickups, &game->pickup_count, type, pos);
 }
@@ -187,6 +188,12 @@ static void check_pickups(Game *game) {
                 p->inventory.bombs += pk->value;
                 if (p->inventory.bombs > p->inventory.bomb_capacity)
                     p->inventory.bombs = p->inventory.bomb_capacity;
+                sound_play(game, SOUND_PICKUP_BOMB);
+                break;
+            case PICKUP_ARROW:
+                p->inventory.arrows += pk->value;
+                if (p->inventory.arrows > p->inventory.arrow_capacity)
+                    p->inventory.arrows = p->inventory.arrow_capacity;
                 sound_play(game, SOUND_PICKUP_BOMB);
                 break;
             default: break;

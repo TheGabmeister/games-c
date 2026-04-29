@@ -38,6 +38,8 @@ void player_init(Player *player) {
     player->inventory.sword_tier = 1;
     player->inventory.bomb_capacity = 8;
     player->inventory.bombs = 8;
+    player->inventory.arrow_capacity = 30;
+    player->inventory.arrows = 30;
     player->inventory.rupees = 50;
     player->inventory.equipped = ITEM_BOW;
     player->inventory.items = (1 << ITEM_BOOMERANG) | (1 << ITEM_BOW);
@@ -57,8 +59,8 @@ static float snap_toward_grid(float pos, float base, float speed, float dt) {
 static void try_use_item(Player *player, Projectile *projectiles, int *projectile_count) {
     switch (player->inventory.equipped) {
         case ITEM_BOW:
-            if (player->inventory.rupees <= 0) return;
-            player->inventory.rupees--;
+            if (player->inventory.arrows <= 0) return;
+            player->inventory.arrows--;
             projectile_spawn(projectiles, projectile_count,
                              PROJ_ARROW, OWNER_PLAYER, player->pos, player->facing);
             break;

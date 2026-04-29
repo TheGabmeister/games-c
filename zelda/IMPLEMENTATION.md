@@ -110,6 +110,8 @@ typedef struct Inventory {
     int rupees;
     int bombs;
     int bomb_capacity;
+    int arrows;
+    int arrow_capacity;
     int keys;
 
     // Active item slot
@@ -624,7 +626,7 @@ Deliverable: ranged combat works, basic inventory functional.
 
 - Projectile system (player and enemy projectiles, lifetime, wall collision).
 - Enemy projectiles: rock spitter, spear thrower.
-- Player projectiles: boomerang (stun + return), bow/arrows (rupee cost).
+- Player projectiles: boomerang (stun + return), bow/arrows (arrow ammo).
 - Bombs (placement, timed blast, area damage, bombable wall reveal).
 - Pickup and drop system (rupees, hearts, bombs from defeated enemies).
 - Inventory struct and equipped item slot.
@@ -639,7 +641,7 @@ Deliverable: ranged combat works, basic inventory functional.
 - [x] Boomerang flies in facing direction and returns to player.
 - [x] Boomerang stuns enemies on hit.
 - [x] Arrows fly in facing direction and stop on wall collision or max range.
-- [ ] Arrows cost rupees to fire; cannot fire with 0 rupees.
+- [ ] Arrows cost one arrow to fire; cannot fire with 0 arrows.
 - [ ] Bombs can be placed; they explode after timed delay.
 - [ ] Bomb blast damages nearby enemies and the player if in range.
 - [ ] Bombable walls are revealed by bomb explosions.
