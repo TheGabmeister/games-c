@@ -116,7 +116,23 @@
       "Bash(\"C:/Program Files/Inkscape/bin/inkscape.exe\" \"c:/dev/games-c/zelda/src/assets/sprites/pickup_rupee.svg\" -o \"c:/dev/games-c/zelda/src/assets/sprites/pickup_rupee.png\" -w 64 -h 64)",
       "Bash(\"C:/Program Files/Inkscape/bin/inkscape.exe\" \"c:/dev/games-c/zelda/src/assets/sprites/pickup_heart.svg\" -o \"c:/dev/games-c/zelda/src/assets/sprites/pickup_heart.png\" -w 64 -h 64)",
       "Bash(\"C:/Program Files/Inkscape/bin/inkscape.exe\" \"c:/dev/games-c/zelda/src/assets/sprites/pickup_bomb.svg\" -o \"c:/dev/games-c/zelda/src/assets/sprites/pickup_bomb.png\" -w 64 -h 64)",
-      "Bash(\"C:/Program Files/Inkscape/bin/inkscape.exe\" \"c:/dev/games-c/zelda/src/assets/sprites/pickup_arrow.svg\" -o \"c:/dev/games-c/zelda/src/assets/sprites/pickup_arrow.png\" -w 64 -h 64)"
+      "Bash(\"C:/Program Files/Inkscape/bin/inkscape.exe\" \"c:/dev/games-c/zelda/src/assets/sprites/pickup_arrow.svg\" -o \"c:/dev/games-c/zelda/src/assets/sprites/pickup_arrow.png\" -w 64 -h 64)",
+      "Bash(python3 -c \"import midiutil; print\\(midiutil.__file__\\)\")",
+      "Bash(python -c \"import midiutil; print\\(midiutil.__file__\\)\")",
+      "Read(//d/GeneralUser-GS/**)",
+      "Bash(python3 -c \"from midiutil import MIDIFile; help\\(MIDIFile.addNote\\)\")",
+      "Bash(python tools/music/compose_dungeon.py)",
+      "Bash(python tools/music/compose_boss.py)",
+      "Bash(\"D:/fluidsynth-v2.5.4-win10-x64-cpp11/bin/fluidsynth.exe\" -ni \"D:/8bitsf.SF2\" tools/music/dungeon1.mid -F tools/music/dungeon1.wav)",
+      "Bash(\"D:/fluidsynth-v2.5.4-win10-x64-cpp11/bin/fluidsynth.exe\" -ni -F tools/music/dungeon1.wav \"D:/8bitsf.SF2\" tools/music/dungeon1.mid)",
+      "Bash(\"D:/fluidsynth-v2.5.4-win10-x64-cpp11/bin/fluidsynth.exe\" -ni -F tools/music/boss1.wav \"D:/8bitsf.SF2\" tools/music/boss1.mid)",
+      "Bash(\"D:/ffmpeg-8.1-essentials_build/bin/ffmpeg.exe\" -y -i tools/music/dungeon1.wav -q:a 5 src/assets/music/dungeon1.ogg)",
+      "Bash(\"D:/ffmpeg-8.1-essentials_build/bin/ffmpeg.exe\" -y -i tools/music/boss1.wav -q:a 5 src/assets/music/boss1.ogg)",
+      "Bash(D:/rfxgen_v5.0_win_x64/rfxgen.exe -g powerup -o src/assets/door_open.wav)",
+      "Bash(D:/rfxgen_v5.0_win_x64/rfxgen.exe -g coin -o src/assets/key_use.wav)",
+      "Bash(D:/rfxgen_v5.0_win_x64/rfxgen.exe -g powerup -o src/assets/shutter_open.wav)",
+      "Bash(D:/rfxgen_v5.0_win_x64/rfxgen.exe -g powerup -o src/assets/secret.wav)",
+      "Bash(D:/rfxgen_v5.0_win_x64/rfxgen.exe -g powerup -o src/assets/item_get.wav)"
     ]
   }
 }
