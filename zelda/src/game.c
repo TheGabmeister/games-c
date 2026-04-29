@@ -8,6 +8,7 @@
 #include "debug.h"
 #include "input.h"
 #include "vfx.h"
+#include <assert.h>
 #include <stdio.h>
 #include <string.h>
 
@@ -331,11 +332,8 @@ void game_draw(Game *game) {
         int item_x = (int)game->player.pos.x + TILE_SIZE / 2 - 20;
         int item_y = (int)game->player.pos.y - TILE_SIZE;
         TextureID get_tex = dungeon_item_texture(game->item_get_type);
-        if (get_tex < TEX_COUNT && IsTextureValid(textures[get_tex])) {
-            DrawTexture(textures[get_tex], item_x - 12, item_y - 12, WHITE);
-        } else {
-            DrawRectangle(item_x, item_y, 40, 40, item_color);
-        }
+        assert(get_tex < TEX_COUNT && IsTextureValid(textures[get_tex]));
+        DrawTexture(textures[get_tex], item_x - 12, item_y - 12, WHITE);
 
         int text_w = MeasureText(item_name, 30);
         DrawText(item_name, WINDOW_WIDTH / 2 - text_w / 2,

@@ -2,6 +2,7 @@
 #include "game.h"
 #include "sounds.h"
 #include "textures.h"
+#include <assert.h>
 #include <math.h>
 
 static bool all_enemies_dead(const Game *game) {
@@ -260,19 +261,6 @@ TextureID dungeon_item_texture(DungeonItemType type) {
     }
 }
 
-Color dungeon_item_fallback_color(DungeonItemType type) {
-    switch (type) {
-        case DITEM_KEY:             return YELLOW;
-        case DITEM_MAP:             return BLUE;
-        case DITEM_COMPASS:         return RED;
-        case DITEM_HEART_CONTAINER: return RED;
-        case DITEM_FRAGMENT:        return GOLD;
-        case DITEM_BOOMERANG:       return SKYBLUE;
-        case DITEM_BOW:             return BROWN;
-        default:                    return WHITE;
-    }
-}
-
 void dungeon_draw_items(const Game *game) {
     if (!game->in_dungeon) return;
     if (boss_room_items_hidden(game)) return;
@@ -282,11 +270,7 @@ void dungeon_draw_items(const Game *game) {
         int px = ip->tile_col * TILE_SIZE;
         int py = PLAY_AREA_Y + ip->tile_row * TILE_SIZE;
         TextureID tex_id = dungeon_item_texture(ip->type);
-        if (tex_id < TEX_COUNT && IsTextureValid(textures[tex_id])) {
-            DrawTexture(textures[tex_id], px, py, WHITE);
-        } else {
-            DrawRectangle(px + TILE_SIZE / 4, py + TILE_SIZE / 4,
-                          TILE_SIZE / 2, TILE_SIZE / 2, dungeon_item_fallback_color(ip->type));
-        }
+        assert(tex_id < TEX_COUNT && IsTextureValid(textures[tex_id]));
+        DrawTexture(textures[tex_id], px, py, WHITE);
     }
 }
