@@ -55,14 +55,6 @@ typedef struct Game {
     int dungeon_return_tile_col;
     int dungeon_return_tile_row;
 
-    Music overworld_music;
-    bool music_loaded;
-
-    Music dungeon_music;
-    bool dungeon_music_loaded;
-    Music boss_music;
-    bool boss_music_loaded;
-
     int item_get_timer;
     ItemType item_get_type;
 

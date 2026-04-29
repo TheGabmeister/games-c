@@ -2,6 +2,7 @@
 #include "combat.h"
 #include "navigation.h"
 #include "dungeon_interact.h"
+#include "music.h"
 #include "sounds.h"
 #include "hud.h"
 #include "textures.h"
@@ -18,13 +19,6 @@ void game_init(Game *game) {
 
     player_init(&game->player);
     nav_load_screen(game, START_SCREEN_X, START_SCREEN_Y);
-
-    const char *music_path = "assets/music/overworld.ogg";
-    if (FileExists(music_path)) {
-        game->overworld_music = LoadMusicStream(music_path);
-        game->music_loaded = IsMusicValid(game->overworld_music);
-        if (game->music_loaded) PlayMusicStream(game->overworld_music);
-    }
 }
 
 void game_update(Game *game) {
@@ -32,16 +26,7 @@ void game_update(Game *game) {
 
     float dt = GetFrameTime();
 
-    if (game->in_dungeon) {
-        if (game->boss_music_loaded && game->current_screen.is_boss_room &&
-            !game->dungeon.boss_defeated) {
-            UpdateMusicStream(game->boss_music);
-        } else if (game->dungeon_music_loaded) {
-            UpdateMusicStream(game->dungeon_music);
-        }
-    } else if (game->music_loaded) {
-        UpdateMusicStream(game->overworld_music);
-    }
+    music_update();
 
     switch (game->state) {
         case STATE_PLAY: {
@@ -109,14 +94,8 @@ void game_update(Game *game) {
                     bool was_boss = game->current_screen.is_boss_room;
                     nav_load_dungeon_room(game, drx, dry);
                     bool is_boss = game->current_screen.is_boss_room && !game->dungeon.boss_defeated;
-                    if (is_boss && !was_boss) {
-                        if (game->dungeon_music_loaded) StopMusicStream(game->dungeon_music);
-                        if (game->boss_music_loaded) PlayMusicStream(game->boss_music);
-                        sound_play(SOUND_BOSS_ROAR);
-                    } else if (!is_boss && was_boss) {
-                        if (game->boss_music_loaded) StopMusicStream(game->boss_music);
-                        if (game->dungeon_music_loaded) PlayMusicStream(game->dungeon_music);
-                    }
+                    music_set_boss(is_boss);
+                    if (is_boss && !was_boss) sound_play(SOUND_BOSS_ROAR);
                     game->player.pos.x = 7.0f * TILE_SIZE;
                     game->player.pos.y = PLAY_AREA_Y + 5.0f * TILE_SIZE;
                     game->warp_dest_name[0] = '\0';
@@ -130,22 +109,7 @@ void game_update(Game *game) {
                     game->dungeon.entrance_room_y = 0;
                     dungeon_scan_rooms(&game->dungeon);
                     game->in_dungeon = true;
-
-                    if (game->music_loaded) {
-                        StopMusicStream(game->overworld_music);
-                    }
-                    char dmus_path[64];
-                    snprintf(dmus_path, sizeof(dmus_path), "assets/music/dungeon%d.ogg", dungeon_id);
-                    if (FileExists(dmus_path)) {
-                        game->dungeon_music = LoadMusicStream(dmus_path);
-                        game->dungeon_music_loaded = IsMusicValid(game->dungeon_music);
-                        if (game->dungeon_music_loaded) PlayMusicStream(game->dungeon_music);
-                    }
-                    snprintf(dmus_path, sizeof(dmus_path), "assets/music/boss%d.ogg", dungeon_id);
-                    if (FileExists(dmus_path)) {
-                        game->boss_music = LoadMusicStream(dmus_path);
-                        game->boss_music_loaded = IsMusicValid(game->boss_music);
-                    }
+                    music_enter_dungeon(dungeon_id);
 
                     nav_load_dungeon_room(game, 0, 0);
                     nav_position_at_return_warp(game);
@@ -157,19 +121,7 @@ void game_update(Game *game) {
                 } else if (game->in_dungeon) {
                     nav_load_screen(game, game->warp_dest_x, game->warp_dest_y);
                     game->in_dungeon = false;
-                    if (game->dungeon_music_loaded) {
-                        StopMusicStream(game->dungeon_music);
-                        UnloadMusicStream(game->dungeon_music);
-                        game->dungeon_music_loaded = false;
-                    }
-                    if (game->boss_music_loaded) {
-                        StopMusicStream(game->boss_music);
-                        UnloadMusicStream(game->boss_music);
-                        game->boss_music_loaded = false;
-                    }
-                    if (game->music_loaded) {
-                        PlayMusicStream(game->overworld_music);
-                    }
+                    music_exit_dungeon();
                     game->player.pos.x = (float)(game->dungeon_return_tile_col * TILE_SIZE);
                     game->player.pos.y = (float)(PLAY_AREA_Y + (game->dungeon_return_tile_row - 1) * TILE_SIZE);
                 } else if (game->in_cave) {
@@ -191,14 +143,8 @@ void game_update(Game *game) {
                         bool was_boss = game->current_screen.is_boss_room;
                         nav_load_dungeon_room(game, game->warp_dest_x, game->warp_dest_y);
                         bool is_boss = game->current_screen.is_boss_room && !game->dungeon.boss_defeated;
-                        if (is_boss && !was_boss) {
-                            if (game->dungeon_music_loaded) StopMusicStream(game->dungeon_music);
-                            if (game->boss_music_loaded) PlayMusicStream(game->boss_music);
-                            sound_play(SOUND_BOSS_ROAR);
-                        } else if (!is_boss && was_boss) {
-                            if (game->boss_music_loaded) StopMusicStream(game->boss_music);
-                            if (game->dungeon_music_loaded) PlayMusicStream(game->dungeon_music);
-                        }
+                        music_set_boss(is_boss);
+                        if (is_boss && !was_boss) sound_play(SOUND_BOSS_ROAR);
                         Rectangle ph = player_hitbox(&game->player);
                         if (screen_tile_blocked(&game->current_screen, ph)) {
                             if (game->player.pos.x <= 0)

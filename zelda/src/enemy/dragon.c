@@ -132,6 +132,11 @@ void dragon_draw(const Enemy *self) {
     }
 }
 
+void dragon_on_spawn(Enemy *self) {
+    self->velocity.x = (rand() % 2 == 0) ? DRAGON_SPEED : -DRAGON_SPEED;
+    self->ai_timer = 90 + rand() % 60;
+}
+
 void dragon_on_death(Enemy *self, Game *game) {
     (void)self;
     if (!game->in_dungeon || !game->current_screen.is_boss_room) return;
