@@ -1,4 +1,4 @@
-#include "world_interact.h"
+#include "world_state.h"
 #include "game.h"
 #include "dialogue.h"
 #include "shop.h"

@@ -16,7 +16,7 @@
 #include "title.h"
 #include "dialogue.h"
 #include "shop.h"
-#include "world_interact.h"
+#include "world_state.h"
 #include <stdbool.h>
 #include <stdlib.h>
 #include <string.h>

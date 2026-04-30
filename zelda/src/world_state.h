@@ -1,5 +1,5 @@
-#ifndef WORLD_INTERACT_H
-#define WORLD_INTERACT_H
+#ifndef WORLD_STATE_H
+#define WORLD_STATE_H
 
 #include "game_config.h"
 #include <stdint.h>

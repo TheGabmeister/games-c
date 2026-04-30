@@ -2,7 +2,7 @@
 #include "game.h"
 #include "sounds.h"
 #include "vfx.h"
-#include "world_interact.h"
+#include "world_state.h"
 #include "raymath.h"
 #include <math.h>
 #include <stdlib.h>

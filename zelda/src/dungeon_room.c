@@ -1,4 +1,4 @@
-#include "dungeon_interact.h"
+#include "dungeon_room.h"
 #include "game.h"
 #include "sounds.h"
 #include "textures.h"

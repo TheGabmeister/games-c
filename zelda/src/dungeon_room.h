@@ -1,5 +1,5 @@
-#ifndef DUNGEON_INTERACT_H
-#define DUNGEON_INTERACT_H
+#ifndef DUNGEON_ROOM_H
+#define DUNGEON_ROOM_H
 
 #include "items.h"
 #include "textures.h"

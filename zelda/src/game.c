@@ -1,7 +1,7 @@
 #include "game.h"
 #include "combat.h"
 #include "navigation.h"
-#include "dungeon_interact.h"
+#include "dungeon_room.h"
 #include "music.h"
 #include "sounds.h"
 #include "hud.h"
@@ -13,7 +13,7 @@
 #include "title.h"
 #include "dialogue.h"
 #include "shop.h"
-#include "world_interact.h"
+#include "world_state.h"
 #include <assert.h>
 #include <stdio.h>
 #include <string.h>
