@@ -3,6 +3,38 @@
 #include "input.h"
 #include "raylib.h"
 
+void inventory_grant(Inventory *inv, int *health, int *max_health,
+                     ItemType item, int amount) {
+    switch (item) {
+        case ITEM_NONE:
+            inv->rupees += amount;
+            if (inv->rupees > 255) inv->rupees = 255;
+            break;
+        case ITEM_BOMB:
+            inv->bombs += amount;
+            if (inv->bombs > inv->bomb_capacity) inv->bombs = inv->bomb_capacity;
+            break;
+        case ITEM_ARROW:
+            inv->arrows += amount;
+            if (inv->arrows > inv->arrow_capacity) inv->arrows = inv->arrow_capacity;
+            break;
+        case ITEM_KEY:
+            inv->keys += amount;
+            break;
+        case ITEM_HEART_CONTAINER:
+            *max_health += 2 * amount;
+            *health = *max_health;
+            break;
+        case ITEM_SHIELD:
+            inv->shield_tier = 1;
+            inv->items |= item_bit(item);
+            break;
+        default:
+            inv->items |= item_bit(item);
+            break;
+    }
+}
+
 #define GRID_COLS   5
 #define GRID_ROWS   2
 #define CELL_SIZE   80

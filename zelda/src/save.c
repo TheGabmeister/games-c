@@ -158,6 +158,5 @@ bool save_load_game(Game *game, int slot) {
     game->player.max_health = data.player_max_health;
     game->player.inventory = data.inventory;
     anim_set(&game->player.anim, &player_idle_anims[game->player.facing]);
-    world_apply_screen_flags(game);
     return true;
 }

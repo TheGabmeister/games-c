@@ -15,9 +15,10 @@ typedef struct WorldState {
 } WorldState;
 
 struct Game;
+struct Screen;
 
 void world_init(WorldState *world);
-void world_apply_screen_flags(struct Game *game);
+void world_apply_screen_flags(const struct Game *game, struct Screen *screen, int sx, int sy);
 void world_check_cave_interaction(struct Game *game);
 void world_check_push_rock(struct Game *game);
 void world_use_candle(struct Game *game);

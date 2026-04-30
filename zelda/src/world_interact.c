@@ -56,54 +56,26 @@ static void set_service_flag(uint64_t *flags, int id) {
 }
 
 static void grant_gift(Game *game, const CaveGiftMeta *gift) {
-    Inventory *inv = &game->player.inventory;
-    switch (gift->reward) {
-        case ITEM_NONE:
-            inv->rupees += gift->amount;
-            if (inv->rupees > 255) inv->rupees = 255;
-            break;
-        case ITEM_BOMB:
-            inv->bombs += gift->amount;
-            if (inv->bombs > inv->bomb_capacity) inv->bombs = inv->bomb_capacity;
-            break;
-        case ITEM_ARROW:
-            inv->arrows += gift->amount;
-            if (inv->arrows > inv->arrow_capacity) inv->arrows = inv->arrow_capacity;
-            break;
-        case ITEM_KEY:
-            inv->keys += gift->amount;
-            break;
-        case ITEM_HEART_CONTAINER:
-            game->player.max_health += 2 * gift->amount;
-            game->player.health = game->player.max_health;
-            break;
-        case ITEM_SHIELD:
-            inv->shield_tier = 1;
-            inv->items |= item_bit(gift->reward);
-            break;
-        default:
-            inv->items |= item_bit(gift->reward);
-            break;
-    }
+    inventory_grant(&game->player.inventory,
+                    &game->player.health, &game->player.max_health,
+                    gift->reward, gift->amount);
 }
 
-void world_apply_screen_flags(Game *game) {
-    int index = current_screen_index(game);
-    if (index < 0) return;
-
+void world_apply_screen_flags(const Game *game, Screen *screen, int sx, int sy) {
+    int index = sy * OVERWORLD_COLS + sx;
     if (world_flag_is_set(game->world.bombed_walls, index)) {
         for (int r = 0; r < SCREEN_TILES_Y; r++) {
             for (int c = 0; c < SCREEN_TILES_X; c++) {
-                if ((TileType)game->current_screen.tiles[r][c] == TILE_BOMBABLE_WALL)
-                    game->current_screen.tiles[r][c] = TILE_FLOOR;
+                if ((TileType)screen->tiles[r][c] == TILE_BOMBABLE_WALL)
+                    screen->tiles[r][c] = TILE_FLOOR;
             }
         }
     }
     if (world_flag_is_set(game->world.burned_bushes, index)) {
         for (int r = 0; r < SCREEN_TILES_Y; r++) {
             for (int c = 0; c < SCREEN_TILES_X; c++) {
-                if ((TileType)game->current_screen.tiles[r][c] == TILE_BUSH)
-                    game->current_screen.tiles[r][c] = TILE_FLOOR;
+                if ((TileType)screen->tiles[r][c] == TILE_BUSH)
+                    screen->tiles[r][c] = TILE_FLOOR;
             }
         }
     }

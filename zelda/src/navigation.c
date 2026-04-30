@@ -6,33 +6,13 @@
 #include <stdio.h>
 #include <string.h>
 
-static void apply_overworld_flags_to_screen(const Game *game, Screen *screen, int sx, int sy) {
-    int index = sy * OVERWORLD_COLS + sx;
-    if (world_flag_is_set(game->world.bombed_walls, index)) {
-        for (int r = 0; r < SCREEN_TILES_Y; r++) {
-            for (int c = 0; c < SCREEN_TILES_X; c++) {
-                if ((TileType)screen->tiles[r][c] == TILE_BOMBABLE_WALL)
-                    screen->tiles[r][c] = TILE_FLOOR;
-            }
-        }
-    }
-    if (world_flag_is_set(game->world.burned_bushes, index)) {
-        for (int r = 0; r < SCREEN_TILES_Y; r++) {
-            for (int c = 0; c < SCREEN_TILES_X; c++) {
-                if ((TileType)screen->tiles[r][c] == TILE_BUSH)
-                    screen->tiles[r][c] = TILE_FLOOR;
-            }
-        }
-    }
-}
-
 void nav_load_screen(Game *game, int sx, int sy) {
     char path[SCREEN_PATH_MAX];
     snprintf(path, sizeof(path), "assets/screens/%02d_%02d.txt", sx, sy);
     if (!screen_load(&game->current_screen, path)) {
         memset(&game->current_screen, TILE_FLOOR, sizeof(game->current_screen));
     }
-    apply_overworld_flags_to_screen(game, &game->current_screen, sx, sy);
+    world_apply_screen_flags(game, &game->current_screen, sx, sy);
     game->screen_x = sx;
     game->screen_y = sy;
     game->candle_used_this_screen = false;
@@ -194,7 +174,7 @@ static void start_scroll_transition(Game *game, Direction dir) {
         snprintf(path, sizeof(path), "assets/screens/%02d_%02d.txt", nx, ny);
     if (!screen_load(&game->next_screen, path)) return;
     if (!game->in_dungeon) {
-        apply_overworld_flags_to_screen(game, &game->next_screen, nx, ny);
+        world_apply_screen_flags(game, &game->next_screen, nx, ny);
     }
 
     game->trans_player_start = game->player.pos;

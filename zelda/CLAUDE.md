@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project
 
-A 2D top-down action-adventure game inspired by The Legend of Zelda (1986), built in C with raylib. Phases 1 (Player and Tiles), 2 (World Navigation), 3 (Combat), 4 (Projectiles and Items), and 5 (Dungeons) are complete. Phase 6 (World Systems) is next.
+A 2D top-down action-adventure game inspired by The Legend of Zelda (1986), built in C with raylib. Phases 1 (Player and Tiles), 2 (World Navigation), 3 (Combat), 4 (Projectiles and Items), 5 (Dungeons), and 6 (World Systems) are complete.
 
 Key documents:
 - **SPEC.md** — complete game design specification (mechanics, items, enemies, dungeons, tuning values). Source of truth for game behavior.
@@ -35,7 +35,7 @@ Window: 1024x960. Logical resolution: 1024x960 (1:1, no scaling). Tile size: 64x
 
 Screen layout (top to bottom): HUD 1024x224 (3.5 tiles), 32px divider, play area 1024x704 (16x11 tiles). Play area starts at y=256 (`PLAY_AREA_Y`).
 
-`Game` struct holds gameplay state (defined in `game.h`). Self-contained modules own their own static state: sounds (`sounds.c`), music (`music.c`), VFX (`vfx.c`), textures (`textures.c`). The main loop in `main.c` calls `game_init` -> `game_update`/`game_draw` per frame -> cleanup on exit. Game state machine: `STATE_PLAY` (normal gameplay), `STATE_TRANSITION` (scroll/fade between screens), `STATE_DEATH` (death pause + fade, then respawn), `STATE_PAUSE` (inventory/pause screen, game logic frozen), `STATE_ITEM_GET` (dungeon item pickup ceremony, 2-second hold with jingle).
+`Game` struct holds gameplay state (defined in `game.h`). Self-contained modules own their own static state: sounds (`sounds.c`), music (`music.c`), VFX (`vfx.c`), textures (`textures.c`). The main loop in `main.c` calls `game_init` -> `game_update`/`game_draw` per frame -> cleanup on exit. Game state machine: `STATE_TITLE` (save slot selection), `STATE_PLAY` (normal gameplay), `STATE_TRANSITION` (scroll/fade between screens), `STATE_DEATH` (death pause + fade), `STATE_CONTINUE` (press enter to respawn), `STATE_PAUSE` (inventory/pause screen, game logic frozen), `STATE_ITEM_GET` (dungeon item pickup ceremony, 2-second hold with jingle), `STATE_DIALOGUE` (NPC text display), `STATE_SHOP` (shop purchase UI).
 
 ### Shared types
 
@@ -43,9 +43,9 @@ Screen layout (top to bottom): HUD 1024x224 (3.5 tiles), 32px divider, play area
 
 ### Update loop order (STATE_PLAY)
 
-`player_update` -> `enemies_update` -> `projectiles_update` -> `combat_check_bombs` -> `vfx_update` -> `combat_check` -> `pickups_update` -> `combat_check_pickups` -> `dungeon_check_locked_door` -> `dungeon_check_shutter_room` -> `dungeon_check_push_block` -> `dungeon_check_items` -> death check -> low health beep -> `nav_check_warp` -> `nav_check_edge_transition`.
+`player_update` -> `enemies_update` -> `projectiles_update` -> `combat_check_bombs` -> `vfx_update` -> `combat_check` -> `pickups_update` -> `combat_check_pickups` -> `dungeon_check_locked_door` -> `dungeon_check_shutter_room` -> `dungeon_check_push_block` -> `dungeon_check_items` -> `world_check_push_rock` -> death check -> low health beep -> `world_check_cave_interaction` -> `nav_check_warp` -> `nav_check_edge_transition`.
 
-Game logic is split across focused modules: `combat.c` (collision, bombs, pickups, enemy death/drops), `navigation.c` (screen loading, transitions, warps), `dungeon_interact.c` (doors, shutters, push blocks, dungeon items). `game.c` retains `game_init`, the state machine in `game_update`, and `game_draw`.
+Game logic is split across focused modules: `combat.c` (collision, bombs, pickups, enemy death/drops), `navigation.c` (screen loading, transitions, warps), `dungeon_interact.c` (doors, shutters, push blocks, dungeon items), `world_interact.c` (overworld persistent state, cave NPC services, heavy rocks, candle/bush burning). `game.c` retains `game_init`, the state machine in `game_update`, and `game_draw`.
 
 Combat collision (`combat_check` in combat.c) handles sword-vs-enemy, player-projectile-vs-enemy (with slime splitting and boomerang stun), enemy-contact-vs-player, and enemy-projectile-vs-player (with shield blocking).
 
@@ -109,6 +109,49 @@ HUD and pause screen show dungeon room minimap when `in_dungeon`. Map item revea
 
 Dungeon 1 (Forest Shrine): 8 rooms at `assets/dungeons/1/`. Layout: entrance(0,0) → key room(0,1) → shutter room(1,1), map room(0,2) → compass room(1,2) → dark room(1,3), push block room(0,3) → boss room(0,4).
 
+### Input abstraction
+
+`input.h/c` wraps all player input (keyboard + gamepad) behind named functions (`input_attack`, `input_confirm`, `input_pause`, etc.). All game code uses these instead of raw raylib key checks. Gamepad deadzone is `GAMEPAD_DEADZONE` in `game_config.h`.
+
+### Animation system
+
+`anim.h/c` provides a lightweight frame animation system. `AnimDef` describes an animation (first frame, count, duration, looping). `Anim` tracks playback state. Used by the player sprite system (`player_idle_anims`, `player_walk_anims` arrays indexed by `Direction`).
+
+### Title screen and save system
+
+`title.h/c` manages the title/save-select screen (`STATE_TITLE`). Displays 3 save slots with summary info (health, rupees, location). Player selects a slot to load or start a new game.
+
+`save.h/c` handles binary save/load. `SaveData` struct is written as a flat binary blob to `saves/slot_N.sav` with magic number (`0x3144565A`) and version validation. Saves player position, inventory, `WorldState`, `DungeonState`. Saving during gameplay is triggered from the pause screen (F5/restart key). Caves are saved as the overworld screen the player entered from (never saves mid-cave).
+
+### World interaction system
+
+`world_interact.h/c` owns persistent overworld state via `WorldState`: bitfield arrays for bombed walls and burned bushes (per-screen), plus `uint64_t` flags for gifts taken, shops spent, NPCs triggered, and upgrades taken. All indexed by screen position or service ID.
+
+Key behaviors:
+- **Bombable walls**: when a bomb explodes near a `TILE_BOMBABLE_WALL`, the wall becomes floor and the screen is flagged so it stays open on revisit.
+- **Bush burning**: candle use removes all `TILE_BUSH` tiles on the current screen and flags it permanently.
+- **Heavy rocks**: bracelet item lets the player push `TILE_HEAVY_ROCK` tiles (12-frame sustained contact, same pattern as dungeon push blocks). Rocks are only pushable once per screen visit.
+- **Cave NPC services**: when in a cave with an NPC, pressing confirm near the NPC triggers dialogue, gift, upgrade, or shop interaction based on cave metadata. Each service has a unique ID tracked in `WorldState` to prevent re-collection.
+
+`world_apply_screen_flags` re-applies persistent state (bombed walls, burned bushes) after loading a screen — called from both `nav_load_screen` and `save_load_game`.
+
+### Cave NPC services (dialogue, gift, upgrade, shop)
+
+Cave screen files support four service metadata types, each with a unique ID for persistence:
+
+- `dialogue: <id> | <text>` — NPC shows text when spoken to.
+- `gift: <id> <item_name> <amount> | <text>` — one-time item reward. Items resolved via `item_type_names` table.
+- `upgrade: <id> sword <tier> <required_max_health> | <text>` — sword upgrade gated by health requirement.
+- `shop: <id> <item1> <price1> [<item2> <price2> ...]` — up to 3 items for sale. Tracked to prevent repeat purchases.
+
+Text after `|` is the NPC dialogue shown to the player. `dialogue.h/c` handles `STATE_DIALOGUE` (text box display). `shop.h/c` handles `STATE_SHOP` (cursor-based item selection, rupee cost, inventory grants).
+
+Cave NPCs render at fixed position (col 8, row 5) using `TEX_NPC_OLD_MAN` with a colored-rectangle fallback.
+
+### Item-gated tile passability
+
+`TileDef` has a `pass_requires` field: `TILE_WATER` requires `ITEM_RAFT` (must enter from a `TILE_DOCK`), `TILE_GAP` requires `ITEM_LADDER`, `TILE_BUSH` requires `ITEM_CANDLE` (burned via candle, not walked through), `TILE_HEAVY_ROCK` requires `ITEM_BRACELET` (pushed, not walked through). Player movement uses `screen_tile_blocked_for_items` which checks item flags. Additional tile chars in screen files: `=` (dock), `G` (gap), `R` (heavy rock), `T` (bush).
+
 ### Debug overlay
 
 `debug.c/.h` provides an F3-toggled overlay showing enemy count, alive/dead status, per-enemy type/state/position, player state, HP, and active projectile count. Yellow wireframe boxes mark enemy positions. Off by default.
@@ -135,10 +178,11 @@ Files in `src/enemy/` use relative paths for project headers (`../tilemap.h`, `.
   - Projectiles: `arrow.png` (4-dir), `boomerang.png`, `bomb.png`, `rock.png`, `spear.png` (4-dir)
   - Pickups: `pickup_rupee.png`, `pickup_heart.png`, `pickup_bomb.png`, `pickup_arrow.png`
   - Dungeon items: `item_key.png`, `item_map.png`, `item_compass.png`, `item_heart_container.png`, `item_fragment.png`
-  - Tiles: `tiles.png` is a 256x192 spritesheet (4 columns x 3 rows). Indices: 0=floor, 1=wall, 2=water1, 3=water2, 4=door, 5=pushblock, 6=stairs, 7=bombable wall, 8=closed door.
+  - NPCs: `npc_old_man.png` (cave NPC, colored-rectangle fallback if missing)
+  - Tiles: `tiles.png` is a spritesheet (4 columns). Indices: 0=floor, 1=wall, 2=water1, 3=water2, 4=door, 5=pushblock/heavy rock, 6=stairs, 7=bombable wall, 8=closed door, 9=dock, 10=gap. Bush reuses index 1 (wall sprite).
   - Dungeon item draw functions assert on missing textures. Other draw functions (enemies, projectiles, pickups) have colored-rectangle fallbacks.
   - Inkscape path: `"/c/Program Files/Inkscape/bin/inkscape.exe"`. Export: `inkscape input.svg --export-type=png --export-filename=output.png -w 64 -h 64`.
 - **Sounds**: generate with rfxgen (`"D:/rfxgen_v5.0_win_x64/rfxgen.exe" -g coin -o sound.wav`). Presets: coin, laser, explosion, powerup, hit, jump, blip. Store WAV in `assets/`.
 - **Music**: OGG files in `assets/music/`. Managed by `music.c` (module-owned static state). API: `music_init`, `music_update`, `music_enter_dungeon(id)`, `music_exit_dungeon`, `music_set_boss(bool)`, `music_cleanup`. Composition pipeline: Python scripts in `tools/music/` use `midiutil` to generate MIDI -> FluidSynth renders with a soundfont to WAV -> ffmpeg converts to OGG. See `tools/music/compose_overworld.py` for the pattern. Tool paths: `D:/fluidsynth-v2.5.4-win10-x64-cpp11/bin/fluidsynth.exe`, `D:/ffmpeg-8.1-essentials_build/bin/ffmpeg.exe`, soundfont `D:/8bitsf.SF2`. Render command: `fluidsynth -ni -F out.wav soundfont.sf2 input.mid`.
-- **Screen data**: plain text files in `assets/screens/` (overworld), `assets/dungeons/<n>/` (dungeons), `assets/caves/` (caves). Format: optional metadata lines (`warp:`, `enemy:`, `door:`, `item:`, `shutter:`, `dark:`, `boss:`, `#` comments), then 11 rows of **exactly 16** tile characters (W=wall, .=floor, ~=water, D=door, P=pushblock, S=stairs, B=bombable wall). Rows shorter than 16 characters are silently skipped by the parser, causing `screen_load` to return false. Enemy spawn format: `enemy: type col row`. Door format: `door: direction position type`. Item format: `item: type col row`. Warp format: `warp: type col row -> dest`. **Door tile consistency**: every `door:` metadata line must have matching `D` tiles in the tile grid at the correct edge position, and vice versa.
+- **Screen data**: plain text files in `assets/screens/` (overworld), `assets/dungeons/<n>/` (dungeons), `assets/caves/` (caves). Format: optional metadata lines (`warp:`, `enemy:`, `door:`, `item:`, `shutter:`, `dark:`, `boss:`, `dialogue:`, `gift:`, `upgrade:`, `shop:`, `#` comments), then 11 rows of **exactly 16** tile characters (W=wall, .=floor, ~=water, D=door, P=pushblock, S=stairs, B=bombable wall, ==dock, G=gap, R=heavy rock, T=bush). Rows shorter than 16 characters are silently skipped by the parser, causing `screen_load` to return false. Enemy spawn format: `enemy: type col row`. Door format: `door: direction position type`. Item format: `item: type col row`. Warp format: `warp: type col row -> dest`. Cave service formats: `dialogue: <id> | <text>`, `gift: <id> <item> <amount> | <text>`, `upgrade: <id> sword <tier> <health_req> | <text>`, `shop: <id> <item1> <price1> [<item2> <price2> ...]`. **Door tile consistency**: every `door:` metadata line must have matching `D` tiles in the tile grid at the correct edge position, and vice versa.
 - Sound and music loading is resilient — missing files are skipped.
