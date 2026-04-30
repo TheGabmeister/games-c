@@ -68,6 +68,7 @@ typedef struct Game {
     ItemType item_get_type;
 
     int push_timer;
+    bool heavy_rock_pushed[SCREEN_TILES_Y][SCREEN_TILES_X];
 
     Enemy enemies[MAX_ENEMIES_PER_SCREEN];
     int enemy_count;

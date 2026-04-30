@@ -175,6 +175,7 @@ void game_update(Game *game) {
                         game->screen_x = game->warp_dest_x;
                         game->screen_y = game->warp_dest_y;
                         game->candle_used_this_screen = false;
+                        memset(game->heavy_rock_pushed, 0, sizeof(game->heavy_rock_pushed));
                         enemies_spawn(game->enemies, &game->enemy_count,
                                       &game->current_screen);
                         projectiles_clear(game->projectiles, &game->projectile_count);

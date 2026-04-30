@@ -165,17 +165,25 @@ void world_check_push_rock(Game *game) {
         game->push_timer = 0;
         return;
     }
+    if (game->heavy_rock_pushed[tr][tc]) {
+        game->push_timer = 0;
+        return;
+    }
 
     game->push_timer++;
     if (game->push_timer < 12) return;
 
     int nr = tr + dr;
     int nc = tc + dc;
-    if (nr >= 0 && nr < SCREEN_TILES_Y && nc >= 0 && nc < SCREEN_TILES_X &&
-        tile_defs[game->current_screen.tiles[nr][nc]].passable) {
-        game->current_screen.tiles[nr][nc] = TILE_HEAVY_ROCK;
+    if (nr < 0 || nr >= SCREEN_TILES_Y || nc < 0 || nc >= SCREEN_TILES_X ||
+        !tile_defs[game->current_screen.tiles[nr][nc]].passable) {
+        game->push_timer = 0;
+        return;
     }
+
     game->current_screen.tiles[tr][tc] = TILE_FLOOR;
+    game->current_screen.tiles[nr][nc] = TILE_HEAVY_ROCK;
+    game->heavy_rock_pushed[nr][nc] = true;
     game->push_timer = 0;
     sound_play(SOUND_SECRET);
 }

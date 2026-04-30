@@ -36,6 +36,7 @@ void nav_load_screen(Game *game, int sx, int sy) {
     game->screen_x = sx;
     game->screen_y = sy;
     game->candle_used_this_screen = false;
+    memset(game->heavy_rock_pushed, 0, sizeof(game->heavy_rock_pushed));
     enemies_spawn(game->enemies, &game->enemy_count, &game->current_screen);
     projectiles_clear(game->projectiles, &game->projectile_count);
     pickups_clear(game->pickups, &game->pickup_count);
@@ -52,6 +53,7 @@ void nav_load_dungeon_room(Game *game, int rx, int ry) {
     game->dungeon.room_x = rx;
     game->dungeon.room_y = ry;
     game->candle_used_this_screen = false;
+    memset(game->heavy_rock_pushed, 0, sizeof(game->heavy_rock_pushed));
     game->dungeon.rooms_visited |= dungeon_room_bit(rx, ry);
 
     uint64_t rbit = dungeon_room_bit(rx, ry);
@@ -123,6 +125,7 @@ void nav_load_cave(Game *game, const char *cave_name) {
         memset(&game->current_screen, TILE_FLOOR, sizeof(game->current_screen));
     }
     game->candle_used_this_screen = false;
+    memset(game->heavy_rock_pushed, 0, sizeof(game->heavy_rock_pushed));
     enemies_spawn(game->enemies, &game->enemy_count, &game->current_screen);
     projectiles_clear(game->projectiles, &game->projectile_count);
     pickups_clear(game->pickups, &game->pickup_count);
