@@ -19,9 +19,13 @@ void hud_draw(const Game *game) {
 
     int hearts = player->max_health / 2;
     int filled = player->health;
+    int hearts_per_row = 10;
+    int spacing = (hearts > hearts_per_row) ? 28 : 36;
     for (int i = 0; i < hearts; i++) {
-        int x = 560 + i * 36;
-        int y = 32;
+        int row = i / hearts_per_row;
+        int col = i % hearts_per_row;
+        int x = 560 + col * spacing;
+        int y = 32 + row * 32;
         int half_index = i * 2;
         Color c;
         if (filled > half_index + 1)     c = RED;

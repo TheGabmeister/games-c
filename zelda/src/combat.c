@@ -7,36 +7,45 @@
 #include <math.h>
 #include <stdlib.h>
 
-static void spawn_small_slimes(Game *game, Vector2 pos) {
-    for (int s = 0; s < 2 && game->enemy_count < MAX_ENEMIES_PER_SCREEN; s++) {
-        Enemy *e = &game->enemies[game->enemy_count++];
-        *e = (Enemy){0};
-        e->type = ENEMY_SLIME;
-        e->subtype = 1;
-        e->pos.x = pos.x + (s == 0 ? -16.0f : 16.0f);
-        e->pos.y = pos.y;
-        e->pos.x = Clamp(e->pos.x, 0, SCREEN_TILES_X * TILE_SIZE - TILE_SIZE);
-        e->facing = DIR_S;
-        e->state = ESTATE_IDLE;
-        e->state_timer = 20 + rand() % 40;
-        e->health = 1;
-        e->active = true;
-    }
-}
+typedef struct DropTable {
+    int nothing;
+    int rupee;
+    int heart;
+    int arrow;
+    int bomb;
+} DropTable;
+
+static const DropTable drop_tables[] = {
+    [0] = { 35, 20, 15, 15, 15 },
+    [1] = { 20, 30, 20, 15, 15 },
+    [2] = { 50, 15, 15, 10, 10 },
+};
+#define DROP_TABLE_COUNT ((int)(sizeof(drop_tables) / sizeof(drop_tables[0])))
 
 static void on_enemy_death(Game *game, Enemy *e) {
     if (enemy_defs[e->type].on_death) {
         enemy_defs[e->type].on_death(e, game);
         return;
     }
+    int group = enemy_defs[e->type].drop_group;
+    if (group < 0 || group >= DROP_TABLE_COUNT) group = 0;
+    const DropTable *dt = &drop_tables[group];
     int roll = rand() % 100;
-    if (roll < 35) return;
+    if (roll < dt->nothing) return;
+    roll -= dt->nothing;
     PickupType type;
-    if (roll < 55)      type = PICKUP_RUPEE;
-    else if (roll < 70) type = PICKUP_HEART;
-    else if (roll < 85) type = PICKUP_ARROW;
-    else                type = PICKUP_BOMB;
+    if (roll < dt->rupee)       type = PICKUP_RUPEE;
+    else if (roll < dt->rupee + dt->heart) type = PICKUP_HEART;
+    else if (roll < dt->rupee + dt->heart + dt->arrow) type = PICKUP_ARROW;
+    else                        type = PICKUP_BOMB;
     pickup_spawn(game->pickups, &game->pickup_count, type, e->pos);
+}
+
+static bool try_on_hit(Game *game, Enemy *e, int damage) {
+    if (enemy_defs[e->type].on_hit) {
+        return enemy_defs[e->type].on_hit(e, game, damage);
+    }
+    return false;
 }
 
 static int player_sword_damage(const Player *p) {
@@ -149,13 +158,8 @@ void combat_check(Game *game) {
                 if (CheckCollisionRecs(sword, enemy_hitbox(e))) {
                     e->invuln_timer = SWORD_ACTIVE_FRAMES;
                     sound_play(SOUND_SWORD_HIT);
-                    if (e->type == ENEMY_SLIME && e->subtype == 0 &&
-                        p->inventory.sword_tier <= 1) {
-                        Vector2 split_pos = e->pos;
-                        e->active = false;
-                        e->state = ESTATE_DEAD;
+                    if (try_on_hit(game, e, player_sword_damage(p))) {
                         sound_play(SOUND_ENEMY_DEATH);
-                        spawn_small_slimes(game, split_pos);
                     } else {
                         enemy_take_damage(e, player_sword_damage(p));
                         if (!e->active) {
@@ -177,13 +181,8 @@ void combat_check(Game *game) {
             if (!e->active || e->invuln_timer > 0) continue;
             if (!CheckCollisionRecs(proj_rect, enemy_hitbox(e))) continue;
 
-            if (e->type == ENEMY_SLIME && e->subtype == 0 &&
-                p->inventory.sword_tier <= 1 && proj->type == PROJ_ARROW) {
-                Vector2 split_pos = e->pos;
-                e->active = false;
-                e->state = ESTATE_DEAD;
+            if (try_on_hit(game, e, proj->damage)) {
                 sound_play(SOUND_ENEMY_DEATH);
-                spawn_small_slimes(game, split_pos);
             } else {
                 enemy_take_damage(e, proj->damage);
                 e->invuln_timer = SWORD_ACTIVE_FRAMES;

@@ -117,10 +117,18 @@ void game_update(Game *game) {
                     strncmp(game->warp_dest_name, "dungeon_", 8) == 0) {
                     int dungeon_id = 0;
                     sscanf(game->warp_dest_name + 8, "%d", &dungeon_id);
-                    memset(&game->dungeon, 0, sizeof(game->dungeon));
+                    if (dungeon_id >= 1 && dungeon_id <= MAX_DUNGEONS) {
+                        game->dungeon = game->dungeon_saves[dungeon_id - 1];
+                    } else {
+                        memset(&game->dungeon, 0, sizeof(game->dungeon));
+                    }
                     game->dungeon.id = dungeon_id;
                     game->dungeon.entrance_room_x = 0;
                     game->dungeon.entrance_room_y = 0;
+                    game->dungeon.rooms_cleared = 0;
+                    game->dungeon.shutter_opened = 0;
+                    game->dungeon.rooms_lit = 0;
+                    game->dungeon.rooms_visited = 0;
                     dungeon_scan_rooms(&game->dungeon);
                     game->in_dungeon = true;
                     music_enter_dungeon(dungeon_id);
@@ -133,6 +141,8 @@ void game_update(Game *game) {
                     game->in_cave = true;
                     nav_position_at_return_warp(game);
                 } else if (game->in_dungeon) {
+                    if (game->dungeon.id >= 1 && game->dungeon.id <= MAX_DUNGEONS)
+                        game->dungeon_saves[game->dungeon.id - 1] = game->dungeon;
                     nav_load_screen(game, game->warp_dest_x, game->warp_dest_y);
                     game->in_dungeon = false;
                     music_exit_dungeon();
@@ -197,13 +207,18 @@ void game_update(Game *game) {
         case STATE_CONTINUE:
             if (input_confirm() || input_attack()) {
                 if (game->in_dungeon) {
+                    if (game->dungeon.id >= 1 && game->dungeon.id <= MAX_DUNGEONS)
+                        game->dungeon_saves[game->dungeon.id - 1] = game->dungeon;
                     game->player.health = 6;
+                    if (game->player.health > game->player.max_health)
+                        game->player.health = game->player.max_health;
                     game->player.state = PSTATE_IDLE;
                     game->player.invuln_timer = 0;
                     game->player.knockback_timer = 0;
                     game->dungeon.rooms_cleared = 0;
                     game->dungeon.shutter_opened = 0;
                     game->dungeon.rooms_lit = 0;
+                    game->dungeon.rooms_visited = 0;
                     nav_load_dungeon_room(game, game->dungeon.entrance_room_x,
                                       game->dungeon.entrance_room_y);
                     nav_position_at_return_warp(game);

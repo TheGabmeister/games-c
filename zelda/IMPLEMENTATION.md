@@ -677,14 +677,14 @@ Deliverable: overworld is navigable with shops, NPCs, and saves.
 - [x] Ladder allows crossing gap tiles.
 - [x] Bracelet allows pushing heavy rocks.
 - [x] Bombs open bombable walls in the overworld.
-- [ ] Sword upgrades change sword tier and damage output.
-- [ ] Master sword has a health gate (requires full hearts to obtain).
-- [ ] Save writes to file; saved data persists across game restarts.
-- [ ] Load restores player position, inventory, progress, and health.
-- [ ] 3 save slots work independently.
-- [ ] Title screen shows file select with save slot status.
-- [ ] Death flow resets health but keeps inventory and progress.
-- [ ] Shop and NPC sounds play correctly.
+- [x] Sword upgrades change sword tier and damage output.
+- [x] Master sword has a health gate (requires full hearts to obtain).
+- [x] Save writes to file; saved data persists across game restarts.
+- [x] Load restores player position, inventory, progress, and health.
+- [x] 3 save slots work independently.
+- [x] Title screen shows file select with save slot status.
+- [x] Death flow resets health but keeps inventory and progress.
+- [x] Shop and NPC sounds play correctly.
 
 ### Phase 7 — Content
 

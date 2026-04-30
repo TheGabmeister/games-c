@@ -19,8 +19,8 @@ static void face_toward_player(Enemy *self, Vector2 player_pos) {
         self->facing = (dy > 0) ? DIR_S : DIR_N;
 }
 
-void spear_thrower_update(Enemy *self, Vector2 player_pos, const Screen *screen,
-                          Projectile *projectiles, int *projectile_count, float dt) {
+static void spear_thrower_update(Enemy *self, Vector2 player_pos, const Screen *screen,
+                                 Projectile *projectiles, int *projectile_count, float dt) {
     const EnemyDef *def = &enemy_defs[self->type];
 
     switch (self->state) {
@@ -84,7 +84,7 @@ void spear_thrower_update(Enemy *self, Vector2 player_pos, const Screen *screen,
     }
 }
 
-void spear_thrower_draw(const Enemy *self) {
+static void spear_thrower_draw(const Enemy *self) {
     Color tint = (Color){ 180, 140, 60, 255 };
     if (self->invuln_timer > 0 && (self->invuln_timer / 3) % 2 == 0)
         tint = (Color){ 255, 100, 100, 255 };
@@ -96,4 +96,8 @@ void spear_thrower_draw(const Enemy *self) {
     DrawRectangle((int)self->pos.x + 12, (int)self->pos.y + 4, 40, 56, tint);
     DrawRectangle((int)self->pos.x + 20, (int)self->pos.y + 16, 10, 10, DARKBROWN);
     DrawRectangle((int)self->pos.x + 34, (int)self->pos.y + 16, 10, 10, DARKBROWN);
+}
+
+EnemyDef spear_thrower_def(void) {
+    return (EnemyDef){ "spear_thrower", 2, 1, 0, 80.0f, false, TILE_SIZE, TILE_SIZE, 0, spear_thrower_update, spear_thrower_draw, NULL, NULL, NULL };
 }

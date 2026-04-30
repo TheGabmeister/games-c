@@ -28,6 +28,7 @@
 #define START_SCREEN_X      7
 #define START_SCREEN_Y      4
 #define SCREEN_PATH_MAX     64
+#define MAX_DUNGEONS        9
 
 // Transitions
 #define SCROLL_FRAMES       30
@@ -39,7 +40,8 @@
 #define WARP_DEST_MAX        32
 #define WORLD_SCREEN_COUNT   (OVERWORLD_COLS * OVERWORLD_ROWS)
 #define WORLD_FLAG_WORDS     ((WORLD_SCREEN_COUNT + 63) / 64)
-#define WORLD_SERVICE_MAX    64
+#define WORLD_SERVICE_MAX    128
+#define WORLD_SERVICE_WORDS  ((WORLD_SERVICE_MAX + 63) / 64)
 #define CAVE_TEXT_MAX        128
 #define SHOP_ITEM_MAX        3
 

@@ -1,4 +1,5 @@
 #include "game.h"
+#include "enemy/enemy.h"
 #include "music.h"
 #include "sounds.h"
 #include "textures.h"
@@ -8,6 +9,7 @@ int main(void) {
     SetTargetFPS(TARGET_FPS);
     InitAudioDevice();
 
+    enemy_defs_init();
     Game game;
     game_init(&game);
     textures_load();

@@ -94,7 +94,7 @@ void pause_screen_update(PauseState *state, Inventory *inventory) {
         if (item == ITEM_BOMB) {
             has_item = inventory->bomb_capacity > 0;
         } else {
-            has_item = (inventory->items & (1 << item)) != 0;
+            has_item = (inventory->items & item_bit(item)) != 0;
         }
         if (has_item && item_can_equip(item)) {
             inventory->equipped = item;
@@ -124,7 +124,7 @@ void pause_screen_draw(const PauseState *state, const Game *game) {
             if (item == ITEM_BOMB) {
                 has_item = inventory->bomb_capacity > 0;
             } else if (item != ITEM_NONE) {
-                has_item = (inventory->items & (1 << item)) != 0;
+                has_item = (inventory->items & item_bit(item)) != 0;
             }
 
             Color bg = has_item ? item_color(item) : (Color){ 30, 30, 30, 255 };

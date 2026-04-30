@@ -18,7 +18,7 @@ typedef enum PlayerState {
 } PlayerState;
 
 typedef struct Inventory {
-    uint32_t items;
+    uint64_t items;
     int sword_tier;
     int shield_tier;
     int armor_tier;

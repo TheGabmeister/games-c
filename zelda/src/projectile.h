@@ -40,6 +40,8 @@ typedef struct ProjectileDef {
     float speed;
     int damage;
     float max_range;
+    int hitbox_w;
+    int hitbox_h;
     bool blocked_by_walls;
     bool blocked_by_shield_small;
     bool blocked_by_shield_large;

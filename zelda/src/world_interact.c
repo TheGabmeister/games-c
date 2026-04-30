@@ -34,8 +34,8 @@ static int current_screen_index(const Game *game) {
 static bool service_near_player(const Game *game) {
     float cx = game->player.pos.x + TILE_SIZE / 2.0f;
     float cy = game->player.pos.y + TILE_SIZE / 2.0f;
-    float npc_x = 8.0f * TILE_SIZE;
-    float npc_y = PLAY_AREA_Y + 5.0f * TILE_SIZE;
+    float npc_x = (float)(game->current_screen.npc_col * TILE_SIZE);
+    float npc_y = PLAY_AREA_Y + (float)(game->current_screen.npc_row * TILE_SIZE);
     return CheckCollisionRecs((Rectangle){ cx - 96, cy - 96, 192, 192 },
                               (Rectangle){ npc_x - 32, npc_y - 32, 64, 64 });
 }
@@ -45,14 +45,14 @@ static bool cave_has_service(const Screen *screen) {
            screen->upgrade.active || screen->shop.active;
 }
 
-static bool service_flag(uint64_t flags, int id) {
+static bool service_flag(const uint64_t *words, int id) {
     if (id < 0 || id >= WORLD_SERVICE_MAX) return false;
-    return (flags & (1ULL << id)) != 0;
+    return (words[id / 64] & (1ULL << (id % 64))) != 0;
 }
 
-static void set_service_flag(uint64_t *flags, int id) {
+static void set_service_flag(uint64_t *words, int id) {
     if (id < 0 || id >= WORLD_SERVICE_MAX) return;
-    *flags |= 1ULL << id;
+    words[id / 64] |= 1ULL << (id % 64);
 }
 
 static void grant_gift(Game *game, const CaveGiftMeta *gift) {
@@ -175,7 +175,7 @@ void world_check_cave_interaction(Game *game) {
     if (screen->gift.active) {
         if (!service_flag(game->world.gifts_taken, screen->gift.id)) {
             grant_gift(game, &screen->gift);
-            set_service_flag(&game->world.gifts_taken, screen->gift.id);
+            set_service_flag(game->world.gifts_taken, screen->gift.id);
             dialogue_start(game, screen->gift.text[0] ? screen->gift.text : "TAKE THIS.");
         } else {
             dialogue_start(game, "IT IS ALREADY YOURS.");
@@ -184,22 +184,29 @@ void world_check_cave_interaction(Game *game) {
     }
 
     if (screen->upgrade.active) {
-        if (service_flag(game->world.upgrades_taken, screen->upgrade.id) ||
-            game->player.inventory.sword_tier >= screen->upgrade.sword_tier) {
-            dialogue_start(game, "YOUR BLADE IS TRUE.");
-        } else if (game->player.max_health >= screen->upgrade.required_max_health) {
-            game->player.inventory.sword_tier = screen->upgrade.sword_tier;
-            set_service_flag(&game->world.upgrades_taken, screen->upgrade.id);
-            dialogue_start(game, screen->upgrade.text[0] ? screen->upgrade.text : "TAKE THIS SWORD.");
-            sound_play(SOUND_ITEM_GET);
-        } else {
+        if (service_flag(game->world.upgrades_taken, screen->upgrade.id)) {
+            dialogue_start(game, "YOU ALREADY HAVE THIS.");
+        } else if (game->player.max_health < screen->upgrade.required_max_health) {
             dialogue_start(game, "RETURN WITH STRONGER HEARTS.");
+        } else {
+            Inventory *inv = &game->player.inventory;
+            switch (screen->upgrade.upgrade_type) {
+                case UPGRADE_SWORD: inv->sword_tier = screen->upgrade.tier; break;
+                case UPGRADE_SHIELD: inv->shield_tier = screen->upgrade.tier; break;
+                case UPGRADE_ARMOR: inv->armor_tier = screen->upgrade.tier; break;
+                case UPGRADE_BOMB_CAPACITY: inv->bomb_capacity = screen->upgrade.tier; break;
+                case UPGRADE_ARROW_CAPACITY: inv->arrow_capacity = screen->upgrade.tier; break;
+                default: break;
+            }
+            set_service_flag(game->world.upgrades_taken, screen->upgrade.id);
+            dialogue_start(game, screen->upgrade.text[0] ? screen->upgrade.text : "TAKE THIS.");
+            sound_play(SOUND_ITEM_GET);
         }
         return;
     }
 
     if (screen->dialogue.active) {
-        set_service_flag(&game->world.npcs_triggered, screen->dialogue.id);
+        set_service_flag(game->world.npcs_triggered, screen->dialogue.id);
         dialogue_start(game, screen->dialogue.text);
     }
 }
@@ -207,7 +214,8 @@ void world_check_cave_interaction(Game *game) {
 void world_draw_cave_npc(const Game *game) {
     if (!game->in_cave || !cave_has_service(&game->current_screen)) return;
 
-    Vector2 pos = { 8.0f * TILE_SIZE, PLAY_AREA_Y + 5.0f * TILE_SIZE };
+    Vector2 pos = { (float)(game->current_screen.npc_col * TILE_SIZE),
+                     PLAY_AREA_Y + (float)(game->current_screen.npc_row * TILE_SIZE) };
     if (IsTextureValid(textures[TEX_NPC_OLD_MAN])) {
         DrawTexture(textures[TEX_NPC_OLD_MAN], (int)pos.x, (int)pos.y, WHITE);
     } else {

@@ -8,10 +8,10 @@
 typedef struct WorldState {
     uint64_t bombed_walls[WORLD_FLAG_WORDS];
     uint64_t burned_bushes[WORLD_FLAG_WORDS];
-    uint64_t gifts_taken;
-    uint64_t shops_spent;
-    uint64_t npcs_triggered;
-    uint64_t upgrades_taken;
+    uint64_t gifts_taken[WORLD_SERVICE_WORDS];
+    uint64_t shops_spent[WORLD_SERVICE_WORDS];
+    uint64_t npcs_triggered[WORLD_SERVICE_WORDS];
+    uint64_t upgrades_taken[WORLD_SERVICE_WORDS];
 } WorldState;
 
 struct Game;

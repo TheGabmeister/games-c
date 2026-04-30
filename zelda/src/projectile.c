@@ -156,32 +156,32 @@ static void bomb_draw(const Projectile *self) {
 
 const ProjectileDef projectile_defs[PROJ_TYPE_COUNT] = {
     [PROJ_ARROW] = {
-        ARROW_SPEED, ARROW_DAMAGE, ARROW_MAX_RANGE,
+        ARROW_SPEED, ARROW_DAMAGE, ARROW_MAX_RANGE, 32, 8,
         true, true, true,
         linear_update, linear_draw
     },
     [PROJ_BOOMERANG] = {
-        BOOMERANG_SPEED, 0, BOOMERANG_MAX_RANGE,
+        BOOMERANG_SPEED, 0, BOOMERANG_MAX_RANGE, 20, 20,
         false, false, false,
         boomerang_update, boomerang_draw
     },
     [PROJ_BOMB] = {
-        0, BOMB_DAMAGE, 0,
+        0, BOMB_DAMAGE, 0, 24, 24,
         false, false, false,
         bomb_update, bomb_draw
     },
     [PROJ_ROCK] = {
-        ENEMY_ROCK_SPEED, 1, ARROW_MAX_RANGE,
+        ENEMY_ROCK_SPEED, 1, ARROW_MAX_RANGE, 16, 16,
         true, true, false,
         linear_update, linear_draw
     },
     [PROJ_SPEAR] = {
-        ENEMY_SPEAR_SPEED, 1, ARROW_MAX_RANGE,
+        ENEMY_SPEAR_SPEED, 1, ARROW_MAX_RANGE, 32, 8,
         true, true, false,
         linear_update, linear_draw
     },
     [PROJ_DRAGON_BEAM] = {
-        DRAGON_BEAM_SPEED, DRAGON_BEAM_DAMAGE, ARROW_MAX_RANGE,
+        DRAGON_BEAM_SPEED, DRAGON_BEAM_DAMAGE, ARROW_MAX_RANGE, 24, 24,
         true, false, true,
         linear_update, linear_draw
     },
@@ -242,21 +242,11 @@ void projectiles_clear(Projectile projs[], int *count) {
 }
 
 Rectangle projectile_hitbox(const Projectile *proj) {
-    int w, h;
-    switch (proj->type) {
-        case PROJ_ARROW:
-        case PROJ_SPEAR:
-            if (proj->facing == DIR_E || proj->facing == DIR_W) { w = 32; h = 8; }
-            else { w = 8; h = 32; }
-            break;
-        case PROJ_BOOMERANG: w = 20; h = 20; break;
-        case PROJ_BOMB:      w = 24; h = 24; break;
-        case PROJ_ROCK:        w = 16; h = 16; break;
-        case PROJ_DRAGON_BEAM:
-            if (proj->facing == DIR_E || proj->facing == DIR_W) { w = 40; h = 12; }
-            else { w = 12; h = 40; }
-            break;
-        default:             w = 16; h = 16; break;
+    const ProjectileDef *def = &projectile_defs[proj->type];
+    int w = def->hitbox_w;
+    int h = def->hitbox_h;
+    if (w != h && (proj->facing == DIR_N || proj->facing == DIR_S)) {
+        int tmp = w; w = h; h = tmp;
     }
     int ox = (TILE_SIZE - w) / 2;
     int oy = (TILE_SIZE - h) / 2;

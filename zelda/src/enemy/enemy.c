@@ -3,14 +3,16 @@
 #include "../projectile.h"
 #include <stdlib.h>
 
-const EnemyDef enemy_defs[ENEMY_TYPE_COUNT] = {
-    [ENEMY_SLIME]         = { "slime",         1, 1,  96.0f, false, TILE_SIZE, TILE_SIZE, slime_update,         slime_draw },
-    [ENEMY_BAT]           = { "bat",           1, 1, 160.0f, true,  TILE_SIZE, TILE_SIZE, bat_update,           bat_draw },
-    [ENEMY_SNAKE]         = { "snake",         1, 1, 128.0f, false, TILE_SIZE, TILE_SIZE, snake_update,         snake_draw },
-    [ENEMY_ROCK_SPITTER]  = { "rock_spitter",  2, 1,  64.0f, false, TILE_SIZE, TILE_SIZE, rock_spitter_update,  rock_spitter_draw },
-    [ENEMY_SPEAR_THROWER] = { "spear_thrower", 2, 1,  80.0f, false, TILE_SIZE, TILE_SIZE, spear_thrower_update, spear_thrower_draw },
-    [ENEMY_DRAGON]        = { "dragon",        12, 2, 64.0f, false, TILE_SIZE * 2, TILE_SIZE * 2, dragon_update, dragon_draw, dragon_on_spawn, dragon_on_death },
-};
+EnemyDef enemy_defs[ENEMY_TYPE_COUNT];
+
+void enemy_defs_init(void) {
+    enemy_defs[ENEMY_SLIME]         = slime_def();
+    enemy_defs[ENEMY_BAT]           = bat_def();
+    enemy_defs[ENEMY_SNAKE]         = snake_def();
+    enemy_defs[ENEMY_ROCK_SPITTER]  = rock_spitter_def();
+    enemy_defs[ENEMY_SPEAR_THROWER] = spear_thrower_def();
+    enemy_defs[ENEMY_DRAGON]        = dragon_def();
+}
 
 void enemies_spawn(Enemy enemies[], int *count, const Screen *screen) {
     *count = 0;
@@ -19,11 +21,15 @@ void enemies_spawn(Enemy enemies[], int *count, const Screen *screen) {
         Enemy *e = &enemies[(*count)++];
         *e = (Enemy){0};
         e->type = (EnemyType)es->type;
+        e->variant = es->variant;
         e->pos.x = (float)(es->tile_col * TILE_SIZE);
         e->pos.y = (float)(PLAY_AREA_Y + es->tile_row * TILE_SIZE);
         e->facing = DIR_S;
         e->state = ESTATE_IDLE;
         e->health = enemy_defs[e->type].health;
+        if (e->variant > 0) {
+            e->health = e->health * 2;
+        }
         e->active = true;
         e->state_timer = 30 + rand() % 60;
         if (enemy_defs[e->type].on_spawn) {
@@ -58,7 +64,9 @@ Rectangle enemy_hitbox(const Enemy *enemy) {
 }
 
 void enemy_take_damage(Enemy *enemy, int damage) {
-    enemy->health -= damage;
+    int effective = damage - enemy_defs[enemy->type].defense;
+    if (effective < 1) effective = 1;
+    enemy->health -= effective;
     if (enemy->health <= 0) {
         enemy->active = false;
         enemy->state = ESTATE_DEAD;

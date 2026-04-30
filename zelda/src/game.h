@@ -59,6 +59,7 @@ typedef struct Game {
 
     bool in_dungeon;
     DungeonState dungeon;
+    DungeonState dungeon_saves[MAX_DUNGEONS];
     int dungeon_return_screen_x;
     int dungeon_return_screen_y;
     int dungeon_return_tile_col;

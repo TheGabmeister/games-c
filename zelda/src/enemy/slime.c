@@ -1,4 +1,5 @@
 #include "enemy.h"
+#include "../game.h"
 #include "../tilemap.h"
 #include "../textures.h"
 #include "../projectile.h"
@@ -13,8 +14,8 @@ static int random_range(int min, int max) {
     return min + rand() % (max - min + 1);
 }
 
-void slime_update(Enemy *self, Vector2 player_pos, const Screen *screen,
-                  Projectile *projectiles, int *projectile_count, float dt) {
+static void slime_update(Enemy *self, Vector2 player_pos, const Screen *screen,
+                         Projectile *projectiles, int *projectile_count, float dt) {
     (void)projectiles; (void)projectile_count;
     (void)player_pos;
     const EnemyDef *def = &enemy_defs[self->type];
@@ -75,7 +76,7 @@ void slime_update(Enemy *self, Vector2 player_pos, const Screen *screen,
     }
 }
 
-void slime_draw(const Enemy *self) {
+static void slime_draw(const Enemy *self) {
     Color tint = WHITE;
     if (self->invuln_timer > 0 && (self->invuln_timer / 3) % 2 == 0)
         tint = (Color){ 255, 100, 100, 255 };
@@ -98,4 +99,31 @@ void slime_draw(const Enemy *self) {
         int oy = (TILE_SIZE - h) / 2;
         DrawRectangle((int)self->pos.x + ox, (int)self->pos.y + oy, w, h, c);
     }
+}
+
+static bool slime_on_hit(Enemy *self, Game *game, int damage) {
+    if (self->subtype != 0 || game->player.inventory.sword_tier > 1) return false;
+    Vector2 split_pos = self->pos;
+    self->active = false;
+    self->state = ESTATE_DEAD;
+    for (int s = 0; s < 2 && game->enemy_count < MAX_ENEMIES_PER_SCREEN; s++) {
+        Enemy *e = &game->enemies[game->enemy_count++];
+        *e = (Enemy){0};
+        e->type = ENEMY_SLIME;
+        e->subtype = 1;
+        e->pos.x = split_pos.x + (s == 0 ? -16.0f : 16.0f);
+        e->pos.y = split_pos.y;
+        e->pos.x = Clamp(e->pos.x, 0, SCREEN_TILES_X * TILE_SIZE - TILE_SIZE);
+        e->facing = DIR_S;
+        e->state = ESTATE_IDLE;
+        e->state_timer = 20 + rand() % 40;
+        e->health = 1;
+        e->active = true;
+    }
+    (void)damage;
+    return true;
+}
+
+EnemyDef slime_def(void) {
+    return (EnemyDef){ "slime", 1, 1, 0, 96.0f, false, TILE_SIZE, TILE_SIZE, 0, slime_update, slime_draw, NULL, NULL, slime_on_hit };
 }

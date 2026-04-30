@@ -5,18 +5,18 @@
 #include <string.h>
 
 const TileDef tile_defs[TILE_TYPE_COUNT] = {
-    [TILE_FLOOR]     = { TILE_FLOOR,     0, true,  ITEM_NONE },
-    [TILE_WALL]      = { TILE_WALL,      1, false, ITEM_NONE },
-    [TILE_WATER]     = { TILE_WATER,     2, false, ITEM_RAFT },
-    [TILE_DOOR]      = { TILE_DOOR,      4, true,  ITEM_NONE },
-    [TILE_PUSHBLOCK] = { TILE_PUSHBLOCK, 5, false, ITEM_NONE },
-    [TILE_STAIRS]        = { TILE_STAIRS,        6, true,  ITEM_NONE },
-    [TILE_BOMBABLE_WALL] = { TILE_BOMBABLE_WALL, 7, false, ITEM_NONE },
-    [TILE_DOOR_CLOSED]   = { TILE_DOOR_CLOSED,   8, false, ITEM_NONE },
-    [TILE_DOCK]          = { TILE_DOCK,          9, true,  ITEM_NONE },
-    [TILE_GAP]           = { TILE_GAP,          10, false, ITEM_LADDER },
-    [TILE_HEAVY_ROCK]    = { TILE_HEAVY_ROCK,    5, false, ITEM_BRACELET },
-    [TILE_BUSH]          = { TILE_BUSH,          1, false, ITEM_CANDLE },
+    [TILE_FLOOR]     = { TILE_FLOOR,     0, true,  false, ITEM_NONE },
+    [TILE_WALL]      = { TILE_WALL,      1, false, false, ITEM_NONE },
+    [TILE_WATER]     = { TILE_WATER,     2, false, false, ITEM_RAFT },
+    [TILE_DOOR]      = { TILE_DOOR,      4, true,  false, ITEM_NONE },
+    [TILE_PUSHBLOCK] = { TILE_PUSHBLOCK, 5, false, false, ITEM_NONE },
+    [TILE_STAIRS]        = { TILE_STAIRS,        6, true,  false, ITEM_NONE },
+    [TILE_BOMBABLE_WALL] = { TILE_BOMBABLE_WALL, 7, false, false, ITEM_NONE },
+    [TILE_DOOR_CLOSED]   = { TILE_DOOR_CLOSED,   8, false, false, ITEM_NONE },
+    [TILE_DOCK]          = { TILE_DOCK,          9, true,  false, ITEM_NONE },
+    [TILE_GAP]           = { TILE_GAP,          10, false, false, ITEM_LADDER },
+    [TILE_HEAVY_ROCK]    = { TILE_HEAVY_ROCK,    5, false, true,  ITEM_BRACELET },
+    [TILE_BUSH]          = { TILE_BUSH,          1, false, true,  ITEM_CANDLE },
 };
 
 static ItemType item_from_name(const char *name) {
@@ -67,6 +67,8 @@ bool screen_load(Screen *screen, const char *path) {
     if (!text) return false;
 
     memset(screen, 0, sizeof(*screen));
+    screen->npc_col = 8;
+    screen->npc_row = 5;
 
     int row = 0;
     const char *p = text;
@@ -110,8 +112,9 @@ bool screen_load(Screen *screen, const char *path) {
             } else if (line_len > 6 && strncmp(line_start, "enemy:", 6) == 0
                        && screen->enemy_spawn_count < MAX_ENEMIES_PER_SCREEN) {
                 char type_buf[16];
-                int ec, er;
-                if (sscanf(line_copy, "enemy: %15s %d %d", type_buf, &ec, &er) == 3) {
+                int ec, er, ev = 0;
+                int parsed = sscanf(line_copy, "enemy: %15s %d %d %d", type_buf, &ec, &er, &ev);
+                if (parsed >= 3) {
                     int etype = -1;
                     for (int t = 0; t < ENEMY_TYPE_COUNT; t++) {
                         if (enemy_defs[t].name && strcmp(type_buf, enemy_defs[t].name) == 0) {
@@ -122,6 +125,7 @@ bool screen_load(Screen *screen, const char *path) {
                     if (etype >= 0) {
                         EnemySpawn *es = &screen->enemy_spawns[screen->enemy_spawn_count++];
                         es->type = etype;
+                        es->variant = (parsed >= 4) ? ev : 0;
                         es->tile_col = ec;
                         es->tile_row = er;
                     }
@@ -201,13 +205,21 @@ bool screen_load(Screen *screen, const char *path) {
                 int id, tier, required_health;
                 char type_buf[16];
                 if (sscanf(line_copy, "upgrade: %d %15s %d %d",
-                           &id, type_buf, &tier, &required_health) == 4 &&
-                    strcmp(type_buf, "sword") == 0) {
-                    screen->upgrade.id = id;
-                    screen->upgrade.sword_tier = tier;
-                    screen->upgrade.required_max_health = required_health;
-                    screen->upgrade.active = true;
-                    copy_text_after_pipe(screen->upgrade.text, CAVE_TEXT_MAX, line_copy);
+                           &id, type_buf, &tier, &required_health) == 4) {
+                    UpgradeType ut = UPGRADE_TYPE_COUNT;
+                    if (strcmp(type_buf, "sword") == 0) ut = UPGRADE_SWORD;
+                    else if (strcmp(type_buf, "shield") == 0) ut = UPGRADE_SHIELD;
+                    else if (strcmp(type_buf, "armor") == 0) ut = UPGRADE_ARMOR;
+                    else if (strcmp(type_buf, "bomb_capacity") == 0) ut = UPGRADE_BOMB_CAPACITY;
+                    else if (strcmp(type_buf, "arrow_capacity") == 0) ut = UPGRADE_ARROW_CAPACITY;
+                    if (ut < UPGRADE_TYPE_COUNT) {
+                        screen->upgrade.id = id;
+                        screen->upgrade.upgrade_type = ut;
+                        screen->upgrade.tier = tier;
+                        screen->upgrade.required_max_health = required_health;
+                        screen->upgrade.active = true;
+                        copy_text_after_pipe(screen->upgrade.text, CAVE_TEXT_MAX, line_copy);
+                    }
                 }
             } else if (strncmp(line_copy, "shop:", 5) == 0) {
                 int id;
@@ -228,6 +240,12 @@ bool screen_load(Screen *screen, const char *path) {
                         screen->shop.items[si].item = item_from_name(item_buf[si]);
                         screen->shop.items[si].price = price[si];
                     }
+                }
+            } else if (strncmp(line_copy, "npc:", 4) == 0) {
+                int nc, nr;
+                if (sscanf(line_copy, "npc: %d %d", &nc, &nr) == 2) {
+                    screen->npc_col = nc;
+                    screen->npc_row = nr;
                 }
             }
             continue;
@@ -286,7 +304,7 @@ bool screen_tile_blocked(const Screen *screen, Rectangle hitbox) {
 }
 
 bool screen_tile_blocked_for_items(const Screen *screen, Rectangle hitbox,
-                                   Rectangle current_hitbox, uint32_t item_flags) {
+                                   Rectangle current_hitbox, uint64_t item_flags) {
     float rel_y = hitbox.y - PLAY_AREA_Y;
     int current_col = (int)((current_hitbox.x + current_hitbox.width / 2.0f) / TILE_SIZE);
     int current_row = (int)((current_hitbox.y + current_hitbox.height / 2.0f - PLAY_AREA_Y) / TILE_SIZE);
@@ -325,7 +343,7 @@ bool screen_tile_blocked_for_items(const Screen *screen, Rectangle hitbox,
                 current_tile != TILE_DOCK && current_tile != TILE_WATER) {
                 return true;
             }
-            if (def->type == TILE_BUSH || def->type == TILE_HEAVY_ROCK)
+            if (def->requires_interaction)
                 return true;
         }
     }

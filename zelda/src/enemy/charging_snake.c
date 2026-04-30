@@ -27,8 +27,8 @@ static void set_velocity_from_dir(Enemy *self, float speed) {
     }
 }
 
-void snake_update(Enemy *self, Vector2 player_pos, const Screen *screen,
-                  Projectile *projectiles, int *projectile_count, float dt) {
+static void snake_update(Enemy *self, Vector2 player_pos, const Screen *screen,
+                         Projectile *projectiles, int *projectile_count, float dt) {
     (void)projectiles; (void)projectile_count;
     const EnemyDef *def = &enemy_defs[self->type];
 
@@ -114,7 +114,7 @@ void snake_update(Enemy *self, Vector2 player_pos, const Screen *screen,
     }
 }
 
-void snake_draw(const Enemy *self) {
+static void snake_draw(const Enemy *self) {
     Color tint = WHITE;
     if (self->invuln_timer > 0 && (self->invuln_timer / 3) % 2 == 0)
         tint = (Color){ 255, 100, 100, 255 };
@@ -140,4 +140,8 @@ void snake_draw(const Enemy *self) {
         if (self->invuln_timer > 0 && (self->invuln_timer / 3) % 2 == 0) c = WHITE;
         DrawRectangle((int)self->pos.x, (int)self->pos.y, TILE_SIZE, TILE_SIZE, c);
     }
+}
+
+EnemyDef snake_def(void) {
+    return (EnemyDef){ "snake", 1, 1, 0, 128.0f, false, TILE_SIZE, TILE_SIZE, 0, snake_update, snake_draw, NULL, NULL, NULL };
 }

@@ -24,33 +24,20 @@ static bool item_is_permanent(ItemType item) {
     }
 }
 
-static void grant_shop_item(Game *game, ItemType item) {
-    Inventory *inv = &game->player.inventory;
+static int shop_item_amount(ItemType item) {
     switch (item) {
-        case ITEM_BOMB:
-            inv->bombs += 4;
-            if (inv->bombs > inv->bomb_capacity) inv->bombs = inv->bomb_capacity;
-            break;
-        case ITEM_ARROW:
-            inv->arrows += 10;
-            if (inv->arrows > inv->arrow_capacity) inv->arrows = inv->arrow_capacity;
-            break;
-        case ITEM_KEY:
-            inv->keys++;
-            break;
-        case ITEM_SHIELD:
-            inv->shield_tier = 1;
-            inv->items |= item_bit(item);
-            break;
-        case ITEM_POTION:
-            inv->items |= item_bit(item);
-            game->player.health = game->player.max_health;
-            break;
-        default:
-            if (item > ITEM_NONE && item < ITEM_TYPE_COUNT)
-                inv->items |= item_bit(item);
-            break;
+        case ITEM_BOMB: return 4;
+        case ITEM_ARROW: return 10;
+        default: return 1;
     }
+}
+
+static void grant_shop_item(Game *game, ItemType item) {
+    inventory_grant(&game->player.inventory,
+                    &game->player.health, &game->player.max_health,
+                    item, shop_item_amount(item));
+    if (item == ITEM_POTION)
+        game->player.health = game->player.max_health;
 }
 
 void shop_open(Game *game, const CaveShopMeta *shop) {

@@ -89,10 +89,7 @@ void nav_load_dungeon_room(Game *game, int rx, int ry) {
     for (int i = 0; i < game->current_screen.item_count; i++) {
         ItemPlacement *ip = &game->current_screen.items[i];
         if (!ip->active) continue;
-        int item_bit = i;
-        int room_idx = ry * DUNGEON_MAX_COLS + rx;
-        uint64_t collected_bit = 1ULL << (room_idx % 16 * 4 + item_bit);
-        if (game->dungeon.items_collected & collected_bit) {
+        if (dungeon_item_is_collected(&game->dungeon, rx, ry, i)) {
             ip->active = false;
         }
     }

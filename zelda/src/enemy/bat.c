@@ -16,8 +16,8 @@ static void pick_random_velocity(Enemy *self, float speed) {
     self->velocity.y = sinf(angle) * speed;
 }
 
-void bat_update(Enemy *self, Vector2 player_pos, const Screen *screen,
-                Projectile *projectiles, int *projectile_count, float dt) {
+static void bat_update(Enemy *self, Vector2 player_pos, const Screen *screen,
+                       Projectile *projectiles, int *projectile_count, float dt) {
     (void)projectiles; (void)projectile_count;
     (void)player_pos;
     (void)screen;
@@ -96,7 +96,7 @@ void bat_update(Enemy *self, Vector2 player_pos, const Screen *screen,
     }
 }
 
-void bat_draw(const Enemy *self) {
+static void bat_draw(const Enemy *self) {
     Color tint = WHITE;
     if (self->invuln_timer > 0 && (self->invuln_timer / 3) % 2 == 0)
         tint = (Color){ 255, 100, 100, 255 };
@@ -118,4 +118,8 @@ void bat_draw(const Enemy *self) {
         if (self->invuln_timer > 0 && (self->invuln_timer / 3) % 2 == 0) c = WHITE;
         DrawRectangle((int)self->pos.x, (int)self->pos.y, TILE_SIZE, TILE_SIZE, c);
     }
+}
+
+EnemyDef bat_def(void) {
+    return (EnemyDef){ "bat", 1, 1, 0, 160.0f, true, TILE_SIZE, TILE_SIZE, 0, bat_update, bat_draw, NULL, NULL, NULL };
 }

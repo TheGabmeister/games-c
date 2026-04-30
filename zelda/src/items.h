@@ -1,6 +1,8 @@
 #ifndef ITEMS_H
 #define ITEMS_H
 
+#include <stdint.h>
+
 typedef enum ItemType {
     ITEM_NONE = 0,
     ITEM_BOOMERANG,
@@ -69,8 +71,8 @@ static inline const char *item_display_name(ItemType item) {
     return item_display_names[item];
 }
 
-static inline unsigned int item_bit(ItemType item) {
-    return 1u << (unsigned int)item;
+static inline uint64_t item_bit(ItemType item) {
+    return 1ULL << (unsigned int)item;
 }
 
 #endif

@@ -23,8 +23,8 @@
 #define DSUB_FIRE     2
 #define DSUB_COOLDOWN 3
 
-void dragon_update(Enemy *self, Vector2 player_pos, const Screen *screen,
-                   Projectile *projectiles, int *projectile_count, float dt) {
+static void dragon_update(Enemy *self, Vector2 player_pos, const Screen *screen,
+                          Projectile *projectiles, int *projectile_count, float dt) {
     (void)screen;
 
     switch (self->subtype) {
@@ -98,7 +98,7 @@ void dragon_update(Enemy *self, Vector2 player_pos, const Screen *screen,
     }
 }
 
-void dragon_draw(const Enemy *self) {
+static void dragon_draw(const Enemy *self) {
     int size = TILE_SIZE * 2;
     bool flash = (self->invuln_timer > 0 && (self->invuln_timer / 3) % 2 == 0);
     bool windup_flash = (self->subtype == DSUB_WINDUP && (self->state_timer / 4) % 2 == 0);
@@ -132,15 +132,19 @@ void dragon_draw(const Enemy *self) {
     }
 }
 
-void dragon_on_spawn(Enemy *self) {
+static void dragon_on_spawn(Enemy *self) {
     self->velocity.x = (rand() % 2 == 0) ? DRAGON_SPEED : -DRAGON_SPEED;
     self->ai_timer = 90 + rand() % 60;
 }
 
-void dragon_on_death(Enemy *self, Game *game) {
+static void dragon_on_death(Enemy *self, Game *game) {
     (void)self;
     if (!game->in_dungeon || !game->current_screen.is_boss_room) return;
     if (game->dungeon.boss_defeated) return;
     game->dungeon.boss_defeated = true;
     sound_play(SOUND_BOSS_DEFEAT);
+}
+
+EnemyDef dragon_def(void) {
+    return (EnemyDef){ "dragon", 12, 2, 0, 64.0f, false, TILE_SIZE * 2, TILE_SIZE * 2, 0, dragon_update, dragon_draw, dragon_on_spawn, dragon_on_death, NULL };
 }

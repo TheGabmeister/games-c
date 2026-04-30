@@ -14,7 +14,7 @@
 #endif
 
 #define SAVE_MAGIC   0x3144565aU
-#define SAVE_VERSION 1U
+#define SAVE_VERSION 2U
 
 typedef struct SaveData {
     uint32_t magic;
@@ -26,7 +26,8 @@ typedef struct SaveData {
     int player_max_health;
     Inventory inventory;
     WorldState world;
-    DungeonState dungeon;
+    DungeonState dungeon_saves[MAX_DUNGEONS];
+    DungeonState dungeon_active;
 
     int screen_x;
     int screen_y;
@@ -80,7 +81,7 @@ bool save_read_summary(int slot, SaveSlotSummary *summary) {
     summary->screen_x = data.screen_x;
     summary->screen_y = data.screen_y;
     summary->in_dungeon = data.in_dungeon;
-    summary->dungeon_id = data.dungeon.id;
+    summary->dungeon_id = data.dungeon_active.id;
     return true;
 }
 
@@ -109,7 +110,10 @@ bool save_write_game(const Game *game, int slot) {
     data.player_max_health = game->player.max_health;
     data.inventory = game->player.inventory;
     data.world = game->world;
-    data.dungeon = game->dungeon;
+    memcpy(data.dungeon_saves, game->dungeon_saves, sizeof(data.dungeon_saves));
+    data.dungeon_active = game->dungeon;
+    if (game->in_dungeon && game->dungeon.id >= 1 && game->dungeon.id <= MAX_DUNGEONS)
+        data.dungeon_saves[game->dungeon.id - 1] = game->dungeon;
     data.in_dungeon = game->in_dungeon;
     data.in_cave = false;
     data.active_save_slot = slot;
@@ -139,7 +143,8 @@ bool save_load_game(Game *game, int slot) {
     game->state = STATE_PLAY;
     game->active_save_slot = slot;
     game->world = data.world;
-    game->dungeon = data.dungeon;
+    memcpy(game->dungeon_saves, data.dungeon_saves, sizeof(game->dungeon_saves));
+    game->dungeon = data.dungeon_active;
     game->in_dungeon = data.in_dungeon;
     game->in_cave = false;
 

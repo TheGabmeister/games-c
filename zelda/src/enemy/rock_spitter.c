@@ -19,8 +19,8 @@ static void face_toward_player(Enemy *self, Vector2 player_pos) {
         self->facing = (dy > 0) ? DIR_S : DIR_N;
 }
 
-void rock_spitter_update(Enemy *self, Vector2 player_pos, const Screen *screen,
-                         Projectile *projectiles, int *projectile_count, float dt) {
+static void rock_spitter_update(Enemy *self, Vector2 player_pos, const Screen *screen,
+                                Projectile *projectiles, int *projectile_count, float dt) {
     const EnemyDef *def = &enemy_defs[self->type];
 
     switch (self->state) {
@@ -84,7 +84,7 @@ void rock_spitter_update(Enemy *self, Vector2 player_pos, const Screen *screen,
     }
 }
 
-void rock_spitter_draw(const Enemy *self) {
+static void rock_spitter_draw(const Enemy *self) {
     Color tint = (Color){ 120, 100, 80, 255 };
     if (self->invuln_timer > 0 && (self->invuln_timer / 3) % 2 == 0)
         tint = (Color){ 255, 100, 100, 255 };
@@ -96,4 +96,8 @@ void rock_spitter_draw(const Enemy *self) {
     DrawRectangle((int)self->pos.x + 8, (int)self->pos.y + 8, 48, 48, tint);
     DrawRectangle((int)self->pos.x + 16, (int)self->pos.y + 16, 12, 12, DARKGRAY);
     DrawRectangle((int)self->pos.x + 36, (int)self->pos.y + 16, 12, 12, DARKGRAY);
+}
+
+EnemyDef rock_spitter_def(void) {
+    return (EnemyDef){ "rock_spitter", 2, 1, 0, 64.0f, false, TILE_SIZE, TILE_SIZE, 0, rock_spitter_update, rock_spitter_draw, NULL, NULL, NULL };
 }

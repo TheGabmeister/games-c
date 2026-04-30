@@ -13,9 +13,8 @@ static bool all_enemies_dead(const Game *game) {
 }
 
 static void mark_item_collected(Game *game, int item_index) {
-    int room_idx = game->dungeon.room_y * DUNGEON_MAX_COLS + game->dungeon.room_x;
-    uint64_t collected_bit = 1ULL << (room_idx % 16 * 4 + item_index);
-    game->dungeon.items_collected |= collected_bit;
+    dungeon_item_set_collected(&game->dungeon,
+        game->dungeon.room_x, game->dungeon.room_y, item_index);
 }
 
 static void open_door_tiles(Screen *screen, const DoorMeta *d) {
@@ -228,13 +227,13 @@ void dungeon_check_items(Game *game) {
                 game->state = STATE_ITEM_GET;
                 break;
             case ITEM_BOOMERANG:
-                game->player.inventory.items |= (1 << ITEM_BOOMERANG);
+                game->player.inventory.items |= item_bit(ITEM_BOOMERANG);
                 game->item_get_type = ITEM_BOOMERANG;
                 game->item_get_timer = 120;
                 game->state = STATE_ITEM_GET;
                 break;
             case ITEM_BOW:
-                game->player.inventory.items |= (1 << ITEM_BOW);
+                game->player.inventory.items |= item_bit(ITEM_BOW);
                 game->item_get_type = ITEM_BOW;
                 game->item_get_timer = 120;
                 game->state = STATE_ITEM_GET;
