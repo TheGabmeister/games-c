@@ -14,7 +14,7 @@ const TileDef tile_defs[TILE_TYPE_COUNT] = {
     [TILE_BOMBABLE_WALL] = { TILE_BOMBABLE_WALL, 7, false, ITEM_NONE },
     [TILE_DOOR_CLOSED]   = { TILE_DOOR_CLOSED,   8, false, ITEM_NONE },
     [TILE_DOCK]          = { TILE_DOCK,          9, true,  ITEM_NONE },
-    [TILE_GAP]           = { TILE_GAP,           2, false, ITEM_LADDER },
+    [TILE_GAP]           = { TILE_GAP,          10, false, ITEM_LADDER },
     [TILE_HEAVY_ROCK]    = { TILE_HEAVY_ROCK,    5, false, ITEM_BRACELET },
     [TILE_BUSH]          = { TILE_BUSH,          1, false, ITEM_CANDLE },
 };
@@ -308,6 +308,12 @@ bool screen_tile_blocked_for_items(const Screen *screen, Rectangle hitbox,
 
     for (int r = row_min; r <= row_max; r++) {
         for (int c = col_min; c <= col_max; c++) {
+            TileType target_tile = (TileType)screen->tiles[r][c];
+            if (current_tile == TILE_WATER &&
+                target_tile != TILE_WATER && target_tile != TILE_DOCK) {
+                return true;
+            }
+
             const TileDef *def = &tile_defs[screen->tiles[r][c]];
             if (def->passable) continue;
             if (def->pass_requires == ITEM_NONE) return true;

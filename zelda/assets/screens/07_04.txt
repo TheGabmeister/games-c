@@ -5,7 +5,7 @@ enemy: bat 12 2
 enemy: snake 10 8
 WWWWWWW..WWWWWWW
 W.......S......W
-W..............W
+W..G...........W
 W....BWWW......W
 W..........T...W
 ................

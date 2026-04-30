@@ -673,10 +673,10 @@ Deliverable: overworld is navigable with shops, NPCs, and saves.
 - [x] NPC dialogue displays text correctly (hint caves, gift caves).
 - [x] Gift cave NPCs give items once only.
 - [x] Cave rooms load from `assets/caves/` and render correctly.
-- [ ] Raft allows crossing water tiles from dock tiles.
-- [ ] Ladder allows crossing gap tiles.
-- [ ] Bracelet allows pushing heavy rocks.
-- [ ] Bombs open bombable walls in the overworld.
+- [x] Raft allows crossing water tiles from dock tiles.
+- [x] Ladder allows crossing gap tiles.
+- [x] Bracelet allows pushing heavy rocks.
+- [x] Bombs open bombable walls in the overworld.
 - [ ] Sword upgrades change sword tier and damage output.
 - [ ] Master sword has a health gate (requires full hearts to obtain).
 - [ ] Save writes to file; saved data persists across game restarts.
