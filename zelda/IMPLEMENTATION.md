@@ -357,51 +357,6 @@ Overworld screens are named by grid position: `assets/screens/03_05.txt`
 for column 3, row 5. Dungeon rooms: `assets/dungeons/1/02_03.txt`. Caves:
 `assets/caves/cave_12.txt`.
 
-## Event System
-
-A simple queue drained once per frame at the end of update. Events are
-fire-and-forget notifications that decouple systems.
-
-```c
-typedef enum EventType {
-    EVENT_ENEMY_KILLED,
-    EVENT_ITEM_PICKUP,
-    EVENT_SECRET_REVEALED,
-    EVENT_DOOR_OPENED,
-    EVENT_BOSS_DEFEATED,
-    EVENT_PLAYER_DAMAGED,
-    EVENT_PLAYER_DEATH,
-    EVENT_SHUTTER_CLEAR,
-    EVENT_COUNT
-} EventType;
-
-typedef struct Event {
-    EventType type;
-    union {
-        struct { Vector2 pos; int enemy_type; } enemy_killed;
-        struct { int item_id; bool is_major; } item_pickup;
-        struct { Vector2 pos; } secret_revealed;
-        struct { int damage; Direction from; } player_damaged;
-    };
-} Event;
-```
-
-Each event type has its own payload struct in the union. Producers fill the
-relevant fields when pushing. Consumers read them at drain time:
-
-- `EVENT_ENEMY_KILLED` → use `enemy_type` and `pos` for drop table lookup,
-  play death sound, check if room is clear (shutter doors).
-- `EVENT_ITEM_PICKUP` → use `item_id` to update inventory, `is_major` to
-  decide whether to enter ITEM_GET state and play the big jingle.
-- `EVENT_SECRET_REVEALED` → play secret jingle, mark location in world
-  state.
-- `EVENT_PLAYER_DAMAGED` → use `damage` for health reduction, `from` for
-  knockback direction, start invulnerability timer.
-- `EVENT_SHUTTER_CLEAR` → open shutter doors in current room.
-
-The queue is a fixed-size ring buffer. Events that overflow are dropped
-(indicates a bug — the buffer should be sized generously).
-
 ## Collision Pipeline
 
 Runs once per frame during update, after all positions have been advanced:
