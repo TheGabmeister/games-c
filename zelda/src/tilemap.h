@@ -17,6 +17,10 @@ typedef enum TileType {
     TILE_STAIRS,
     TILE_BOMBABLE_WALL,
     TILE_DOOR_CLOSED,
+    TILE_DOCK,
+    TILE_GAP,
+    TILE_HEAVY_ROCK,
+    TILE_BUSH,
     TILE_TYPE_COUNT
 } TileType;
 
@@ -42,6 +46,40 @@ typedef struct EnemySpawn {
     int tile_row;
 } EnemySpawn;
 
+typedef struct CaveDialogueMeta {
+    int id;
+    char text[CAVE_TEXT_MAX];
+    bool active;
+} CaveDialogueMeta;
+
+typedef struct CaveGiftMeta {
+    int id;
+    ItemType reward;
+    int amount;
+    char text[CAVE_TEXT_MAX];
+    bool active;
+} CaveGiftMeta;
+
+typedef struct CaveUpgradeMeta {
+    int id;
+    int sword_tier;
+    int required_max_health;
+    char text[CAVE_TEXT_MAX];
+    bool active;
+} CaveUpgradeMeta;
+
+typedef struct ShopItemMeta {
+    ItemType item;
+    int price;
+} ShopItemMeta;
+
+typedef struct CaveShopMeta {
+    int id;
+    ShopItemMeta items[SHOP_ITEM_MAX];
+    int item_count;
+    bool active;
+} CaveShopMeta;
+
 typedef struct Screen {
     uint8_t tiles[SCREEN_TILES_Y][SCREEN_TILES_X];
     Warp warps[MAX_WARPS_PER_SCREEN];
@@ -55,12 +93,18 @@ typedef struct Screen {
     bool is_shutter;
     bool is_dark;
     bool is_boss_room;
+    CaveDialogueMeta dialogue;
+    CaveGiftMeta gift;
+    CaveUpgradeMeta upgrade;
+    CaveShopMeta shop;
 } Screen;
 
 bool screen_load(Screen *screen, const char *path);
 void screen_draw(const Screen *screen);
 void screen_draw_offset(const Screen *screen, int offset_x, int offset_y);
 bool screen_tile_blocked(const Screen *screen, Rectangle hitbox);
+bool screen_tile_blocked_for_items(const Screen *screen, Rectangle hitbox,
+                                   uint32_t item_flags);
 const TileDef *screen_tile_at_pixel(const Screen *screen, int px, int py);
 bool screen_file_exists(int sx, int sy);
 const Warp *screen_warp_at(const Screen *screen, int col, int row);

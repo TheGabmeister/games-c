@@ -37,6 +37,11 @@
 // Warps
 #define MAX_WARPS_PER_SCREEN 4
 #define WARP_DEST_MAX        32
+#define WORLD_SCREEN_COUNT   (OVERWORLD_COLS * OVERWORLD_ROWS)
+#define WORLD_FLAG_WORDS     ((WORLD_SCREEN_COUNT + 63) / 64)
+#define WORLD_SERVICE_MAX    64
+#define CAVE_TEXT_MAX        128
+#define SHOP_ITEM_MAX        3
 
 // Player
 #define PLAYER_LIVES        3

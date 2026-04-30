@@ -36,14 +36,14 @@ void player_init(Player *player) {
     player->health = PLAYER_MAX_HEALTH;
     player->max_health = PLAYER_MAX_HEALTH;
     player->inventory.sword_tier = 1;
-    player->inventory.shield_tier = 1;
+    player->inventory.shield_tier = 0;
     player->inventory.bomb_capacity = 8;
-    player->inventory.bombs = 8;
+    player->inventory.bombs = 0;
     player->inventory.arrow_capacity = 30;
-    player->inventory.arrows = 30;
-    player->inventory.rupees = 50;
-    player->inventory.equipped = ITEM_BOW;
-    player->inventory.items = (1 << ITEM_BOOMERANG) | (1 << ITEM_BOW) | (1 << ITEM_CANDLE);
+    player->inventory.arrows = 0;
+    player->inventory.rupees = 80;
+    player->inventory.equipped = ITEM_NONE;
+    player->inventory.items = 0;
     anim_set(&player->anim, &player_idle_anims[DIR_S]);
 }
 
@@ -112,7 +112,7 @@ void player_update(Player *player, const Screen *screen,
         nx = Clamp(nx, 0, SCREEN_TILES_X * TILE_SIZE - TILE_SIZE);
         ny = Clamp(ny, PLAY_AREA_Y, PLAY_AREA_Y + SCREEN_TILES_Y * TILE_SIZE - TILE_SIZE);
         Rectangle test = { nx, ny, TILE_SIZE, TILE_SIZE };
-        if (!screen_tile_blocked(screen, test)) {
+        if (!screen_tile_blocked_for_items(screen, test, player->inventory.items)) {
             player->pos.x = nx;
             player->pos.y = ny;
         }
@@ -186,26 +186,26 @@ void player_update(Player *player, const Screen *screen,
             float new_x = player->pos.x + move_x * step;
             new_x = Clamp(new_x, 0, SCREEN_TILES_X * TILE_SIZE - TILE_SIZE);
             Rectangle test = { new_x, player->pos.y, TILE_SIZE, TILE_SIZE };
-            if (!screen_tile_blocked(screen, test)) {
+            if (!screen_tile_blocked_for_items(screen, test, player->inventory.items)) {
                 player->pos.x = new_x;
             }
             float snapped_y = snap_toward_grid(player->pos.y, PLAY_AREA_Y, PLAYER_SPEED, dt);
             snapped_y = Clamp(snapped_y, PLAY_AREA_Y, PLAY_AREA_Y + SCREEN_TILES_Y * TILE_SIZE - TILE_SIZE);
             Rectangle snap_test = { player->pos.x, snapped_y, TILE_SIZE, TILE_SIZE };
-            if (!screen_tile_blocked(screen, snap_test)) {
+            if (!screen_tile_blocked_for_items(screen, snap_test, player->inventory.items)) {
                 player->pos.y = snapped_y;
             }
         } else {
             float new_y = player->pos.y + move_y * step;
             new_y = Clamp(new_y, PLAY_AREA_Y, PLAY_AREA_Y + SCREEN_TILES_Y * TILE_SIZE - TILE_SIZE);
             Rectangle test = { player->pos.x, new_y, TILE_SIZE, TILE_SIZE };
-            if (!screen_tile_blocked(screen, test)) {
+            if (!screen_tile_blocked_for_items(screen, test, player->inventory.items)) {
                 player->pos.y = new_y;
             }
             float snapped_x = snap_toward_grid(player->pos.x, 0, PLAYER_SPEED, dt);
             snapped_x = Clamp(snapped_x, 0, SCREEN_TILES_X * TILE_SIZE - TILE_SIZE);
             Rectangle snap_test = { snapped_x, player->pos.y, TILE_SIZE, TILE_SIZE };
-            if (!screen_tile_blocked(screen, snap_test)) {
+            if (!screen_tile_blocked_for_items(screen, snap_test, player->inventory.items)) {
                 player->pos.x = snapped_x;
             }
         }

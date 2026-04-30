@@ -7,13 +7,27 @@
 const TileDef tile_defs[TILE_TYPE_COUNT] = {
     [TILE_FLOOR]     = { TILE_FLOOR,     0, true,  ITEM_NONE },
     [TILE_WALL]      = { TILE_WALL,      1, false, ITEM_NONE },
-    [TILE_WATER]     = { TILE_WATER,     2, false, ITEM_NONE },
+    [TILE_WATER]     = { TILE_WATER,     2, false, ITEM_RAFT },
     [TILE_DOOR]      = { TILE_DOOR,      4, true,  ITEM_NONE },
     [TILE_PUSHBLOCK] = { TILE_PUSHBLOCK, 5, false, ITEM_NONE },
     [TILE_STAIRS]        = { TILE_STAIRS,        6, true,  ITEM_NONE },
     [TILE_BOMBABLE_WALL] = { TILE_BOMBABLE_WALL, 7, false, ITEM_NONE },
     [TILE_DOOR_CLOSED]   = { TILE_DOOR_CLOSED,   8, false, ITEM_NONE },
+    [TILE_DOCK]          = { TILE_DOCK,          6, true,  ITEM_NONE },
+    [TILE_GAP]           = { TILE_GAP,           2, false, ITEM_LADDER },
+    [TILE_HEAVY_ROCK]    = { TILE_HEAVY_ROCK,    5, false, ITEM_BRACELET },
+    [TILE_BUSH]          = { TILE_BUSH,          1, false, ITEM_CANDLE },
 };
+
+static ItemType item_from_name(const char *name) {
+    if (strcmp(name, "rupees") == 0 || strcmp(name, "rupee") == 0)
+        return ITEM_NONE;
+    for (int t = 1; t < ITEM_TYPE_COUNT; t++) {
+        if (item_type_names[t] && strcmp(name, item_type_names[t]) == 0)
+            return (ItemType)t;
+    }
+    return ITEM_NONE;
+}
 
 static TileType char_to_tile(char c) {
     switch (c) {
@@ -24,8 +38,24 @@ static TileType char_to_tile(char c) {
         case 'P': return TILE_PUSHBLOCK;
         case 'S': return TILE_STAIRS;
         case 'B': return TILE_BOMBABLE_WALL;
+        case '=': return TILE_DOCK;
+        case 'G': return TILE_GAP;
+        case 'R': return TILE_HEAVY_ROCK;
+        case 'T': return TILE_BUSH;
         default:  return TILE_FLOOR;
     }
+}
+
+static void copy_text_after_pipe(char *dst, int dst_size, const char *line) {
+    const char *pipe = strchr(line, '|');
+    if (!pipe) {
+        dst[0] = '\0';
+        return;
+    }
+    pipe++;
+    while (*pipe == ' ') pipe++;
+    strncpy(dst, pipe, (size_t)dst_size - 1);
+    dst[dst_size - 1] = '\0';
 }
 
 bool screen_load(Screen *screen, const char *path) {
@@ -146,6 +176,55 @@ bool screen_load(Screen *screen, const char *path) {
                 if (sscanf(line_copy, "boss: %7s", val) == 1 && strcmp(val, "true") == 0) {
                     screen->is_boss_room = true;
                 }
+            } else if (strncmp(line_copy, "dialogue:", 9) == 0) {
+                int id;
+                if (sscanf(line_copy, "dialogue: %d", &id) == 1) {
+                    screen->dialogue.id = id;
+                    screen->dialogue.active = true;
+                    copy_text_after_pipe(screen->dialogue.text, CAVE_TEXT_MAX, line_copy);
+                }
+            } else if (strncmp(line_copy, "gift:", 5) == 0) {
+                int id, amount;
+                char reward_buf[24];
+                if (sscanf(line_copy, "gift: %d %23s %d", &id, reward_buf, &amount) == 3) {
+                    screen->gift.id = id;
+                    screen->gift.reward = item_from_name(reward_buf);
+                    screen->gift.amount = amount;
+                    screen->gift.active = true;
+                    copy_text_after_pipe(screen->gift.text, CAVE_TEXT_MAX, line_copy);
+                }
+            } else if (strncmp(line_copy, "upgrade:", 8) == 0) {
+                int id, tier, required_health;
+                char type_buf[16];
+                if (sscanf(line_copy, "upgrade: %d %15s %d %d",
+                           &id, type_buf, &tier, &required_health) == 4 &&
+                    strcmp(type_buf, "sword") == 0) {
+                    screen->upgrade.id = id;
+                    screen->upgrade.sword_tier = tier;
+                    screen->upgrade.required_max_health = required_health;
+                    screen->upgrade.active = true;
+                    copy_text_after_pipe(screen->upgrade.text, CAVE_TEXT_MAX, line_copy);
+                }
+            } else if (strncmp(line_copy, "shop:", 5) == 0) {
+                int id;
+                char item_buf[SHOP_ITEM_MAX][24];
+                int price[SHOP_ITEM_MAX];
+                int parsed = sscanf(line_copy, "shop: %d %23s %d %23s %d %23s %d",
+                                    &id,
+                                    item_buf[0], &price[0],
+                                    item_buf[1], &price[1],
+                                    item_buf[2], &price[2]);
+                if (parsed >= 3) {
+                    screen->shop.id = id;
+                    screen->shop.active = true;
+                    screen->shop.item_count = (parsed - 1) / 2;
+                    if (screen->shop.item_count > SHOP_ITEM_MAX)
+                        screen->shop.item_count = SHOP_ITEM_MAX;
+                    for (int si = 0; si < screen->shop.item_count; si++) {
+                        screen->shop.items[si].item = item_from_name(item_buf[si]);
+                        screen->shop.items[si].price = price[si];
+                    }
+                }
             }
             continue;
         }
@@ -197,6 +276,49 @@ bool screen_tile_blocked(const Screen *screen, Rectangle hitbox) {
     for (int r = row_min; r <= row_max; r++) {
         for (int c = col_min; c <= col_max; c++) {
             if (!tile_defs[screen->tiles[r][c]].passable) return true;
+        }
+    }
+    return false;
+}
+
+static bool tile_adjacent_to_dock(const Screen *screen, int row, int col) {
+    static const int dirs[4][2] = {{-1, 0}, {1, 0}, {0, -1}, {0, 1}};
+    for (int i = 0; i < 4; i++) {
+        int r = row + dirs[i][0];
+        int c = col + dirs[i][1];
+        if (r < 0 || r >= SCREEN_TILES_Y || c < 0 || c >= SCREEN_TILES_X) continue;
+        if ((TileType)screen->tiles[r][c] == TILE_DOCK) return true;
+    }
+    return false;
+}
+
+bool screen_tile_blocked_for_items(const Screen *screen, Rectangle hitbox,
+                                   uint32_t item_flags) {
+    float rel_y = hitbox.y - PLAY_AREA_Y;
+
+    int col_min = (int)(hitbox.x / TILE_SIZE);
+    int col_max = (int)((hitbox.x + hitbox.width - 1) / TILE_SIZE);
+    int row_min = (int)(rel_y / TILE_SIZE);
+    int row_max = (int)((rel_y + hitbox.height - 1) / TILE_SIZE);
+
+    if (col_min < 0) col_min = 0;
+    if (col_max >= SCREEN_TILES_X) col_max = SCREEN_TILES_X - 1;
+    if (row_min < 0) row_min = 0;
+    if (row_max >= SCREEN_TILES_Y) row_max = SCREEN_TILES_Y - 1;
+
+    for (int r = row_min; r <= row_max; r++) {
+        for (int c = col_min; c <= col_max; c++) {
+            const TileDef *def = &tile_defs[screen->tiles[r][c]];
+            if (def->passable) continue;
+            if (def->pass_requires == ITEM_NONE) return true;
+
+            bool has_item = (item_flags & item_bit(def->pass_requires)) != 0;
+            if (!has_item) return true;
+
+            if (def->type == TILE_WATER && !tile_adjacent_to_dock(screen, r, c))
+                return true;
+            if (def->type == TILE_BUSH || def->type == TILE_HEAVY_ROCK)
+                return true;
         }
     }
     return false;

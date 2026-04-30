@@ -12,16 +12,25 @@
 #include "pickup.h"
 #include "sounds.h"
 #include "inventory.h"
+#include "save.h"
+#include "title.h"
+#include "dialogue.h"
+#include "shop.h"
+#include "world_interact.h"
 #include <stdbool.h>
 #include <stdlib.h>
 #include <string.h>
 
 typedef enum GameState {
-    STATE_PLAY = 0,
+    STATE_TITLE = 0,
+    STATE_PLAY,
     STATE_TRANSITION,
     STATE_DEATH,
     STATE_PAUSE,
     STATE_ITEM_GET,
+    STATE_DIALOGUE,
+    STATE_SHOP,
+    STATE_CONTINUE,
     STATE_COUNT
 } GameState;
 
@@ -70,6 +79,14 @@ typedef struct Game {
     int pickup_count;
 
     PauseState pause_state;
+    TitleState title_state;
+    DialogueState dialogue_state;
+    ShopState shop_state;
+    WorldState world;
+
+    int active_save_slot;
+    int save_message_timer;
+    bool candle_used_this_screen;
 
     int death_timer;
     int low_health_counter;
