@@ -13,7 +13,7 @@ const TileDef tile_defs[TILE_TYPE_COUNT] = {
     [TILE_STAIRS]        = { TILE_STAIRS,        6, true,  ITEM_NONE },
     [TILE_BOMBABLE_WALL] = { TILE_BOMBABLE_WALL, 7, false, ITEM_NONE },
     [TILE_DOOR_CLOSED]   = { TILE_DOOR_CLOSED,   8, false, ITEM_NONE },
-    [TILE_DOCK]          = { TILE_DOCK,          6, true,  ITEM_NONE },
+    [TILE_DOCK]          = { TILE_DOCK,          9, true,  ITEM_NONE },
     [TILE_GAP]           = { TILE_GAP,           2, false, ITEM_LADDER },
     [TILE_HEAVY_ROCK]    = { TILE_HEAVY_ROCK,    5, false, ITEM_BRACELET },
     [TILE_BUSH]          = { TILE_BUSH,          1, false, ITEM_CANDLE },
@@ -285,20 +285,16 @@ bool screen_tile_blocked(const Screen *screen, Rectangle hitbox) {
     return false;
 }
 
-static bool tile_adjacent_to_dock(const Screen *screen, int row, int col) {
-    static const int dirs[4][2] = {{-1, 0}, {1, 0}, {0, -1}, {0, 1}};
-    for (int i = 0; i < 4; i++) {
-        int r = row + dirs[i][0];
-        int c = col + dirs[i][1];
-        if (r < 0 || r >= SCREEN_TILES_Y || c < 0 || c >= SCREEN_TILES_X) continue;
-        if ((TileType)screen->tiles[r][c] == TILE_DOCK) return true;
-    }
-    return false;
-}
-
 bool screen_tile_blocked_for_items(const Screen *screen, Rectangle hitbox,
-                                   uint32_t item_flags) {
+                                   Rectangle current_hitbox, uint32_t item_flags) {
     float rel_y = hitbox.y - PLAY_AREA_Y;
+    int current_col = (int)((current_hitbox.x + current_hitbox.width / 2.0f) / TILE_SIZE);
+    int current_row = (int)((current_hitbox.y + current_hitbox.height / 2.0f - PLAY_AREA_Y) / TILE_SIZE);
+    TileType current_tile = TILE_WALL;
+    if (current_col >= 0 && current_col < SCREEN_TILES_X &&
+        current_row >= 0 && current_row < SCREEN_TILES_Y) {
+        current_tile = (TileType)screen->tiles[current_row][current_col];
+    }
 
     int col_min = (int)(hitbox.x / TILE_SIZE);
     int col_max = (int)((hitbox.x + hitbox.width - 1) / TILE_SIZE);
@@ -319,8 +315,10 @@ bool screen_tile_blocked_for_items(const Screen *screen, Rectangle hitbox,
             bool has_item = (item_flags & item_bit(def->pass_requires)) != 0;
             if (!has_item) return true;
 
-            if (def->type == TILE_WATER && !tile_adjacent_to_dock(screen, r, c))
+            if (def->type == TILE_WATER &&
+                current_tile != TILE_DOCK && current_tile != TILE_WATER) {
                 return true;
+            }
             if (def->type == TILE_BUSH || def->type == TILE_HEAVY_ROCK)
                 return true;
         }

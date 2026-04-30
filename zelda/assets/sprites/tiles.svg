@@ -89,4 +89,19 @@
     <circle cx="16" cy="40.5" r="2" fill="#888888"/>
     <circle cx="48" cy="40.5" r="2" fill="#888888"/>
   </g>
+
+  <!-- Index 9: Dock (wooden planks over water) -->
+  <g transform="translate(64,128)">
+    <rect width="64" height="64" fill="#2266aa"/>
+    <path d="M0,18 Q8,12 16,18 Q24,24 32,18 Q40,12 48,18 Q56,24 64,18" fill="none" stroke="#4499dd" stroke-width="2"/>
+    <path d="M0,45 Q8,39 16,45 Q24,51 32,45 Q40,39 48,45 Q56,51 64,45" fill="none" stroke="#4499dd" stroke-width="2"/>
+    <rect x="10" y="8" width="12" height="48" fill="#7a5631" rx="2"/>
+    <rect x="26" y="8" width="12" height="48" fill="#8a6238" rx="2"/>
+    <rect x="42" y="8" width="12" height="48" fill="#7a5631" rx="2"/>
+    <rect x="7" y="15" width="50" height="6" fill="#5e3f22" rx="1"/>
+    <rect x="7" y="42" width="50" height="6" fill="#5e3f22" rx="1"/>
+    <line x1="16" y1="11" x2="16" y2="53" stroke="#b0834b" stroke-width="1"/>
+    <line x1="32" y1="11" x2="32" y2="53" stroke="#c09050" stroke-width="1"/>
+    <line x1="48" y1="11" x2="48" y2="53" stroke="#b0834b" stroke-width="1"/>
+  </g>
 </svg>

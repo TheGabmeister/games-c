@@ -104,7 +104,7 @@ void screen_draw(const Screen *screen);
 void screen_draw_offset(const Screen *screen, int offset_x, int offset_y);
 bool screen_tile_blocked(const Screen *screen, Rectangle hitbox);
 bool screen_tile_blocked_for_items(const Screen *screen, Rectangle hitbox,
-                                   uint32_t item_flags);
+                                   Rectangle current_hitbox, uint32_t item_flags);
 const TileDef *screen_tile_at_pixel(const Screen *screen, int px, int py);
 bool screen_file_exists(int sx, int sy);
 const Warp *screen_warp_at(const Screen *screen, int col, int row);

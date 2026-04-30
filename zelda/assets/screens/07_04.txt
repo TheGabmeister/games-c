@@ -1,5 +1,5 @@
 warp: stairs 8 1 -> cave_01
-warp: stairs 14 8 -> cave_02
+warp: stairs 11 8 -> cave_02
 enemy: slime 4 3
 enemy: bat 12 2
 enemy: snake 10 8
@@ -10,7 +10,7 @@ W....BWWW......W
 W..........T...W
 ................
 W......RR......W
-W..............W
-W..=~......S...W
-W..~G..........W
+W..~~~~........W
+W..=~~~~...S...W
+W..~~~~........W
 WWWWWWW..WWWWWWW

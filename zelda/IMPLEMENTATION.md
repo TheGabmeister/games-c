@@ -670,9 +670,9 @@ Deliverable: overworld is navigable with shops, NPCs, and saves.
 - [x] Shops display items with prices; buying deducts rupees.
 - [x] Cannot buy items with insufficient rupees.
 - [x] Purchased items appear in inventory.
-- [ ] NPC dialogue displays text correctly (hint caves, gift caves).
-- [ ] Gift cave NPCs give items once only.
-- [ ] Cave rooms load from `assets/caves/` and render correctly.
+- [x] NPC dialogue displays text correctly (hint caves, gift caves).
+- [x] Gift cave NPCs give items once only.
+- [x] Cave rooms load from `assets/caves/` and render correctly.
 - [ ] Raft allows crossing water tiles from dock tiles.
 - [ ] Ladder allows crossing gap tiles.
 - [ ] Bracelet allows pushing heavy rocks.

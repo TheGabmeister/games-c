@@ -45,6 +45,14 @@ void pause_screen_update(PauseState *state, Inventory *inventory) {
         state->cursor_x++;
         if (state->cursor_x >= GRID_COLS) state->cursor_x = 0;
     }
+    if (IsKeyPressed(KEY_UP) || IsGamepadButtonPressed(0, GAMEPAD_BUTTON_LEFT_FACE_UP)) {
+        state->cursor_y--;
+        if (state->cursor_y < 0) state->cursor_y = GRID_ROWS - 1;
+    }
+    if (IsKeyPressed(KEY_DOWN) || IsGamepadButtonPressed(0, GAMEPAD_BUTTON_LEFT_FACE_DOWN)) {
+        state->cursor_y++;
+        if (state->cursor_y >= GRID_ROWS) state->cursor_y = 0;
+    }
 
     if (input_confirm() || input_attack()) {
         ItemType item = grid_items[state->cursor_y][state->cursor_x];
