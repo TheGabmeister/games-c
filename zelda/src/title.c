@@ -12,13 +12,11 @@ void title_refresh(TitleState *state) {
 
 void title_update(Game *game) {
     TitleState *state = &game->title_state;
-    if (IsKeyPressed(KEY_UP) || IsKeyPressed(KEY_W) ||
-        IsGamepadButtonPressed(0, GAMEPAD_BUTTON_LEFT_FACE_UP)) {
+    if (input_up_pressed()) {
         state->cursor--;
         if (state->cursor < 0) state->cursor = SAVE_SLOT_COUNT - 1;
     }
-    if (IsKeyPressed(KEY_DOWN) || IsKeyPressed(KEY_S) ||
-        IsGamepadButtonPressed(0, GAMEPAD_BUTTON_LEFT_FACE_DOWN)) {
+    if (input_down_pressed()) {
         state->cursor++;
         if (state->cursor >= SAVE_SLOT_COUNT) state->cursor = 0;
     }

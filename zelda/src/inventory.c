@@ -69,19 +69,19 @@ static Color item_color(ItemType item) {
 }
 
 void pause_screen_update(PauseState *state, Inventory *inventory) {
-    if (IsKeyPressed(KEY_LEFT) || IsGamepadButtonPressed(0, GAMEPAD_BUTTON_LEFT_FACE_LEFT)) {
+    if (input_left_pressed()) {
         state->cursor_x--;
         if (state->cursor_x < 0) state->cursor_x = GRID_COLS - 1;
     }
-    if (IsKeyPressed(KEY_RIGHT) || IsGamepadButtonPressed(0, GAMEPAD_BUTTON_LEFT_FACE_RIGHT)) {
+    if (input_right_pressed()) {
         state->cursor_x++;
         if (state->cursor_x >= GRID_COLS) state->cursor_x = 0;
     }
-    if (IsKeyPressed(KEY_UP) || IsGamepadButtonPressed(0, GAMEPAD_BUTTON_LEFT_FACE_UP)) {
+    if (input_up_pressed()) {
         state->cursor_y--;
         if (state->cursor_y < 0) state->cursor_y = GRID_ROWS - 1;
     }
-    if (IsKeyPressed(KEY_DOWN) || IsGamepadButtonPressed(0, GAMEPAD_BUTTON_LEFT_FACE_DOWN)) {
+    if (input_down_pressed()) {
         state->cursor_y++;
         if (state->cursor_y >= GRID_ROWS) state->cursor_y = 0;
     }

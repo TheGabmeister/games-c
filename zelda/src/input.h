@@ -8,6 +8,11 @@ bool input_right(void);
 bool input_up(void);
 bool input_down(void);
 
+bool input_left_pressed(void);
+bool input_right_pressed(void);
+bool input_up_pressed(void);
+bool input_down_pressed(void);
+
 bool input_attack(void);
 bool input_use_item(void);
 bool input_confirm(void);
