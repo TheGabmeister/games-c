@@ -22,6 +22,8 @@ typedef enum SoundID {
     SOUND_ITEM_GET,
     SOUND_BOSS_ROAR,
     SOUND_BOSS_DEFEAT,
+    SOUND_NPC,
+    SOUND_SHOP,
     SOUND_COUNT
 } SoundID;
 

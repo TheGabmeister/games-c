@@ -22,6 +22,10 @@ const TileDef tile_defs[TILE_TYPE_COUNT] = {
 static ItemType item_from_name(const char *name) {
     if (strcmp(name, "rupees") == 0 || strcmp(name, "rupee") == 0)
         return ITEM_NONE;
+    if (strcmp(name, "bombs") == 0)
+        return ITEM_BOMB;
+    if (strcmp(name, "keys") == 0)
+        return ITEM_KEY;
     for (int t = 1; t < ITEM_TYPE_COUNT; t++) {
         if (item_type_names[t] && strcmp(name, item_type_names[t]) == 0)
             return (ItemType)t;

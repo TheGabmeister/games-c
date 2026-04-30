@@ -20,7 +20,11 @@ typedef struct SaveData {
     uint32_t magic;
     uint32_t version;
 
-    Player player;
+    Vector2 player_pos;
+    Direction player_facing;
+    int player_health;
+    int player_max_health;
+    Inventory inventory;
     WorldState world;
     DungeonState dungeon;
 
@@ -52,10 +56,10 @@ static bool read_save_data(int slot, SaveData *data) {
 
     char path[64];
     save_path(slot, path, sizeof(path));
-    unsigned int bytes = 0;
+    int bytes = 0;
     unsigned char *raw = LoadFileData(path, &bytes);
     if (!raw) return false;
-    bool ok = bytes == sizeof(*data);
+    bool ok = bytes == (int)sizeof(*data);
     if (ok) {
         memcpy(data, raw, sizeof(*data));
         ok = data->magic == SAVE_MAGIC && data->version == SAVE_VERSION;
@@ -70,9 +74,9 @@ bool save_read_summary(int slot, SaveSlotSummary *summary) {
     if (!read_save_data(slot, &data)) return false;
 
     summary->exists = true;
-    summary->health = data.player.health;
-    summary->max_health = data.player.max_health;
-    summary->rupees = data.player.inventory.rupees;
+    summary->health = data.player_health;
+    summary->max_health = data.player_max_health;
+    summary->rupees = data.inventory.rupees;
     summary->screen_x = data.screen_x;
     summary->screen_y = data.screen_y;
     summary->in_dungeon = data.in_dungeon;
@@ -99,7 +103,11 @@ bool save_write_game(const Game *game, int slot) {
     memset(&data, 0, sizeof(data));
     data.magic = SAVE_MAGIC;
     data.version = SAVE_VERSION;
-    data.player = game->player;
+    data.player_pos = game->player.pos;
+    data.player_facing = game->player.facing;
+    data.player_health = game->player.health;
+    data.player_max_health = game->player.max_health;
+    data.inventory = game->player.inventory;
     data.world = game->world;
     data.dungeon = game->dungeon;
     data.in_dungeon = game->in_dungeon;
@@ -130,7 +138,6 @@ bool save_load_game(Game *game, int slot) {
     memset(game, 0, sizeof(*game));
     game->state = STATE_PLAY;
     game->active_save_slot = slot;
-    game->player = data.player;
     game->world = data.world;
     game->dungeon = data.dungeon;
     game->in_dungeon = data.in_dungeon;
@@ -144,7 +151,13 @@ bool save_load_game(Game *game, int slot) {
         music_exit_dungeon();
         nav_load_screen(game, data.screen_x, data.screen_y);
     }
-    game->player = data.player;
+    player_init(&game->player);
+    game->player.pos = data.player_pos;
+    game->player.facing = data.player_facing;
+    game->player.health = data.player_health;
+    game->player.max_health = data.player_max_health;
+    game->player.inventory = data.inventory;
+    anim_set(&game->player.anim, &player_idle_anims[game->player.facing]);
     world_apply_screen_flags(game);
     return true;
 }

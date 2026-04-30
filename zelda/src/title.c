@@ -2,6 +2,7 @@
 #include "game.h"
 #include "input.h"
 #include "raylib.h"
+#include <stdio.h>
 
 void title_refresh(TitleState *state) {
     for (int i = 0; i < SAVE_SLOT_COUNT; i++) {
@@ -11,11 +12,13 @@ void title_refresh(TitleState *state) {
 
 void title_update(Game *game) {
     TitleState *state = &game->title_state;
-    if (input_up()) {
+    if (IsKeyPressed(KEY_UP) || IsKeyPressed(KEY_W) ||
+        IsGamepadButtonPressed(0, GAMEPAD_BUTTON_LEFT_FACE_UP)) {
         state->cursor--;
         if (state->cursor < 0) state->cursor = SAVE_SLOT_COUNT - 1;
     }
-    if (input_down()) {
+    if (IsKeyPressed(KEY_DOWN) || IsKeyPressed(KEY_S) ||
+        IsGamepadButtonPressed(0, GAMEPAD_BUTTON_LEFT_FACE_DOWN)) {
         state->cursor++;
         if (state->cursor >= SAVE_SLOT_COUNT) state->cursor = 0;
     }
@@ -43,8 +46,11 @@ void title_draw(const TitleState *state) {
         DrawText(TextFormat("SLOT %d", i + 1), 280, y, 26, c);
         if (state->slots[i].exists) {
             const SaveSlotSummary *s = &state->slots[i];
-            const char *where = s->in_dungeon ? TextFormat("DUNGEON %d", s->dungeon_id)
-                                              : TextFormat("%02d_%02d", s->screen_x, s->screen_y);
+            char where[32];
+            if (s->in_dungeon)
+                snprintf(where, sizeof(where), "DUNGEON %d", s->dungeon_id);
+            else
+                snprintf(where, sizeof(where), "%02d_%02d", s->screen_x, s->screen_y);
             DrawText(TextFormat("HP %d/%d  R %d  %s",
                                 s->health, s->max_health, s->rupees, where),
                      420, y + 4, 20, LIGHTGRAY);

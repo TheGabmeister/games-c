@@ -3,32 +3,38 @@
 #include "input.h"
 #include "raylib.h"
 
-static const char *item_names[ITEM_TYPE_COUNT] = {
-    [ITEM_NONE]      = "---",
-    [ITEM_BOOMERANG] = "BOOMERANG",
-    [ITEM_BOW]       = "BOW",
-    [ITEM_BOMB]      = "BOMB",
-    [ITEM_CANDLE]    = "CANDLE",
-};
-
-static const Color item_colors[ITEM_TYPE_COUNT] = {
-    [ITEM_NONE]      = { 40, 40, 40, 255 },
-    [ITEM_BOOMERANG] = { 60, 160, 220, 255 },
-    [ITEM_BOW]       = { 180, 120, 60, 255 },
-    [ITEM_BOMB]      = { 80, 80, 80, 255 },
-    [ITEM_CANDLE]    = { 220, 160, 40, 255 },
-};
-
 #define GRID_COLS   5
-#define GRID_ROWS   1
+#define GRID_ROWS   2
 #define CELL_SIZE   80
 #define CELL_PAD    12
 #define GRID_X      ((WINDOW_WIDTH - (GRID_COLS * (CELL_SIZE + CELL_PAD) - CELL_PAD)) / 2)
 #define GRID_Y      (PLAY_AREA_Y + 200)
 
 static const ItemType grid_items[GRID_ROWS][GRID_COLS] = {
-    { ITEM_BOOMERANG, ITEM_BOW, ITEM_BOMB, ITEM_CANDLE, ITEM_NONE },
+    { ITEM_BOOMERANG, ITEM_BOW, ITEM_BOMB, ITEM_CANDLE, ITEM_FOOD },
+    { ITEM_RAFT, ITEM_LADDER, ITEM_BRACELET, ITEM_LETTER, ITEM_POTION },
 };
+
+static bool item_can_equip(ItemType item) {
+    return item == ITEM_BOOMERANG || item == ITEM_BOW || item == ITEM_BOMB ||
+           item == ITEM_CANDLE || item == ITEM_FOOD || item == ITEM_POTION;
+}
+
+static Color item_color(ItemType item) {
+    switch (item) {
+        case ITEM_BOOMERANG: return (Color){ 60, 160, 220, 255 };
+        case ITEM_BOW:       return (Color){ 180, 120, 60, 255 };
+        case ITEM_BOMB:      return (Color){ 80, 80, 80, 255 };
+        case ITEM_CANDLE:    return (Color){ 220, 160, 40, 255 };
+        case ITEM_FOOD:      return (Color){ 160, 100, 60, 255 };
+        case ITEM_POTION:    return (Color){ 180, 60, 200, 255 };
+        case ITEM_RAFT:      return (Color){ 90, 120, 80, 255 };
+        case ITEM_LADDER:    return (Color){ 130, 100, 60, 255 };
+        case ITEM_BRACELET:  return (Color){ 160, 160, 80, 255 };
+        case ITEM_LETTER:    return (Color){ 180, 180, 150, 255 };
+        default:             return (Color){ 40, 40, 40, 255 };
+    }
+}
 
 void pause_screen_update(PauseState *state, Inventory *inventory) {
     if (IsKeyPressed(KEY_LEFT) || IsGamepadButtonPressed(0, GAMEPAD_BUTTON_LEFT_FACE_LEFT)) {
@@ -50,7 +56,7 @@ void pause_screen_update(PauseState *state, Inventory *inventory) {
         } else {
             has_item = (inventory->items & (1 << item)) != 0;
         }
-        if (has_item) {
+        if (has_item && item_can_equip(item)) {
             inventory->equipped = item;
         }
     }
@@ -81,7 +87,7 @@ void pause_screen_draw(const PauseState *state, const Game *game) {
                 has_item = (inventory->items & (1 << item)) != 0;
             }
 
-            Color bg = has_item ? item_colors[item] : (Color){ 30, 30, 30, 255 };
+            Color bg = has_item ? item_color(item) : (Color){ 30, 30, 30, 255 };
             DrawRectangle(x, y, CELL_SIZE, CELL_SIZE, bg);
 
             if (item == inventory->equipped && has_item) {
@@ -96,18 +102,18 @@ void pause_screen_draw(const PauseState *state, const Game *game) {
 
             if (item != ITEM_NONE) {
                 Color text_c = has_item ? WHITE : (Color){ 80, 80, 80, 255 };
-                DrawText(item_names[item], x + 4, y + CELL_SIZE - 18, 14, text_c);
+                DrawText(item_display_name(item), x + 4, y + CELL_SIZE - 18, 14, text_c);
             }
         }
     }
 
     ItemType sel = grid_items[state->cursor_y][state->cursor_x];
     if (sel != ITEM_NONE) {
-        DrawText(item_names[sel], GRID_X, GRID_Y + GRID_ROWS * (CELL_SIZE + CELL_PAD) + 20,
+        DrawText(item_display_name(sel), GRID_X, GRID_Y + GRID_ROWS * (CELL_SIZE + CELL_PAD) + 20,
                  24, WHITE);
     }
 
-    DrawText("ARROWS/ENTER to equip  |  P to resume",
+    DrawText("ARROWS/ENTER to equip  |  R save  |  P resume",
              GRID_X, GRID_Y + GRID_ROWS * (CELL_SIZE + CELL_PAD) + 60, 16, LIGHTGRAY);
 
     if (game->in_dungeon) {

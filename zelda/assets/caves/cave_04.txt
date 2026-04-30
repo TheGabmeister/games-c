@@ -1,5 +1,5 @@
-# First cave - simple single room
-dialogue: 1 | BUY FIRE. BURN THE LONELY SHRUB.
+# Ladder gift cave
+gift: 4 ladder 1 | BRIDGE THE THIN DARK WATER.
 warp: stairs 8 9 -> return
 
 WWWWWWWWWWWWWWWW

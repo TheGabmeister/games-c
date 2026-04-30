@@ -1,10 +1,11 @@
 # West of starting room - has stairs with warp
 warp: cave 10 5 -> cave_01
 warp: stairs 4 8 -> dungeon_1
+warp: stairs 2 2 -> cave_06
 
 WWWWWWWWWWWWWWWW
 W..............W
-W..............W
+W.S............W
 W..............W
 W..............W
 ..........S.....

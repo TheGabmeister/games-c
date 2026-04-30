@@ -2,6 +2,7 @@
 #include "game.h"
 #include "sounds.h"
 #include "vfx.h"
+#include "world_interact.h"
 #include "raymath.h"
 #include <math.h>
 #include <stdlib.h>
@@ -36,6 +37,12 @@ static void on_enemy_death(Game *game, Enemy *e) {
     else if (roll < 85) type = PICKUP_ARROW;
     else                type = PICKUP_BOMB;
     pickup_spawn(game->pickups, &game->pickup_count, type, e->pos);
+}
+
+static int player_sword_damage(const Player *p) {
+    if (p->inventory.sword_tier >= 3) return SWORD_DAMAGE * 4;
+    if (p->inventory.sword_tier >= 2) return SWORD_DAMAGE * 2;
+    return SWORD_DAMAGE;
 }
 
 void combat_check_pickups(Game *game) {
@@ -119,6 +126,7 @@ void combat_check_bombs(Game *game) {
                 int r = tr + dr, c = tc + dc;
                 if (r < 0 || r >= SCREEN_TILES_Y || c < 0 || c >= SCREEN_TILES_X) continue;
                 if (game->current_screen.tiles[r][c] == TILE_BOMBABLE_WALL) {
+                    world_mark_bombable_revealed(game);
                     game->current_screen.tiles[r][c] = TILE_FLOOR;
                 }
             }
@@ -149,7 +157,7 @@ void combat_check(Game *game) {
                         sound_play(SOUND_ENEMY_DEATH);
                         spawn_small_slimes(game, split_pos);
                     } else {
-                        enemy_take_damage(e, SWORD_DAMAGE);
+                        enemy_take_damage(e, player_sword_damage(p));
                         if (!e->active) {
                             sound_play(SOUND_ENEMY_DEATH);
                             on_enemy_death(game, e);

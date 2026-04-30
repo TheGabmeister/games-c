@@ -1,5 +1,5 @@
-# First cave - simple single room
-dialogue: 1 | BUY FIRE. BURN THE LONELY SHRUB.
+# Strong sword upgrade cave
+upgrade: 6 sword 2 10 | A SHARPER BLADE FOR FIVE HEARTS.
 warp: stairs 8 9 -> return
 
 WWWWWWWWWWWWWWWW

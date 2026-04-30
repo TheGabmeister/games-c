@@ -85,6 +85,16 @@ static void try_use_item(Player *player, Projectile *projectiles, int *projectil
             break;
         case ITEM_CANDLE:
             break;
+        case ITEM_POTION:
+            if ((player->inventory.items & item_bit(ITEM_POTION)) == 0) return;
+            player->health = player->max_health;
+            player->inventory.items &= ~item_bit(ITEM_POTION);
+            if (player->inventory.equipped == ITEM_POTION)
+                player->inventory.equipped = ITEM_NONE;
+            break;
+        case ITEM_FOOD:
+            if ((player->inventory.items & item_bit(ITEM_FOOD)) == 0) return;
+            break;
         default:
             return;
     }

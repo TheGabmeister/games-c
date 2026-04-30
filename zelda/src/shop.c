@@ -69,11 +69,17 @@ void shop_update(Game *game) {
         game->state = STATE_PLAY;
         return;
     }
-    if (input_left() || input_up()) {
+    if (IsKeyPressed(KEY_LEFT) || IsKeyPressed(KEY_A) ||
+        IsKeyPressed(KEY_UP) || IsKeyPressed(KEY_W) ||
+        IsGamepadButtonPressed(0, GAMEPAD_BUTTON_LEFT_FACE_LEFT) ||
+        IsGamepadButtonPressed(0, GAMEPAD_BUTTON_LEFT_FACE_UP)) {
         state->cursor--;
         if (state->cursor < 0) state->cursor = state->shop.item_count - 1;
     }
-    if (input_right() || input_down()) {
+    if (IsKeyPressed(KEY_RIGHT) || IsKeyPressed(KEY_D) ||
+        IsKeyPressed(KEY_DOWN) || IsKeyPressed(KEY_S) ||
+        IsGamepadButtonPressed(0, GAMEPAD_BUTTON_LEFT_FACE_RIGHT) ||
+        IsGamepadButtonPressed(0, GAMEPAD_BUTTON_LEFT_FACE_DOWN)) {
         state->cursor++;
         if (state->cursor >= state->shop.item_count) state->cursor = 0;
     }

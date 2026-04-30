@@ -9,16 +9,21 @@
 #include "debug.h"
 #include "input.h"
 #include "vfx.h"
+#include "save.h"
+#include "title.h"
+#include "dialogue.h"
+#include "shop.h"
+#include "world_interact.h"
 #include <assert.h>
 #include <stdio.h>
 #include <string.h>
 
 void game_init(Game *game) {
     memset(game, 0, sizeof(*game));
-    game->state = STATE_PLAY;
-
-    player_init(&game->player);
-    nav_load_screen(game, START_SCREEN_X, START_SCREEN_Y);
+    game->state = STATE_TITLE;
+    game->active_save_slot = 0;
+    world_init(&game->world);
+    title_refresh(&game->title_state);
 }
 
 void game_update(Game *game) {
@@ -29,6 +34,10 @@ void game_update(Game *game) {
     music_update();
 
     switch (game->state) {
+        case STATE_TITLE:
+            title_update(game);
+            break;
+
         case STATE_PLAY: {
             if (input_pause()) {
                 game->state = STATE_PAUSE;
@@ -41,11 +50,13 @@ void game_update(Game *game) {
                 sound_play(SOUND_SWORD_SWING);
             }
             if (game->player.state == PSTATE_USING_ITEM && prev_state != PSTATE_USING_ITEM &&
-                game->player.inventory.equipped == ITEM_CANDLE &&
-                game->in_dungeon && game->current_screen.is_dark) {
-                uint64_t rbit = dungeon_room_bit(game->dungeon.room_x, game->dungeon.room_y);
-                game->dungeon.rooms_lit |= rbit;
-                sound_play(SOUND_SECRET);
+                game->player.inventory.equipped == ITEM_CANDLE) {
+                world_use_candle(game);
+                if (game->in_dungeon && game->current_screen.is_dark) {
+                    uint64_t rbit = dungeon_room_bit(game->dungeon.room_x, game->dungeon.room_y);
+                    game->dungeon.rooms_lit |= rbit;
+                    sound_play(SOUND_SECRET);
+                }
             }
             enemies_update(game->enemies, game->enemy_count,
                            game->player.pos, &game->current_screen,
@@ -61,6 +72,7 @@ void game_update(Game *game) {
             dungeon_check_shutter_room(game);
             dungeon_check_push_block(game);
             dungeon_check_items(game);
+            world_check_push_rock(game);
             if (game->state != STATE_PLAY) break;
             if (game->player.health <= 0) {
                 game->state = STATE_DEATH;
@@ -77,6 +89,8 @@ void game_update(Game *game) {
             } else {
                 game->low_health_counter = 0;
             }
+            world_check_cave_interaction(game);
+            if (game->state != STATE_PLAY) break;
             nav_check_warp(game);
             if (game->state == STATE_PLAY) {
                 nav_check_edge_transition(game);
@@ -160,6 +174,7 @@ void game_update(Game *game) {
                         game->current_screen = game->next_screen;
                         game->screen_x = game->warp_dest_x;
                         game->screen_y = game->warp_dest_y;
+                        game->candle_used_this_screen = false;
                         enemies_spawn(game->enemies, &game->enemy_count,
                                       &game->current_screen);
                         projectiles_clear(game->projectiles, &game->projectile_count);
@@ -174,6 +189,12 @@ void game_update(Game *game) {
         case STATE_DEATH:
             game->death_timer--;
             if (game->death_timer <= 0) {
+                game->state = STATE_CONTINUE;
+            }
+            break;
+
+        case STATE_CONTINUE:
+            if (input_confirm() || input_attack()) {
                 if (game->in_dungeon) {
                     game->player.health = 6;
                     game->player.state = PSTATE_IDLE;
@@ -186,8 +207,14 @@ void game_update(Game *game) {
                                       game->dungeon.entrance_room_y);
                     nav_position_at_return_warp(game);
                 } else {
-                    player_init(&game->player);
+                    game->player.health = 6;
+                    if (game->player.health > game->player.max_health)
+                        game->player.health = game->player.max_health;
+                    game->player.state = PSTATE_IDLE;
+                    game->player.invuln_timer = 0;
+                    game->player.knockback_timer = 0;
                     game->in_cave = false;
+                    game->in_dungeon = false;
                     nav_load_screen(game, START_SCREEN_X, START_SCREEN_Y);
                 }
                 game->state = STATE_PLAY;
@@ -204,9 +231,19 @@ void game_update(Game *game) {
         case STATE_PAUSE:
             if (input_pause() || input_back()) {
                 game->state = STATE_PLAY;
+            } else if (input_restart()) {
+                game->save_message_timer = save_write_game(game, game->active_save_slot) ? 90 : -90;
             } else {
                 pause_screen_update(&game->pause_state, &game->player.inventory);
             }
+            break;
+
+        case STATE_DIALOGUE:
+            dialogue_update(game);
+            break;
+
+        case STATE_SHOP:
+            shop_update(game);
             break;
 
         default:
@@ -217,6 +254,12 @@ void game_update(Game *game) {
 void game_draw(Game *game) {
     BeginDrawing();
     ClearBackground((Color){ 20, 24, 32, 255 });
+
+    if (game->state == STATE_TITLE) {
+        title_draw(&game->title_state);
+        EndDrawing();
+        return;
+    }
 
     if (game->state == STATE_TRANSITION && game->cam.type == TRANS_SCROLL) {
         int ox_old, oy_old, ox_new, oy_new;
@@ -299,6 +342,26 @@ void game_draw(Game *game) {
     }
 
     hud_draw(game);
+
+    if (game->state == STATE_DIALOGUE) {
+        dialogue_draw(&game->dialogue_state);
+    } else if (game->state == STATE_SHOP) {
+        shop_draw(&game->shop_state, game);
+    } else if (game->state == STATE_CONTINUE) {
+        DrawRectangle(0, PLAY_AREA_Y, WINDOW_WIDTH, PLAY_AREA_HEIGHT,
+                      (Color){ 0, 0, 0, 180 });
+        DrawText("CONTINUE", WINDOW_WIDTH / 2 - 88, PLAY_AREA_Y + 280, 34, WHITE);
+        DrawText("ENTER", WINDOW_WIDTH / 2 - 44, PLAY_AREA_Y + 328, 22, LIGHTGRAY);
+    }
+
+    if (game->save_message_timer != 0) {
+        const char *msg = game->save_message_timer > 0 ? "SAVED" : "SAVE FAILED";
+        DrawText(msg, 448, HUD_HEIGHT - 36, 20,
+                 game->save_message_timer > 0 ? GREEN : RED);
+        if (game->save_message_timer > 0) game->save_message_timer--;
+        else game->save_message_timer++;
+    }
+
     debug_draw_game(game);
     debug_draw_overlay();
 

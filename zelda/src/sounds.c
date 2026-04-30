@@ -25,11 +25,13 @@ static const char *sound_files[SOUND_COUNT] = {
     [SOUND_ITEM_GET]      = "assets/item_get.wav",
     [SOUND_BOSS_ROAR]     = "assets/boss_roar.wav",
     [SOUND_BOSS_DEFEAT]   = "assets/boss_defeat.wav",
+    [SOUND_NPC]           = "assets/npc.wav",
+    [SOUND_SHOP]          = "assets/shop.wav",
 };
 
 void sounds_load(void) {
     for (int i = 0; i < SOUND_COUNT; i++) {
-        if (FileExists(sound_files[i])) {
+        if (sound_files[i] && FileExists(sound_files[i])) {
             sounds[i] = LoadSound(sound_files[i]);
             sound_loaded[i] = IsSoundValid(sounds[i]);
         }

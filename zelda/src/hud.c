@@ -12,14 +12,9 @@ void hud_draw(const Game *game) {
     DrawText(TextFormat("BOMBS: %d/%d", player->inventory.bombs, player->inventory.bomb_capacity), 32, 96, 20, WHITE);
     DrawText(TextFormat("ARROWS: %d/%d", player->inventory.arrows, player->inventory.arrow_capacity), 32, 128, 20, WHITE);
 
-    const char *equip_name = "---";
-    switch (player->inventory.equipped) {
-        case ITEM_BOOMERANG: equip_name = "BOOMERANG"; break;
-        case ITEM_BOW:       equip_name = "BOW"; break;
-        case ITEM_BOMB:      equip_name = "BOMB"; break;
-        case ITEM_CANDLE:    equip_name = "CANDLE"; break;
-        default: break;
-    }
+    const char *equip_name = player->inventory.equipped == ITEM_NONE
+        ? "---"
+        : item_display_name(player->inventory.equipped);
     DrawText(TextFormat("B: %s", equip_name), 32, 160, 20, YELLOW);
 
     int hearts = player->max_health / 2;
