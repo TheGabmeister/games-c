@@ -23,6 +23,7 @@ void world_check_push_rock(struct Game *game);
 void world_use_candle(struct Game *game);
 void world_mark_bombable_revealed(struct Game *game);
 void world_mark_bushes_burned(struct Game *game);
+void world_draw_cave_npc(const struct Game *game);
 
 bool world_flag_is_set(const uint64_t *words, int index);
 void world_flag_set(uint64_t *words, int index);

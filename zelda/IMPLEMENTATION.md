@@ -667,9 +667,9 @@ Deliverable: overworld is navigable with shops, NPCs, and saves.
 
 **Test checklist:**
 
-- [ ] Shops display items with prices; buying deducts rupees.
-- [ ] Cannot buy items with insufficient rupees.
-- [ ] Purchased items appear in inventory.
+- [x] Shops display items with prices; buying deducts rupees.
+- [x] Cannot buy items with insufficient rupees.
+- [x] Purchased items appear in inventory.
 - [ ] NPC dialogue displays text correctly (hint caves, gift caves).
 - [ ] Gift cave NPCs give items once only.
 - [ ] Cave rooms load from `assets/caves/` and render correctly.

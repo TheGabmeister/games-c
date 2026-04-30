@@ -23,6 +23,7 @@ typedef enum TextureID {
     TEX_ITEM_COMPASS,
     TEX_ITEM_HEART_CONTAINER,
     TEX_ITEM_FRAGMENT,
+    TEX_NPC_OLD_MAN,
     TEX_COUNT
 } TextureID;
 

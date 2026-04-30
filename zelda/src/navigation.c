@@ -255,8 +255,8 @@ void nav_check_edge_transition(Game *game) {
 }
 
 void nav_check_warp(Game *game) {
-    int col = (int)(game->player.pos.x / TILE_SIZE);
-    int row = (int)((game->player.pos.y - PLAY_AREA_Y) / TILE_SIZE);
+    int col = (int)((game->player.pos.x + TILE_SIZE / 2.0f) / TILE_SIZE);
+    int row = (int)((game->player.pos.y + TILE_SIZE / 2.0f - PLAY_AREA_Y) / TILE_SIZE);
 
     if (col < 0 || col >= SCREEN_TILES_X || row < 0 || row >= SCREEN_TILES_Y) return;
 

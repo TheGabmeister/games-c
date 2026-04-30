@@ -327,6 +327,7 @@ void game_draw(Game *game) {
     } else {
         screen_draw(&game->current_screen);
         dungeon_draw_items(game);
+        world_draw_cave_npc(game);
         enemies_draw(game->enemies, game->enemy_count);
         pickups_draw(game->pickups, game->pickup_count);
         projectiles_draw(game->projectiles, game->projectile_count);

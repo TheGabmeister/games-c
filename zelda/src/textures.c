@@ -23,6 +23,7 @@ static const char *texture_paths[TEX_COUNT] = {
     [TEX_ITEM_COMPASS]         = "assets/sprites/item_compass.png",
     [TEX_ITEM_HEART_CONTAINER] = "assets/sprites/item_heart_container.png",
     [TEX_ITEM_FRAGMENT]        = "assets/sprites/item_fragment.png",
+    [TEX_NPC_OLD_MAN]          = "assets/sprites/npc_old_man.png",
 };
 
 void textures_load(void) {

@@ -4,6 +4,7 @@
 #include "shop.h"
 #include "sounds.h"
 #include "input.h"
+#include "textures.h"
 #include "raylib.h"
 #include <string.h>
 
@@ -37,6 +38,11 @@ static bool service_near_player(const Game *game) {
     float npc_y = PLAY_AREA_Y + 5.0f * TILE_SIZE;
     return CheckCollisionRecs((Rectangle){ cx - 96, cy - 96, 192, 192 },
                               (Rectangle){ npc_x - 32, npc_y - 32, 64, 64 });
+}
+
+static bool cave_has_service(const Screen *screen) {
+    return screen->dialogue.active || screen->gift.active ||
+           screen->upgrade.active || screen->shop.active;
 }
 
 static bool service_flag(uint64_t flags, int id) {
@@ -175,7 +181,10 @@ void world_check_push_rock(Game *game) {
 }
 
 void world_check_cave_interaction(Game *game) {
-    if (!game->in_cave || !input_confirm() || !service_near_player(game)) return;
+    if (!game->in_cave || !cave_has_service(&game->current_screen) ||
+        !input_confirm() || !service_near_player(game)) {
+        return;
+    }
 
     const Screen *screen = &game->current_screen;
     if (screen->shop.active) {
@@ -212,5 +221,19 @@ void world_check_cave_interaction(Game *game) {
     if (screen->dialogue.active) {
         set_service_flag(&game->world.npcs_triggered, screen->dialogue.id);
         dialogue_start(game, screen->dialogue.text);
+    }
+}
+
+void world_draw_cave_npc(const Game *game) {
+    if (!game->in_cave || !cave_has_service(&game->current_screen)) return;
+
+    Vector2 pos = { 8.0f * TILE_SIZE, PLAY_AREA_Y + 5.0f * TILE_SIZE };
+    if (IsTextureValid(textures[TEX_NPC_OLD_MAN])) {
+        DrawTexture(textures[TEX_NPC_OLD_MAN], (int)pos.x, (int)pos.y, WHITE);
+    } else {
+        DrawRectangle((int)pos.x + 12, (int)pos.y + 8, 40, 52,
+                      (Color){ 118, 87, 181, 255 });
+        DrawCircle((int)pos.x + 32, (int)pos.y + 20, 14,
+                   (Color){ 232, 199, 154, 255 });
     }
 }
